@@ -1,0 +1,137 @@
+# =============================================================================
+# plugin manager
+# =============================================================================
+
+[[plugins]]
+repo = 'Shougo/dein.vim'
+
+# =============================================================================
+# denops
+# =============================================================================
+
+[[plugins]]
+repo = 'vim-denops/denops.vim'
+
+# =============================================================================
+# treesitter
+# =============================================================================
+[[plugins]]
+repo = 'nvim-treesitter/nvim-treesitter'
+if = 'has("nvim")'
+on_event = 'BufRead'
+depends = 'impatient.nvim'
+hook_post_update = 'TSUpdate'
+hook_source = '''
+lua <<EOF
+require'nvim-treesitter.configs'.setup {
+    ensure_installed = 'all',
+    highlight = {
+        enable = true,
+        disable = {},
+    },
+}
+EOF
+'''
+# =============================================================================
+# color schema
+# =============================================================================
+
+[[plugins]]
+repo = 'rktjmp/lush.nvim'
+
+[[plugins]]
+repo = 'ellisonleao/gruvbox.nvim'
+hook_add = '''
+  source ~/.config/nvim/plugins/gruvbox.vim
+'''
+
+# =============================================================================
+# status bar
+# =============================================================================
+
+[[plugins]]
+repo = 'vim-airline/vim-airline'
+
+[[plugins]]
+repo = 'vim-airline/vim-airline-themes'
+
+# =============================================================================
+# NerdTree
+# =============================================================================
+
+# The NERDTree is a file system explorer for the Vim editor.
+[[plugins]]
+repo = 'scrooloose/nerdtree'
+hook_add = '''
+  source ~/.config/nvim/plugins/nerdtree.vim
+'''
+
+[[plugins]]
+repo = 'kassio/neoterm'
+
+# A plugin of NERDTree showing git status flags.
+[[plugins]]
+repo = 'Xuyuanp/nerdtree-git-plugin'
+
+# Add icons
+[[plugins]]
+repo = 'ryanoasis/vim-devicons'
+
+# =============================================================================
+# Git
+# =============================================================================
+
+# Vim plugin for Git.
+[[plugins]]
+repo = 'tpope/vim-fugitive'
+
+# Brows code by github
+[[plugins]]
+repo = 'tpope/vim-rhubarb'
+
+# A Vim plugin which shows a git diff in the sign column
+[[plugins]]
+repo = 'airblade/vim-gitgutter'
+
+# =============================================================================
+# case change plugins
+# =============================================================================
+
+# キャメルケース、アンダースコア区切りの語を操作するプラグイン
+[[plugins]]
+repo = 'bkad/camelcasemotion'
+
+# camelize/decamelize a specified text
+[[plugins]]
+repo = 'tyru/operator-camelize.vim'
+
+# =============================================================================
+# operators
+# =============================================================================
+
+# expand . operator
+[[plugins]]
+repo = 'kana/vim-operator-user'
+
+# allows you to visually select increasingly larger regions of text using the same key combination
+[[plugins]]
+repo = 'terryma/vim-expand-region'
+
+# Surround.vim is all about "surroundings": parentheses, brackets, quotes, XML tags, and more
+[[plugins]]
+repo = 'tpope/vim-surround'
+
+# Comment stuff out.
+[[plugins]]
+repo = 'tpope/vim-commentary'
+
+# =============================================================================
+# LSP
+# =============================================================================
+[[plugins]]
+repo = 'neoclide/coc.nvim'
+rev = 'release'
+
+# coc-graphqlの依存
+[[plugins]]
+repo = 'jparise/vim-graphql'

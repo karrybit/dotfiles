@@ -1,0 +1,13 @@
+cargo-cache
+cargo-deps
+cargo-edit
+cargo-expand
+cargo-make
+cargo-modules
+cargo-sort
+cargo-update
+cargo-upgrades
+cargo-workspaces
+sea-orm-cli
+toml-cli
+wasm-pack
