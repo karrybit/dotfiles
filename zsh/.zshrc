@@ -39,9 +39,6 @@ typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
 
 local xdg_dirs=(
     $XDG_CONFIG_HOME/aws
-    $XDG_CONFIG_HOME/bundle
-    $XDG_CACHE_HOME/bundle
-    $XDG_DATA_HOME/bundle
     $XDG_CONFIG_HOME/pg
     $XDG_CACHE_HOME/pg
     $XDG_DATA_HOME/cargo
