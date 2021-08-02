@@ -13,7 +13,6 @@ export CCACHE_DIR=$XDG_CACHE_HOME/ccache
 export DOCKER_CONFIG=$XDG_CONFIG_HOME/docker
 export GOPATH=$XDG_DATA_HOME/go
 export GRADLE_USER_HOME=$XDG_DATA_HOME/gradle
-export IRBRC=$XDG_CONFIG_HOME/irb/irbrc
 export _JAVA_OPTIONS=-Djava.util.prefs.userRoot=$XDG_CONFIG_HOME/java
 export MINIKUBE_HOME=$XDG_DATA_HOME/minikube
 export MYSQL_HISTFILE=$XDG_DATA_HOME/mysql_history
@@ -24,8 +23,6 @@ export PSQLRC=$XDG_CONFIG_HOME/pg/psqlrc
 export PSQL_HISTORY=$XDG_CACHE_HOME/pg/psql_history
 export PGPASSFILE=$XDG_CONFIG_HOME/pg/pgpass
 export PGSERVICEFILE=$XDG_CONFIG_HOME/pg/pg_service.conf
-export GEM_HOME=$XDG_DATA_HOME/gem
-export GEM_SPEC_CACHE=$XDG_CACHE_HOME/gem
 export RUSTUP_HOME=$XDG_DATA_HOME/rustup
 export VSCODE_PORTABLE=$XDG_DATA_HOME/vscode
 

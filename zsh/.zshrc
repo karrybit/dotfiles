@@ -46,13 +46,10 @@ local xdg_dirs=(
     $XDG_CONFIG_HOME/docker
     $XDG_DATA_HOME/go
     $XDG_DATA_HOME/gradle
-    $XDG_CONFIG_HOME/irb
     $XDG_CONFIG_HOME/java
     $XDG_DATA_HOME/minikube
     $XDG_CACHE_HOME/node-gyp
     $XDG_CONFIG_HOME/npm
-    $XDG_DATA_HOME/gem
-    $XDG_CACHE_HOME/gem
     $XDG_DATA_HOME/rustup
     $XDG_DATA_HOME/vscode
 )
