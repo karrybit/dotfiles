@@ -29,14 +29,3 @@ function ksh() {
     fi
     kubectl exec -it -n "$namespace" "$(kubectl get pod -n $namespace | grep Running | head -n 1 | awk '{print $1}')" -- sh
 }
-
-function krc() {
-    namespace=$(kubectl config view --minify | grep namespace | awk '{print $2}')
-    if [ -z "$namespace" ]; then
-        echo_failure 'namespace is empty\n'
-        kubectl get namespaces
-        kubectl config get-contexts
-        return
-    fi
-    kubectl exec -it -n "$namespace" "$(kubectl get pod -n $namespace | grep Running | head -n 1 | awk '{print $1}')" -- bin/rails c
-}
