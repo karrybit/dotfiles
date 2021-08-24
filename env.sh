@@ -55,6 +55,3 @@ export RUSTC_WRAPPER="$(which sccache)"
 [[ -d ~/.nodenv ]] &&
     export PATH=$PATH:$HOME/.nodenv/bin &&
     eval "$(nodenv init -)"
-
-# wasm
-export PATH=$PATH:$HOME/wabt/build
