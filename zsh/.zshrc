@@ -215,7 +215,6 @@ alias sed='sd'
 alias ping='gping'
 alias ps='procs'
 alias curl='curlie'
-alias cd='z'
 
 alias yq='yq eval -C'
 
