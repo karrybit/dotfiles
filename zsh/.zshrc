@@ -9,12 +9,6 @@ fi
 
 zstyle ':completion:*' matcher-list '' 'm:{[:lower:]}={[:upper:]}' '+m:{[:upper:]}={[:lower:]}'
 
-export DOTFILES_PATH=~/dotfiles
-source $DOTFILES_PATH/colorize.sh
-source $DOTFILES_PATH/env.sh
-source $DOTFILES_PATH/util/func.sh
-source $DOTFILES_PATH/alias.sh
-
 source $HOME/powerlevel10k/powerlevel10k.zsh-theme
 [[ ! -f "$HOME/.p10k.zsh" ]] || source "$HOME/.p10k.zsh"
 typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
@@ -34,6 +28,12 @@ if [ ! -d $HOME/.local/share ]; then
     fi
     mkdir $HOME/.local/share
 fi
+
+export DOTFILES_PATH=~/dotfiles
+source $DOTFILES_PATH/colorize.sh
+source $DOTFILES_PATH/env.sh
+source $DOTFILES_PATH/util/func.sh
+source $DOTFILES_PATH/alias.sh
 
 local xdg_dirs=(
     $XDG_CONFIG_HOME/aws
