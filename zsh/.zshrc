@@ -19,6 +19,22 @@ source $HOME/powerlevel10k/powerlevel10k.zsh-theme
 [[ ! -f "$HOME/.p10k.zsh" ]] || source "$HOME/.p10k.zsh"
 typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
 
+export XDG_CONFIG_HOME=$HOME/.config
+if [ ! -d $XDG_CONFIG_HOME ]; then
+    mkdir $XDG_CONFIG_HOME
+fi
+export XDG_CACHE_HOME=$HOME/.cache
+if [ ! -d $XDG_CACHE_HOME ]; then
+mkdir $XDG_CACHE_HOME
+fi
+export XDG_DATA_HOME=$HOME/.local/share
+if [ ! -d $HOME/.local/share ]; then
+    if [ ! -d $HOME/.local ]; then
+        mkdir $HOME/.local
+    fi
+    mkdir $HOME/.local/share
+fi
+
 local xdg_dirs=(
     $XDG_CONFIG_HOME/aws
     $XDG_CONFIG_HOME/pg
