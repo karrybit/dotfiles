@@ -20,17 +20,14 @@ if [ ! -d $XDG_CONFIG_HOME ]; then
 fi
 export XDG_CACHE_HOME=$HOME/.cache
 if [ ! -d $XDG_CACHE_HOME ]; then
-mkdir $XDG_CACHE_HOME
+    mkdir $XDG_CACHE_HOME
 fi
 export XDG_DATA_HOME=$HOME/.local/share
-if [ ! -d $HOME/.local/share ]; then
-    if [ ! -d $HOME/.local ]; then
-        mkdir $HOME/.local
-    fi
-    mkdir $HOME/.local/share
+if [ ! -d $XDG_DATA_HOME ]; then
+    mkdir -p $XDG_DATA_HOME
 fi
 
-export DOTFILES_PATH=~/dotfiles
+export DOTFILES_PATH=$HOME/dotfiles
 source $DOTFILES_PATH/util/func.sh
 
 local xdg_dirs=(

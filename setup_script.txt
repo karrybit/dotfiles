@@ -1,0 +1,4 @@
+/bin/bash -c "$(/usr/bin/curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+git clone https://github.com/romkatv/powerlevel10k.git
+git clone https://github.com/karrybit/dotfiles.git
+mkdir -p $HOME/work/ghq
