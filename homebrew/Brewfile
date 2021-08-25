@@ -38,6 +38,7 @@ brew "kubernetes-cli"
 brew "kubernetes-cli", link: false
 brew "kustomize"
 brew "lazydocker"
+brew "lerna"
 brew "libpq"
 brew "mas"
 brew "ncdu"
@@ -93,11 +94,15 @@ cask "sourcetree"
 cask "stoplight-studio"
 cask "visual-studio-code"
 cask "wireshark"
+cask "zoom"
+mas "GarageBand", id: 682658836
 mas "Keynote", id: 409183694
 mas "Moom", id: 419330170
 mas "Numbers", id: 409203825
+mas "Pages", id: 409201541
 mas "RunCat", id: 1429033973
 mas "Xcode", id: 497799835
+mas "iMovie", id: 408981434
 tap "grpc/grpc"
 tap "homebrew/bundle"
 tap "homebrew/cask"
