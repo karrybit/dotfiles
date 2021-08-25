@@ -23,14 +23,17 @@ function update_all() {
     ghq_update
 }
 
-function link_dotfiles() {
-    "$DOTFILES_PATH/link.sh"
-}
-
 function sync_brewfile() {
     pushd $DOTFILES_PATH/homebrew >/dev/null
+    rm Brewfile
+    brew bundle dump --all
+    popd >/dev/null
+}
+
+function merge_brewfile() {
+    pushd $DOTFILES_PATH/homebrew >/dev/null
     mv Brewfile Brewfile.before
-    brew bundle dump
+    brew bundle dump --all
     mv Brewfile Brewfile.dumped
     /bin/cat Brewfile.before Brewfile.dumped | sort | uniq >Brewfile
     rm Brewfile.before Brewfile.dumped
