@@ -226,9 +226,6 @@ alias rustrepl='evcxr'
 
 # kubernetes
 alias k='kubectl'
-alias kex='kubectl exec'
-alias kg='kubectl get'
-alias ked='kubectl edit'
 
 # memo
 alias mmn='memo new'
