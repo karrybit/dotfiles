@@ -32,13 +32,13 @@ function link_git() {
 }
 
 function link_karabiner() {
-    if [ ! -d "$XDG_CONFIG_HOME/karabiner/assets/complex_modifications" ]; then
-        mkdir -p "$XDG_CONFIG_HOME/karabiner/assets/complex_modifications"
+    if [ ! -d "$XDG_CONFIG_HOME/karabiner" ]; then
+        mkdir -p "$XDG_CONFIG_HOME/karabiner"
     fi
     echo_success 'link '
     reset_style
-    echo "$XDG_CONFIG_HOME/karabiner/assets/complex_modifications/move_word.json -> $DOTFILES_PATH/karabiner/move_word.json"
-    ln -si "$DOTFILES_PATH/karabiner/move_word.json" "$XDG_CONFIG_HOME/karabiner/assets/complex_modifications"
+    echo "$XDG_CONFIG_HOME/karabiner/karabiner.json -> $DOTFILES_PATH/karabiner/karabiner.json"
+    ln -si "$DOTFILES_PATH/karabiner/karabiner.json" "$XDG_CONFIG_HOME/karabiner"
 }
 
 function link_iterm2() {
