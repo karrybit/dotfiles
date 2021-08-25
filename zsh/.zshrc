@@ -113,6 +113,10 @@ export RUSTC_WRAPPER="$(which sccache)"
     export PATH=$PATH:$HOME/.nodenv/bin &&
     eval "$(nodenv init -)"
 
+# kube
+[[ -d ~/.kube ]] &&
+    source <(kubectl completion zsh)
+
 # ----- COLORIZE -----
 
 # constants
