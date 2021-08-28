@@ -33,6 +33,7 @@ brew "go"
 brew "goaccess"
 brew "golangci-lint"
 brew "gping"
+brew "openjdk"
 brew "gradle"
 brew "graphviz"
 brew "grpcurl"
@@ -50,7 +51,7 @@ brew "mas"
 brew "ncdu"
 brew "neovim"
 brew "nodenv"
-brew "postgresql", restart_service: true
+brew "postgresql"
 brew "procs"
 brew "protobuf"
 brew "prototool"
@@ -72,6 +73,8 @@ brew "zenith"
 brew "zsh-completions"
 brew "rs/tap/curlie"
 cask "1password"
+cask "blackhole-16ch"
+cask "blackhole-64ch"
 cask "deepl"
 cask "discord"
 cask "docker"
@@ -99,6 +102,7 @@ cask "zoom"
 mas "GarageBand", id: 682658836
 mas "iMovie", id: 408981434
 mas "Keynote", id: 409183694
+mas "LadioCast", id: 411213048
 mas "Moom", id: 419330170
 mas "Numbers", id: 409203825
 mas "Pages", id: 409201541
