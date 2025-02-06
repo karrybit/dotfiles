@@ -70,7 +70,7 @@ function now_utcc() {
 
 function ghqco() {
     organization=$1
-    repository=$(gh repo list "${organization}" --no-archived --limit 100 --json url,updatedAt --jq '[.[] | select((.updatedAt | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime) > (now - 90 * 24 * 60 * 60))] | .[].url' | fzf -x --cycle --layout=reverse)
+    repository=$(gh repo list "${organization}" --no-archived --limit 200 --json url,updatedAt --jq '[.[] | select((.updatedAt | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime) > (now - 180 * 24 * 60 * 60))] | .[].url' | fzf -x --cycle --layout=reverse)
     if [ -z "$repository" ]; then
         echo_failure "canceled\n"
         return
