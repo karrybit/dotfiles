@@ -7,3 +7,4 @@ github.com/k1LoW/runn/cmd/runn
 github.com/mattn/memo
 google.golang.org/grpc/cmd/protoc-gen-go-grpc
 google.golang.org/protobuf/cmd/protoc-gen-go
+github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
