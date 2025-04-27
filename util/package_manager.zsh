@@ -22,15 +22,4 @@ function update_all() {
     for repo in $(ghq list); do
         ghq get --update --parallel "$repo"
     done
-
-    # alacritty
-    pushd $(ghq list --full-path alacritty)
-    local tag_name="$(git describe --tags --exact-match)"
-    git switch --detach "$(gh release list --exclude-pre-releases --exclude-drafts --limit 1 --json tagName --jq '.[0].tagName')"
-    local switched_tag_name="$(git describe --tags --exact-match)"
-    if [ "${tag_name}" != "${switched_tag_name}" ]; then
-        make app
-        cp -r target/release/osx/Alacritty.app /Applications/
-    fi
-    popd
 }
