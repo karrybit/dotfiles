@@ -17,7 +17,6 @@ function update_all() {
         # yay -Syu
         # yay -Yc
 
-        $DOTFILES_PATH/go/install.sh
         $DOTFILES_PATH/rust/install.sh
         gcloud components update
 
