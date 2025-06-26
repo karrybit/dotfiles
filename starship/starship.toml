@@ -50,9 +50,6 @@ style = "bright-black"
 [direnv]
 disabled = false
 
-[memory_usage]
-disabled = false
-
 [status]
 disabled = false
 
