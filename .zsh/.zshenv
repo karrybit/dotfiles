@@ -23,6 +23,7 @@ mkdir -p $XDG_CONFIG_HOME/docker
 mkdir -p $XDG_CONFIG_HOME/java
 mkdir -p $XDG_CONFIG_HOME/npm
 mkdir -p $XDG_CONFIG_HOME/pg
+mkdir -p $XDG_CONFIG_HOME/aquaproj-aqua
 
 # export config path using XDG
 export AWS_SHARED_CREDENTIALS_FILE=$XDG_CONFIG_HOME/aws/credentials
@@ -57,9 +58,7 @@ export MYSQL_HISTFILE=$XDG_DATA_HOME/mysql_history
 export NODE_REPL_HISTORY=$XDG_DATA_HOME/node_repl_history
 export RUSTUP_HOME=$XDG_DATA_HOME/rustup
 export VSCODE_PORTABLE=$XDG_DATA_HOME/vscode
-
-export BOOK_HOME=$HOME/Documents/Books
-mkdir -p $BOOK_HOME
+export CLAUDE_CONFIG_DIR=$XDG_CONFIG_HOME/claude
 
 # path
 export PATH=/usr/local/sbin:$PATH
@@ -85,17 +84,6 @@ export PATH="/usr/local/opt/openjdk/bin:$PATH"
 
 # rust
 export PATH=$PATH:$CARGO_HOME/bin
-case "$OSTYPE" in
-darwin*)
-    export RUSTC_WRAPPER="/opt/homebrew/bin/sccache"
-    ;;
-linux*)
-    export RUSTC_WRAPPER="/usr/bin/sccache"
-    ;;
-esac
-
-# haskell
-export GHCUP_USE_XDG_DIRS=1
 
 # volta
 export VOLTA_HOME="$XDG_BIN_HOME/volta"
@@ -111,5 +99,8 @@ export PATH="$PATH:$HOME/.krew/bin"
 export HISTFILE=$ZDOTDIR/.zsh_history
 export HISTSIZE=100000
 export SAVEHIST=100000
+
+export PATH="${AQUA_ROOT_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua}/bin:$PATH"
+export AQUA_PROGRESS_BAR=true
 
 . "/Users/takumikaribe/.local/share/cargo/env"

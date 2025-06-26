@@ -9,5 +9,4 @@ cargo-update
 cargo-upgrades
 cargo-workspaces
 sea-orm-cli
-toml-cli
 wasm-pack
