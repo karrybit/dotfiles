@@ -34,11 +34,6 @@ done
 # direnv
 eval "$(direnv hook zsh)"
 
-# ruby
-[[ -d ~/.rbenv ]] &&
-    export PATH=${HOME}/.rbenv/bin:${PATH} &&
-    eval "$(rbenv init -)"
-
 # kube
 [[ -d ~/.kube ]] &&
     source <(kubectl completion zsh)
