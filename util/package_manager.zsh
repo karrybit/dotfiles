@@ -5,6 +5,11 @@ function update_all() {
     (
         set -eo pipefail
 
+        pushd ~
+        aqua update-aqua
+        aqua install -a
+        popd
+
         # for mac
         pushd ~/dotfiles/homebrew
         brew bundle dump -vf
@@ -19,6 +24,10 @@ function update_all() {
 
         $DOTFILES_PATH/rust/install.sh
         gcloud components update
+
+        pushd ~/dotfiles
+        [ ! -d .venv ] && uv venv
+        popd
 
         for repo in $(ghq list); do
             ghq get --update --parallel "$repo"

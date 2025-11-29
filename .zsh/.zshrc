@@ -35,12 +35,13 @@ done
 eval "$(direnv hook zsh)"
 
 # kube
-[[ -d ~/.kube ]] &&
-    source <(kubectl completion zsh)
+[[ -d ~/.kube ]] && source <(kubectl completion zsh)
 
 # cargo
-[[ -d ~/.local/share/cargo/env ]] &&
-    source "$HOME/.local/share/cargo/env"
+[[ -d ~/.local/share/cargo/env ]] && source "$HOME/.local/share/cargo/env"
+
+# venv
+[[ -d "$DOTFILES_PATH/.venv" ]] && source "$DOTFILES_PATH/.venv/bin/activate"
 
 autoload -U +X bashcompinit && bashcompinit
 complete -o nospace -C /usr/local/bin/terraform terraform

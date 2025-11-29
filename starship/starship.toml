@@ -46,6 +46,7 @@ style = "yellow"
 [python]
 format = "[$virtualenv]($style) "
 style = "bright-black"
+disabled = true
 
 [direnv]
 disabled = false

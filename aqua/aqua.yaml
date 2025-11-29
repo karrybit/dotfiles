@@ -1,0 +1,60 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/aquaproj/aqua/main/json-schema/aqua-yaml.json
+# aqua - Declarative CLI Version Manager
+# https://aquaproj.github.io/
+# checksum:
+#   enabled: true
+#   require_checksum: true
+#   supported_envs:
+#   - all
+registries:
+  - type: standard
+    ref: v4.441.0 # renovate: depName=aquaproj/aqua-registry
+# How to sort: yq -i '.packages |= sort_by(.name)' aqua/aqua.yaml
+packages:
+  - name: BurntSushi/ripgrep@15.1.0
+  - name: GoogleContainerTools/skaffold@v2.17.0
+  - name: ahmetb/kubectx@v0.9.5
+  - name: air-verse/air@v1.63.1
+  - name: aquasecurity/tfsec@v1.28.14
+  - name: astral-sh/uv@0.9.8
+  - name: bootandy/dust@v1.2.3
+  - name: bufbuild/buf@v1.61.0
+  - name: cli/cli@v2.83.1
+  - name: denoland/deno@v2.5.6
+  - name: direnv/direnv@v2.37.1
+  - name: eza-community/eza@v0.23.4
+  - name: go-delve/delve@v1.25.2
+  - name: go-task/task@v3.44.1
+  - name: golang-migrate/migrate@v4.18.3
+  - name: golang/go@go1.25.4
+  - name: golangci/golangci-lint@v2.4.0
+  - name: gradle/gradle-distributions@v9.2.1
+  - name: grafana/k6@v1.2.3
+  - name: hashicorp/terraform@v1.14.0
+  - name: helm/helm@v4.0.1
+  - name: jqlang/jq@jq-1.8.1
+  - name: junegunn/fzf@v0.67.0
+  - name: k1LoW/runn@v0.132.2
+  - name: k1LoW/tbls@v1.86.1
+  - name: kubernetes-sigs/kind@v0.30.0
+  - name: kubernetes-sigs/kustomize@kustomize/v5.8.0
+  - name: kubernetes/kubernetes/kubectl@v1.34.2
+  - name: mike-engel/jwt-cli@6.2.0
+  - name: mikefarah/yq@v4.49.2
+  - name: mozilla/sccache@v0.12.0
+  - name: mvdan/gofumpt@v0.7.0
+  - name: nektos/act@v0.2.82
+  - name: neovim/neovim@v0.11.5
+  - name: orf/gping@gping-v1.20.1
+  - name: protocolbuffers/protobuf/protoc@v33.1
+  - name: rhysd/actionlint@v1.7.9
+  - name: rs/curlie@v1.8.2
+  - name: sharkdp/bat@v0.26.0
+  - name: sharkdp/fd@v10.3.0
+  - name: sharkdp/hyperfine@v1.20.0
+  - name: starship/starship@v1.24.1
+  - name: terraform-linters/tflint@v0.60.0
+  - name: uber-go/mock@v0.6.0
+  - name: volta-cli/volta@v2.0.2
+  - name: x-motemen/ghq@v1.8.0
