@@ -25,10 +25,6 @@ function update_all() {
         $DOTFILES_PATH/rust/install.sh
         gcloud components update
 
-        pushd ~/dotfiles
-        [ ! -d .venv ] && uv venv
-        popd
-
         for repo in $(ghq list); do
             ghq get --update --parallel "$repo"
         done
