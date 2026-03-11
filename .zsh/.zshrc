@@ -50,15 +50,6 @@ if [ -f '/home/karrybit/google-cloud-sdk/path.zsh.inc' ]; then . '/home/karrybit
 if [ -f '/home/karrybit/google-cloud-sdk/completion.zsh.inc' ]; then . '/home/karrybit/google-cloud-sdk/completion.zsh.inc'; fi
 if [[ -f "/opt/homebrew/bin/gcloud" ]]; then export GOOGLE_CLOUD_ACCESS_TOKEN=$(gcloud auth print-access-token); fi
 
-# zsh
-## autosuggestion
-case $(uname -o) in
-Darwin)
-    source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-    ;;
-*) ;;
-esac
-
 ## history
 setopt hist_expire_dups_first
 setopt hist_ignore_all_dups
@@ -76,8 +67,6 @@ export SDKMAN_DIR="$HOME/.sdkman"
 
 # The following lines have been added by Docker Desktop to enable Docker CLI completions.
 fpath=(/Users/takumikaribe/.docker/completions $fpath)
-autoload -Uz compinit
-compinit
 # End of Docker CLI completions
 
 # antidote
@@ -85,3 +74,22 @@ source $(brew --prefix)/opt/antidote/share/antidote/antidote.zsh
 antidote load ~/dotfiles/.zsh/.zsh_plugins.txt
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
+
+fpath=(~/dotfiles/functions $fpath)
+autoload -Uz ~/dotfiles/functions/*
+
+case "${OSTYPE}" in
+darwin*)
+    fpath=(~/dotfiles/functions/darwin $fpath)
+    autoload -Uz ~/dotfiles/functions/darwin/*
+    ;;
+linux*)
+    fpath=(~/dotfiles/functions/linux $fpath)
+    autoload -Uz ~/dotfiles/functions/linux/*
+    ;;
+esac
+
+zle -N fzf-select-history
+bindkey '^r' fzf-select-history
+
+autoload -Uz compinit; compinit

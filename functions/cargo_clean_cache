@@ -1,0 +1,5 @@
+set -x
+rm -rf $CARGO_HOME/git
+rm -rf $CARGO_HOME/registry
+rm -rf $(sccache -s | grep 'Cache location' | awk '{print $5}' | sed -e 's/^"//g; s/"$//g')
+set +x

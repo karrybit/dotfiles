@@ -1,0 +1,10 @@
+dir=$(ghq list --full-path | fzf -x --cycle --layout=reverse)
+if [ -z "$dir" ]; then
+    echo_failure "canceled\n"
+    return
+fi
+
+echo_success "selected "
+echo "$dir"
+
+code "$dir"

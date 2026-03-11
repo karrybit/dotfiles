@@ -1,0 +1,24 @@
+dir=$(ghq list --full-path | fzf -x --cycle --layout=reverse --preview="if [ -f $dir{} ]; then bat --color=always --style=header,grid,numbers $dir{}; fi")
+if [ -z "$dir" ]; then
+    echo_failure "canceled\n"
+    return
+fi
+
+echo_success "selected "
+echo "$dir"
+dir="$dir/"
+
+while [ -d "$dir" ]; do
+    /bin/ls -ap "$dir" | fzf -x --cycle --layout=reverse --preview="if [ -f $dir{} ]; then bat --color=always --style=header,grid,numbers $dir{}; fi" | read s
+    if [ -z "$s" ]; then
+        echo_failure "canceled\n"
+        return
+    fi
+
+    dir="$dir$s"
+
+    echo_success "selected "
+    echo "$dir"
+done
+
+bat "$dir"

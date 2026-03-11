@@ -1,0 +1,4 @@
+case $OSTYPE in
+darwin*) uuidgen | tr "[:upper:]" "[:lower:]" | xargs echo -n | pbcopy ;;
+linux*) uuidgen | tr "[:upper:]" "[:lower:]" | xargs echo -n | pbcopyx ;;
+esac

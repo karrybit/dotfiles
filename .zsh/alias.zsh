@@ -6,8 +6,6 @@ if type brew &>/dev/null; then
     chmod go-w '/opt/homebrew/share'
     chmod -R go-w '/opt/homebrew/share/zsh'
     FPATH=$(brew --prefix)/share/zsh-abbr:$FPATH
-    autoload -Uz compinit
-    compinit
 fi
 
 abbr -S '..'='cd ..'

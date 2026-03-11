@@ -1,0 +1,6 @@
+repository=$(ghq list --full-path | fzf -x --cycle --layout=reverse)
+if [ -z "$repository" ]; then
+    echo_failure "canceled\n"
+    return
+fi
+rm -rf "${repository}"

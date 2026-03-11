@@ -1,0 +1,16 @@
+dir=$(ghq list --full-path | fzf -x --cycle --layout=reverse)
+if [ -z "$dir" ]; then
+    return
+fi
+dir="$dir/"
+
+while [ -d "$dir" ]; do
+    /bin/ls -ap "$dir" | fzf -x --cycle --layout=reverse --preview="if [ -f $dir{} ]; then bat --color=always --style=header,grid,numbers $dir{}; fi" | read s
+    if [ -z "$s" ]; then
+        break
+    fi
+
+    dir="$dir$s"
+done
+
+echo "$dir"

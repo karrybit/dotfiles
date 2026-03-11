@@ -1,0 +1,4 @@
+case $OSTYPE in
+darwin*) echo 'not implemented' ;;
+linux*) date -Iseconds | xargs echo -n | pbcopyx ;;
+esac

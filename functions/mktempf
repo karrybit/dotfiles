@@ -1,0 +1,3 @@
+local tmp_file=$(mktemp)
+local file_name=$(basename $tmp_file)
+ln -s "$tmp_file" "./$file_name"
