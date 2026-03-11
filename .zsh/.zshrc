@@ -19,8 +19,6 @@ Linux)
     ;;
 esac
 
-source $ZDOTDIR/color.zsh
-source $DOTFILES_PATH/util/func.zsh
 source $ZDOTDIR/alias.zsh
 
 # git
