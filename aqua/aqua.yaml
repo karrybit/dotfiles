@@ -50,6 +50,7 @@ packages:
   - name: protocolbuffers/protobuf/protoc@v33.1
   - name: rhysd/actionlint@v1.7.9
   - name: rs/curlie@v1.8.2
+  - name: rust-lang/rustup@1.28.2
   - name: sharkdp/bat@v0.26.0
   - name: sharkdp/fd@v10.3.0
   - name: sharkdp/hyperfine@v1.20.0

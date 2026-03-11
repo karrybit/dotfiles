@@ -24,13 +24,6 @@ cd ~/dotfiles/homebrew
 ./install.sh
 cd ~
 
-# Install the pacakges by go
-cd ~/dotiles/go
-./install.sh
-cd ~
-
-# https://doc.rust-lang.org/cargo/getting-started/installation.html
-curl https://sh.rustup.rs -sSf | sh
 # Install the crates by cargo
 cd ~/dotfiles/rust
 ./install.sh
