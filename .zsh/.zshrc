@@ -79,3 +79,9 @@ fpath=(/Users/takumikaribe/.docker/completions $fpath)
 autoload -Uz compinit
 compinit
 # End of Docker CLI completions
+
+# antidote
+source $(brew --prefix)/opt/antidote/share/antidote/antidote.zsh
+antidote load ~/dotfiles/.zsh/.zsh_plugins.txt
+bindkey '^[[A' history-substring-search-up
+bindkey '^[[B' history-substring-search-down
