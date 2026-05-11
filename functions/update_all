@@ -2,8 +2,9 @@
 (
     set -eo pipefail
 
-    pushd ~
+    pushd ~/dotfiles
     aqua update-aqua
+    aqua update
     aqua install -a
     popd
 
