@@ -1,0 +1,13 @@
+#!/bin/bash
+# run_onchange_: rust/component が変わった時だけ再実行される
+# hash: {{ include "dot_config/rust/component" | sha256sum }}
+set -e
+
+if ! command -v rustup >/dev/null 2>&1; then
+  exit 0
+fi
+
+while IFS= read -r component; do
+  [[ -z "$component" ]] && continue
+  rustup component add "$component"
+done < "${XDG_CONFIG_HOME:-$HOME/.config}/rust/component"

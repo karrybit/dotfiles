@@ -1,0 +1,1 @@
+printf '%s' "$(now)" | clipboard_copy

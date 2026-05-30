@@ -1,0 +1,11 @@
+_require_commands git fzf || return 1
+local selected dir
+selected=$(_fzf_select_worktree) || return
+if [[ -z "$selected" ]]; then
+    echo_failure "canceled\n"
+    return
+fi
+dir=$(echo "$selected" | awk '{print $1}')
+echo_success "selected "
+echo "$dir"
+cd "$dir" || return 1

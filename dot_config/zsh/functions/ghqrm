@@ -1,0 +1,7 @@
+_require_commands ghq fzf || return 1
+repository=$(_fzf_select_ghq_dir)
+if [[ -z "$repository" ]]; then
+    echo_failure "canceled\n"
+    return
+fi
+rm -rf "${repository}"

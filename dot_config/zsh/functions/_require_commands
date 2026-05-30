@@ -1,0 +1,7 @@
+local cmd
+for cmd in "$@"; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        printf "\033[31mrequired command not found: ${cmd}\n\033[0m" >&2
+        return 1
+    fi
+done

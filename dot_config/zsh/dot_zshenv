@@ -1,0 +1,9 @@
+#!/bin/zsh
+# Guard against double-sourcing when sourced explicitly from ~/.zshenv
+[[ -n "$_ZSHENV_SOURCED" ]] && return 0
+export _ZSHENV_SOURCED=1
+: "${ZDOTDIR:=$HOME/.config/zsh}"
+
+for f in "$ZDOTDIR/zshenv.d/"*.zsh(N); do
+    source "$f"
+done

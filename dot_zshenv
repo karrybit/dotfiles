@@ -1,0 +1,6 @@
+#!/bin/zsh
+export ZDOTDIR=$HOME/.config/zsh
+# zsh reads .zshenv only once from the initial ZDOTDIR (HOME when unset).
+# After ZDOTDIR changes here, ~/.config/zsh/.zshenv is NOT automatically sourced.
+# VS Code's shell integration handles this cascade explicitly, but other terminals don't.
+source "$ZDOTDIR/.zshenv"

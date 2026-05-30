@@ -1,0 +1,12 @@
+_require_commands ghq fzf bat vim || return 1
+dir=$(_fzf_select_ghq_dir)
+if [[ -z "$dir" ]]; then
+    echo_failure "canceled\n"
+    return
+fi
+
+echo_success "selected "
+echo "$dir"
+
+dir=$(_fzf_browse_dir "$dir") || { echo_failure "canceled\n"; return; }
+vim "$dir"

@@ -1,0 +1,8 @@
+_require_commands git fzf || return 1
+local selected
+selected=$(_fzf_select_worktree) || return
+if [[ -z "$selected" ]]; then
+    echo_failure "canceled\n"
+    return
+fi
+echo "$selected" | awk '{gsub(/[\[\]]/, "", $NF); print $NF}'

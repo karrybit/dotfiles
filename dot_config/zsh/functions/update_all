@@ -1,0 +1,55 @@
+_require_commands aqua brew ghq gh || return 1
+
+# Use subshell to limit scope of set -eo pipefail
+(
+    set -eo pipefail
+
+    local _profile
+    _profile=$(chezmoi data --format json | jq -r '.profile // "work"')
+
+    # for mac
+    local _brewfile="${XDG_CONFIG_HOME:-$HOME/.config}/homebrew/Brewfile.${_profile}"
+    pushd "${XDG_CONFIG_HOME:-$HOME/.config}/homebrew"
+    # --no-go --no-uv: suppress aqua-proxy calls for aqua-managed go/uv binaries
+    brew bundle dump -f --no-go --no-uv --file "${_brewfile}"
+    brew upgrade
+    brew autoremove
+    brew cleanup
+    popd
+    chezmoi re-add "${_brewfile}"
+    git -C "$(chezmoi source-path)" add "dot_config/homebrew/Brewfile.${_profile}"
+    git -C "$(chezmoi source-path)" diff --cached --quiet || \
+        git -C "$(chezmoi source-path)" commit -m "chore: update Brewfile"
+
+    # Export GitHub token for aqua to avoid rate limits
+    export GITHUB_TOKEN=$(gh auth token)
+
+    local _aqua_config="${XDG_CONFIG_HOME:-$HOME/.config}/aquaproj-aqua/aqua.${_profile}.yaml"
+    aqua update-aqua
+    aqua update --config "${_aqua_config}"
+    aqua install --all --config "${_aqua_config}"
+    chezmoi re-add "${_aqua_config}"
+    git -C "$(chezmoi source-path)" add "dot_config/aquaproj-aqua/aqua.${_profile}.yaml"
+    git -C "$(chezmoi source-path)" diff --cached --quiet || \
+        git -C "$(chezmoi source-path)" commit -m "chore: update aqua ${_profile}"
+
+    # for Arch
+    # yay -Syu
+    # yay -Yc
+
+    if command -v rustup >/dev/null 2>&1; then
+        rustup update
+    fi
+
+    if command -v cargo >/dev/null 2>&1 && command -v cargo-install-update >/dev/null 2>&1; then
+        cargo install-update -a
+    fi
+
+    if command -v gcloud >/dev/null 2>&1; then
+        gcloud components update
+    fi
+
+    for repo in $(ghq list); do
+        ghq get --update --parallel "$repo"
+    done
+)

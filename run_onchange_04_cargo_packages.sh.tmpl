@@ -1,0 +1,13 @@
+#!/bin/bash
+# run_onchange_: rust/package が変わった時だけ再実行される
+# hash: {{ include "dot_config/rust/package" | sha256sum }}
+set -e
+
+if ! command -v cargo >/dev/null 2>&1; then
+  exit 0
+fi
+
+while IFS= read -r package; do
+  [[ -z "$package" ]] && continue
+  cargo install "$package"
+done < "${XDG_CONFIG_HOME:-$HOME/.config}/rust/package"

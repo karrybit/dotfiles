@@ -1,0 +1,7 @@
+dir=$(_fzf_select_ghq_dir)
+if [[ -z "$dir" ]]; then
+    return
+fi
+
+dir=$(_fzf_browse_dir "$dir") || return
+echo "$dir"

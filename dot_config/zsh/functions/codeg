@@ -1,0 +1,11 @@
+_require_commands ghq fzf code || return 1
+dir=$(_fzf_select_ghq_dir)
+if [[ -z "$dir" ]]; then
+    echo_failure "canceled\n"
+    return
+fi
+
+echo_success "selected "
+echo "$dir"
+
+code "$dir"

@@ -1,0 +1,4 @@
+case "${OSTYPE}" in
+darwin*) date '+%Y-%m-%dT%H:%M:%S%z' ;;
+linux*)  date -Iseconds ;;
+esac
