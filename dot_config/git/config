@@ -1,6 +1,6 @@
 [user]
     name = karrybit
-    email = {{ .email }}
+    email = karrybit@users.noreply.github.com
 
 [commit]
     template = ~/.stCommitMsg

@@ -44,7 +44,6 @@ Edit `~/.config/chezmoi/chezmoi.toml` directly:
 ```toml
 [data]
     name = "karrybit"
-    email = "your.email@example.com"
     profile = "work"   # or "personal"
 ```
 
