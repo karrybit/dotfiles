@@ -7,7 +7,7 @@ if ! command -v brew >/dev/null 2>&1; then
     return 0
 fi
 
-_require_commands chezmoi git jq || return 1
+__require_commands chezmoi git jq || return 1
 
 (
     set -eo pipefail
@@ -24,7 +24,7 @@ _require_commands chezmoi git jq || return 1
     brew autoremove
     brew cleanup
 
-    _chezmoi_commit_file \
+    __readd_and_commit_chezmoi_file \
         "${_brewfile}" \
         "dot_config/homebrew/Brewfile.${_profile}" \
         "chore: update Brewfile"

@@ -67,6 +67,9 @@ source "$XDG_CONFIG_HOME/zsh/lib/_fzf.zsh"
 fpath=("$XDG_CONFIG_HOME/zsh/functions" $fpath)
 autoload -Uz "$XDG_CONFIG_HOME/zsh/functions/"*(N.)
 
+fpath=("$XDG_CONFIG_HOME/zsh/widgets" $fpath)
+autoload -Uz "$XDG_CONFIG_HOME/zsh/widgets/"*(N.)
+
 case "${OSTYPE}" in
 darwin*)
     fpath=("$XDG_CONFIG_HOME/zsh/functions/darwin" $fpath)
@@ -78,8 +81,8 @@ linux*)
     ;;
 esac
 
-zle -N fzf-select-history
-bindkey '^r' fzf-select-history
+zle -N __select_history_with_fzf
+bindkey '^r' __select_history_with_fzf
 
 # Interactive init for manually installed tools (gcloud, SDKMAN, etc.)
 for f in "$ZDOTDIR/env.d/"*.zsh(N); do source "$f"; done

@@ -3,7 +3,7 @@ if ! command -v aqua >/dev/null 2>&1; then
     return 0
 fi
 
-_require_commands chezmoi git jq || return 1
+__require_commands chezmoi git jq || return 1
 
 (
     set -eo pipefail
@@ -26,7 +26,7 @@ _require_commands chezmoi git jq || return 1
     aqua update --config "${_aqua_config}"
     aqua install --all --config "${_aqua_config}"
 
-    _chezmoi_commit_file \
+    __readd_and_commit_chezmoi_file \
         "${_aqua_config}" \
         "dot_config/aquaproj-aqua/aqua.${_profile}.yaml" \
         "chore: update aqua ${_profile}"

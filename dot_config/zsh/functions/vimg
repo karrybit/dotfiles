@@ -1,4 +1,4 @@
-_require_commands ghq fzf bat vim || return 1
+__require_commands ghq fzf bat vim || return 1
 dir=$(_fzf_select_ghq_dir)
 if [[ -z "$dir" ]]; then
     echo_failure "canceled\n"

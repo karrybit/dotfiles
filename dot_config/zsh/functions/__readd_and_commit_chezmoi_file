@@ -3,7 +3,7 @@ local _source_rel_path=$2
 local _message=$3
 local _source_path
 
-_require_commands chezmoi git || return 1
+__require_commands chezmoi git || return 1
 
 _source_path=$(chezmoi source-path) || return 1
 
