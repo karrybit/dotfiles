@@ -19,6 +19,7 @@ vim.opt.rtp:prepend(lazypath)
 require("lazy").setup({ { import = "plugins" } }, {
   ui               = { border = "rounded" },
   change_detection = { notify = false },
+  rocks            = { enabled = false },
 })
 
 require("keymaps")

@@ -44,5 +44,6 @@ packages:
   - name: sharkdp/hyperfine@v1.20.0
   - name: starship/starship@v1.25.1
   - name: terraform-linters/tflint@v0.62.1
+  - name: tree-sitter/tree-sitter@v0.26.9
   - name: volta-cli/volta@v2.0.2
   - name: x-motemen/ghq@v1.10.1

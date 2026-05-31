@@ -23,14 +23,5 @@ map("x", "p", '"_dP', { desc = "Paste without yanking" })
 map("n", "[b", "<cmd>bprevious<cr>", { desc = "Prev buffer" })
 map("n", "]b", "<cmd>bnext<cr>",     { desc = "Next buffer" })
 
--- File tree (nvim-tree, replaces NERDTree)
--- Old: <C-t> NERDTreeToggle, <C-n> NERDTree, <leader>n NERDTreeFocus, <C-f> NERDTreeFind
-map("n", "<leader>e",  "<cmd>NvimTreeToggle<cr>",   { desc = "Toggle file tree" })
-map("n", "<leader>E",  "<cmd>NvimTreeFocus<cr>",    { desc = "Focus file tree" })
-map("n", "<leader>ef", "<cmd>NvimTreeFindFile<cr>", { desc = "Find file in tree" })
-
--- Terminal (toggleterm, replaces neoterm)
--- Old: <C-t><C-t> toggle, <C-n><C-n> exit terminal mode
-map("n", "<leader>t", "<cmd>ToggleTerm<cr>",  { desc = "Toggle terminal" })
-map("t", "<leader>t", "<cmd>ToggleTerm<cr>",  { desc = "Toggle terminal" })
-map("t", "<C-n><C-n>", [[<C-\><C-n>]],        { desc = "Exit terminal mode" })
+-- Terminal mode escape
+map("t", "<C-n><C-n>", [[<C-\><C-n>]], { desc = "Exit terminal mode" })

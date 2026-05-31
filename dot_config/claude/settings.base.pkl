@@ -2,7 +2,41 @@
 // Keep company-specific providers, plugin marketplaces, and credentials in
 // $XDG_CONFIG_HOME/claude/settings.work.pkl instead.
 
-settings: Dynamic = new Dynamic {}
+settings: Dynamic = new Dynamic {
+  env {
+    ["ANTHROPIC_MODEL"] = "claude-sonnet-4-6"
+    ["ANTHROPIC_DEFAULT_OPUS_MODEL"] = "claude-opus-4-8"
+    ["ANTHROPIC_DEFAULT_SONNET_MODEL"] = "claude-sonnet-4-6"
+    ["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = "claude-haiku-4-5@20251001"
+    ["CLAUDE_CODE_SESSIONEND_HOOKS_TIMEOUT_MS"] = "60000"
+    ["ENABLE_TOOL_SEARCH"] = "true"
+  }
+  permissions {
+    allow {
+      "Read(~/.local/share/go/*)"
+      "Read(~/work/*)"
+    }
+  }
+  worktree {
+    baseRef = "head"
+  }
+  statusLine {
+    type = "command"
+    command = "~/.config/claude/statusline.sh"
+    refreshInterval = 5
+  }
+  enabledPlugins {
+    ["usage-collector@awesome-claude-marketplace"] = true
+    ["skill-creator@claude-plugins-official"] = true
+    ["slack@claude-plugins-official"] = true
+    ["superpowers@claude-plugins-official"] = true
+    ["gopls-lsp@claude-plugins-official"] = true
+    ["typescript-lsp@claude-plugins-official"] = true
+  }
+  alwaysThinkingEnabled = true
+  effortLevel = "xhigh"
+  autoUpdatesChannel = "stable"
+}
 
 output {
   value = settings
