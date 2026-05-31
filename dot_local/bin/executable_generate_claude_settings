@@ -1,0 +1,28 @@
+#!/bin/bash
+set -euo pipefail
+
+profile="$(chezmoi execute-template '{{ .profile }}')"
+claude_config_dir="${CLAUDE_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/claude}"
+base_pkl="$claude_config_dir/settings.base.pkl"
+profile_pkl="$claude_config_dir/settings.${profile}.pkl"
+settings_json="$claude_config_dir/settings.json"
+
+mkdir -p "$claude_config_dir"
+
+if [ ! -f "$base_pkl" ]; then
+  echo "missing Claude Code base settings: $base_pkl" >&2
+  exit 1
+fi
+
+source_pkl="$base_pkl"
+if [ -f "$profile_pkl" ]; then
+  source_pkl="$profile_pkl"
+fi
+
+tmp_dir="$(mktemp -d)"
+trap 'rm -rf "$tmp_dir"' EXIT
+
+tmp_json="$tmp_dir/settings.json"
+
+pkl eval -f json "$source_pkl" > "$tmp_json"
+mv "$tmp_json" "$settings_json"

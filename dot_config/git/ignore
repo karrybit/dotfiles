@@ -35,3 +35,5 @@ Temporary Items
 .tours
 
 **/.claude/settings.local.json
+**/.config/claude/settings.json
+**/.config/claude/settings.work.pkl

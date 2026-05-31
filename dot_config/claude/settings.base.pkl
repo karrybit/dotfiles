@@ -1,0 +1,10 @@
+// Claude Code settings shared by all local profiles.
+// Keep company-specific providers, plugin marketplaces, and credentials in
+// $XDG_CONFIG_HOME/claude/settings.work.pkl instead.
+
+settings: Dynamic = new Dynamic {}
+
+output {
+  value = settings
+  renderer = new JsonRenderer {}
+}

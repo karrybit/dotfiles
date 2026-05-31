@@ -1,0 +1,5 @@
+amends "settings.base.pkl"
+
+// Personal-only Claude Code settings.
+settings {
+}

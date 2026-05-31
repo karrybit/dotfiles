@@ -5,3 +5,7 @@ README.md
 .config/zsh/.zsh_history
 .config/zsh/.zcompdump
 .config/zsh/.zsh_sessions
+
+# Claude Code generated/local settings
+.config/claude/settings.json
+.config/claude/settings.work.pkl

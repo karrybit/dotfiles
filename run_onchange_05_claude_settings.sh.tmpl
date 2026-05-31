@@ -1,0 +1,12 @@
+#!/bin/bash
+# run_onchange_: Claude Code settings source が変わった時だけ再実行される
+# base hash: {{ include "dot_config/claude/settings.base.pkl" | sha256sum }}
+# personal hash: {{ include "dot_config/claude/settings.personal.pkl" | sha256sum }}
+# generator hash: {{ include "dot_local/bin/executable_generate_claude_settings" | sha256sum }}
+# profile: {{ .profile }}
+{{- $xdgConfigHome := env "XDG_CONFIG_HOME" | default (printf "%s/.config" .chezmoi.homeDir) }}
+{{- $workSettings := printf "%s/claude/settings.work.pkl" $xdgConfigHome }}
+# work hash: {{ if eq .profile "work" }}{{ output "sh" "-c" (printf "if [ -f %q ]; then shasum -a 256 %q; else printf absent; fi" $workSettings $workSettings) }}{{ else }}ignored{{ end }}
+set -euo pipefail
+
+generate_claude_settings
