@@ -1,0 +1,15 @@
+local _failed=0
+
+if command -v rustup >/dev/null 2>&1; then
+    rustup update || _failed=1
+fi
+
+if command -v cargo >/dev/null 2>&1 && command -v cargo-install-update >/dev/null 2>&1; then
+    cargo install-update -a || _failed=1
+fi
+
+if (( _failed != 0 )); then
+    printf "\033[33mrust tool update failed; continuing\033[0m\n" >&2
+fi
+
+return 0

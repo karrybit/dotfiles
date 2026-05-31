@@ -1,0 +1,11 @@
+_require_commands chezmoi git jq || return 1
+
+(
+    set -eo pipefail
+
+    upbrew
+    upaqua
+    uprust
+    upgcloud
+    upghq
+)

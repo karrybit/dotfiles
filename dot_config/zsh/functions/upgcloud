@@ -1,0 +1,8 @@
+if ! command -v gcloud >/dev/null 2>&1; then
+    return 0
+fi
+
+gcloud components update || \
+    printf "\033[33mgcloud components update failed; continuing\033[0m\n" >&2
+
+return 0

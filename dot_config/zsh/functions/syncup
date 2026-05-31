@@ -1,0 +1,35 @@
+_require_commands chezmoi git uppkg || return 1
+
+# Use a subshell to keep strict mode and locals scoped to this command.
+(
+    set -eo pipefail
+
+    local _source_path
+    _source_path=$(chezmoi source-path)
+
+    if [[ -n "$(git -C "${_source_path}" status --porcelain)" ]]; then
+        printf "\033[31mchezmoi source repo has uncommitted changes\033[0m\n" >&2
+        git -C "${_source_path}" status --short >&2
+        exit 1
+    fi
+
+    local _chezmoi_status
+    _chezmoi_status=$(chezmoi status)
+    if [[ -n "${_chezmoi_status}" ]]; then
+        printf "\033[31mchezmoi has unapplied differences\033[0m\n" >&2
+        printf "%s\n" "${_chezmoi_status}" >&2
+        exit 1
+    fi
+
+    chezmoi update
+
+    uppkg
+
+    local _ahead
+    _ahead=$(git -C "${_source_path}" rev-list --count @{upstream}..HEAD 2>/dev/null || printf "0")
+    if (( _ahead > 0 )); then
+        git -C "${_source_path}" push
+    fi
+
+    chezmoi apply
+)

@@ -139,13 +139,22 @@ chezmoi diff ~/.config/zsh/.zshrc
 
 ---
 
-### Update packages
+### Sync and refresh everything
 
 ```sh
-update_all
+syncup
 ```
 
-Runs the package and tool update routine defined in `update_all`.
+Pulls and applies the latest dotfiles, updates packages and tools, pushes any
+generated dotfile commits, then applies the final source state.
+
+### Update packages and tools only
+
+```sh
+uppkg
+```
+
+Runs package and tool updates without pulling, pushing, or applying dotfiles.
 
 ---
 

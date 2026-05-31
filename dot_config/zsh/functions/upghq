@@ -1,0 +1,17 @@
+if ! command -v ghq >/dev/null 2>&1; then
+    return 0
+fi
+
+local _repo
+local _failed=0
+
+while IFS= read -r _repo; do
+    [[ -z "${_repo}" ]] && continue
+    ghq get --update --parallel "${_repo}" || _failed=1
+done < <(ghq list)
+
+if (( _failed != 0 )); then
+    printf "\033[33mone or more ghq repositories failed to update; continuing\033[0m\n" >&2
+fi
+
+return 0
