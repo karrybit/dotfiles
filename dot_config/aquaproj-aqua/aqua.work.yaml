@@ -49,7 +49,7 @@ packages:
   - name: mikefarah/yq@v4.53.2
   - name: mozilla/sccache@v0.15.0
   - name: mvdan/gofumpt@v0.10.0
-  - name: nektos/act@v0.2.88
+  - name: nektos/act@v0.2.89
   - name: neovim/neovim@v0.12.2
   - name: nickel-lang/nickel@1.16.0
   - name: orf/gping@gping-v1.20.1
