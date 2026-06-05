@@ -1,0 +1,4 @@
+interface:
+  display_name: "Manage chezmoi dotfiles"
+  short_description: "Safely change and verify this chezmoi repository"
+  default_prompt: "Use $manage-chezmoi-dotfiles to make and verify this dotfiles change."

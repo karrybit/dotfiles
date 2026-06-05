@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audit dotfiles bootstrap"
+  short_description: "Assess whether dotfiles bootstrap works on a new machine"
+  default_prompt: "Use $audit-dotfiles-bootstrap to audit this dotfiles repository for new-machine bootstrap risks."

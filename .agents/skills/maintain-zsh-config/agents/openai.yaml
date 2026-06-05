@@ -1,0 +1,4 @@
+interface:
+  display_name: "Maintain zsh config"
+  short_description: "Safely change and verify this zsh configuration"
+  default_prompt: "Use $maintain-zsh-config to implement and verify this zsh configuration change."

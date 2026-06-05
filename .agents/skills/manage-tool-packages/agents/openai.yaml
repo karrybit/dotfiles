@@ -1,0 +1,4 @@
+interface:
+  display_name: "Manage tool packages"
+  short_description: "Update package manifests and profile-specific tools"
+  default_prompt: "Use $manage-tool-packages to change or update packages in this dotfiles repository."

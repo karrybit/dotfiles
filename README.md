@@ -7,9 +7,15 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/).
 ```
 ~/.local/share/chezmoi/   ← source (this repository)
 ~/.config/                ← live (files read by each application)
+~/.agents/skills/         ← user-level Codex skills
 ```
 
 `chezmoi apply` deploys source → live. The `dot_` prefix is converted to `.` (e.g. `dot_config/` → `~/.config/`).
+
+User-level Codex skills are managed under `dot_agents/skills/` and deploy to
+`~/.agents/skills/`. Restart Codex if a newly applied skill is not detected.
+Repository-specific Codex skills live under `.agents/skills/` and remain
+source-only through their entries in `.chezmoiignore`.
 
 ---
 

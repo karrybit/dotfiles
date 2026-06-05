@@ -9,6 +9,12 @@ README.md
 .config/tmux/CLAUDE.md
 .config/tmux/README.md
 
+# Repository-specific Codex skills
+.agents/skills/audit-dotfiles-bootstrap
+.agents/skills/maintain-zsh-config
+.agents/skills/manage-chezmoi-dotfiles
+.agents/skills/manage-tool-packages
+
 # Runtime artifacts
 .config/zsh/.zsh_history
 .config/zsh/.zcompdump
