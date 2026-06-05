@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audit agent skills"
+  short_description: "Audit skill quality, overlap, and maintainability"
+  default_prompt: "Use $audit-agent-skills to audit these agent skills and report focused improvements."

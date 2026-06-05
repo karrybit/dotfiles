@@ -1,0 +1,4 @@
+interface:
+  display_name: "Manage agent skills"
+  short_description: "Create, place, update, and remove agent skills"
+  default_prompt: "Use $manage-agent-skills to design and safely manage this agent skill."
