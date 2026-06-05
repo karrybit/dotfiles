@@ -1,0 +1,444 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["pyyaml>=6,<7"]
+# ///
+"""Codex skill evaluation CLI inspired by the empirical workflow of waxa."""
+
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+VERSION = "0.1.0"
+SELF_REPORT = """\
+
+End your response with this exact structure:
+
+## Self-report
+- Phases: <brief phase summary ending with OK or FAIL>
+- Unclear points: <none, or concise list>
+- Discretionary fill-ins: <none, or concise list>
+- Retries: <integer>
+"""
+
+
+def fail(message: str, code: int = 1) -> None:
+    print(f"cowaxa: {message}", file=sys.stderr)
+    raise SystemExit(code)
+
+
+def load_yaml(path: Path) -> dict[str, Any]:
+    try:
+        data = yaml.safe_load(path.read_text())
+    except (OSError, yaml.YAMLError) as exc:
+        fail(f"cannot read {path}: {exc}")
+    if not isinstance(data, dict):
+        fail(f"{path}: expected a YAML mapping")
+    return data
+
+
+def dump_yaml(path: Path, data: dict[str, Any]) -> None:
+    path.write_text(yaml.safe_dump(data, sort_keys=False))
+
+
+def find_skill_dir(eval_path: Path, config: dict[str, Any]) -> Path:
+    explicit = config.get("skill_path")
+    if explicit:
+        return (eval_path.parent / str(explicit)).resolve()
+    if eval_path.parent.name == "evals":
+        return eval_path.parent.parent.resolve()
+    fail(f"{eval_path}: set skill_path or place eval.yaml under <skill>/evals/")
+
+
+def task_paths(eval_path: Path, config: dict[str, Any]) -> list[Path]:
+    patterns = config.get("tasks", ["tasks/*.yaml"])
+    if isinstance(patterns, str):
+        patterns = [patterns]
+    paths: list[Path] = []
+    for pattern in patterns:
+        paths.extend(sorted(eval_path.parent.glob(str(pattern))))
+    if not paths:
+        fail(f"{eval_path}: no tasks matched {patterns}")
+    return paths
+
+
+def parse_self_report(output: str) -> dict[str, Any]:
+    marker = "## Self-report"
+    if marker not in output:
+        return {"present": False, "phases_ok": False, "unclear": None, "retries": None}
+    tail = output.rsplit(marker, 1)[1]
+    fields: dict[str, str] = {}
+    for line in tail.splitlines():
+        match = re.match(r"^-\s*([^:]+):\s*(.*)$", line.strip())
+        if match:
+            fields[match.group(1).lower()] = match.group(2).strip()
+    unclear = fields.get("unclear points", "")
+    retries_text = fields.get("retries", "")
+    retries = int(retries_text) if retries_text.isdigit() else None
+    return {
+        "present": True,
+        "phases_ok": fields.get("phases", "").upper().endswith("OK"),
+        "unclear": 0 if unclear.lower() == "none" else (1 if unclear else None),
+        "retries": retries,
+    }
+
+
+def grade(output: str, task: dict[str, Any]) -> dict[str, Any]:
+    expected = task.get("expected", {})
+    if not isinstance(expected, dict):
+        expected = {}
+    checks: list[dict[str, Any]] = []
+
+    for text in expected.get("output_contains", []):
+        checks.append({"name": f"contains:{text}", "passed": str(text) in output})
+    for text in expected.get("output_not_contains", []):
+        checks.append({"name": f"not_contains:{text}", "passed": str(text) not in output})
+    for pattern in expected.get("regex_match", []):
+        try:
+            passed = re.search(str(pattern), output, re.MULTILINE) is not None
+        except re.error:
+            passed = False
+        checks.append({"name": f"regex:{pattern}", "passed": passed})
+
+    report = parse_self_report(output)
+    if expected.get("require_self_report", True):
+        checks.append({"name": "self_report:present", "passed": report["present"]})
+    if expected.get("require_phases_ok", True):
+        checks.append({"name": "self_report:phases_ok", "passed": report["phases_ok"]})
+    max_unclear = expected.get("max_unclear")
+    if max_unclear is not None:
+        checks.append(
+            {
+                "name": f"self_report:max_unclear:{max_unclear}",
+                "passed": report["unclear"] is not None
+                and report["unclear"] <= int(max_unclear),
+            }
+        )
+    max_retries = expected.get("max_retries")
+    if max_retries is not None:
+        checks.append(
+            {
+                "name": f"self_report:max_retries:{max_retries}",
+                "passed": report["retries"] is not None
+                and report["retries"] <= int(max_retries),
+            }
+        )
+
+    passed = all(check["passed"] for check in checks) if checks else report["present"]
+    return {"passed": passed, "checks": checks, "self_report": report}
+
+
+def build_prompt(task: dict[str, Any], skill_text: str | None) -> str:
+    inputs = task.get("inputs", {})
+    prompt = inputs.get("prompt") if isinstance(inputs, dict) else None
+    if not isinstance(prompt, str) or not prompt.strip():
+        fail(f"task {task.get('id', '<unknown>')}: inputs.prompt is required")
+    parts = [
+        "Complete the following evaluation scenario. Return only the requested deliverable.",
+    ]
+    if skill_text is not None:
+        parts.extend(
+            [
+                "",
+                "Use the following skill instructions for this scenario:",
+                "",
+                skill_text,
+            ]
+        )
+    else:
+        parts.extend(
+            [
+                "",
+                "Baseline condition: Do not invoke, read, or use any agent skill.",
+            ]
+        )
+    parts.extend(["", "Scenario:", "", prompt.strip(), SELF_REPORT])
+    return "\n".join(parts)
+
+
+def run_codex(prompt: str, cwd: Path, model: str | None, timeout: int) -> dict[str, Any]:
+    with tempfile.NamedTemporaryFile(delete=False) as output_file:
+        output_path = Path(output_file.name)
+    command = [
+        "codex",
+        "exec",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "--sandbox",
+        "read-only",
+        "--color",
+        "never",
+        "--output-last-message",
+        str(output_path),
+        "-C",
+        str(cwd),
+    ]
+    if model:
+        command.extend(["--model", model])
+    command.append("-")
+
+    started = dt.datetime.now(dt.UTC)
+    try:
+        completed = subprocess.run(
+            command,
+            input=prompt,
+            text=True,
+            capture_output=True,
+            timeout=timeout,
+            check=False,
+        )
+        output = output_path.read_text() if output_path.exists() else ""
+    except subprocess.TimeoutExpired as exc:
+        return {
+            "exit_code": 124,
+            "duration_seconds": timeout,
+            "output": "",
+            "stderr": f"timeout: {exc}",
+        }
+    except OSError as exc:
+        return {
+            "exit_code": 127,
+            "duration_seconds": 0,
+            "output": "",
+            "stderr": str(exc),
+        }
+    finally:
+        output_path.unlink(missing_ok=True)
+    duration = (dt.datetime.now(dt.UTC) - started).total_seconds()
+    return {
+        "exit_code": completed.returncode,
+        "duration_seconds": round(duration, 3),
+        "output": output,
+        "stderr": completed.stderr[-4000:],
+    }
+
+
+def audit_skill(skill_dir: Path) -> list[dict[str, str]]:
+    findings: list[dict[str, str]] = []
+    skill_file = skill_dir / "SKILL.md"
+    if not skill_file.is_file():
+        return [{"severity": "error", "message": "missing SKILL.md"}]
+    text = skill_file.read_text()
+    match = re.match(r"^---\n(.*?)\n---\n", text, re.DOTALL)
+    if not match:
+        findings.append({"severity": "error", "message": "invalid frontmatter"})
+        return findings
+    try:
+        frontmatter = yaml.safe_load(match.group(1))
+    except yaml.YAMLError as exc:
+        findings.append({"severity": "error", "message": f"invalid YAML: {exc}"})
+        return findings
+    if not isinstance(frontmatter, dict):
+        findings.append({"severity": "error", "message": "frontmatter must be a mapping"})
+        return findings
+    if frontmatter.get("name") != skill_dir.name:
+        findings.append({"severity": "error", "message": "name does not match directory"})
+    if not frontmatter.get("description"):
+        findings.append({"severity": "error", "message": "missing description"})
+    extra = set(frontmatter) - {"name", "description"}
+    if extra:
+        findings.append(
+            {"severity": "warning", "message": f"unexpected frontmatter fields: {sorted(extra)}"}
+        )
+    if len(text.splitlines()) > 500:
+        findings.append({"severity": "warning", "message": "SKILL.md exceeds 500 lines"})
+    if re.search(r"TODO|\[TODO", text):
+        findings.append({"severity": "warning", "message": "SKILL.md contains TODO markers"})
+    if not (skill_dir / "agents" / "openai.yaml").is_file():
+        findings.append({"severity": "warning", "message": "missing agents/openai.yaml"})
+    return findings
+
+
+def command_doctor(args: argparse.Namespace) -> None:
+    payload = {
+        "cowaxa_version": VERSION,
+        "codex": shutil.which("codex"),
+        "uv": shutil.which("uv"),
+        "ready": bool(shutil.which("codex") and shutil.which("uv")),
+    }
+    if args.json:
+        print(json.dumps(payload, indent=2))
+    else:
+        for key, value in payload.items():
+            print(f"{key}: {value}")
+    raise SystemExit(0 if payload["ready"] else 1)
+
+
+def command_init(args: argparse.Namespace) -> None:
+    skill_dir = Path(args.skill_dir).resolve()
+    if not (skill_dir / "SKILL.md").is_file():
+        fail(f"{skill_dir}: SKILL.md not found")
+    eval_dir = skill_dir / "evals"
+    tasks_dir = eval_dir / "tasks"
+    if eval_dir.exists() and not args.force:
+        fail(f"{eval_dir} already exists; pass --force to overwrite templates")
+    tasks_dir.mkdir(parents=True, exist_ok=True)
+    eval_data = {
+        "name": f"{skill_dir.name}-eval",
+        "config": {"trials_per_task": 1, "timeout_seconds": 180},
+        "tasks": ["tasks/*.yaml"],
+    }
+    task_base = {
+        "inputs": {"prompt": "Replace with a realistic user request."},
+        "expected": {
+            "output_contains": [],
+            "require_self_report": True,
+            "require_phases_ok": True,
+            "max_unclear": 0,
+            "max_retries": 2,
+        },
+    }
+    dump_yaml(eval_dir / "eval.yaml", eval_data)
+    dump_yaml(
+        tasks_dir / "scenario-typical.yaml",
+        {"id": "typical", "name": "Typical scenario", **task_base},
+    )
+    dump_yaml(
+        tasks_dir / "scenario-edge.yaml",
+        {"id": "edge", "name": "Edge scenario", **task_base},
+    )
+    (eval_dir / ".gitignore").write_text("results/\n")
+    print(f"Created {eval_dir}")
+
+
+def command_audit(args: argparse.Namespace) -> None:
+    skill_dir = Path(args.skill_dir).resolve()
+    findings = audit_skill(skill_dir)
+    payload = {"skill": str(skill_dir), "findings": findings}
+    if args.json:
+        print(json.dumps(payload, indent=2))
+    elif findings:
+        for finding in findings:
+            print(f"{finding['severity'].upper()}: {finding['message']}")
+    else:
+        print(f"{skill_dir}: no findings")
+    raise SystemExit(1 if any(f["severity"] == "error" for f in findings) else 0)
+
+
+def command_eval(args: argparse.Namespace) -> None:
+    eval_path = Path(args.eval_file).resolve()
+    config = load_yaml(eval_path)
+    skill_dir = find_skill_dir(eval_path, config)
+    skill_file = skill_dir / "SKILL.md"
+    if not skill_file.is_file():
+        fail(f"{skill_file}: not found")
+    skill_text = skill_file.read_text()
+    settings = config.get("config", {})
+    if not isinstance(settings, dict):
+        settings = {}
+    trials = args.trials or int(settings.get("trials_per_task", 1))
+    timeout = args.timeout or int(settings.get("timeout_seconds", 180))
+    model = args.model or settings.get("model")
+    tasks = [load_yaml(path) for path in task_paths(eval_path, config)]
+    if args.task:
+        tasks = [task for task in tasks if task.get("id") == args.task]
+        if not tasks:
+            fail(f"task not found: {args.task}")
+    modes = ["with_skill", "without_skill"] if args.baseline else ["with_skill"]
+    run_id = dt.datetime.now(dt.UTC).strftime("%Y%m%dT%H%M%SZ")
+    result_dir = eval_path.parent / "results" / run_id
+    result_dir.mkdir(parents=True, exist_ok=True)
+    records: list[dict[str, Any]] = []
+
+    for task in tasks:
+        task_id = str(task.get("id", "unnamed"))
+        for mode in modes:
+            for trial in range(1, trials + 1):
+                print(f"[{task_id}] {mode} trial {trial}/{trials}", file=sys.stderr)
+                prompt = build_prompt(task, skill_text if mode == "with_skill" else None)
+                execution = run_codex(prompt, skill_dir, model, timeout)
+                result = grade(execution["output"], task)
+                execution_check = {
+                    "name": "codex_exit_code:0",
+                    "passed": execution["exit_code"] == 0,
+                }
+                result["checks"].insert(0, execution_check)
+                result["passed"] = result["passed"] and execution_check["passed"]
+                record = {
+                    "task": task_id,
+                    "mode": mode,
+                    "trial": trial,
+                    "execution": execution,
+                    "grade": result,
+                }
+                records.append(record)
+                output_dir = result_dir / task_id / mode
+                output_dir.mkdir(parents=True, exist_ok=True)
+                (output_dir / f"output-trial-{trial}.txt").write_text(execution["output"])
+                (output_dir / f"result-trial-{trial}.json").write_text(
+                    json.dumps(record, indent=2)
+                )
+
+    summary: dict[str, Any] = {"run_id": run_id, "records": len(records), "modes": {}}
+    for mode in modes:
+        mode_records = [record for record in records if record["mode"] == mode]
+        passed = sum(1 for record in mode_records if record["grade"]["passed"])
+        summary["modes"][mode] = {
+            "passed": passed,
+            "total": len(mode_records),
+            "pass_rate": passed / len(mode_records) if mode_records else 0,
+        }
+    if args.baseline:
+        summary["delta"] = (
+            summary["modes"]["with_skill"]["pass_rate"]
+            - summary["modes"]["without_skill"]["pass_rate"]
+        )
+    (result_dir / "summary.json").write_text(json.dumps(summary, indent=2))
+    print(json.dumps(summary, indent=2))
+    raise SystemExit(
+        0 if summary["modes"]["with_skill"]["passed"] == summary["modes"]["with_skill"]["total"] else 1
+    )
+
+
+def parser() -> argparse.ArgumentParser:
+    root = argparse.ArgumentParser(
+        prog="cowaxa",
+        description="Evaluate Codex skills with scenarios and baseline comparisons.",
+    )
+    root.add_argument("--version", action="version", version=f"%(prog)s {VERSION}")
+    sub = root.add_subparsers(dest="command", required=True)
+
+    doctor = sub.add_parser("doctor", help="Check runtime prerequisites")
+    doctor.add_argument("--json", action="store_true")
+    doctor.set_defaults(func=command_doctor)
+
+    init = sub.add_parser("init", help="Scaffold skill-local eval files")
+    init.add_argument("skill_dir", nargs="?", default=".")
+    init.add_argument("--force", action="store_true")
+    init.set_defaults(func=command_init)
+
+    audit = sub.add_parser("audit", help="Run static skill checks")
+    audit.add_argument("skill_dir")
+    audit.add_argument("--json", action="store_true")
+    audit.set_defaults(func=command_audit)
+
+    evaluate = sub.add_parser("eval", help="Run Codex skill scenarios")
+    evaluate.add_argument("eval_file")
+    evaluate.add_argument("--baseline", action="store_true")
+    evaluate.add_argument("--task")
+    evaluate.add_argument("--model")
+    evaluate.add_argument("--trials", type=int)
+    evaluate.add_argument("--timeout", type=int)
+    evaluate.set_defaults(func=command_eval)
+    return root
+
+
+def main() -> None:
+    args = parser().parse_args()
+    args.func(args)
+
+
+if __name__ == "__main__":
+    main()

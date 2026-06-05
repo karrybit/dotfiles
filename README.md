@@ -17,6 +17,9 @@ User-level Codex skills are managed under `dot_agents/skills/` and deploy to
 Repository-specific Codex skills live under `.agents/skills/` and remain
 source-only through their entries in `.chezmoiignore`.
 
+`cowaxa` is a user-level CLI for evaluating Codex skills with scenario-based
+tests and with-skill versus without-skill baseline comparisons.
+
 ---
 
 ## Usage

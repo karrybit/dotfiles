@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cowaxa"
+  short_description: "Evaluate Codex skills with scenarios and baselines"
+  default_prompt: "Use $cowaxa to create and run a Codex skill evaluation."
