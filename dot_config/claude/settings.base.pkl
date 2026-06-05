@@ -36,6 +36,39 @@ settings: Dynamic = new Dynamic {
   alwaysThinkingEnabled = true
   effortLevel = "xhigh"
   autoUpdatesChannel = "stable"
+  hooks {
+    ["PostToolUse"] = new Listing {
+      new Dynamic {
+        matcher = "Edit|Write|MultiEdit"
+        hooks = new Listing {
+          new Dynamic {
+            type = "command"
+            command = "git diff --check"
+          }
+        }
+      }
+    }
+    ["Stop"] = new Listing {
+      new Dynamic {
+        hooks = new Listing {
+          new Dynamic {
+            type = "command"
+            command = #"osascript -e 'display notification "Claude Code finished" with title "Claude"' 2>/dev/null; afplay /System/Library/Sounds/Glass.aiff 2>/dev/null; true"#
+          }
+        }
+      }
+    }
+    ["PreCompact"] = new Listing {
+      new Dynamic {
+        hooks = new Listing {
+          new Dynamic {
+            type = "command"
+            command = "true"
+          }
+        }
+      }
+    }
+  }
 }
 
 output {
