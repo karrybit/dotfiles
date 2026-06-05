@@ -1,5 +1,13 @@
 # Source-only docs
+AGENTS.md
+CLAUDE.md
 README.md
+.config/nvim/AGENTS.md
+.config/nvim/CLAUDE.md
+.config/nvim/README.md
+.config/tmux/AGENTS.md
+.config/tmux/CLAUDE.md
+.config/tmux/README.md
 
 # Runtime artifacts
 .config/zsh/.zsh_history

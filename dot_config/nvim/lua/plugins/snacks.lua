@@ -37,6 +37,7 @@ return {
   keys = {
     { "<leader>e", function() Snacks.explorer.open() end, desc = "Explorer" },
     { "<leader>E", function() Snacks.explorer.reveal() end, desc = "Reveal file" },
+    { "<leader>bd", function() Snacks.bufdelete() end, desc = "Delete Buffer" },
     { "<leader>ff", function() Snacks.picker.files() end, desc = "Find files" },
     { "<leader>fg", function() Snacks.picker.grep() end, desc = "Grep" },
     { "<leader>fb", function() Snacks.picker.buffers() end, desc = "Buffers" },
