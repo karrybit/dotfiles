@@ -17,10 +17,10 @@ else
 fi
 
 rest=$(echo "$input" | jq -r '[
-  "🧠 " + (.model.display_name // "Claude"),
-  "📊 " + ((.context_window.used_percentage // 0) | tostring) + "%",
+  "🤖 " + (.model.display_name // "Claude"),
+  "🧠 " + ((.context_window.used_percentage // 0) | tostring) + "%",
   "💰 $" + ((.cost.total_cost_usd // 0) * 100 | round / 100 | tostring),
-  "⚡ " + ((.rate_limits.five_hour.used_percentage // 0) | round | tostring) + "%"
+  "🚧 " + ((.rate_limits.five_hour.used_percentage // 0) | round | tostring) + "%"
 ] | join(" | ")')
 
 echo "$rest | $branch_info"
