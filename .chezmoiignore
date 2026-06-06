@@ -26,6 +26,7 @@ README.md
 .local/share/agents/docs/*
 !.local/share/agents/docs/AGENTS.md
 !.local/share/agents/docs/agent-extension-security.md
+!.local/share/agents/docs/ecc-hackathon-review.md
 
 # Claude Code generated/local settings
 .config/claude/settings.json

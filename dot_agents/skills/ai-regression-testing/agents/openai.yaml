@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI regression testing"
+  short_description: "Design tests that catch AI-assisted coding blind spots"
+  default_prompt: "Use $ai-regression-testing to define regression tests for this AI-assisted change."

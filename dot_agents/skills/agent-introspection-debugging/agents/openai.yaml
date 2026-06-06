@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent introspection debugging"
+  short_description: "Diagnose and recover from stalled or drifting agent runs"
+  default_prompt: "Use $agent-introspection-debugging to capture the failure, classify it, and recover with the smallest safe action."

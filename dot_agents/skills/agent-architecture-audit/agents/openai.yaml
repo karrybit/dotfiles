@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent architecture audit"
+  short_description: "Audit agent systems for wrapper, memory, tool, and rendering failures"
+  default_prompt: "Use $agent-architecture-audit to inspect this agent or LLM application and report severity-ranked findings."

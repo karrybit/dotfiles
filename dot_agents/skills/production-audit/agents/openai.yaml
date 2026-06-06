@@ -1,0 +1,4 @@
+interface:
+  display_name: "Production audit"
+  short_description: "Assess production readiness from local evidence"
+  default_prompt: "Use $production-audit to assess production readiness, blockers, evidence checked, and next action."
