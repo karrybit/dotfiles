@@ -8,6 +8,7 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/).
 ~/.local/share/chezmoi/   ← source (this repository)
 ~/.config/                ← live (files read by each application)
 ~/.config/agents/         ← shared user-level agent instructions
+~/.local/share/agents/docs/ ← reusable local agent source summaries
 ~/.agents/skills/         ← user-level Codex skills
 ```
 
@@ -22,6 +23,10 @@ User-level Codex skills are managed under `dot_agents/skills/` and deploy to
 `~/.agents/skills/`. Restart Codex if a newly applied skill is not detected.
 Repository-specific Codex skills live under `.agents/skills/` and remain
 source-only through their entries in `.chezmoiignore`.
+
+Reusable agent source summaries are stored under
+`~/.local/share/agents/docs/`. Only that directory's `AGENTS.md` is managed by
+chezmoi; cached summaries remain local and unmanaged.
 
 `cowaxa` is a user-level CLI for evaluating Codex skills with scenario-based
 tests and with-skill versus without-skill baseline comparisons.

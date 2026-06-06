@@ -21,6 +21,8 @@ README.md
 .config/zsh/.zsh_sessions
 .local/share/agent-scripts/*
 !.local/share/agent-scripts/AGENTS.md
+.local/share/agents/docs/*
+!.local/share/agents/docs/AGENTS.md
 
 # Claude Code generated/local settings
 .config/claude/settings.json

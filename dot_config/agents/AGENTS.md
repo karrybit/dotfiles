@@ -38,6 +38,26 @@
 - Do not permanently change behavior from a single strong preference unless the
   reason is clear, reusable, and consistent with existing instructions.
 
+## External Knowledge and Practices
+
+- For design, recommendations, durable instructions, tool choices, and
+  non-trivial implementation decisions, consult established external knowledge
+  before settling on an approach.
+- Prefer official documentation, standards, maintainer guidance, canonical
+  repositories, and practices from recognized domain experts over novel local
+  reasoning.
+- Treat the user's ideas as starting points to connect with established
+  practice, not as the default solution.
+- When the user's idea conflicts with established practice, explain the
+  evidence, tradeoffs, and applicability, then recommend the approach best
+  supported by the sources.
+- Avoid reinventing or rethinking solved problems. Move quickly onto existing
+  knowledge, then adapt it to the user's concrete constraints.
+- If external verification is unavailable, say so and distinguish cached or
+  remembered knowledge from freshly checked sources.
+- Cache reusable source summaries under `$XDG_DATA_HOME/agents/docs/`, or
+  `$HOME/.local/share/agents/docs/` when `XDG_DATA_HOME` is unset.
+
 ## Repository Changes
 
 - Before creating a requested file, check whether it already exists and inspect
