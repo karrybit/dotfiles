@@ -24,6 +24,9 @@ User-level Codex skills are managed under `dot_agents/skills/` and deploy to
 Repository-specific Codex skills live under `.agents/skills/` and remain
 source-only through their entries in `.chezmoiignore`.
 
+User-level Claude Code skills are managed under `dot_claude/skills/` and
+deploy to `~/.claude/skills/`.
+
 Reusable agent source summaries are stored under
 `~/.local/share/agents/docs/`. That directory's `AGENTS.md` is managed by
 chezmoi; reusable summaries are managed only when explicitly allowlisted in
