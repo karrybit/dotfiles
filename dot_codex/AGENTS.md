@@ -15,3 +15,9 @@
 - Commit and push the source change with Git.
 - After the source change has been pushed, run `chezmoi apply` to update the live file.
 - If `chezmoi apply` fails because the chezmoi state database or another managed path is permission-gated, rerun the same apply command with the required approval rather than changing the target path or flags.
+
+## Artifact reconciliation
+
+- Before committing work that created new files, inventory newly created files and classify them as canonical, draft, merged, or deletion candidates.
+- Do not delete draft or obsolete-looking files automatically; report candidates with evidence unless the user explicitly requests cleanup.
+- Keep only current effective guidance in instruction files. Move rationale or superseded discussion to commit messages, PR notes, or a dedicated decision log when needed.
