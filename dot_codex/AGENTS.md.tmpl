@@ -1,0 +1,11 @@
+{{ include "dot_config/agents/AGENTS.md" }}
+
+# Codex Instructions
+
+## Codex Home
+
+- Keep `CODEX_HOME` at the Codex default unless the user explicitly requests
+  moving the whole Codex state directory.
+- Do not treat `CODEX_HOME` as a config-only location. It contains Codex
+  config, auth, logs, sessions, skills, plugins, cache, and other runtime
+  state.

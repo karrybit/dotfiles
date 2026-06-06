@@ -1,0 +1,11 @@
+@{{ .chezmoi.homeDir }}/.config/agents/AGENTS.md
+
+# Claude Code Instructions
+
+## Memory Files
+
+- Keep this file as the user-scope Claude Code entrypoint.
+- Put reusable cross-agent guidance in
+  `{{ .chezmoi.homeDir }}/.config/agents/AGENTS.md` and reference it from this
+  file instead of duplicating it.
+- Put Claude Code-specific guidance in this file.

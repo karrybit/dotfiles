@@ -7,10 +7,16 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/).
 ```
 ~/.local/share/chezmoi/   ← source (this repository)
 ~/.config/                ← live (files read by each application)
+~/.config/agents/         ← shared user-level agent instructions
 ~/.agents/skills/         ← user-level Codex skills
 ```
 
 `chezmoi apply` deploys source → live. The `dot_` prefix is converted to `.` (e.g. `dot_config/` → `~/.config/`).
+
+Shared user-level agent instructions are managed under
+`dot_config/agents/AGENTS.md`. Codex receives those rules through the generated
+`~/.codex/AGENTS.md`; Claude Code imports them from
+`~/.config/claude/CLAUDE.md`.
 
 User-level Codex skills are managed under `dot_agents/skills/` and deploy to
 `~/.agents/skills/`. Restart Codex if a newly applied skill is not detected.
