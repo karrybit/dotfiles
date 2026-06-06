@@ -62,7 +62,7 @@ settings: Dynamic = new Dynamic {
     refreshInterval = 5
   }
   enabledPlugins {
-    ["usage-collector@awesome-claude-marketplace"] = false
+    ["usage-collector@awesome-claude-marketplace"] = true
     ["skill-creator@claude-plugins-official"] = true
     ["slack@claude-plugins-official"] = true
     ["superpowers@claude-plugins-official"] = true

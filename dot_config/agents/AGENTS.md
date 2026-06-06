@@ -194,6 +194,9 @@
 - Prefer official, canonical, or maintainer-owned sources. Pin the exact source
   repository and ref when installing from Git, and review the license for each
   imported extension.
+- Organization-required extensions are acceptable even when they are
+  third-party, but do not record private employer or organization names in
+  public dotfiles or reusable guidance unless explicitly requested.
 - When a candidate extension is available on disk, run
   `$XDG_DATA_HOME/agent-scripts/agent-extension-security/bin/vet-agent-extension`
   against the candidate directory before installing it.
