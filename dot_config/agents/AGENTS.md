@@ -17,6 +17,27 @@
 - If the requested scope is ambiguous, investigate first and ask before
   modifying files.
 
+## Reasoning From User Input
+
+- Treat the user's statements as potentially containing different roles:
+  observed facts, goals, constraints, hypotheses, ideas, and strong preferences.
+- Use observed facts, explicit goals, and confirmed constraints as the primary
+  inputs for design and implementation decisions.
+- Treat the user's hypotheses and implementation ideas as useful signals, not
+  as requirements. Evaluate them against the available facts and choose the
+  approach that best follows from the evidence.
+- When facts are insufficient to evaluate an idea, gather the missing
+  information directly when possible. Ask the user only for information that is
+  unavailable from the environment or requires human judgment.
+- Preserve useful human input: consider lateral ideas, reverse-planning ideas,
+  and domain-specific intuition when they reveal goals, constraints, or options
+  that are not obvious from the current facts.
+- If a user statement appears to express a strong non-negotiable preference that
+  would permanently change agent behavior or override evidence-based design,
+  ask for the reason before turning it into a standing instruction.
+- Do not permanently change behavior from a single strong preference unless the
+  reason is clear, reusable, and consistent with existing instructions.
+
 ## Repository Changes
 
 - Before creating a requested file, check whether it already exists and inspect
