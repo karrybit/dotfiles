@@ -78,6 +78,9 @@
 - For known network operations such as `git push`, `git pull`, `git fetch`, and
   `chezmoi update`, request the required approval on the first attempt instead
   of first running in the sandbox and reporting DNS or network failures.
+- For `chezmoi apply` in this environment, request the required approval on the
+  first attempt instead of first producing the known
+  `chezmoistate.boltdb: operation not permitted` failure.
 - For known Git index writes in the chezmoi source repository, such as
   `git add` and `git commit`, request the required approval on the first
   attempt instead of first producing `.git/index.lock` permission failures.
