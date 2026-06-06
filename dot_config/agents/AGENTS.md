@@ -99,8 +99,16 @@
 
 ## Instruction Maintenance
 
-- When agent behavior causes reusable friction or violates user intent, propose
-  the smallest concrete `AGENTS.md` improvement.
+- When a conversation reveals reusable friction or agent behavior violates user
+  intent, propose the smallest concrete instruction improvement before ending
+  the task.
+- Classify each proposed improvement before suggesting it: agent-neutral user
+  guidance belongs in `$XDG_CONFIG_HOME/agents/AGENTS.md`; Codex-specific
+  guidance belongs in Codex user instructions; Claude Code-specific guidance
+  belongs in Claude Code user instructions; repository-specific guidance
+  belongs in the narrowest applicable repository `AGENTS.md`.
+- For each proposed instruction change, provide the target file, proposed
+  wording, reason, and overlap or conflict with existing rules.
 - Do not update `AGENTS.md` automatically when reviewing agent behavior.
 - Do not add rules for one-off situations unless the impact is significant.
 - Write rules with a clear trigger and expected action.
@@ -108,7 +116,13 @@
   when compliance can be checked mechanically.
 - Check proposed rules for duplication or conflicts with existing instructions.
 - Apply instruction changes only after user approval.
-- Periodically remove outdated, duplicated, or ineffective instructions.
+- Treat instruction files as a maintained system, not an append-only log. When
+  adding or reviewing instructions, look for outdated, duplicated, overlapping,
+  too-specific, or ineffective rules and propose removing or consolidating them.
+- Prefer replacing several narrow rules with one clearer general rule when it
+  preserves the intended behavior.
+- Move rationale, historical context, and superseded discussion out of
+  instruction files into commit messages, PR notes, or a dedicated decision log.
 
 ## User-Scoped Agent Scripts
 
