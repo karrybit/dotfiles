@@ -185,3 +185,29 @@
 - Runtime outputs, logs, scraped intermediates, and other disposable state
   belong under `$XDG_STATE_HOME/agent-scripts/` or, if `XDG_STATE_HOME` is
   unset, `$HOME/.local/state/agent-scripts/`.
+
+## External Agent Extensions
+
+- Before installing or enabling a public Codex skill, Claude Code skill,
+  Claude Code subagent, Claude Code plugin, or MCP-backed agent extension,
+  inspect it in a temporary or quarantined directory first.
+- Prefer official, canonical, or maintainer-owned sources. Pin the exact source
+  repository and ref when installing from Git, and review the license for each
+  imported extension.
+- When a candidate extension is available on disk, run
+  `$XDG_DATA_HOME/agent-scripts/agent-extension-security/bin/vet-agent-extension`
+  against the candidate directory before installing it.
+- Review `SKILL.md`, Claude subagent frontmatter, plugin manifests, hooks,
+  MCP server declarations, executable scripts, install commands, update
+  commands, network access, and secret-handling behavior before installation.
+- Do not install or enable an extension that requests bypass permissions,
+  broad write access, broad shell access, hooks, MCP servers, credential reads,
+  or automatic network actions unless the user explicitly approves that risk.
+- For Claude Code subagents, prefer read-only tools and no `mcpServers`,
+  `hooks`, or elevated `permissionMode` unless the task requires those
+  capabilities.
+- For Codex skills, prefer instruction-only skills or deterministic helper
+  scripts with explicit inputs and no ambient credential access.
+- Cache reusable official or expert source summaries under
+  `$XDG_DATA_HOME/agents/docs/` with source URL, date checked, version context,
+  and revalidation trigger.

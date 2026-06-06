@@ -1,0 +1,64 @@
+#!/bin/bash
+set -euo pipefail
+
+usage() {
+  echo "usage: vet-agent-extension <candidate-dir> [candidate-dir ...]" >&2
+}
+
+if [ "$#" -eq 0 ]; then
+  usage
+  exit 2
+fi
+
+status=0
+
+for candidate in "$@"; do
+  if [ ! -d "$candidate" ]; then
+    echo "ERROR: not a directory: $candidate" >&2
+    status=2
+    continue
+  fi
+
+  echo "== $candidate =="
+
+  echo "-- entrypoints"
+  find "$candidate" -type f \( \
+    -name 'SKILL.md' -o \
+    -path '*/agents/*.md' -o \
+    -name 'plugin.json' -o \
+    -name 'hooks.json' -o \
+    -name '.mcp.json' -o \
+    -name 'package.json' \
+  \) -print | sort || true
+
+  echo "-- executable files"
+  find "$candidate" -type f -perm -111 -print | sort || true
+
+  echo "-- risky frontmatter or manifests"
+  if command -v rg >/dev/null 2>&1; then
+    rg -n --hidden --glob '!**/.git/**' \
+      'permissionMode: *(bypassPermissions|dontAsk|auto|acceptEdits)|mcpServers:|hooks:|tools:.*(Write|Edit|MultiEdit|Bash|Agent|Skill|WebFetch)|disallowedTools:.*(Read|Grep|Glob)|strictKnownMarketplaces|extraKnownMarketplaces|enabledPlugins' \
+      "$candidate" || true
+  else
+    grep -RInE \
+      'permissionMode: *(bypassPermissions|dontAsk|auto|acceptEdits)|mcpServers:|hooks:|tools:.*(Write|Edit|MultiEdit|Bash|Agent|Skill|WebFetch)|disallowedTools:.*(Read|Grep|Glob)|strictKnownMarketplaces|extraKnownMarketplaces|enabledPlugins' \
+      "$candidate" 2>/dev/null || true
+  fi
+
+  echo "-- shell, network, and credential indicators"
+  if command -v rg >/dev/null 2>&1; then
+    rg -n --hidden --glob '!**/.git/**' \
+      '^\s*!\s*|curl |wget |npx |npm +(install|exec)|pip +(install|x)|uvx |git +clone|ssh |scp |rsync |osascript |launchctl |security +find-|API_KEY|TOKEN|SECRET|PASSWORD|PRIVATE_KEY|~/.ssh|~/.aws|~/.config/gcloud|~/.kube' \
+      "$candidate" || true
+  else
+    grep -RInE \
+      '^[[:space:]]*![[:space:]]*|curl |wget |npx |npm +(install|exec)|pip +(install|x)|uvx |git +clone|ssh |scp |rsync |osascript |launchctl |security +find-|API_KEY|TOKEN|SECRET|PASSWORD|PRIVATE_KEY|~/.ssh|~/.aws|~/.config/gcloud|~/.kube' \
+      "$candidate" 2>/dev/null || true
+  fi
+
+  echo "-- oversized files"
+  find "$candidate" -type f -size +1M -print | sort || true
+  echo
+done
+
+exit "$status"

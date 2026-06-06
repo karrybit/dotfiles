@@ -12,9 +12,45 @@ settings: Dynamic = new Dynamic {
     ["ENABLE_TOOL_SEARCH"] = "true"
   }
   permissions {
+    defaultMode = "default"
     allow {
       "Read(~/.local/share/go/*)"
       "Read(~/work/*)"
+    }
+    deny {
+      "Read(./.env)"
+      "Read(./.env.*)"
+      "Read(./secrets/**)"
+      "Read(./config/credentials.json)"
+      "Read(~/.ssh/**)"
+      "Read(~/.aws/**)"
+      "Read(~/.config/gcloud/**)"
+      "Read(~/.kube/**)"
+    }
+    disableBypassPermissionsMode = "disable"
+  }
+  sandbox {
+    enabled = true
+    autoAllowBashIfSandboxed = false
+    excludedCommands {
+      "docker *"
+    }
+    network {
+      allowedDomains {
+        "github.com"
+        "api.github.com"
+        "raw.githubusercontent.com"
+        "objects.githubusercontent.com"
+        "*.githubusercontent.com"
+        "registry.npmjs.org"
+        "*.npmjs.org"
+        "registry.yarnpkg.com"
+        "pypi.org"
+        "files.pythonhosted.org"
+        "crates.io"
+        "static.crates.io"
+        "index.crates.io"
+      }
     }
   }
   worktree {
@@ -26,7 +62,7 @@ settings: Dynamic = new Dynamic {
     refreshInterval = 5
   }
   enabledPlugins {
-    ["usage-collector@awesome-claude-marketplace"] = true
+    ["usage-collector@awesome-claude-marketplace"] = false
     ["skill-creator@claude-plugins-official"] = true
     ["slack@claude-plugins-official"] = true
     ["superpowers@claude-plugins-official"] = true

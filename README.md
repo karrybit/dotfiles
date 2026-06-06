@@ -25,8 +25,12 @@ Repository-specific Codex skills live under `.agents/skills/` and remain
 source-only through their entries in `.chezmoiignore`.
 
 Reusable agent source summaries are stored under
-`~/.local/share/agents/docs/`. Only that directory's `AGENTS.md` is managed by
-chezmoi; cached summaries remain local and unmanaged.
+`~/.local/share/agents/docs/`. That directory's `AGENTS.md` is managed by
+chezmoi; reusable summaries are managed only when explicitly allowlisted in
+`.chezmoiignore`, and other cached summaries remain local and unmanaged.
+
+Reusable agent-operated scripts live under `~/.local/share/agent-scripts/`.
+Only explicitly allowlisted script sets are managed by chezmoi.
 
 `cowaxa` is a user-level CLI for evaluating Codex skills with scenario-based
 tests and with-skill versus without-skill baseline comparisons.
