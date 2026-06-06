@@ -21,3 +21,12 @@
 - Before committing work that created new files, inventory newly created files and classify them as canonical, draft, merged, or deletion candidates.
 - Do not delete draft or obsolete-looking files automatically; report candidates with evidence unless the user explicitly requests cleanup.
 - Keep only current effective guidance in instruction files. Move rationale or superseded discussion to commit messages, PR notes, or a dedicated decision log when needed.
+
+## User-scoped agent scripts
+
+- Reusable but project-specific or write-once-run-later scripts for Codex, Claude, or other agents belong under `$XDG_DATA_HOME/agent-scripts/`.
+- The stable directory root is managed by chezmoi as `dot_local/share/agent-scripts/`, but arbitrary files below that root are not managed by chezmoi unless explicitly requested.
+- Put directory-specific operating rules in `$XDG_DATA_HOME/agent-scripts/AGENTS.md`.
+- Do not add agent script directories to `PATH` by default. Invoke scripts by explicit file path.
+- Agent scripts must not depend on the caller's current working directory. Resolve paths from the script location, environment variables, or explicit arguments.
+- Runtime outputs, logs, scraped intermediates, and other disposable state belong under `$XDG_STATE_HOME/agent-scripts/` or, if `XDG_STATE_HOME` is unset, `$HOME/.local/state/agent-scripts/`.
