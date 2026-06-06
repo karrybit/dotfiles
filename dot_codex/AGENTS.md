@@ -16,6 +16,13 @@
 - After the source change has been pushed, run `chezmoi apply` to update the live file.
 - If `chezmoi apply` fails because the chezmoi state database or another managed path is permission-gated, rerun the same apply command with the required approval rather than changing the target path or flags.
 
+## Known permission-gated operations
+
+- For known network operations such as `git push`, `git pull`, `git fetch`, and `chezmoi update`, request the required approval on the first attempt instead of first running in the sandbox and reporting DNS or network failures.
+- For known Git index writes in the chezmoi source repository, such as `git add` and `git commit`, request the required approval on the first attempt instead of first producing `.git/index.lock` permission failures.
+- Keep approval requests narrowly scoped to the exact command family needed for the task.
+- Do not request persistent broad auto-approval for commands that can rewrite history, delete refs, run arbitrary scripts, or exfiltrate secrets. In particular, do not ask to persist broad approval for force-push commands.
+
 ## Artifact reconciliation
 
 - Before committing work that created new files, inventory newly created files and classify them as canonical, draft, merged, or deletion candidates.

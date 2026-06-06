@@ -26,3 +26,10 @@ Respond in the same language as the user's message. Default to Japanese when amb
 
 - After editing files, run `git diff --check`.
 - Report checks that could not be run rather than silently skipping them.
+
+## Known permission-gated operations
+
+- For known network operations such as `git push`, `git pull`, `git fetch`, and `chezmoi update`, request the required approval on the first attempt instead of first running in the sandbox and reporting DNS or network failures.
+- For known Git index writes in the chezmoi source repository, such as `git add` and `git commit`, request the required approval on the first attempt instead of first producing `.git/index.lock` permission failures.
+- Keep approval requests narrowly scoped to the exact command family needed for the task.
+- Do not request persistent broad auto-approval for commands that can rewrite history, delete refs, run arbitrary scripts, or exfiltrate secrets. In particular, do not ask to persist broad approval for force-push commands.
