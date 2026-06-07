@@ -9,9 +9,9 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/).
 ~/.config/                ← live (files read by each application)
 ~/.config/agents/         ← shared user-level agent instructions
 ~/.local/share/agents/docs/ ← reusable local agent source summaries
-~/.local/share/agent-skills/ ← shared user-level agent skill sources
-~/.agents/skills/         ← Codex skill entrypoints
-~/.claude/skills/         ← Claude Code skill entrypoints
+~/.local/share/skills/     ← shared user-level agent skills (canonical)
+~/.agents/skills/         ← Codex skill entrypoints (symlink → ~/.local/share/skills)
+~/.claude/skills/         ← Claude Code skill entrypoints (symlink → ~/.local/share/skills)
 ```
 
 `chezmoi apply` deploys source → live. The `dot_` prefix is converted to `.` (e.g. `dot_config/` → `~/.config/`).
@@ -21,16 +21,15 @@ Shared user-level agent instructions are managed under
 `~/.codex/AGENTS.md`; Claude Code imports them from
 `~/.config/claude/CLAUDE.md`.
 
-Shared user-level agent skills are managed under
-`dot_local/share/agent-skills/skills/`. Codex and Claude Code receive those
-skills through managed symlink entries under `dot_agents/skills/` and
-`dot_claude/skills/`. Restart Codex or Claude Code if a newly applied skill is
-not detected.
+Shared user-level agent skills are managed under `dot_local/share/skills/`.
+Both Codex and Claude Code receive all skills through a single directory-level
+symlink: `~/.agents/skills` and `~/.claude/skills` each point to
+`~/.local/share/skills`. Adding a skill requires only one directory under
+`dot_local/share/skills/`; no per-skill symlink entries are needed. Restart
+Codex or Claude Code if a newly applied skill is not detected.
 
-Codex-only skill adapters can still live under `dot_agents/skills/` when they
-depend on Codex-specific tools or UI metadata.
-Repository-specific Codex skills live under `.agents/skills/` and remain
-source-only through their entries in `.chezmoiignore`.
+Repository-specific skills live under `.agents/skills/` and remain source-only
+through their entries in `.chezmoiignore`.
 
 User-level Claude Code subagents are managed under `dot_claude/agents/` and
 deploy to `~/.claude/agents/`.

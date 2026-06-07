@@ -25,14 +25,15 @@ Inspect repository instructions and existing conventions before choosing a path.
 | Scope | Typical path |
 | --- | --- |
 | One repository | `<repo>/.agents/skills/<skill-name>/` |
-| Current user across repositories | `~/.local/share/agent-skills/skills/<skill-name>/` |
+| Current user across repositories | `~/.local/share/skills/<skill-name>/` |
 | Managed user-global source | Use the repository's documented source mapping |
 
 Do not assume a dotfiles repository's source path. Verify its mapping and ignore
 rules first. In this dotfiles repository, shared user-global skills are canonical
-under `dot_local/share/agent-skills/skills/` and deploy to Codex and Claude Code
-through managed symlink entries. When both local and global copies exist, prefer
-the narrower applicable skill and eliminate accidental duplication.
+under `dot_local/share/skills/` and deploy to both Codex and Claude Code through
+a directory-level symlink (`~/.agents/skills` and `~/.claude/skills` each point to
+`~/.local/share/skills`). When both local and global copies exist, prefer the
+narrower applicable skill and eliminate accidental duplication.
 
 ## Workflow
 
