@@ -31,8 +31,10 @@ Inspect repository instructions and existing conventions before choosing a path.
 Do not assume a dotfiles repository's source path. Verify its mapping and ignore
 rules first. In this dotfiles repository, shared user-global skills are canonical
 under `dot_local/share/skills/` and deploy to both Codex and Claude Code through
-a directory-level symlink (`~/.agents/skills` and `~/.claude/skills` each point to
-`~/.local/share/skills`). When both local and global copies exist, prefer the
+`run_onchange_06_sync-skills.sh.tmpl`, which creates a per-skill symlink in
+`~/.agents/skills/` (Codex) and `~/.config/claude/skills/` (Claude Code) whenever
+the skill set changes; third-party skills installed into those directories are
+left untouched. When both local and global copies exist, prefer the
 narrower applicable skill and eliminate accidental duplication.
 
 ## Workflow

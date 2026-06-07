@@ -23,8 +23,8 @@ done
 for skill_dir in "$CANONICAL"/*/; do
     [ -d "$skill_dir" ] || continue
     name=$(basename "$skill_dir")
-    ln -sfn "../../../.local/share/skills/$name" "$CLAUDE_DIR/$name"
-    ln -sfn "../../.local/share/skills/$name"    "$AGENTS_DIR/$name"
+    ln -sfn "$CANONICAL/$name" "$CLAUDE_DIR/$name"
+    ln -sfn "$CANONICAL/$name" "$AGENTS_DIR/$name"
 done
 
 # Remove stale managed symlinks (canonical skill was deleted)

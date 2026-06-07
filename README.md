@@ -10,8 +10,8 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/).
 ~/.config/agents/         ← shared user-level agent instructions
 ~/.local/share/agents/docs/ ← reusable local agent source summaries
 ~/.local/share/skills/     ← shared user-level agent skills (canonical)
-~/.agents/skills/         ← Codex skill entrypoints (symlink → ~/.local/share/skills)
-~/.claude/skills/         ← Claude Code skill entrypoints (symlink → ~/.local/share/skills)
+~/.agents/skills/         ← Codex skill entrypoints (per-skill symlinks → ~/.local/share/skills/*)
+~/.config/claude/skills/  ← Claude Code skill entrypoints (per-skill symlinks → ~/.local/share/skills/*)
 ```
 
 `chezmoi apply` deploys source → live. The `dot_` prefix is converted to `.` (e.g. `dot_config/` → `~/.config/`).
