@@ -35,6 +35,7 @@ README.md
 !.local/share/agents/docs/agentic-development-runs
 !.local/share/agents/docs/agentic-development-runs/**
 !.local/share/agents/docs/ecc-hackathon-review.md
+!.local/share/agents/docs/qsv-csv-wrangling.md
 
 # Claude Code generated/local settings
 .config/claude/settings.json

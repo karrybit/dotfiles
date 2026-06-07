@@ -1,0 +1,4 @@
+interface:
+  display_name: "CSV wrangling with qsv"
+  short_description: "Prefer qsv for local CSV inspection and transforms"
+  default_prompt: "Use $csv-wrangling-with-qsv to inspect, transform, validate, or summarize local CSV or TSV data."
