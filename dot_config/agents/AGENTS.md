@@ -58,6 +58,29 @@
 - Cache reusable source summaries under `$XDG_DATA_HOME/agents/docs/`, or
   `$HOME/.local/share/agents/docs/` when `XDG_DATA_HOME` is unset.
 
+## Designing Against the Real Environment
+
+- Before wiring an integration to a path, port, endpoint, or config key, confirm
+  where the consuming program actually reads it in the current environment by
+  resolving environment variables, config overrides, and XDG or platform
+  defaults. Do not trust documented defaults; they can be overridden locally.
+- When a change must work across multiple targets you cannot all observe (agents,
+  machines, operating systems, runtimes), treat each unobserved target's behavior
+  as an unverified assumption. Verify it directly, or make the mechanism
+  self-verify at apply or run time, before depending on it.
+- Generate artifacts that are fully derivable from a single source of truth
+  instead of maintaining each by hand. Hand-maintained derived sets drift and
+  scale with item count times target count.
+- Before accepting a refactor, enumerate the invariants the current solution
+  satisfies, such as the correct consumer path, coexistence with other writers,
+  idempotency, and reversibility, then confirm the replacement preserves all of
+  them. Reducing file or step count does not by itself justify a change.
+- Do not assume exclusive ownership of a location that other tools also write to.
+  Prefer per-item ownership over whole-directory ownership so external additions
+  survive.
+- When the same class of defect recurs across iterations, fix the verification
+  gap that let it through, not only the current symptom.
+
 ## Repository Changes
 
 - Before creating a requested file, check whether it already exists and inspect
