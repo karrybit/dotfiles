@@ -27,6 +27,9 @@ source-only through their entries in `.chezmoiignore`.
 User-level Claude Code skills are managed under `dot_claude/skills/` and
 deploy to `~/.claude/skills/`.
 
+User-level Claude Code subagents are managed under `dot_claude/agents/` and
+deploy to `~/.claude/agents/`.
+
 Some user-level agent workflows are distilled from external expert repositories
 and vendored as instruction-only skills. These do not install the source
 repository's plugins, hooks, MCP servers, installers, or auto-update behavior.
