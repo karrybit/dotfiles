@@ -203,6 +203,16 @@
 - Review `SKILL.md`, Claude subagent frontmatter, plugin manifests, hooks,
   MCP server declarations, executable scripts, install commands, update
   commands, network access, and secret-handling behavior before installation.
+- Treat skills, plugins, MCP servers, hooks, and subagents installed by Codex or
+  Claude Code commands as runtime state, not chezmoi-managed source, unless the
+  corresponding source artifact or setting is explicitly added to this
+  repository.
+- Before managing an agent extension in this repository, record its origin,
+  source URL or local source, version or ref, license, sync policy, review date,
+  and migration target in the agent extensions ledger.
+- Managed user-global skills must include `PROVENANCE.md`. Do not vendor
+  proprietary, unclear-license, or terms-restricted skill artifacts into shared
+  dotfiles; record them as `installed-only` or `do-not-vendor` instead.
 - Do not install or enable an extension that requests bypass permissions,
   broad write access, broad shell access, hooks, MCP servers, credential reads,
   or automatic network actions unless the user explicitly approves that risk.

@@ -9,7 +9,9 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/).
 ~/.config/                ← live (files read by each application)
 ~/.config/agents/         ← shared user-level agent instructions
 ~/.local/share/agents/docs/ ← reusable local agent source summaries
-~/.agents/skills/         ← user-level Codex skills
+~/.local/share/agent-skills/ ← shared user-level agent skill sources
+~/.agents/skills/         ← Codex skill entrypoints
+~/.claude/skills/         ← Claude Code skill entrypoints
 ```
 
 `chezmoi apply` deploys source → live. The `dot_` prefix is converted to `.` (e.g. `dot_config/` → `~/.config/`).
@@ -19,13 +21,16 @@ Shared user-level agent instructions are managed under
 `~/.codex/AGENTS.md`; Claude Code imports them from
 `~/.config/claude/CLAUDE.md`.
 
-User-level Codex skills are managed under `dot_agents/skills/` and deploy to
-`~/.agents/skills/`. Restart Codex if a newly applied skill is not detected.
+Shared user-level agent skills are managed under
+`dot_local/share/agent-skills/skills/`. Codex and Claude Code receive those
+skills through managed symlink entries under `dot_agents/skills/` and
+`dot_claude/skills/`. Restart Codex or Claude Code if a newly applied skill is
+not detected.
+
+Codex-only skill adapters can still live under `dot_agents/skills/` when they
+depend on Codex-specific tools or UI metadata.
 Repository-specific Codex skills live under `.agents/skills/` and remain
 source-only through their entries in `.chezmoiignore`.
-
-User-level Claude Code skills are managed under `dot_claude/skills/` and
-deploy to `~/.claude/skills/`.
 
 User-level Claude Code subagents are managed under `dot_claude/agents/` and
 deploy to `~/.claude/agents/`.
@@ -33,6 +38,11 @@ deploy to `~/.claude/agents/`.
 Some user-level agent workflows are distilled from external expert repositories
 and vendored as instruction-only skills. These do not install the source
 repository's plugins, hooks, MCP servers, installers, or auto-update behavior.
+Managed skills must include `PROVENANCE.md`, and installed or enabled skills,
+plugins, MCP servers, hooks, and subagents should be recorded in
+`~/.local/share/agents/docs/agent-extensions-ledger.md`. Installing an extension
+with a Codex or Claude Code command does not make it chezmoi-managed unless the
+source artifact or setting is added to this repository.
 
 Reusable agent source summaries are stored under
 `~/.local/share/agents/docs/`. That directory's `AGENTS.md` is managed by

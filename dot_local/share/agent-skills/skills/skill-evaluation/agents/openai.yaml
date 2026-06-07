@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Evaluation"
+  short_description: "Evaluate agent skills with scenarios and baselines"
+  default_prompt: "Use $skill-evaluation to create and run a skill evaluation."
