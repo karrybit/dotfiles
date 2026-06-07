@@ -22,11 +22,13 @@ Shared user-level agent instructions are managed under
 `~/.config/claude/CLAUDE.md`.
 
 Shared user-level agent skills are managed under `dot_local/share/skills/`.
-Both Codex and Claude Code receive all skills through a single directory-level
-symlink: `~/.agents/skills` and `~/.claude/skills` each point to
-`~/.local/share/skills`. Adding a skill requires only one directory under
-`dot_local/share/skills/`; no per-skill symlink entries are needed. Restart
-Codex or Claude Code if a newly applied skill is not detected.
+`run_onchange_06_sync-skills.sh.tmpl` automatically symlinks each skill into
+`~/.config/claude/skills/` (Claude Code) and `~/.agents/skills/` (Codex)
+whenever the skill set changes. Adding a skill requires only one directory
+under `dot_local/share/skills/`; no per-agent symlink entries are needed.
+3rd party skills installed via `claude` or `apm` land directly in those
+directories and are not affected. Restart Codex or Claude Code if a newly
+applied skill is not detected.
 
 Repository-specific skills live under `.agents/skills/` and remain source-only
 through their entries in `.chezmoiignore`.
@@ -211,3 +213,4 @@ These scripts run during `chezmoi apply` only when their tracked files change.
 | `run_onchange_02_aqua.sh.tmpl` | `aqua.{profile}.yaml` changed | `aqua install --all` |
 | `run_onchange_03_rustup_components.sh.tmpl` | `rust/component` changed | `rustup component add` |
 | `run_onchange_04_cargo_packages.sh.tmpl` | `rust/package` changed | `cargo install` |
+| `run_onchange_06_sync-skills.sh.tmpl` | skills added/removed under `dot_local/share/skills/` | symlink each skill into `~/.config/claude/skills/` and `~/.agents/skills/` |

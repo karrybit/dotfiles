@@ -1,0 +1,40 @@
+#!/bin/bash
+# Sync chezmoi-managed skills to agent skill directories.
+# Re-runs when the set of skills in dot_local/share/skills/ changes.
+{{ range (glob "dot_local/share/skills/*/SKILL.md") -}}
+# {{ . }}
+{{ end -}}
+
+set -eu
+
+CANONICAL="${XDG_DATA_HOME:-$HOME/.local/share}/skills"
+CLAUDE_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/claude/skills"
+AGENTS_DIR="${HOME}/.agents/skills"
+
+# Restore real directories (replacing any directory-level symlinks if present)
+for dir in "$CLAUDE_DIR" "$AGENTS_DIR"; do
+    if [ -L "$dir" ]; then
+        rm "$dir"
+    fi
+    mkdir -p "$dir"
+done
+
+# Create/update symlinks for each canonical skill
+for skill_dir in "$CANONICAL"/*/; do
+    [ -d "$skill_dir" ] || continue
+    name=$(basename "$skill_dir")
+    ln -sfn "../../../.local/share/skills/$name" "$CLAUDE_DIR/$name"
+    ln -sfn "../../.local/share/skills/$name"    "$AGENTS_DIR/$name"
+done
+
+# Remove stale managed symlinks (canonical skill was deleted)
+for target_dir in "$CLAUDE_DIR" "$AGENTS_DIR"; do
+    while IFS= read -r link; do
+        name=$(basename "$link")
+        link_target=$(readlink "$link")
+        if [[ "$link_target" == *".local/share/skills/$name" ]] && \
+           [ ! -d "$CANONICAL/$name" ]; then
+            rm "$link"
+        fi
+    done < <(find "$target_dir" -maxdepth 1 -type l 2>/dev/null)
+done
