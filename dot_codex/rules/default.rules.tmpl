@@ -1,0 +1,7 @@
+prefix_rule(pattern=["node", "{{ .chezmoi.homeDir }}/.codex/skills/.system/openai-docs/scripts/fetch-codex-manual.mjs"], decision="allow")
+prefix_rule(pattern=["node", "/private/tmp/generate_kakomonn_url_ledger.mjs"], decision="allow")
+prefix_rule(pattern=["chezmoi", "update"], decision="allow")
+prefix_rule(pattern=["git", "add"], decision="allow")
+prefix_rule(pattern=["git", "commit"], decision="allow")
+prefix_rule(pattern=["uv", "run"], decision="allow")
+prefix_rule(pattern=["chezmoi", "apply"], decision="allow")

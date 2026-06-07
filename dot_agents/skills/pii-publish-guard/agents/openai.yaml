@@ -1,0 +1,4 @@
+interface:
+  display_name: "PII publish guard"
+  short_description: "Check diffs for PII and secrets before publishing"
+  default_prompt: "Use $pii-publish-guard to inspect what will be published and block PII or secrets before push."
