@@ -1,0 +1,6 @@
+interface:
+  display_name: "Final Artifact Review"
+  short_description: "Review final deliverables for consistency"
+  default_prompt: "Use $final-artifact-review to check the completed artifact set for contradictions, stale decisions, and quality gaps."
+policy:
+  allow_implicit_invocation: true
