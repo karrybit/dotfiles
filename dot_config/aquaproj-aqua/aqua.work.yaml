@@ -9,7 +9,7 @@
 #   - all
 registries:
   - type: standard
-    ref: v4.520.2 # renovate: depName=aquaproj/aqua-registry
+    ref: v4.521.0 # renovate: depName=aquaproj/aqua-registry
 # How to sort: yq -i '.packages |= sort_by(.name)' aqua/aqua.yaml
 packages:
   - name: BurntSushi/ripgrep@15.1.0
@@ -46,7 +46,7 @@ packages:
   - name: kubernetes-sigs/kustomize@kustomize/v5.8.1
   - name: kubernetes/kubernetes/kubectl@v1.36.1
   - name: mike-engel/jwt-cli@6.2.0
-  - name: mikefarah/yq@v4.53.2
+  - name: mikefarah/yq@v4.53.3
   - name: mozilla/sccache@v0.15.0
   - name: mvdan/gofumpt@v0.10.0
   - name: nektos/act@v0.2.89
