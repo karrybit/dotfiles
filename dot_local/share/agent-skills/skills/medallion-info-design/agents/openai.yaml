@@ -1,0 +1,4 @@
+interface:
+  display_name: "Medallion info design"
+  short_description: "Separate raw, normalized, and action-ready information"
+  default_prompt: "Use $medallion-info-design to design this data or information workflow before analysis."

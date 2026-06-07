@@ -46,11 +46,12 @@ the narrower applicable skill and eliminate accidental duplication.
    - Put all triggering conditions in `description`.
    - Move detailed material to directly linked `references/`.
    - Add `scripts/` only for repeated or deterministic operations.
-7. When making a skill cross-agent, normalize it around the shared workflow and make agent-specific capabilities conditional. Do not leave Codex-only or Claude Code-only assumptions in the main instructions unless the description scopes the skill to that agent. Put agent-specific runners, metadata, or entrypoint behavior behind explicit availability checks or adapter files.
-8. Add or update `PROVENANCE.md` and the extension ledger before publishing the skill.
-9. Generate or update `agents/openai.yaml` when the skill is deployed to Codex and UI metadata is useful.
-10. Preserve unrelated files and upstream license files.
-11. Review repository documentation and ignore rules when placement or discovery changes.
+7. For skills that depend on external knowledge, official docs, source summaries, schemas, or domain concepts, use `skill-reference-curation` to design references before stuffing detail into `SKILL.md`.
+8. When making a skill cross-agent, normalize it around the shared workflow and make agent-specific capabilities conditional. Do not leave Codex-only or Claude Code-only assumptions in the main instructions unless the description scopes the skill to that agent. Put agent-specific runners, metadata, or entrypoint behavior behind explicit availability checks or adapter files.
+9. Add or update `PROVENANCE.md` and the extension ledger before publishing the skill.
+10. Generate or update `agents/openai.yaml` when the skill is deployed to Codex and UI metadata is useful.
+11. Preserve unrelated files and upstream license files.
+12. Review repository documentation and ignore rules when placement or discovery changes.
 
 ## Validation
 

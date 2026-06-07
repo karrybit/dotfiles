@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill reference curation"
+  short_description: "Design source-grounded references for skills"
+  default_prompt: "Use $skill-reference-curation to add durable references to this skill without bloating SKILL.md."
