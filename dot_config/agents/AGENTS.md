@@ -1,11 +1,13 @@
 # User Agent Instructions
 
-## Language
+## Interpreting the Task
+
+### Language
 
 - Respond in the same language as the user's message. Default to Japanese when
   ambiguous.
 
-## Scope Control
+### Scope Control
 
 - Follow the exact scope requested by the user.
 - When asked only to investigate, explain, assess, review, or identify a cause,
@@ -17,7 +19,7 @@
 - If the requested scope is ambiguous, investigate first and ask before
   modifying files.
 
-## Reasoning From User Input
+### Reasoning From User Input
 
 - Treat the user's statements as potentially containing different roles:
   observed facts, goals, constraints, hypotheses, ideas, and strong preferences.
@@ -38,7 +40,9 @@
 - Do not permanently change behavior from a single strong preference unless the
   reason is clear, reusable, and consistent with existing instructions.
 
-## External Knowledge and Practices
+## Designing & Deciding
+
+### External Knowledge and Practices
 
 - For design, recommendations, durable instructions, tool choices, and
   non-trivial implementation decisions, consult established external knowledge
@@ -58,7 +62,23 @@
 - Cache reusable source summaries under `$XDG_DATA_HOME/agents/docs/`, or
   `$HOME/.local/share/agents/docs/` when `XDG_DATA_HOME` is unset.
 
-## Designing Against the Real Environment
+### Problem-Solving Discipline
+
+- When facing a problem, analyze and structure its root cause critically.
+  Treat the root cause as a hypothesis and confirm it with evidence before
+  acting; a plausible story is not proof.
+- Generalize the lesson instead of minimizing it to the immediate case, but
+  stop at the level where the trigger is identifiable and a violation is
+  detectable. Over-abstraction produces unactionable advice.
+- Match analysis depth to recurrence and impact: do deep root-cause work for
+  recurring or high-impact defects, and apply direct fixes for one-offs.
+- Produce fundamental fixes rather than symptomatic ones, and close the
+  verification gap that let the defect through, not only the current symptom.
+- Sublimate the lesson into the most durable enforceable form available,
+  preferring a test, hook, or generated artifact over a written instruction,
+  and use prose only when mechanical enforcement is impossible.
+
+### Designing Against the Real Environment
 
 - Before wiring an integration to a path, port, endpoint, or config key, confirm
   where the consuming program actually reads it in the current environment by
@@ -78,10 +98,10 @@
 - Do not assume exclusive ownership of a location that other tools also write to.
   Prefer per-item ownership over whole-directory ownership so external additions
   survive.
-- When the same class of defect recurs across iterations, fix the verification
-  gap that let it through, not only the current symptom.
 
-## Repository Changes
+## Making Changes Safely
+
+### Repository Changes
 
 - Before creating a requested file, check whether it already exists and inspect
   its contents.
@@ -90,71 +110,14 @@
 - Place instructions in the narrowest applicable `AGENTS.md`.
 - Do not place directory-specific instructions in a broader file.
 
-## Chezmoi-Managed Files
-
-- When a target file appears to be managed by chezmoi, do not edit the live
-  target file directly as the durable change.
-- First run `chezmoi update`.
-- Then edit the corresponding source file in the chezmoi source repository.
-- Commit and push the source change with Git.
-- After the source change has been pushed, run `chezmoi apply` to update the
-  live file.
-- If `chezmoi apply` fails because the chezmoi state database or another
-  managed path is permission-gated, rerun the same apply command with the
-  required approval rather than changing the target path or flags.
-
-## Claude-Related Instruction Files
-
-- When creating or editing Claude-related instruction files, including
-  `CLAUDE.md` and `CLAUDE.local.md`, reference other local instruction files
-  with Claude Code's `@` file-reference syntax.
-- Prefer `Follow the instructions in @AGENTS.md.` over prose-only references
-  such as `Follow the instructions in AGENTS.md`.
-- Do not duplicate the full contents of `AGENTS.md` into `CLAUDE.md` unless
-  explicitly requested.
-- If a Claude-related file points to another local instruction file, use an `@`
-  reference that is meaningful from that file's target location.
-
-## Code Style
+### Code Style
 
 - Write no comments unless the reason is non-obvious to a reader unfamiliar
   with the context.
 - Do not add error handling for scenarios that cannot happen in practice.
 - Prefer editing existing files over creating new ones.
 
-## Verification
-
-- After editing files, run `git diff --check`.
-- After changing chezmoi-managed paths or `.chezmoiignore`, verify that the
-  intended files are managed or ignored as expected.
-- Report checks that could not be run.
-
-## Completion Criteria
-
-- Treat investigation, planning, and implementation as separate request scopes.
-- A documentation-affecting configuration change is complete only after the
-  relevant README has been reviewed.
-- Before creating a file, confirm that an equivalent file does not already
-  exist.
-
-## Known Permission-Gated Operations
-
-- For known network operations such as `git push`, `git pull`, `git fetch`, and
-  `chezmoi update`, request the required approval on the first attempt instead
-  of first running in the sandbox and reporting DNS or network failures.
-- For `chezmoi apply` in this environment, request the required approval on the
-  first attempt instead of first producing the known
-  `chezmoistate.boltdb: operation not permitted` failure.
-- For known Git index writes in the chezmoi source repository, such as
-  `git add` and `git commit`, request the required approval on the first
-  attempt instead of first producing `.git/index.lock` permission failures.
-- Keep approval requests narrowly scoped to the exact command family needed for
-  the task.
-- Do not request persistent broad auto-approval for commands that can rewrite
-  history, delete refs, run arbitrary scripts, or exfiltrate secrets. In
-  particular, do not ask to persist broad approval for force-push commands.
-
-## Artifact Reconciliation
+### Artifact Reconciliation
 
 - Before committing work that created new files, inventory newly created files
   and classify them as canonical, draft, merged, or deletion candidates.
@@ -164,7 +127,21 @@
   superseded discussion to commit messages, PR notes, or a dedicated decision
   log when needed.
 
-## Instruction Maintenance
+## Verification & Completion
+
+- Treat investigation, planning, and implementation as separate request scopes.
+- After editing files, run `git diff --check`.
+- After changing chezmoi-managed paths or `.chezmoiignore`, verify that the
+  intended files are managed or ignored as expected.
+- A documentation-affecting configuration change is complete only after the
+  relevant README has been reviewed.
+- Before creating a file, confirm that an equivalent file does not already
+  exist.
+- Report checks that could not be run.
+
+## Maintaining Instructions
+
+### Instruction Maintenance
 
 - When a conversation reveals reusable friction or agent behavior violates user
   intent, propose the smallest concrete instruction improvement before ending
@@ -191,7 +168,45 @@
 - Move rationale, historical context, and superseded discussion out of
   instruction files into commit messages, PR notes, or a dedicated decision log.
 
-## User-Scoped Agent Scripts
+### Claude-Related Instruction Files
+
+- When creating or editing Claude-related instruction files, including
+  `CLAUDE.md` and `CLAUDE.local.md`, reference other local instruction files
+  with Claude Code's `@` file-reference syntax.
+- Prefer `Follow the instructions in @AGENTS.md.` over prose-only references
+  such as `Follow the instructions in AGENTS.md`.
+- Do not duplicate the full contents of `AGENTS.md` into `CLAUDE.md` unless
+  explicitly requested.
+- If a Claude-related file points to another local instruction file, use an `@`
+  reference that is meaningful from that file's target location.
+
+## Environment & Tooling
+
+### Chezmoi-Managed Files
+
+- When a target file appears to be managed by chezmoi, do not edit the live
+  target file directly as the durable change.
+- First run `chezmoi update`.
+- Then edit the corresponding source file in the chezmoi source repository.
+- Commit and push the source change with Git.
+- After the source change has been pushed, run `chezmoi apply` to update the
+  live file.
+- If `chezmoi apply` fails because the chezmoi state database or another
+  managed path is permission-gated, rerun the same apply command with the
+  required approval rather than changing the target path or flags.
+
+### Known Permission-Gated Operations
+
+- For known network operations such as `git push`, `git pull`, `git fetch`, and
+  `chezmoi update`, request the required approval on the first attempt instead
+  of first running in the sandbox and reporting DNS or network failures.
+- Keep approval requests narrowly scoped to the exact command family needed for
+  the task.
+- Do not request persistent broad auto-approval for commands that can rewrite
+  history, delete refs, run arbitrary scripts, or exfiltrate secrets. In
+  particular, do not ask to persist broad approval for force-push commands.
+
+### User-Scoped Agent Scripts
 
 - Reusable but project-specific or write-once-run-later scripts for Codex,
   Claude, or other agents belong under `$XDG_DATA_HOME/agent-scripts/`.
@@ -209,7 +224,7 @@
   belong under `$XDG_STATE_HOME/agent-scripts/` or, if `XDG_STATE_HOME` is
   unset, `$HOME/.local/state/agent-scripts/`.
 
-## External Agent Extensions
+### External Agent Extensions
 
 - Before installing or enabling a public Codex skill, Claude Code skill,
   Claude Code subagent, Claude Code plugin, or MCP-backed agent extension,

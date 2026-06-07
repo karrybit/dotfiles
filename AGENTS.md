@@ -16,6 +16,15 @@
   `AGENTS.md`.
 - Do not place directory-specific instructions in the repository root.
 
+## Known Permission-Gated Operations
+
+- For `chezmoi apply` in this environment, request the required approval on the
+  first attempt instead of first producing the known
+  `chezmoistate.boltdb: operation not permitted` failure.
+- For known Git index writes in this chezmoi source repository, such as
+  `git add` and `git commit`, request the required approval on the first
+  attempt instead of first producing `.git/index.lock` permission failures.
+
 ## Verification
 
 - After changing chezmoi-managed paths or `.chezmoiignore`, verify that the
