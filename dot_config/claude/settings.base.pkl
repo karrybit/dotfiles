@@ -16,6 +16,7 @@ settings: Dynamic = new Dynamic {
     allow {
       "Read(~/.local/share/go/*)"
       "Read(~/work/*)"
+      "Read(~/.config/claude/plans/**)"
     }
     deny {
       "Read(./.env)"
@@ -53,6 +54,7 @@ settings: Dynamic = new Dynamic {
       }
     }
   }
+  plansDir = "~/.config/claude/plans"
   worktree {
     baseRef = "head"
   }
