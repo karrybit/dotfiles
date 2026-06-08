@@ -63,11 +63,11 @@ settings: Dynamic = new Dynamic {
   }
   enabledPlugins {
     ["usage-collector@awesome-claude-marketplace"] = true
+    ["claude-md-management@claude-plugins-official"] = true
+    ["code-review@claude-plugins-official"] = true
+    ["commit-commands@claude-plugins-official"] = true
     ["skill-creator@claude-plugins-official"] = true
     ["slack@claude-plugins-official"] = true
-    ["superpowers@claude-plugins-official"] = true
-    ["gopls-lsp@claude-plugins-official"] = true
-    ["typescript-lsp@claude-plugins-official"] = true
   }
   alwaysThinkingEnabled = true
   effortLevel = "xhigh"
