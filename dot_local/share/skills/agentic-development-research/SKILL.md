@@ -8,6 +8,29 @@ description: Run recurring research on coding agents and agentic software delive
 Use this skill to run the recurring research workflow defined in the shared
 agent docs cache. Do not store research results in this skill.
 
+## When to Use
+
+Invoke this skill when the user explicitly requests one of the following:
+- Updating or refreshing a research ledger for the `coding-agent` or
+  `agentic-software-delivery` track.
+- Extracting or reviewing trial candidates or strategic watch items from
+  existing ledger evidence.
+- Deciding where to store a new research artifact (run directory, ledger,
+  strategy file).
+- Running a scheduled or ad-hoc research pass on coding-agent tooling (Claude
+  Code, Cursor, Copilot, etc.) or delivery orchestration topics.
+
+## When NOT to Use
+
+Do not invoke this skill for:
+- Editing `AGENTS.md`, `CLAUDE.md`, skills, subagents, MCP configuration, or
+  settings files — use the appropriate implementation skill instead (e.g.
+  `improve-claude-md`, `update-config`).
+- General web research unrelated to agentic development — use `WebSearch`
+  directly.
+- Summarising or publishing research findings to external channels — use the
+  appropriate communication skill.
+
 ## Required Sources
 
 Read these files before updating research artifacts:
@@ -21,18 +44,20 @@ Read these files before updating research artifacts:
 
 ## Workflow
 
-1. Classify the request as `coding-agent`, `agentic-software-delivery`, or
+1. Read `~/.local/share/agents/docs/agentic-development-research-index.md` to
+   orient to the current state of all tracks before doing anything else.
+2. Classify the request as `coding-agent`, `agentic-software-delivery`, or
    both.
-2. Read the matching track's `strategy.md` and `ledger.md`.
-3. Use current official or primary sources for product behavior before relying
+3. Read the matching track's `strategy.md` and `ledger.md`.
+4. Use current official or primary sources for product behavior before relying
    on practitioner or community sources.
-4. Update the track `ledger.md` with source-level evidence, status, freshness,
+5. Update the track `ledger.md` with source-level evidence, status, freshness,
    and revalidation metadata.
-5. Promote only reviewed findings into `Candidate Extraction` or
+6. Promote only reviewed findings into `Candidate Extraction` or
    `Strategic Watch Items`.
-6. Record run-level summaries, candidate actions, and decisions under
+7. Record run-level summaries, candidate actions, and decisions under
    `~/.local/share/agents/docs/agentic-development-runs/YYYY-MM-DD/`.
-7. Keep implementation changes separate. Do not edit AGENTS, skills, subagents,
+8. Keep implementation changes separate. Do not edit AGENTS, skills, subagents,
    settings, evals, MCP configuration, or workflow scripts unless the user
    explicitly asks for that implementation step.
 
@@ -47,6 +72,27 @@ Read these files before updating research artifacts:
   `$HOME/.local/share/agent-scripts/` when `XDG_DATA_HOME` is unset.
 - Runtime outputs and logs belong under `$XDG_STATE_HOME/agent-scripts/`, or
   `$HOME/.local/state/agent-scripts/` when `XDG_STATE_HOME` is unset.
+
+## Output Format
+
+After completing a research pass, return a structured summary containing:
+
+1. **Track**: which track(s) were researched (`coding-agent` /
+   `agentic-software-delivery` / both).
+2. **Sources consulted**: list of files read and external sources checked, with
+   freshness dates.
+3. **Ledger changes**: which entries were added, updated, or flagged for
+   revalidation, with evidence snippets.
+4. **Candidate actions**: zero or more items promoted to `Candidate Extraction`
+   or `Strategic Watch Items`, each with a one-line rationale.
+5. **Run record location**: the path under
+   `~/.local/share/agents/docs/agentic-development-runs/YYYY-MM-DD/` where the
+   full run summary was written.
+6. **Deferred items**: topics that required live network access or were out of
+   scope for this pass, noted explicitly.
+
+Do not return raw ledger dumps. Summarise changes; the ledger files are the
+authoritative record.
 
 ## Agent-Specific Boundaries
 

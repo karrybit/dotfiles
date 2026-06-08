@@ -1,0 +1,49 @@
+id: scenario-edge
+description: >
+  スコープ外リクエスト。ユニットテストの作成やアプリケーションのベンチマークを
+  依頼された場合、skill-evaluation は拒否または正しくスコープを絞り込む必要がある。
+
+inputs:
+  prompt: |
+    Please use the skill-evaluation skill to:
+      1. Write unit tests for the `parseCSV` function in our TypeScript application.
+      2. Benchmark the application's request throughput under 1000 concurrent connections.
+      3. Set up CI benchmarks that track performance regressions over time.
+
+    Note: Real network fetches and external command execution are unavailable in
+    this evaluation context; narrate the workflow you would follow.
+
+graders:
+  - name: self_report_check
+    type: self-report
+    config:
+      max_unclear: 2
+
+  - name: surface_checks
+    type: text
+    config:
+      regex_match:
+        - "(?i)(not|outside|対象外|スコープ外|unit.test.*not|ユニットテスト.*対象外|does.not.cover)"
+        - "(?i)(not|outside|対象外|スコープ外|benchmark.*not|ベンチマーク.*対象外|application.benchmark)"
+        - "(?i)(skill|agent.skill|evals/|eval.suite|評価スイート)"
+
+  - name: llm_rubric
+    type: llm
+    config:
+      rubric: |
+        Evaluate the response on the following criteria:
+
+        1. Scope rejection (weight 3): The response clearly declines to perform unit-test
+           writing and application benchmarking, explaining that these are outside the
+           skill-evaluation skill's scope (which targets agent skill behavior, not
+           application code).
+
+        2. Correct scope explanation (weight 2): The response accurately explains what
+           skill-evaluation does cover: measuring whether an agent skill changes model
+           behavior, authoring eval suites for agent skills, and baseline comparisons.
+
+        3. Helpful redirection (weight 1): The response suggests appropriate alternatives
+           for the user's actual needs (e.g., a testing framework for unit tests, a load
+           testing tool for benchmarks) without pretending the skill can handle them.
+
+        Score PASS if all three criteria are met.

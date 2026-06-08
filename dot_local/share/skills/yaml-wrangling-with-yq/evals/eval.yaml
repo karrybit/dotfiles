@@ -1,0 +1,13 @@
+name: yaml-wrangling-with-yq
+skill: yaml-wrangling-with-yq
+description: Evaluate the yaml-wrangling-with-yq skill for correct yq-first workflow,
+  tool-choice discipline, and guardrail adherence.
+
+trials_per_task: 2
+require_self_report: true
+max_unclear: 1
+max_retries: 0
+
+tasks:
+  - tasks/scenario-typical.yaml
+  - tasks/scenario-edge.yaml

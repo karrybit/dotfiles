@@ -1,0 +1,29 @@
+iterations:
+  - id: iter-0-static
+    date: 2026-06-08
+    scope: static-analysis
+    overall_pass_rate: null
+    note: "waxa CLI 未実行。静的分析のみ実施。"
+    unclear_points:
+      - issue: "When to invoke / When NOT to use の記述がなく、バックエンド実装などスコープ外リクエストでも起動される可能性がある"
+        cause: "SKILL.md の本文にスコープ境界の記述がなく、frontmatter の description だけでは不十分"
+        general_fix_rule: "全スキルの SKILL.md 本文に When to Use / When NOT to Use セクションを設ける"
+      - issue: "出力形式（ファイル構造、コンポーネント形式）が不明瞭で、成果物の完全性を評価しにくい"
+        cause: "実装技術の列挙はあるが、成果物が単一ファイルか複数ファイルかなどの形式要件が定義されていない"
+        general_fix_rule: "Output Format セクションを設け、成果物の形式・完全性・動作可能性の要件を明示する"
+      - issue: "アクセシビリティ要件（WCAG など）への言及がなく、品質基準が視覚的側面に偏っている"
+        cause: "デザイン品質の定義がビジュアル・アニメーション中心で、機能的アクセシビリティが欠落している"
+        general_fix_rule: "デザインスキルに WCAG AA ベースラインとセマンティック HTML の要件を明記する"
+    actions:
+      - "SKILL.md に When to Use / When NOT to Use セクションを追加"
+      - "SKILL.md に Output Format セクションを追加（完全動作コード・アクセシビリティ要件を含む）"
+      - "evals/eval.yaml を作成（2タスク、trials_per_task: 2）"
+      - "evals/tasks/scenario-typical.yaml を作成（Coffee brand landing page、self-report + text + llm グレーダー）"
+      - "evals/tasks/scenario-edge.yaml を作成（バックエンド実装依頼、スコープ外識別テスト）"
+
+convergence:
+  status: pending-waxa-run
+  rationale: |
+    静的分析のみ実施。eval ファイルは作成済み。
+    waxa 実行により actual pass rate を計測し、iter-1 以降で
+    grader の regex や llm ルーブリックを調整する必要がある。

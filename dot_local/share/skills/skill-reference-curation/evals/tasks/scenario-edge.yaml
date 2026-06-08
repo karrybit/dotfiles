@@ -1,0 +1,71 @@
+id: scenario-edge
+description: >
+  Edge case: user asks to improve the skill's workflow logic and add new trigger
+  conditions — not to add or update reference files. The skill should recognize
+  this is out of scope, explain which skill handles workflow improvement
+  (manage-agent-skills), and NOT attempt to curate references or rewrite SKILL.md
+  workflow steps.
+
+inputs:
+  prompt: |
+    I want to improve the `gh-pr-review` skill. Right now it only triggers when a user
+    says "review this PR". I'd like it to also trigger when a user pastes a GitHub PR
+    URL, or when the user says "check this diff". Can you update the skill's trigger
+    conditions and rewrite the workflow steps to handle these new entry points?
+
+    Note: Real network fetches and external command execution are unavailable in this
+    evaluation context; narrate the workflow you would follow.
+
+graders:
+  # --- Axis 1: Correctly defers to manage-agent-skills (or equivalent) ---
+  - name: defers_workflow_edit_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(manage.?agent.?skills|write.?a.?skill|scope.*outside|outside.*scope|not.*this.*skill|別.*スキル|スコープ外|対象外|このスキルでは)"
+
+  - name: defers_workflow_edit_llm
+    type: llm
+    config:
+      rubric: |
+        The response must recognize that editing a skill's trigger conditions and
+        workflow steps is outside the scope of `skill-reference-curation`. It should
+        say so explicitly and ideally name the correct skill to use (manage-agent-skills
+        or write-a-skill). It must NOT proceed to rewrite the skill's workflow or
+        triggers as if this were in scope.
+        Score 1 if the response correctly declines and points to a more appropriate
+        skill or path.
+        Score 0 if the response proceeds to rewrite workflow logic without
+        acknowledging the scope boundary.
+
+  # --- Axis 2: Does not leave the user empty-handed ---
+  - name: offers_path_forward_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(manage.?agent.?skills|instead.*use|use.*instead|代わりに|こちら.*使|recommend|suggest|提案)"
+
+  - name: offers_path_forward_llm
+    type: llm
+    config:
+      rubric: |
+        Even when declining, the response must give the user a concrete path forward.
+        It should name the appropriate skill (e.g., `manage-agent-skills`) or describe
+        what the user should do next to accomplish their goal (editing trigger conditions
+        and workflow steps). A bare refusal with no direction scores 0.
+        Score 1 if the response declines AND provides a concrete alternative or next step.
+        Score 0 if the response only declines without any actionable guidance.
+
+  # --- Axis 3: Does not incorrectly attempt reference curation for this request ---
+  - name: no_spurious_reference_curation_llm
+    type: llm
+    config:
+      rubric: |
+        The response must not propose creating or updating reference files as a way to
+        address the user's request for workflow/trigger changes. Reference curation is
+        not relevant to adding new trigger conditions. The response should recognize
+        that no reference file work is needed here.
+        Score 1 if the response does not propose any reference file changes in response
+        to this request.
+        Score 0 if the response attempts to satisfy the request by suggesting reference
+        file additions or updates.

@@ -1,0 +1,12 @@
+name: skill-reference-curation
+skill: skill-reference-curation
+description: Evaluate the skill-reference-curation skill for correct reference-placement decisions, scope boundary enforcement, and output-shape adherence.
+
+trials_per_task: 2
+require_self_report: true
+max_unclear: 1
+max_retries: 0
+
+tasks:
+  - tasks/scenario-typical.yaml
+  - tasks/scenario-edge.yaml

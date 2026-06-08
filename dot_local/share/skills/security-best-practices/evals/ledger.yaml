@@ -1,0 +1,51 @@
+iterations:
+  - id: iter-0-static
+    date: 2026-06-08
+    scope: static-analysis
+    overall_pass_rate: null
+    note: "waxa CLI 未実行。静的分析のみ実施。"
+    unclear_points:
+      - issue: >
+          本文に "When NOT to use" セクションが存在せず、非対応言語
+          (Java, Ruby, Rust 等) へのリクエスト時に何をすべきかが不明確だった。
+        cause: >
+          frontmatter の description にのみ除外条件が記載されており、
+          本文の Workflow にその条件が反映されていなかった。
+        general_fix_rule: >
+          スキル本文の冒頭に "When to Use / When NOT to Use" セクションを
+          設け、トリガー条件・除外条件・対応言語リストをすべて本文に明示する。
+      - issue: >
+          references/ にファイルが存在しない言語(Java 等)へのリクエスト時、
+          エージェントが架空のファイルパスを返すリスクがあった。
+          Workflow Decision Tree のフォールバック説明が「考える」という
+          曖昧な表現に止まっており、hallucination を防ぐ明示的な禁止がなかった。
+        cause: >
+          "if no matching guidance exists, consider if you know any well known
+          security best practices" という指示が、ファイルの存在確認をスキップ
+          して回答することを許容するように読めた。
+        general_fix_rule: >
+          フォールバックパスで「存在しない参照ファイルを偽りに読んだと言わない」
+          という禁止を明示し、代わりに best-effort ラベルを付けて回答するよう指示する。
+      - issue: >
+          パッシブ検出モード (mode 2) の出力形式が未定義だった。
+          レポートモード (mode 3) には Report Format セクションがあるが、
+          パッシブモードには対応するフォーマットがなかった。
+        cause: >
+          スキルがレポートモードを主要ユースケースとして設計されており、
+          パッシブモードの出力形式が後付けで検討されていなかった。
+        general_fix_rule: >
+          各動作モードに対して出力形式(最低限: severity ラベル、ファイル名、行番号)
+          を明示する。
+    actions:
+      - "SKILL.md 冒頭に 'When to Use This Skill' セクションを追加し、トリガー条件と除外条件を明示"
+      - "SKILL.md に 'Supported Languages and Frameworks' 一覧テーブルを追加"
+      - "Workflow Decision Tree の non-matching フォールバックを具体化: 架空ファイル参照の禁止、best-effort ラベルの使用、免責事項付きレポートの生成を明示"
+      - "mode 2 (passive detection) の説明に inline 出力形式 (CRITICAL/HIGH/MEDIUM ラベル、ファイル名・行番号) を追加"
+      - "evals/eval.yaml、evals/tasks/scenario-typical.yaml、evals/tasks/scenario-edge.yaml を新規作成"
+
+convergence:
+  status: pending-waxa-run
+  rationale: |
+    静的分析のみ実施。eval ファイルは作成済み。
+    waxa 実行は別途必要。waxa による実際の pass/fail 計測後に
+    iter-1 以降のエントリを追加すること。

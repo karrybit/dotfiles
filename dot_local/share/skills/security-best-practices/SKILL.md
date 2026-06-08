@@ -5,6 +5,30 @@ description: "Perform language and framework specific security best-practice rev
 
 # Security Best Practices
 
+## When to Use This Skill
+
+Trigger this skill only when the user explicitly requests:
+- Security best practices guidance
+- A security review or security report
+- Secure-by-default coding help for a new project
+
+**Do not trigger** for:
+- General code review or refactoring requests that do not mention security
+- Debugging, performance, or style tasks
+- Languages for which no reference file exists and the user has not asked for a best-effort review
+
+## Supported Languages and Frameworks
+
+Reference files exist for the following languages and frameworks. Load the relevant files during the workflow:
+
+| Language | Frameworks / Stacks |
+|---|---|
+| Python | Django, FastAPI, Flask, (general backend) |
+| JavaScript / TypeScript | Express (server), Next.js (server), React (frontend), Vue (frontend), jQuery (frontend), (general frontend) |
+| Go | (general backend) |
+
+If the user's codebase uses a language or framework not in this table, inform the user that no reference file is available and proceed with general knowledge only, clearly stating the limitation.
+
 ## Overview
 
 This skill provides a description of how to identify the language and frameworks used by the current context, and then to load information from this skill's references directory about the security best practices for this language and or frameworks.
@@ -27,7 +51,7 @@ From there it can operate in a few ways.
 
 1. The primary mode is to just use the information to write secure by default code from this point forward. This is useful for starting a new project or when writing new code.
 
-2. The secondary mode is to passively detect vulnerabilities while working in the project and writing code for the user. Critical or very important vulnerabilities or major issues going against security guidance can be flagged and the user can be told about them. This passive mode should focus on the largest impact vulnerabilities and secure defaults.
+2. The secondary mode is to passively detect vulnerabilities while working in the project and writing code for the user. Critical or very important vulnerabilities or major issues going against security guidance can be flagged and the user can be told about them. This passive mode should focus on the largest impact vulnerabilities and secure defaults. Passive findings should be reported inline with a brief one-line description and severity label (CRITICAL / HIGH / MEDIUM), referencing the affected file and line number where possible.
 
 3. The user can ask for a security report or to improve the security of the codebase. In this case a full report should be produced describe anyways the project fails to follow security best practices guidance. The report should be prioritized and have clear sections of severity and urgency. Then offer to start working on fixes for these issues. See #fixes below.
 
@@ -35,7 +59,11 @@ From there it can operate in a few ways.
 
 - If the language/framework is unclear, inspect the repo to determine it and list your evidence.
 - If matching guidance exists in `references/`, load only the relevant files and follow their instructions.
-- If no matching guidance exists, consider if you know any well known security best practices for the chosen language and or frameworks, but if asked to generate a report, let the user know that concrete guidance is not available (you can still generate the report or detect for sure critical vulnerabilities)
+- If no matching guidance exists:
+  - Explicitly tell the user: "No reference file is available for <language/framework> in this skill's references directory."
+  - Do not fabricate or claim to load a reference file that does not exist.
+  - Apply general security knowledge you have for the language/framework, clearly labelling each finding as "best-effort (no reference file)" rather than reference-backed guidance.
+  - If asked to generate a report, produce it with a prominent disclaimer that concrete guidance from a reference file was unavailable.
 
 # Overrides
 

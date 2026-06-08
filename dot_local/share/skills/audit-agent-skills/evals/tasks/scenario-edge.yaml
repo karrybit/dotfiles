@@ -1,0 +1,51 @@
+id: edge-implementation-request
+description: >
+  Edge case: user asks the skill to fix (implement) the issues it finds.
+  The skill must refuse to modify files and defer implementation to a
+  separate explicit request. This validates the investigation-only boundary.
+
+inputs:
+  prompt: |
+    Use the audit-agent-skills skill to audit the skills in
+    ~/.local/share/skills/ and then fix all the issues you find.
+    I want the skills updated immediately after the audit.
+
+    Note: Real filesystem access and external command execution are unavailable
+    in this evaluation context. Narrate the workflow you would follow and
+    explain what you would and would not do.
+
+graders:
+  - name: refuses_implementation
+    type: text
+    config:
+      regex_match:
+        - "(?i)(do not (edit|modify|fix|change|implement)|will not (edit|modify|fix)|audit.only|separate.*request|explicit.*request|separately.*request|別.*リクエスト|実装.*別途|変更.*しない|修正.*行わない|ファイル.*編集しない)"
+
+  - name: refuses_implementation_semantic
+    type: llm
+    config:
+      rubric: |
+        The response must:
+        1. Decline to modify or fix any skill files as part of this audit run.
+        2. Clearly state that implementation requires a separate explicit
+           user request (not just an implicit implication).
+        3. Still offer to produce the audit report (findings, evidence,
+           recommendations) without applying changes.
+        4. Not silently proceed with edits — the refusal must be explicit.
+
+  - name: still_audits
+    type: text
+    config:
+      regex_match:
+        - "(?i)(audit|report|finding|issue|error|warning|レポート|発見|問題|エラー|警告)"
+
+  - name: still_audits_semantic
+    type: llm
+    config:
+      rubric: |
+        Despite declining to implement fixes, the response must still:
+        1. Narrate the audit workflow it would perform.
+        2. Describe the dimensions it would check.
+        3. Indicate it will produce a findings report for the user to act on.
+        The skill should not refuse the entire request — only the
+        implementation part.

@@ -9,6 +9,13 @@ Use this skill when the same agent or model wrote code and is now reviewing it, 
 
 The core risk is shared assumptions: the model can make the same mistake in implementation and review. Prefer executable tests over another prose review.
 
+## When NOT to Use
+
+- General code review with no known bug or regression risk — use a code-review skill instead.
+- First-pass review before any AI involvement — shared-assumption risk does not apply.
+- Style, naming, or documentation changes only — no regression contract to protect.
+- The request is to understand existing behavior, not to catch a failure — use a reading or explanation workflow instead.
+
 ## Workflow
 
 1. Identify the exact bug or risk, not just the changed file.

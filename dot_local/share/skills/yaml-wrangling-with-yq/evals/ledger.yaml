@@ -1,0 +1,47 @@
+eval: yaml-wrangling-with-yq
+skill: yaml-wrangling-with-yq
+patterns: []
+iterations:
+  - iter: 1
+    timestamp: '2026-06-08T14:57:58.517Z'
+    overall_pass_rate: 0.1556
+    new_unclear_count: 0
+    reseen_count: 0
+    total_unclear: 0
+    new_rules: []
+    reseen_rules: []
+    notes: >
+      Runner-error: sandbox blocked gcloud credentials read
+      (/Users/…/.config/gcloud/application_default_credentials.json EPERM).
+      claude -p exit 1 before producing any output. All LLM graders failed as
+      judge-error. Pass rate reflects _output_contains only. Not a skill defect.
+  - iter: 2
+    timestamp: '2026-06-08T14:58:02.735Z'
+    overall_pass_rate: 0.1556
+    new_unclear_count: 0
+    reseen_count: 0
+    total_unclear: 0
+    new_rules: []
+    reseen_rules: []
+    notes: Same sandbox failure as iter-1. Identical pass rate is expected (no edit between runs; no real execution).
+  - iter: 3
+    timestamp: '2026-06-08T15:00:22.001Z'
+    overall_pass_rate: 1
+    new_unclear_count: 0
+    reseen_count: 0
+    total_unclear: 0
+    new_rules: []
+    reseen_rules: []
+    notes: >
+      First clean run (sandbox disabled). Both scenarios 100%.
+      scenario-typical: inspection → yq-first patch → source preservation → round-trip validation all passed.
+      scenario-edge: correctly defers to json-wrangling-with-jq with a concrete jq pipeline.
+      Self-report: all phases OK, unclear=0, retries=0 for both tasks.
+convergence:
+  status: converged
+  rationale: |
+    iter-1 (16%) → iter-2 (16%) → iter-3 (100%).
+    iter-1 and iter-2 were sandbox-induced runner failures (gcloud EPERM); not skill defects.
+    iter-3 is the first real execution: both scenarios passed 100% with no unclear points.
+    Convergence declared on iter-3 (zero unclear, zero retries, all LLM graders ≥ 0.95).
+    No residuals remain.

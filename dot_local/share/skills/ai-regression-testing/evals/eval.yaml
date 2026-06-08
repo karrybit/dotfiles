@@ -1,0 +1,14 @@
+skill: ai-regression-testing
+skill_path: ../SKILL.md
+trials_per_task: 2
+tasks:
+  - tasks/scenario-typical.yaml
+  - tasks/scenario-edge.yaml
+
+graders:
+  - name: self_report_present
+    type: self-report
+    config:
+      require_self_report: true
+      max_unclear: 1
+      max_retries: 0

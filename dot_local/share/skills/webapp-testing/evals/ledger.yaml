@@ -1,0 +1,21 @@
+iterations:
+  - id: iter-0-static
+    date: 2026-06-08
+    scope: static-analysis
+    overall_pass_rate: null
+    note: "waxa CLI 未実行。静的分析のみ実施。"
+    unclear_points:
+      - "examples/ ディレクトリ内のファイルが実際に存在するか未確認"
+      - "with_server.py の --help 出力内容・オプションの網羅性"
+      - "headless モード以外（有頭ブラウザ）のユースケースが想定されるか"
+    actions:
+      - "SKILL.md に When to use / When NOT to use セクションを追加"
+      - "SKILL.md に Expected outputs セクションを追加"
+      - "Reference Files に scripts/with_server.py への明示的な参照を追加"
+      - "evals/eval.yaml を作成"
+      - "evals/tasks/scenario-typical.yaml を作成（Playwright ローカル web app テスト）"
+      - "evals/tasks/scenario-edge.yaml を作成（スコープ外リクエスト：Jest + curl）"
+
+convergence:
+  status: pending-waxa-run
+  rationale: "静的分析のみ実施。eval ファイルは作成済み。waxa CLI による実行ループ（スコア収束確認）は未実施。"

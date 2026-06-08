@@ -1,0 +1,47 @@
+eval: json-wrangling-with-jq
+skill: json-wrangling-with-jq
+patterns:
+  - rule: >-
+      skill を実行する前に、入力の実データ形式が当該 skill のスコープ条件を満たすか検証し、満たさない場合は本文が指定する委譲先 skill
+      へ誘導してから着手する。
+    seen_in:
+      - 2
+    representative_issue: >-
+      scenario が json-wrangling-with-jq skill の下で与えられたが、入力は CSV であり当該 skill
+      の適用対象外だった。
+iterations:
+  - iter: 1
+    timestamp: '2026-06-08T14:49:15.618Z'
+    overall_pass_rate: 1
+    new_unclear_count: 0
+    reseen_count: 0
+    total_unclear: 0
+    new_rules: []
+    reseen_rules: []
+  - iter: 2
+    timestamp: '2026-06-08T14:51:05.836Z'
+    overall_pass_rate: 1
+    new_unclear_count: 1
+    reseen_count: 0
+    total_unclear: 1
+    new_rules:
+      - >-
+        skill を実行する前に、入力の実データ形式が当該 skill のスコープ条件を満たすか検証し、満たさない場合は本文が指定する委譲先
+        skill へ誘導してから着手する。
+    reseen_rules: []
+  - iter: 3
+    timestamp: '2026-06-08T14:52:50.762Z'
+    overall_pass_rate: 1
+    new_unclear_count: 0
+    reseen_count: 0
+    total_unclear: 0
+    new_rules: []
+    reseen_rules: []
+  - iter: 4
+    timestamp: '2026-06-08T14:54:33.715Z'
+    overall_pass_rate: 1
+    new_unclear_count: 0
+    reseen_count: 0
+    total_unclear: 0
+    new_rules: []
+    reseen_rules: []

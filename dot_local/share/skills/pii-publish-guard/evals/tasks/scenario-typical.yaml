@@ -1,0 +1,116 @@
+id: scenario-typical
+description: |
+  Typical use — user is about to open a PR that includes config changes
+  in a chezmoi dotfiles repo. The skill should inspect the staged diff,
+  identify any PII or secrets, and report what was found and what to do.
+
+inputs:
+  prompt: |
+    I'm about to open a pull request from my local dotfiles (chezmoi) repo.
+    The staged diff contains changes to dot_config/git/config and
+    dot_config/ssh/config. I want you to run pii-publish-guard on the
+    staged changes before I push.
+
+    The staged diff looks like this:
+
+    ```diff
+    --- a/dot_config/git/config
+    +++ b/dot_config/git/config
+    @@ -1,6 +1,8 @@
+     [user]
+    -	name = John Doe
+    -	email = john.doe@acme-corp.internal
+    +	name = {{ .name }}
+    +	email = {{ .email }}
+     [core]
+         editor = vim
+    +[url "https://github.com/"]
+    +    insteadOf = git@github-acme:
+    --- a/dot_config/ssh/config
+    +++ b/dot_config/ssh/config
+    @@ -0,0 +1,6 @@
+    +Host github-acme
+    +    HostName github.com
+    +    User git
+    +    IdentityFile /Users/john.doe/.ssh/id_rsa_acme
+    +    IdentityFile ~/.ssh/id_rsa_acme
+    ```
+
+    Note: Real network fetches and external command execution (git, rg, etc.) are
+    unavailable in this evaluation context; narrate the workflow you would follow,
+    what you found, what you would change, and any remaining risk.
+
+graders:
+  # --- Axis 1: inspection surface identified ---
+  - name: surface_identified
+    type: text
+    config:
+      regex_match:
+        - "(?i)(staged\\s*diff|git\\s*diff\\s*--cached|staged\\s*change|publication\\s*surface|inspect(ing|ed)?\\s*(the\\s*)?(diff|content|staged|change))"
+
+  - name: surface_identified_llm
+    type: llm
+    config:
+      rubric: |
+        The response must clearly identify which content will be published
+        (the staged diff or the two config files shown). It must not treat
+        the working tree in general as the inspection surface.
+      pass_threshold: 0.7
+
+  # --- Axis 2: PII / sensitive data identified ---
+  - name: pii_found
+    type: text
+    config:
+      regex_match:
+        - "(?i)(pii|personal|sensitive|private|absolute\\s*path|home\\s*path|username|IdentityFile|/Users/|id_rsa|secret|credential|employer|internal|email|phone|address)"
+
+  - name: pii_found_llm
+    type: llm
+    config:
+      rubric: |
+        The response must flag at least two of the following as problematic
+        before they were templated: (a) the absolute path /Users/john.doe/.ssh/id_rsa_acme
+        in the SSH config, (b) the private/internal hostname "github-acme" or
+        "acme-corp.internal" that could reveal organizational data.
+        The templated name/email lines should be acknowledged as already safe.
+      pass_threshold: 0.7
+
+  # --- Axis 3: remediation or action recommended ---
+  - name: remediation_recommended
+    type: text
+    config:
+      regex_match:
+        - "(?i)(template|placeholder|{{ |chezmoi|redact|replace|remove|use\\s*(a\\s*)?(variable|template)|change|fix|risker?|block(er)?|must\\s*(not|be)|do\\s*not\\s*publish|remaining\\s*risk)"
+
+  - name: remediation_recommended_llm
+    type: llm
+    config:
+      rubric: |
+        The response must either (a) recommend templating the absolute IdentityFile
+        path using chezmoi template syntax, or (b) flag it as a blocker and
+        explain what must be changed before the PR can be opened safely.
+        A response that only lists findings without any remediation guidance fails.
+      pass_threshold: 0.7
+
+  # --- Axis 4: re-inspection step mentioned ---
+  - name: reinspect_mentioned
+    type: text
+    config:
+      regex_match:
+        - "(?i)(re.?(run|inspect|check|scan|verify|review)|after.*(edit|fix|change|remediat)|before.*(push|publish|open|merge|pr|pull.request)|再.*(チェック|確認|スキャン|検査)|push.*前|修正.*後|once.*fix|verify.*after|check.*again)"
+
+  - name: reinspect_mentioned_llm
+    type: llm
+    config:
+      rubric: |
+        The response must mention re-running the inspection or verifying the
+        changes after edits, before the pull request is opened or pushed.
+      pass_threshold: 0.7
+
+  # --- Self-report ---
+  - name: self_report
+    type: self-report
+    config:
+      require_self_report: true
+      max_unclear: 1
+      max_retries: 0

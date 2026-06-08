@@ -1,0 +1,61 @@
+id: scenario-typical
+description: |
+  典型的なUIコンポーネント生成リクエスト。
+  フロントエンドデザインの主要ユースケースをカバーする。
+
+inputs:
+  prompt: |
+    Create a visually striking product landing page for a fictional premium coffee
+    brand called "Noir Brew". The page should include: a hero section with a headline
+    and CTA button, a features section highlighting three key selling points, and a footer.
+    Use HTML, CSS, and vanilla JavaScript. Apply a distinctive aesthetic with strong
+    typographic choices and a memorable color scheme.
+
+    Note: Real network fetches and external command execution are unavailable in this
+    evaluation context; narrate the workflow you would follow.
+
+graders:
+  - name: self_report_check
+    type: self-report
+    config:
+      max_unclear: 1
+
+  - name: surface_checks
+    type: text
+    config:
+      regex_match:
+        - "(?i)(aesthetic|美学|デザイン方針|design direction|tone|concept|コンセプト|design.concept|visual|ビジュアル|style|スタイル|brand|ブランド|noir|dark|black)"
+        - "(?i)(typography|font|フォント|typeface)"
+        - "(?i)(color|colour|カラー|palette|配色)"
+        - "(?i)(html|css|javascript|<style|<html)"
+        - "(?i)(hero|landing|section|cta|button|headline)"
+
+  - name: llm_rubric
+    type: llm
+    config:
+      rubric: |
+        以下の観点でレスポンスを評価してください:
+
+        1. デザイン思考の明示: コーディング前にデザイン方向性（tone, aesthetic direction）
+           を明示しているか。
+           PASS: 明確なコンセプト・方向性を宣言してからコードを提示している
+           FAIL: 説明なしにコードのみを提示している
+
+        2. コード品質: 提示されたHTML/CSS/JSコードが機能的か。
+           PASS: 完結したHTMLドキュメントまたは機能するコンポーネントが含まれている
+           FAIL: 断片的なスニペットのみ、または動作しないコード
+
+        3. タイポグラフィの独自性: Inter、Arial、Roboto、system-uiなどのジェネリックフォントを
+           避け、特徴的なフォントを選択しているか。
+           PASS: ジェネリックフォントを使用せず、コンセプトに合ったフォントを選んでいる
+           FAIL: デフォルトや汎用フォントを使用している
+
+        4. カラー設計: 一貫したカラーパレットを持ち、凡庸なグラデーションを避けているか。
+           PASS: 明確なカラーコンセプトがあり、一貫した色体系を持つ
+           FAIL: 汎用的・ありきたりなカラー選択
+
+        5. スコープ遵守: フロントエンドのみを実装し、バックエンド等スコープ外の実装がないか。
+           PASS: フロントエンド実装のみを提供している
+           FAIL: バックエンドAPIや不要なサーバーサイドコードを含む
+
+        5項目中4項目以上PASSで総合PASS。

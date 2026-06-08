@@ -1,0 +1,138 @@
+id: scenario-typical
+description: >
+  User has finished a multi-step implementation session that touched code,
+  config, documentation, and an agent skill. They ask for a final review of
+  all changed artifacts before closing the task. The skill should inventory
+  changes, classify each artifact, check cross-artifact consistency, and
+  report findings ordered by severity without editing any files.
+
+inputs:
+  prompt: |
+    We just finished implementing a new "data-export" feature for our CLI tool.
+    The session touched the following files (simulated git status output):
+
+    M  src/commands/export.ts
+    M  src/commands/export.test.ts
+    A  docs/export-guide.md
+    A  .claude/skills/data-export/SKILL.md
+    M  CHANGELOG.md
+    M  README.md
+    D  src/commands/export.bak.ts
+    A  tmp/export-debug.log
+
+    Here is a brief description of each artifact:
+
+    - **src/commands/export.ts**: New export command implementation using the
+      "csv" and "json" output formats. The internal flag is `--format`.
+    - **src/commands/export.test.ts**: Unit tests for the export command.
+      Coverage focuses on the happy path; edge cases for empty datasets are
+      marked TODO.
+    - **docs/export-guide.md**: User-facing guide. Currently documents the
+      flag as `--output-format` (not `--format`).
+    - **.claude/skills/data-export/SKILL.md**: Agent skill for running the
+      export pipeline. The skill description says it "generates a report",
+      but the actual command now produces a raw data dump, not a formatted
+      report.
+    - **CHANGELOG.md**: Updated with a new entry for the feature. The entry
+      says "added --output-format flag" (stale name from an earlier design).
+    - **README.md**: Updated the Features section; does not mention the
+      export command yet.
+    - **src/commands/export.bak.ts**: A backup file created during
+      development. Not imported anywhere.
+    - **tmp/export-debug.log**: A debug log from the last test run.
+
+    Please do a final artifact review of this set. Classify each artifact,
+    check consistency, identify issues, and report findings.
+
+    Note: Real network fetches and external command execution are unavailable
+    in this evaluation context; narrate the workflow you would follow,
+    including what you would check for each artifact and what issues you would
+    surface.
+
+graders:
+  - name: inventory_and_classify_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(canonical|draft|deletion.?candidate|merged|classification|classify|分類|削除候補|正規)"
+
+  - name: inventory_and_classify_llm
+    type: llm
+    config:
+      rubric: |
+        The response must classify the changed artifacts. It must:
+        1. Identify export.bak.ts and/or tmp/export-debug.log as deletion
+           candidates or non-canonical artifacts (backup/runtime state).
+        2. Identify the canonical source files (export.ts, tests, docs, skill,
+           CHANGELOG, README) as canonical or draft as appropriate.
+        Score PASS if at least criterion 1 is met.
+
+  - name: consistency_flag_name_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(--format|--output-format|flag.*(mismatch|inconsisten|stale|wrong)|mismatch.*flag|inconsisten|フラグ|不整合|不一致)"
+
+  - name: consistency_flag_name_llm
+    type: llm
+    config:
+      rubric: |
+        The response must surface the flag-name inconsistency: the implementation
+        uses --format but docs/export-guide.md and CHANGELOG.md document it as
+        --output-format. Score PASS if this specific cross-artifact mismatch is
+        identified with both the incorrect and correct name.
+
+  - name: skill_description_mismatch_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(skill.*(report|dump|mismatch|stale|wrong|description)|report.*dump|data.?dump|スキル.*不整合|スキル.*説明)"
+
+  - name: skill_description_mismatch_llm
+    type: llm
+    config:
+      rubric: |
+        The response must identify that the SKILL.md description ("generates a
+        report") does not match the actual behavior (produces a raw data dump).
+        Score PASS if this mismatch is surfaced and the SKILL.md is flagged for
+        correction.
+
+  - name: runtime_state_exclusion_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(tmp|debug.?log|runtime|durable|credentials|cache|exclude|not.*durable|一時|ランタイム|ログ.*除外)"
+
+  - name: runtime_state_exclusion_llm
+    type: llm
+    config:
+      rubric: |
+        The response must flag tmp/export-debug.log as a runtime or non-durable
+        artifact that should be excluded from the deliverable set (not committed,
+        gitignored, or deleted). Score PASS if this is explicitly called out.
+
+  - name: severity_ordering_llm
+    type: llm
+    config:
+      rubric: |
+        The response must present findings ordered by severity (critical/high
+        issues first, minor or cosmetic issues later). The flag-name inconsistency
+        and skill description mismatch should appear before cosmetic notes.
+        Score PASS if the most impactful issues (flag mismatch, skill description
+        mismatch, or runtime-state inclusion) are presented before minor notes.
+
+  - name: no_edit_made_llm
+    type: llm
+    config:
+      rubric: |
+        Because the user asked only for a review (not for fixes), the response
+        must NOT claim to have edited files, applied changes, or implemented
+        corrections. It should report findings and optionally offer to fix them
+        if asked. Score PASS if no file edits are claimed.
+
+  - name: self_report
+    type: self-report
+    config:
+      require_self_report: true
+      max_unclear: 1
+      max_retries: 0

@@ -20,6 +20,12 @@ Apply this to any durable output:
 
 Do not use this as a substitute for domain-specific audits. If the work is a production release, security review, skill audit, or regression-testing task, use the relevant specialized skill as well.
 
+Do not use this skill for:
+
+- A single in-progress or partially written file. Run the `code-review` skill instead.
+- A mid-session check before implementation is complete. Finish the work first, then run this skill.
+- General debugging, command troubleshooting, or understanding existing behavior. Those are investigative tasks, not reconciliation.
+
 ## Review Workflow
 
 1. Establish the intended final state from the user's latest request, not from earlier conversation momentum.
@@ -57,7 +63,12 @@ When the user asked to implement fixes, make the smallest coherent edits after t
 
 ## Output Shape
 
-Use this compact structure unless the user asks for a different format:
+Use this compact structure unless the user asks for a different format.
+
+Severity levels for findings:
+- `critical`: breaks correctness, safety, or the user's stated goal (e.g., wrong flag name shipped in docs, runtime state committed)
+- `warn`: reduces clarity, increases maintenance cost, or risks future breakage (e.g., stale rationale, misplaced file)
+- `info`: cosmetic or low-risk (e.g., a TODO comment that is already tracked)
 
 ```text
 Findings:

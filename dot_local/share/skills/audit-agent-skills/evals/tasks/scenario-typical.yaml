@@ -1,0 +1,100 @@
+id: typical-skill-audit
+description: >
+  Typical use: user asks to audit all skills in their user-global skill root.
+  The skill must run the structural script, apply the manual checklist,
+  and produce a severity-ordered report.
+
+inputs:
+  prompt: |
+    Use the audit-agent-skills skill to audit the agent skills installed in
+    ~/.local/share/skills/. Report any structural errors, trigger collisions,
+    stale assumptions, and maintainability warnings you find.
+
+    Note: Real filesystem access and external command execution (including
+    running audit-skills.sh or listing live skill directories) are unavailable
+    in this evaluation context. Narrate the workflow you would follow
+    step-by-step, name the six manual-audit dimensions you would check for
+    each skill, and produce a sample report in the format the skill specifies.
+
+graders:
+  - name: structural_script_mentioned
+    type: text
+    config:
+      regex_match:
+        - "(?i)(audit[-_]skills\\.sh|scripts/audit|structural pass|structural script|スクリプト.*実行|構造.*チェック)"
+
+  - name: structural_script_semantic
+    type: llm
+    config:
+      rubric: |
+        The response must:
+        1. Mention running or narrating the execution of the audit-skills.sh
+           structural script (or equivalent structural pass) as a first step.
+        2. Describe what the script checks (frontmatter name, description,
+           openai.yaml presence, line count, TODO markers, duplicate names).
+        3. Treat script output as evidence to be supplemented by manual review,
+           not as a complete audit.
+
+  - name: six_dimensions_present
+    type: text
+    config:
+      regex_match:
+        - "(?i)(trigger.quality|trigger.*collid|トリガー.*品質|発火.*条件|overlap|trigger)"
+        - "(?i)(scope.and.placement|placement|scope|スコープ|配置|user.global|repo.local)"
+        - "(?i)(content.quality|コンテンツ|内容.*品質|non.obvious|reusable.procedure)"
+        - "(?i)(currenc|staleness|stale|最新|現行|up.to.date|still.exist)"
+        - "(?i)(validat|openai.yaml|validator|検証|syntax.check)"
+        - "(?i)(provenanc|PROVENANCE|来歴|出典|ledger|license|origin)"
+
+  - name: six_dimensions_semantic
+    type: llm
+    config:
+      rubric: |
+        The response must address all six manual-audit dimensions from the
+        skill body:
+        1. Trigger quality (specificity, collision risk)
+        2. Scope and placement (repo-local vs user-global, duplicates)
+        3. Content quality (non-obvious procedure, progressive disclosure,
+           script determinism)
+        4. Currency (named paths, commands, tools still exist; no conflict
+           with AGENTS.md)
+        5. Validation (official validator, openai.yaml accuracy,
+           syntax-checked scripts)
+        6. Provenance (PROVENANCE.md present, ledger classification,
+           no proprietary artifacts in shared skills)
+        All six must be explicitly named or clearly described.
+
+  - name: report_format_severity_order
+    type: text
+    config:
+      regex_match:
+        - "(?i)(structural error|構造.*エラー|trigger.*risk|overlap risk|stale|maintainab|severity|重大|warning|警告)"
+
+  - name: report_format_semantic
+    type: llm
+    config:
+      rubric: |
+        The response must produce a sample or simulated audit report that demonstrates
+        the correct report structure. Because real filesystem access is unavailable,
+        placeholder or invented skill names are acceptable.
+        1. Severity ordering is demonstrated: structural errors first, then
+           trigger/overlap risks, then stale assumptions, then maintainability warnings.
+        2. Each finding entry includes at minimum: a skill identifier (path or name),
+           an observation or evidence, and a remediation suggestion.
+        3. States that some checks could not be verified in this eval context.
+        4. Does not modify skill files.
+        Score PASS if criteria 1 and 2 are demonstrated, even with placeholder data.
+
+  - name: no_modification
+    type: text
+    config:
+      regex_match:
+        - "(?i)(do not (edit|modify|change)|not (modify|edit)|audit.only|ファイル.*変更しない|編集.*しない|変更.*行わない)"
+
+  - name: no_modification_semantic
+    type: llm
+    config:
+      rubric: |
+        The response must make clear that this is an investigation-only
+        workflow and that no skill files will be modified during the audit.
+        The word "audit-only" or an equivalent explicit statement is expected.

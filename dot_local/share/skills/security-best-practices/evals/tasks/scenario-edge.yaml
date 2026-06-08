@@ -1,0 +1,67 @@
+id: scenario-edge
+description: >
+  Out-of-scope request: the user asks for a security review of a Java Spring
+  Boot application. The skill has no reference file for Java. The agent should
+  correctly acknowledge limited concrete guidance without fabricating references.
+
+inputs:
+  prompt: |
+    We have a Java Spring Boot REST API. Please run your security best-practices
+    skill and produce a full vulnerability report for our codebase.
+
+    Here is a sample controller:
+
+    ```java
+    @RestController
+    public class UserController {
+        @Autowired
+        private UserRepository userRepo;
+
+        @GetMapping("/user")
+        public User getUser(@RequestParam String id) {
+            // Potential IDOR - no ownership check
+            return userRepo.findById(Long.parseLong(id)).orElse(null);
+        }
+    }
+    ```
+
+    Note: Real network fetches and external command execution are unavailable
+    in this evaluation context; narrate the workflow you would follow.
+
+graders:
+  - name: self_report_check
+    type: self-report
+    config:
+      max_unclear: 1
+
+  - name: surface_checks
+    type: text
+    config:
+      regex_match:
+        - "(?i)(java|spring.?boot)"
+        - "(?i)(no.*java.*reference|java.*not.*available|java.*guidance.*unavailable|no matching guidance|参照ファイル.*なし)"
+      regex_not_match:
+        - "(?i)(I (found|loaded|read|have) (a |the )?(java-spring|java-general|java-.*-security)\\.md|successfully loaded.*java|java.*security.*md.*found)"
+
+  - name: llm_rubric
+    type: llm
+    config:
+      rubric: |
+        Evaluate the response on the following criteria:
+
+        1. Honest scope acknowledgement (weight 2): The agent clearly states that no
+           Java/Spring Boot reference file exists in the skill's references/ directory
+           and does not invent a path or silently skip the lookup step.
+
+        2. Graceful degradation (weight 1): Rather than refusing entirely, the agent
+           offers what general security knowledge it does have, qualifies it as not
+           backed by a reference file, and notes the report may be less exhaustive.
+
+        3. No hallucinated references (weight 2): The agent does not claim to have
+           loaded a file such as java-spring-web-server-security.md that does not
+           exist in the skill's references/ directory.
+
+        4. Language detection (weight 1): Correctly identifies Java and Spring Boot
+           as the target language/framework from the provided code excerpt.
+
+        Score PASS if criteria 1, 3, and 4 are all met.

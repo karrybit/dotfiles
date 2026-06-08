@@ -1,0 +1,88 @@
+id: scenario-typical
+description: >
+  Typical trigger: user asks to inspect, filter, and extract fields from a local JSON file.
+  The skill should engage, recommend jq inspection commands, plan filtering with select(),
+  and validate output — not fall back to awk/sed/grep.
+
+inputs:
+  prompt: |
+    I have a file `api_response.json` containing an array of objects with fields:
+    id, name, status, created_at, tags (array of strings).
+    I want to:
+    1. Check how many objects there are and what the top-level structure looks like.
+    2. Filter objects where status is "active".
+    3. Extract only the id and name fields from the filtered results.
+    4. Save the result to `active_users.json` without overwriting the original.
+
+    Note: Real network fetches and external command execution are unavailable in this
+    evaluation context; narrate the workflow you would follow, including the exact
+    jq commands you would run and why.
+
+graders:
+  # --- Axis 1: Inspection before transformation ---
+  - name: inspect_first_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(jq\\s+['\"]?\\.?['\"]?\\s|jq\\s+['\"]keys['\"]|jq\\s+['\"]length['\"]|jq\\s+['\"]type['\"]|jq\\s+['\"]\\.[0]['\"])"
+
+  - name: inspect_first_llm
+    type: llm
+    config:
+      rubric: |
+        The response must recommend inspecting the JSON file before applying any
+        transformation. Specifically it should suggest running one or more of:
+        `jq '.'`, `jq 'keys'`, `jq '.[0]'`, `jq 'length'`, or `jq 'type'`
+        on api_response.json. Score 1 if the inspection step is present and clearly
+        precedes filtering. Score 0 if the response jumps straight to filtering
+        without inspection.
+
+  # --- Axis 2: jq-first filtering (not awk/sed/grep) ---
+  - name: jq_filter_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(select\\s*\\(|jq\\s+['\"].*select)"
+
+  - name: jq_filter_llm
+    type: llm
+    config:
+      rubric: |
+        The response must use jq's `select()` function to filter objects where
+        status equals "active". It must NOT propose using `awk`, `sed`, `cut`,
+        `grep`, or shell IFS-based parsing for this filtering step. Score 1 if
+        jq-based filtering with select() is proposed. Score 0 if only non-jq
+        tools are proposed for the filtering step.
+
+  # --- Axis 3: Preserve source file ---
+  - name: preserve_source_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(active_users\\.json|new\\s+file|output\\s+file|separate\\s+file|without.*overwr|overwr.*not|redirect|>\\s*active)"
+
+  - name: preserve_source_llm
+    type: llm
+    config:
+      rubric: |
+        The response must explicitly state or demonstrate that the transformed
+        output will be written to a new file (e.g., `active_users.json`) and
+        that the original `api_response.json` will not be overwritten. Score 1
+        if source preservation is addressed. Score 0 if the response overwrites
+        or ignores the original file.
+
+  # --- Axis 4: Validation of output ---
+  - name: validate_output_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(jq\\s+['\"]?(length|type)['\"]?.*active|validat|structural\\s+check|result.*check|確認|検証)"
+
+  - name: validate_output_llm
+    type: llm
+    config:
+      rubric: |
+        The response must include a validation step on the output file
+        `active_users.json` — for example running `jq 'length'` or `jq 'type'`
+        on the result. Score 1 if at least one structural check on the output
+        is mentioned. Score 0 if no validation of the result is proposed.

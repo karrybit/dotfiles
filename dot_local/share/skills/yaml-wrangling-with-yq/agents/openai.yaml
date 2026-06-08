@@ -1,0 +1,4 @@
+interface:
+  display_name: "YAML wrangling with yq"
+  short_description: "Prefer yq for local YAML inspection and transforms"
+  default_prompt: "Use $yaml-wrangling-with-yq to inspect, filter, patch, or transform local YAML files."

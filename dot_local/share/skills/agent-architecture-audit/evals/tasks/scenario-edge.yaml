@@ -1,0 +1,49 @@
+id: scenario-edge
+description: >
+  Out-of-scope invocation — user asks for a general security review of a
+  non-agent web application (no LLM, no tool-calling, no memory). The skill
+  should recognize it is not applicable and redirect to a more appropriate skill.
+
+inputs:
+  prompt: |
+    このウェブアプリのセキュリティ監査をしてほしい。
+    Railsで書かれた普通のEコマースサイトで、SQLインジェクションや
+    XSSの脆弱性がないか確認したい。AIやLLMは一切使っていない。
+
+    Note: Real network fetches and external command execution are unavailable
+    in this evaluation context; narrate the workflow you would follow.
+
+graders:
+  - name: self_report_check
+    type: self-report
+    config:
+      max_unclear: 0
+
+  - name: surface_redirect
+    type: text
+    config:
+      regex_match:
+        - "(?i)(not applicable|対象外|scope外|スコープ外|security.review|code.review|セキュリティ.*スキル|別のスキル|narrower)"
+        - "(?i)(agent|LLM|tool.call|memory|メモリ|ツール呼び出し)"
+
+  - name: llm_rubric
+    type: llm
+    config:
+      rubric: |
+        Evaluate the response on the following criteria:
+
+        1. Correct decline: The response clearly states that the
+           agent-architecture-audit skill does not apply to a conventional web
+           application with no LLM or agent components, rather than attempting
+           to audit it anyway.
+
+        2. Useful redirect: The response names at least one concrete alternative
+           (e.g., security-review, code-review) and briefly explains why it is
+           more appropriate.
+
+        3. No spurious audit: The response does NOT produce severity-ranked
+           agent-architecture findings (layers, tool discipline failures, memory
+           pollution, etc.) for this non-agent application. Producing such
+           findings is a failure.
+
+        Score PASS if all three criteria are met.

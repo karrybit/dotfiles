@@ -5,9 +5,27 @@ description: Use when reviewing or debugging an agent or LLM-powered application
 
 # Agent Architecture Audit
 
-Use this skill for agent systems, AI features, autonomous loops, MCP-backed workflows, tool-calling apps, or memory-enabled assistants.
+## When to Invoke
 
-Do not use this for ordinary application code review. Use a narrower security, testing, or framework skill when the issue is not agent-specific.
+Use this skill when the subject under review contains at least one of:
+
+- An LLM or AI model (including embedded or API-backed models)
+- Tool-calling, function-calling, or MCP-backed workflows
+- An autonomous loop, agent orchestrator, or planner
+- Memory storage, retrieval, summarization, or compaction
+- A prompt assembly pipeline (system prompt + history + retrieved context)
+- Streaming, structured output, or multi-modal rendering of LLM responses
+
+Typical trigger phrases: "audit my agent", "why is the LLM rewriting the answer", "tool call is silently failing", "memory is leaking old assertions", "hidden retry loop", "compaction is losing context".
+
+## When NOT to Use
+
+Do not invoke this skill when the target has no LLM, agent, or tool-calling component. Redirect to a more appropriate skill instead:
+
+- General web application security (SQL injection, XSS, auth) → use `security-review`
+- Ordinary code quality or correctness → use `code-review`
+- Test coverage or TDD → use `tdd`
+- CI/CD pipeline failures unrelated to LLM components → use `diagnose`
 
 ## Audit Layers
 
@@ -65,7 +83,27 @@ Prefer fixes in this order:
 
 ## Output Format
 
-Lead with severity-ranked findings, then a short architecture diagnosis, then an ordered fix plan. If no issue is found, say what evidence was checked and what risk remains untested.
+Structure the response as follows:
+
+```
+## Findings
+
+| Severity | Layer | Symptom | Mechanism | Evidence |
+|----------|-------|---------|-----------|----------|
+| critical | 11    | ...     | ...       | file:line |
+
+## Architecture Diagnosis
+
+One paragraph summarizing the structural root cause across findings.
+
+## Fix Plan (ordered)
+
+1. <code-first fix for finding 1>
+2. <code-first fix for finding 2>
+...
+```
+
+If no issue is found, list what evidence was checked (files, patterns) and what risk remains untested due to access limitations.
 
 ## Source
 

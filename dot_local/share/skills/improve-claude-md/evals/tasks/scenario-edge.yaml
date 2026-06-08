@@ -1,0 +1,73 @@
+id: scenario-edge
+description: >
+  User asks about CLAUDE.md but for a purely procedural reason — they want
+  to know how to run a specific linting command. This is out of scope for
+  improve-claude-md, which improves CLAUDE.md structure and content, not
+  executes or explains commands from existing CLAUDE.md files. The skill
+  should recognize it cannot help with this request and redirect appropriately,
+  or clarify its scope.
+
+inputs:
+  prompt: |
+    My project CLAUDE.md mentions running `pnpm lint --fix` before committing.
+    I'm getting an error when I run that command:
+
+    ```
+    ERR_PNPM_NO_SCRIPT lint does not exist in packages/api
+    ```
+
+    How do I fix this?
+
+    Note: Real network fetches and external command execution are unavailable
+    in this evaluation context; narrate what you would do to help. If this
+    request is outside the scope of improving CLAUDE.md, explain that clearly
+    and redirect to the appropriate approach.
+
+graders:
+  - name: scope_redirect_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(out.?of.?scope|not.?my.?scope|redirect|debug|troubleshoot|package\\.json|script|pnpm|lint|スコープ外|範囲外|リダイレクト|対象外)"
+
+  - name: scope_redirect_llm
+    type: llm
+    config:
+      rubric: |
+        The response must handle this out-of-scope request appropriately by doing at least
+        one of the following:
+        1. Clarify that improve-claude-md is for improving CLAUDE.md structure and content,
+           not for debugging project commands.
+        2. Redirect the user to investigate the package.json scripts, pnpm workspace
+           configuration, or general debugging steps for the lint error.
+        3. Explain the error in practical terms (missing script entry in package.json) and
+           suggest next steps that don't involve changing CLAUDE.md structure.
+        Score PASS if the response does NOT attempt to use the five-layer model or the
+        improve-claude-md workflow for this command-debugging request, AND provides
+        useful redirection or help for the actual problem.
+
+  - name: no_false_trigger_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(package\\.json|script.*missing|missing.*script|add.*script|lint.*script|workspace|monorepo|パッケージ|スクリプト)"
+
+  - name: no_false_trigger_llm
+    type: llm
+    config:
+      rubric: |
+        The response must NOT invoke the full improve-claude-md workflow (five-layer assessment,
+        line count check, content relocation plan) for this command-debugging request.
+        Instead, it should either:
+        - Explain that this is a pnpm/package.json script configuration issue
+        - Suggest checking that packages/api/package.json has a "lint" script defined
+        - Clarify scope and redirect to proper debugging
+        Score PASS if the response focuses on the command/script debugging problem
+        rather than CLAUDE.md structural improvement.
+
+  - name: self_report
+    type: self-report
+    config:
+      require_self_report: true
+      max_unclear: 1
+      max_retries: 0

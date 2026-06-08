@@ -1,0 +1,29 @@
+iterations:
+  - id: iter-0-static
+    date: 2026-06-08
+    scope: static-analysis
+    overall_pass_rate: null
+    note: "waxa CLI 未実行。静的分析と eval ファイル作成のみ実施。"
+    unclear_points:
+      - issue: "When NOT to use が明示されておらず、ゴールが既に明確な場合でも define-goal ワークフローを誤って実行するリスクがある"
+        cause: "SKILL.md の Workflow Step 1 に否定条件が埋め込まれていたが、独立したセクションとして可視化されていなかった"
+        general_fix_rule: "スキルの適用判断基準は Workflow の内部ではなく、独立した When to Use / When NOT to use セクションに配置する"
+      - issue: "出力形式（objective string のフォーマット）が未定義で、エージェントごとに出力が異なる可能性がある"
+        cause: "SKILL.md Step 6 に 'single concise objective string' とあるが、マークダウン形式・コードブロック・引用ブロックのどれかが指定されていなかった"
+        general_fix_rule: "出力形式はブロッククォート（'> Objective: …'）など具体的な記法で明示する"
+      - issue: "goal tools が利用できない場合の出力物が不明確で、エージェントがツール呼び出しをシミュレートする誤動作リスクがある"
+        cause: "Step 5 に 'produce the goal statement and validation criteria without pretending to create durable goal state' とあるが、出力形式が明示されていなかった"
+        general_fix_rule: "ツール非利用時のフォールバック出力を Step 6 に統合して明示する"
+    actions:
+      - "SKILL.md に 'When to Use' / 'When NOT to use' セクションを新設"
+      - "Workflow Step 1 をリファクタ: 'ゴールが既に明確なら Step 5 へ' という早期スキップ条件を追加"
+      - "Step 6 の objective string 出力形式をブロッククォートに明示"
+      - "Step 6 に goal tools 非利用時のフォールバック出力ルールを追記"
+      - "eval.yaml / scenario-typical.yaml / scenario-edge.yaml を新規作成"
+
+convergence:
+  status: pending-waxa-run
+  rationale: |
+    静的分析のみ実施。eval ファイルは作成済みで waxa 実行待ち。
+    SKILL.md の改善はコンテンツの観点で行ったが、実際のエージェント応答に対する
+    グレーダー通過率は未計測。waxa run 後に iter-1 以降を追記すること。

@@ -18,12 +18,14 @@ This is a workflow skill. It does not reset agent state, change harness settings
    - last failed command or tool call
    - repeated pattern observed
    - assumptions about cwd, branch, files, services, permissions, or network
-3. Classify the failure:
-   - `logic`: wrong hypothesis or wrong target
+3. Classify the failure (classify the underlying root cause, not the agent's observable behavior):
+   - `logic`: the plan or goal itself is wrong — wrong hypothesis, wrong target, wrong algorithm
    - `state`: stale file, branch, process, cache, or live-vs-source mismatch
-   - `environment`: missing tool, stopped service, permissions, network, sandbox
+   - `environment`: missing tool, stopped service, missing credential, permissions, network, sandbox
    - `context`: prompt drift, duplicated plans, oversized logs, forgotten constraint
    - `policy`: blocked action, unsafe permission, approval needed
+
+   Classification rule: if the error message is "permission denied" or "access denied", the root cause is `environment` (credential or key issue) or `policy` (authorization decision), even when the agent's behavioral failure looks like a `logic` error (e.g., retrying or targeting the wrong branch). Classify by what the system reported, not by what the agent did wrong.
 4. Run one discriminating check that can prove or falsify the classification.
 5. Take the smallest reversible recovery action:
    - re-check actual filesystem, branch, process, or config state
@@ -55,6 +57,8 @@ End with:
 - Result: success | partial | blocked
 - Remaining risk:
 ```
+
+When this skill is not applicable (no active failure or loop to debug), skip this section and proceed directly with the actual task as a normal implementation or code-review request.
 
 ## Source
 

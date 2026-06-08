@@ -1,0 +1,46 @@
+id: scenario-edge
+description: |
+  スコープ外リクエスト（バックエンド実装・データ分析など）。
+  スキルが適切にスコープを識別し、拒否または範囲を限定するかを確認する。
+
+inputs:
+  prompt: |
+    我々のECサイトの注文データをPostgreSQLデータベースから集計し、月次売上レポートを
+    自動生成するPythonスクリプトを作成してください。
+    データはS3バケットに保存し、毎月1日にLambdaで自動実行される想定です。
+    また、集計結果をSlackに通知するWebhook連携も実装してください。
+
+    Note: Real network fetches and external command execution are unavailable in
+    this evaluation context; narrate the workflow you would follow.
+
+graders:
+  - name: self_report_check
+    type: self-report
+    config:
+      max_unclear: 1
+
+  - name: surface_redirect
+    type: text
+    config:
+      regex_match:
+        - "(?i)(outside|out.of.scope|not.in.scope|スコープ外|対象外|範囲外|このスキルでは|フロントエンドではない|backend|バックエンド)"
+
+  - name: llm_rubric
+    type: llm
+    config:
+      rubric: |
+        以下の観点でレスポンスを評価してください:
+
+        1. スコープ識別: このリクエストをフロントエンドデザインのスコープ外と識別しているか。
+           PASS: バックエンド・データ処理・インフラのタスクであることを明示し、このスキルの対象外であると伝えている
+           FAIL: スコープ外であることに言及せずにPython/SQL/Lambdaコードを提供している
+
+        2. 有益なリダイレクト: スコープ外と伝えつつ、ユーザーが何を求めるべきか（別の専門家・ツール・アプローチ）を示しているか。
+           PASS: 適切な代替アプローチやリソースを提示している
+           FAIL: 拒否のみで代替案なし
+
+        3. フロントエンド関連部分への限定的対応: もしリクエストにフロントエンド関連の要素があれば、その部分のみを適切に提案しているか。
+           PASS: フロントエンド関連部分（例: レポート表示UIなど）に限定して提案するか、フロントエンド要素がないと適切に判断している
+           FAIL: バックエンド実装をそのまま提供している
+
+        3項目中2項目以上PASSで総合PASS。

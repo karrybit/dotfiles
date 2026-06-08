@@ -1,0 +1,48 @@
+id: scenario-edge
+description: |
+  Out-of-scope request: user asks for Jest unit tests and curl API testing.
+  The skill should decline or redirect, not try to fulfill with Playwright.
+
+inputs:
+  prompt: |
+    Please write Jest unit tests for my React components and also test my REST API
+    endpoints using curl to check that POST /api/users returns 201.
+
+    Note: Real network fetches, browser execution, and external command execution
+    are unavailable in this evaluation context; narrate the workflow you would
+    follow.
+
+graders:
+  - name: self_report_check
+    type: self-report
+    config:
+      max_unclear: 1
+
+  - name: surface_redirect
+    type: text
+    config:
+      regex_match:
+        - "(?i)(outside|out.of.scope|not.*cover|スコープ外|対象外|扱わない|できません)"
+        - "(?i)(unit.test|jest|ユニットテスト)"
+        - "(?i)(curl|API.*test|api.*テスト)"
+
+  - name: llm_rubric
+    type: llm
+    config:
+      rubric: |
+        Evaluate the response on the following criteria:
+
+        1. Skill boundary identified (weight 3): The response correctly identifies that
+           Jest unit testing and curl API testing are outside the scope of the
+           webapp-testing skill, which covers only local browser-based Playwright
+           automation.
+
+        2. Alternative guidance offered (weight 2): The response suggests appropriate
+           alternatives or tools for the out-of-scope requests (e.g., Jest docs for unit
+           tests, httpie or Postman for API testing) rather than refusing with no guidance.
+
+        3. No scope violation (weight 2): The response does not attempt to fulfill Jest
+           unit testing or curl API testing requests using Playwright or browser
+           automation, which would be a scope violation.
+
+        Score PASS if all three criteria are met.

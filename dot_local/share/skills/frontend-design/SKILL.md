@@ -6,6 +6,31 @@ license: Complete terms in LICENSE.txt
 
 This skill guides creation of distinctive, production-grade frontend interfaces that avoid generic "AI slop" aesthetics. Implement real working code with exceptional attention to aesthetic details and creative choices.
 
+## When to Use
+
+Use this skill when the user asks to:
+- Build or generate web components, pages, applications, or interfaces
+- Style, redesign, or beautify an existing UI
+- Create HTML/CSS/JS layouts, React/Vue components, dashboards, landing pages, posters, or artifacts
+
+## When NOT to Use
+
+Do not use this skill for:
+- Backend implementation (APIs, databases, server-side logic, infrastructure)
+- Data analysis, machine learning, or data pipeline work
+- CLI tools, scripts, or automation that produce no visual output
+- Non-visual code generation unrelated to UI or styling
+
+When a request falls outside these boundaries, clearly state the scope limitation and suggest an appropriate alternative before offering any limited frontend assistance.
+
+## Output Format
+
+Deliver complete, runnable code as the primary artifact:
+- **HTML/CSS/JS**: A single self-contained HTML file or clearly delineated separate files
+- **React/Vue/Svelte**: A complete component file with all imports, props, and styles inline or in an adjacent file
+- **Accessibility**: Follow WCAG 2.1 AA as the baseline; provide semantic HTML, ARIA labels for interactive elements, and sufficient color contrast
+- Always include enough context (markup structure, CSS, and JS) that the output works without modification in a browser or sandbox environment
+
 The user provides frontend requirements: a component, page, application, or interface to build. They may include context about the purpose, audience, or technical constraints.
 
 ## Design Thinking

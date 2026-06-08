@@ -1,0 +1,148 @@
+id: scenario-typical
+description: >
+  User asks to review and improve a project CLAUDE.md that has grown too large
+  and contains procedures, automated checks, and generic advice mixed with
+  project-specific facts. The skill should assess the current state, identify
+  what to add/remove/relocate, and produce a concrete improvement plan.
+
+inputs:
+  prompt: |
+    Here is my project's CLAUDE.md. It has grown over time and I feel like it's
+    getting unwieldy. Please review it and tell me how to improve it.
+
+    ```markdown
+    # Project Instructions
+
+    ## About this project
+    This is a TypeScript monorepo using pnpm workspaces.
+    - Node.js 20, TypeScript 5.4, Vitest 1.6
+    - packages/api: Fastify 4.x REST API
+    - packages/web: React 18 + Vite 5
+    - packages/shared: shared types and utilities
+
+    ## How to run tests
+    Run `pnpm test` from the root.
+    For a single package: `cd packages/api && pnpm test`
+    Watch mode: `pnpm test --watch`
+
+    ## API development workflow
+    1. Edit `packages/api/src/routes/` to add a new route
+    2. Update `packages/api/src/schema/openapi.yaml` to reflect the API change
+    3. Run `pnpm generate:types` to regenerate types from the OpenAPI spec
+    4. Write tests under `packages/api/src/routes/__tests__/`
+    5. Run `pnpm lint && pnpm test`
+    6. Commit with conventional commits format
+
+    ## Code style
+    - Always run `pnpm lint --fix` before committing
+    - Prefer `const` over `let`
+    - Use TypeScript strict mode (already configured)
+    - Write descriptive variable names
+    - Always write tests for new features
+    - Avoid `any` type
+    - Use async/await instead of raw Promises
+    - Keep functions small and focused
+
+    ## Git workflow
+    1. Create a branch from main
+    2. Make changes
+    3. Run `git diff --check` before committing
+    4. Submit a PR for review
+
+    ## Architecture
+    The API uses a layered architecture:
+    - Routes layer (packages/api/src/routes/): HTTP handlers only
+    - Service layer (packages/api/src/services/): Business logic
+    - Repository layer (packages/api/src/repositories/): Database access via Drizzle ORM
+
+    ## Database
+    We use PostgreSQL via Drizzle ORM. Migrations are in `packages/api/src/db/migrations/`.
+    Never edit migration files directly. Use `pnpm db:generate` to create new migrations.
+
+    ## Environment
+    Copy `.env.example` to `.env.local` for local development.
+    Never commit `.env` files.
+    ```
+
+    Note: Real network fetches and external command execution are unavailable
+    in this evaluation context; narrate the workflow you would follow, including
+    what you would read, what assessment you would make using the five-layer model,
+    and the concrete improvement plan you would produce.
+
+graders:
+  - name: five_layer_assessment_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(five.?layer|5.?layer|facts?|procedures?|enforcement|hooks?|skills?|layer model|五層|レイヤー)"
+
+  - name: five_layer_assessment_llm
+    type: llm
+    config:
+      rubric: |
+        The response must:
+        1. Reference a framework for evaluating CLAUDE.md — either the "five-layer model",
+           "Okhlopkov", "operating system principle", or an equivalent named framework from the skill.
+        2. Categorize the current content into at least two categories (e.g., facts that belong,
+           procedures that should move, enforcement that should be hooks).
+        3. Identify that multi-step procedures (like the API development workflow or git workflow)
+           should move to skills or be removed from CLAUDE.md.
+        Score PASS if at least 2 of these 3 criteria are met.
+
+  - name: remove_or_relocate_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(remov|relocat|mov(e|ed)|skill|hook|procedure|workflow.*skill|skill.*workflow|削除|移動|スキル|フック)"
+
+  - name: remove_or_relocate_llm
+    type: llm
+    config:
+      rubric: |
+        The response must identify specific content to remove or relocate from the CLAUDE.md,
+        such as:
+        - The multi-step API development workflow (→ skills)
+        - The git workflow steps (→ hooks or skills)
+        - Generic code style rules like "prefer const over let", "write descriptive names"
+          (→ already in Claude's training; remove)
+        - "How to run tests" procedural steps (→ skills or docs)
+        Score PASS if the response identifies at least 2 specific items to remove or relocate
+        with their destination.
+
+  - name: keep_or_add_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(tech.?stack|version|architecture|layer|source.?of.?truth|openapi|drizzle|migration|keep|retain|add|保持|追加|バージョン)"
+
+  - name: keep_or_add_llm
+    type: llm
+    config:
+      rubric: |
+        The response must identify content worth keeping or adding to CLAUDE.md:
+        - Tech stack with exact versions (Node 20, TypeScript 5.4, Vitest 1.6, Fastify 4.x, etc.)
+        - Architecture layer model (Routes/Service/Repository and their directories)
+        - Source-of-truth constraint (e.g., "API changes start from openapi.yaml")
+        - Critical constraint like "never edit migration files directly"
+        Score PASS if at least 2 of these 4 items are identified as worth keeping or adding.
+
+  - name: line_count_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(200|line.?count|wc.?-l|under|below|length|行数|行|短)"
+
+  - name: line_count_llm
+    type: llm
+    config:
+      rubric: |
+        The response must mention the target file length (under 200 lines, or the principle
+        of keeping CLAUDE.md concise and within a manageable size). Score PASS if this
+        length/conciseness goal is referenced.
+
+  - name: self_report
+    type: self-report
+    config:
+      require_self_report: true
+      max_unclear: 1
+      max_retries: 0

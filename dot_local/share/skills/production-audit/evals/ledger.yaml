@@ -1,0 +1,52 @@
+iterations:
+  - id: iter-0-static
+    date: 2026-06-08
+    scope: static-analysis
+    overall_pass_rate: null
+    note: "waxa CLI 未実行。静的分析のみ実施。"
+    unclear_points:
+      - issue: >
+          "When to use" と "When NOT to use" が明示されていないため、
+          code-review / diagnose / security-review との境界が曖昧。
+        cause: >
+          SKILL.md が Evidence Order とスコアリングに集中しており、
+          スキル選択の入口判断を記述していなかった。
+        general_fix_rule: >
+          スキル文書は「いつ使うか / いつ使わないか」を必ず冒頭に置く。
+          兄弟スキルへの委譲条件を明示し、エージェントが曖昧なリクエストを
+          受けたときに正しいスキルへ誘導できるようにする。
+
+      - issue: >
+          監査スコープ（ブランチ、リリース種別、URL）の確認ステップが手順に含まれていない。
+        cause: >
+          Evidence Order セクションが git コマンドから始まり、
+          何を対象にするかの明示的な確認フェーズが省略されていた。
+        general_fix_rule: >
+          多段階ワークフロースキルは「証拠収集の前に確認すること」のリストを
+          手順の最初に置く。
+
+      - issue: >
+          出力フォーマットの各フィールドが必須か任意か不明。
+          "Evidence missing" の省略条件も不明瞭。
+        cause: >
+          テンプレートが "..." プレースホルダのみで
+          必須/任意の区別を記述していなかった。
+        general_fix_rule: >
+          出力フォーマットは各フィールドの必須/任意条件と
+          省略できる例外ケースを明記する。
+
+    actions:
+      - "SKILL.md に 'When to Use' セクションを追加（6ユースケース列挙）"
+      - "SKILL.md に 'When NOT to Use' セクションを追加（code-review / diagnose / security-review への委譲フロー）"
+      - "SKILL.md に 'Audit Scope (Confirm First)' セクションを追加（対象・リリース種別・承認の3確認）"
+      - "SKILL.md の Output Format を改訂（必須/任意を明記、省略条件を付記、バンドラベルを追記）"
+      - "evals/eval.yaml を新規作成"
+      - "evals/tasks/scenario-typical.yaml を新規作成（Stripe Checkout 統合の本番前審査シナリオ）"
+      - "evals/tasks/scenario-edge.yaml を新規作成（スコープ外リクエスト＝未マージPRのコードレビュー依頼）"
+
+convergence:
+  status: pending-waxa-run
+  rationale: |
+    静的分析のみ実施。eval ファイルは作成済み。
+    waxa 実行は別途必要。実行後に overall_pass_rate を更新し、
+    unclear_points が解消されれば converged に遷移する。

@@ -1,0 +1,90 @@
+id: scenario-typical
+description: >
+  Typical case — AI-assisted code change introduced a bug on the sandbox path
+  while the production path was fixed. User needs regression test design help.
+
+inputs:
+  prompt: |
+    We just fixed a bug where our payment API was returning `null` for the `transaction_id`
+    field on successful charges. The fix was applied to the production code path, but the
+    sandbox/mock path was not updated, so sandbox tests still pass while production
+    was returning null.
+
+    The same AI agent that wrote the fix is now reviewing the PR. We're worried the
+    agent may overlook the sandbox path because it made the same assumption in both places.
+
+    Please help design a regression test plan for this scenario.
+
+    Note: Real network fetches and external command execution are unavailable in this
+    evaluation context; narrate the workflow you would follow step by step.
+
+graders:
+  - name: identifies_shared_assumption_risk
+    type: text
+    config:
+      regex_match:
+        - "(?i)(shared.{0,20}assumption|same.{0,20}(mistake|error|blind.?spot|miss)|agent.{0,30}(miss|overlook|skip)|review.{0,20}(miss|fail|blind))"
+
+  - name: identifies_shared_assumption_risk_semantic
+    type: llm
+    config:
+      rubric: |
+        The response must explain that an AI agent reviewing its own code shares the
+        same assumptions as when it wrote it, making it likely to overlook the same
+        bug in both implementation and review. This core risk should be clearly stated
+        or strongly implied.
+      require_self_report: true
+      max_unclear: 1
+      max_retries: 0
+
+  - name: sandbox_vs_production_parity
+    type: text
+    config:
+      regex_match:
+        - "(?i)(sandbox.{0,30}(production|prod|path|parity)|production.{0,30}sandbox|mock.{0,30}real|parity.{0,30}(check|test|assert)|both.{0,20}path)"
+
+  - name: sandbox_vs_production_parity_semantic
+    type: llm
+    config:
+      rubric: |
+        The response must explicitly address that the regression test should cover
+        both sandbox/mock paths and production paths, and check for parity between
+        them. A test that only covers one path is insufficient.
+      require_self_report: true
+      max_unclear: 1
+      max_retries: 0
+
+  - name: deterministic_test_proposed
+    type: text
+    config:
+      regex_match:
+        - "(?i)(determin|assert|test.{0,20}(fail|pass|run)|regression.{0,20}test|smallest.{0,20}test|test.{0,20}contract|contract)"
+
+  - name: deterministic_test_proposed_semantic
+    type: llm
+    config:
+      rubric: |
+        The response must propose or describe a concrete, executable regression test
+        (not just a code review checklist). It should mention specific assertions,
+        such as checking that transaction_id is not null/None in the response, and
+        that this test runs against both mock and real paths.
+      require_self_report: true
+      max_unclear: 1
+      max_retries: 0
+
+  - name: output_format_present
+    type: text
+    config:
+      regex_match:
+        - "(?i)(bug.{0,5}risk|contract|test.{0,20}(added|proposed|plan)|old.{0,20}failure|paths.{0,20}covered|verification|## AI Regression)"
+
+  - name: output_format_present_semantic
+    type: llm
+    config:
+      rubric: |
+        The response should include a structured output following the skill's
+        prescribed format, covering at minimum: the bug/risk identified, the
+        regression contract or assertions, and the verification approach.
+      require_self_report: true
+      max_unclear: 1
+      max_retries: 0

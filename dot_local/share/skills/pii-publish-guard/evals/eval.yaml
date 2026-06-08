@@ -1,0 +1,10 @@
+skill: pii-publish-guard
+skill_path: ../SKILL.md
+trials_per_task: 2
+require_self_report: true
+max_unclear: 1
+max_retries: 0
+
+tasks:
+  - tasks/scenario-typical.yaml
+  - tasks/scenario-edge.yaml

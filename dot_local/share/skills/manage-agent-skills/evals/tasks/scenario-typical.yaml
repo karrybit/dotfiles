@@ -1,0 +1,74 @@
+id: scenario-typical
+description: >
+  User wants to create a new user-global skill for a recurring workflow.
+  The skill manages GitHub PR reviews with a specific checklist pattern.
+
+inputs:
+  prompt: |
+    I have a recurring workflow where I review pull requests and always check:
+    1. Are tests updated?
+    2. Is the changelog entry present?
+    3. Does the PR description match the implementation?
+
+    I want to turn this into a reusable agent skill so I don't have to repeat
+    these instructions every time. Where should I put it and how should I set it up?
+
+    Note: Real network fetches and external command execution are unavailable
+    in this evaluation context; narrate the workflow you would follow including
+    what commands you would run to verify placement, what files you would create,
+    and what the SKILL.md structure would look like.
+
+graders:
+  - name: placement_decision_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(~/.local/share/skills|user.?global|dot_local/share/skills|skill.?creator|skill-creator)"
+
+  - name: placement_decision_llm
+    type: llm
+    config:
+      rubric: |
+        The response must:
+        1. Identify that this is a user-global skill (not repository-local) because the workflow applies across repositories.
+        2. Specify a concrete placement path (e.g., ~/.local/share/skills/<skill-name>/ or the chezmoi source equivalent dot_local/share/skills/).
+        3. Mention using skill-creator or a structured workflow to initialize the skill.
+        4. Describe or outline what SKILL.md should contain (name, description in frontmatter, triggering conditions, workflow steps).
+        Score PASS if at least 3 of these 4 criteria are met.
+
+  - name: skill_md_structure_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(frontmatter|name:|description:|SKILL\\.md|trigger|workflow|step)"
+
+  - name: skill_md_structure_llm
+    type: llm
+    config:
+      rubric: |
+        The response must explain what goes into a SKILL.md file for this scenario:
+        - frontmatter with name and description fields
+        - triggering conditions or when to use
+        - the actual workflow steps (checklist or procedure)
+        Score PASS if the response covers at least 2 of these 3 structural elements.
+
+  - name: overlap_check_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(search|existing|overlap|duplicate|equivalent|already exist|check.*skill|skill.*check)"
+
+  - name: overlap_check_llm
+    type: llm
+    config:
+      rubric: |
+        The response must mention that before creating a new skill, one should
+        search existing skills for overlap or equivalents, to avoid duplicating
+        an existing skill. Score PASS if this check is mentioned or implied.
+
+  - name: self_report
+    type: self-report
+    config:
+      require_self_report: true
+      max_unclear: 1
+      max_retries: 0

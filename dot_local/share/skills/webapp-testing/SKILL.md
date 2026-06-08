@@ -6,6 +6,29 @@ license: Complete terms in LICENSE.txt
 
 # Web Application Testing
 
+## When to use this skill
+
+Use when the task involves:
+- Verifying UI behavior of a **locally running** web application
+- Capturing screenshots of a specific page or interaction state
+- Inspecting rendered DOM or capturing browser console logs
+- Automating browser interactions (clicking, form fill, navigation) on a local dev server
+
+## When NOT to use this skill
+
+This skill covers **browser-based automation only**. Do not use for:
+- **Unit tests** (e.g., Jest, Vitest, pytest component tests) — those are framework-specific and do not require a browser
+- **API-only tests** (e.g., curl, httpx, Postman) — use HTTP client tools directly
+- **External / production sites** — Playwright automation here is scoped to localhost targets
+- **Static analysis or linting** — use the relevant language toolchain instead
+
+## Expected outputs
+
+A completed task should produce one or more of:
+- A **screenshot file** (e.g., `/tmp/screenshot.png`) showing the page state
+- **Console log output** capturing browser JS errors or network events
+- A **pass/fail verdict** with the selector and assertion used
+
 To test local web applications, write native Python Playwright scripts.
 
 **Helper Scripts Available**:
@@ -90,6 +113,7 @@ with sync_playwright() as p:
 
 ## Reference Files
 
+- **scripts/with_server.py** - Server lifecycle manager; run with `--help` before use
 - **examples/** - Examples showing common patterns:
   - `element_discovery.py` - Discovering buttons, links, and inputs on a page
   - `static_html_automation.py` - Using file:// URLs for local HTML

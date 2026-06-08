@@ -1,0 +1,74 @@
+id: scenario-edge
+description: |
+  Edge case: a routine new feature implementation request. The agent is NOT
+  failing or looping; there is no failure pattern to diagnose. This skill
+  should correctly recognize that it is out of scope and defer to normal
+  implementation workflow rather than launching a debug investigation.
+
+inputs:
+  prompt: |
+    I want to add a new endpoint to the Express.js API: GET /api/users/:id
+    that returns user details from the database. Please implement it.
+
+    The agent has not started yet. There are no errors and no repeated failures.
+
+    Note: Real network fetches and external command execution are unavailable in
+    this evaluation context; narrate the workflow you would follow.
+
+require_self_report: true
+max_unclear: 1
+max_retries: 0
+
+graders:
+  # This skill should NOT engage its debug workflow for a fresh implementation request.
+  # It should either: (a) defer/redirect to a normal implementation approach,
+  # or (b) correctly note it is not applicable.
+
+  - name: no_spurious_debug_report_surface
+    type: text
+    config:
+      # Only fail if the debug report contains real (non-N/A) result values
+      regex_not_match:
+        - "(?i)(##\\s*Agent\\s+Debug\\s+Report.{0,800}Result:\\s*(success|partial|blocked))"
+
+  - name: no_spurious_debug_report_llm
+    type: llm
+    config:
+      rubric: |
+        The response is for a fresh, non-failing feature implementation request.
+        The agent-introspection-debugging skill is intended for scenarios where
+        an agent is already failing, looping, or in a broken state.
+        Check:
+        1. The response does NOT apply the agent-introspection-debugging workflow
+           (capture evidence of failure, classify failure class, run discriminating check)
+           to a non-failing request.
+        2. The response either: (a) correctly redirects to normal implementation,
+           (b) explicitly notes this is out of scope for this skill, OR
+           (c) proceeds with a sensible implementation plan without invoking the debug protocol.
+        3. The response does NOT produce a spurious "Agent Debug Report" for a routine request.
+        Score PASS if criteria 1 and 3 are met (criterion 2 provides context for why it passes).
+
+  - name: appropriate_response_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(implement|create|add|build|write|作成|実装|追加|構築).{0,80}(endpoint|route|api|handler|エンドポイント|ルート|ハンドラ)"
+        - "(?i)(GET\\s*/api|router\\.|app\\.|express|middleware)"
+
+  - name: appropriate_response_llm
+    type: llm
+    config:
+      rubric: |
+        For a routine implementation request with no failure state, check:
+        1. The response does not apply the debug workflow (failure capture, classification,
+           discriminating check) to a non-failing request.
+        2. The response is helpful — it either (a) outlines an implementation plan for the
+           endpoint, (b) clearly defers to normal implementation workflow with a concrete
+           next step, or (c) explains what information is missing to proceed.
+        Score PASS if both criteria are met. Graceful deferral ("proceed with normal
+        implementation") is acceptable if the model explains clearly what to do next.
+
+  - name: self_report_check
+    type: self-report
+    config:
+      require_phases: [Understanding, Planning, Execution, Formatting]

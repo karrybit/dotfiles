@@ -1,0 +1,90 @@
+id: scenario-typical
+description: >
+  Typical trigger: user asks to inspect, patch, and export a Kubernetes Deployment
+  manifest using yq. The skill should engage, recommend yq inspection commands,
+  plan field updates with yq expressions, write output to a new file, and validate
+  the result — not fall back to sed/awk text surgery.
+
+inputs:
+  prompt: |
+    I have a Kubernetes Deployment manifest `deployment.yaml`. I want to:
+    1. Check the current image tag used by the container named "app".
+    2. Update the image tag from "v1.2.3" to "v1.3.0".
+    3. Also set the replica count to 3.
+    4. Save the result to `deployment-updated.yaml` without modifying the original.
+
+    Note: Real network fetches and external command execution are unavailable in this
+    evaluation context; narrate the workflow you would follow, including the exact
+    yq commands you would run and why.
+
+graders:
+  # --- Axis 1: Inspect before modify ---
+  - name: inspect_first_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(yq\\s+'\\.'|yq\\s+eval|yq\\s+'keys'|yq\\s+'\\.spec|yq\\s+'\\.spec\\.template|containers.*image|image.*containers)"
+
+  - name: inspect_first_llm
+    type: llm
+    config:
+      rubric: |
+        The response must recommend inspecting the YAML file before applying any
+        transformation. Specifically it should suggest running a yq command to
+        read the current image tag (e.g., `yq '.spec.template.spec.containers[]
+        | select(.name == "app") | .image' deployment.yaml`) or at least pretty-
+        printing the file with `yq '.' deployment.yaml` before patching.
+        Score 1 if an inspection step is present and clearly precedes the patch.
+        Score 0 if the response jumps straight to patching without inspection.
+
+  # --- Axis 2: yq-first patching (not sed/awk) ---
+  - name: yq_patch_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(yq\\s+(-i\\s+)?'[^']*=|yq\\s+eval[^']*=|yq\\s+e\\s+'[^']*=)"
+
+  - name: yq_patch_llm
+    type: llm
+    config:
+      rubric: |
+        The response must use yq expressions to patch the image tag and replica
+        count (e.g., `yq '.spec.replicas = 3' …` or `yq '.spec.template.spec
+        .containers[] |= select(.name == "app").image = "v1.3.0"' …`). It must
+        NOT propose using `sed`, `awk`, or manual text substitution for the patch
+        step. Score 1 if yq-based patching is proposed. Score 0 if only non-yq
+        tools are used for the patching step.
+
+  # --- Axis 3: Preserve source file ---
+  - name: preserve_source_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(deployment-updated\\.yaml|new\\s+file|output\\s+file|separate\\s+file|without.*overwr|overwr.*not|redirect|>\\s*deployment)"
+
+  - name: preserve_source_llm
+    type: llm
+    config:
+      rubric: |
+        The response must explicitly state or demonstrate that the patched output
+        will be written to a new file (e.g., `deployment-updated.yaml`) and that
+        the original `deployment.yaml` will not be overwritten. Score 1 if source
+        preservation is addressed. Score 0 if the response overwrites or ignores
+        the original file.
+
+  # --- Axis 4: Round-trip validation ---
+  - name: validate_output_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(yq\\s+'\\.'\\s+deployment-updated|round.trip|validat|parse.*check|確認|検証)"
+
+  - name: validate_output_llm
+    type: llm
+    config:
+      rubric: |
+        The response must include a validation step on the output file — for
+        example running `yq '.' deployment-updated.yaml` to confirm the result
+        parses as valid YAML, or checking specific fields in the output.
+        Score 1 if at least one structural check on the output is mentioned.
+        Score 0 if no validation of the result is proposed.

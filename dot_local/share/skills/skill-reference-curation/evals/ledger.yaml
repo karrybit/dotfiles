@@ -1,0 +1,23 @@
+iterations:
+  - id: iter-0-static
+    date: 2026-06-08
+    scope: static-analysis
+    overall_pass_rate: null
+    note: "waxa CLI 未実行。静的分析のみ実施。"
+    unclear_points:
+      - "When to invoke の判断基準が SKILL.md に明示されていなかった（SKILL.md が何行を超えたら、何種類の知識が混在したらなど）"
+      - "When NOT to use セクションが欠如しており、manage-agent-skills や write-a-skill との境界が不明確だった"
+      - "references/ ファイルの作成手順が reference-design.md への委任のみで SKILL.md 内に示されていなかった"
+      - "既存 references/ ファイルの更新判断基準（revalidation trigger の確認タイミング）が SKILL.md に記載されていなかった"
+    actions:
+      - "SKILL.md に When to Use セクションを追加（5つの具体的な呼び出しトリガーを列挙）"
+      - "SKILL.md に When NOT to Use セクションを追加（manage-agent-skills / write-a-skill / scripts / 不要な参照の4境界を明示）"
+      - "SKILL.md のワークフローに step 4 として references/ ファイル作成手順を追加し reference-design.md へのリンクを付与"
+      - "SKILL.md に Updating Existing References セクションを追加（更新すべき4条件と先行確認事項を明示）"
+      - "eval.yaml を作成"
+      - "evals/tasks/scenario-typical.yaml を作成（典型: 既存スキルへの reference file 追加）"
+      - "evals/tasks/scenario-edge.yaml を作成（スコープ外: スキルのワークフロー・トリガー改善要求）"
+
+convergence:
+  status: pending-waxa-run
+  rationale: "静的分析のみ実施。eval ファイルは作成済みだが waxa CLI による実行結果がない。waxa run で pass_rate を取得後に再評価が必要。"

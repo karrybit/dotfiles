@@ -1,0 +1,84 @@
+id: scenario-edge
+description: >
+  User has a goal that is already concrete and measurable — they ask to "use
+  define-goal" but the goal they state already passes the quality bar. The skill
+  should recognize that no goal-definition work is needed, confirm the goal as
+  stated, and proceed (or invite the agent to proceed) without adding unnecessary
+  restatement, clarifying questions, or planning artifacts.
+
+inputs:
+  prompt: |
+    Please use define-goal for this task: Fix the failing auth test in
+    packages/api/src/routes/__tests__/auth.test.ts so that `pnpm test --filter api`
+    passes with zero failures, touching only the auth route and its test file, and
+    without changing the existing API contract.
+
+    Note: Real network fetches and external command execution are unavailable in
+    this evaluation context; narrate what you would do. If the goal is already
+    clear and measurable, say so and explain why define-goal is not needed, or
+    confirm the goal as-is and describe the next step.
+
+graders:
+  - name: already_clear_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(already.?(clear|concrete|measur|verif|pass)|goal.?(is|already|meets|satisf)|no.?(clarif|question|restat)|confirm|accept|既に|十分|明確|確認|そのまま|質問不要)"
+
+  - name: already_clear_llm
+    type: llm
+    config:
+      rubric: |
+        The response must recognize that the stated goal already passes the quality bar:
+        - It names a specific outcome (failing test passes)
+        - It names the exact verification command (`pnpm test --filter api`)
+        - It states a binary success condition (zero failures)
+        - It has explicit scope bounds (only auth route and test file, no API contract changes)
+        The response should confirm the goal as-is or explicitly state that define-goal
+        is not needed because the goal is already concrete and verifiable.
+        Score PASS if the response does NOT ask unnecessary clarifying questions and
+        does NOT restate the goal into a different (not necessarily better) form.
+
+  - name: no_false_elaboration_text
+    type: text
+    config:
+      regex_not_match:
+        - "(?i)(what.?metric|which.?environment|how.?many.?run|please.?clarif|what.?does.?success|成功の定義|どの環境|何回)"
+
+  - name: no_false_elaboration_llm
+    type: llm
+    config:
+      rubric: |
+        The response must NOT ask clarifying questions about metric, environment,
+        threshold, or evidence when the goal statement already provides all of those.
+        Score PASS if the response does not ask any of:
+        - "What metric should define success?"
+        - "Which environment should I verify against?"
+        - "How many runs are required?"
+        - Any other question whose answer is already explicit in the user's goal statement.
+        Score FAIL if the response asks any such redundant clarifying question.
+
+  - name: next_step_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(next.?step|proceed|start|implement|fix|diagnos|investigate|次のステップ|進める|着手|実装|修正|調査)"
+
+  - name: next_step_llm
+    type: llm
+    config:
+      rubric: |
+        After confirming the goal is already clear, the response should indicate
+        what the next step would be — for example, starting to investigate the
+        failing test, reading the test file, or running the test command to reproduce
+        the failure. It should not stop at "the goal is fine" without directing
+        forward progress.
+        Score PASS if the response mentions a concrete next action after confirming
+        the goal is already well-defined.
+
+  - name: self_report
+    type: self-report
+    config:
+      require_self_report: true
+      max_unclear: 1
+      max_retries: 0

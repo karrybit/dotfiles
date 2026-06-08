@@ -1,0 +1,53 @@
+id: scenario-edge
+description: >
+  Edge case: user asks to operate on a JSON file (not YAML). The skill should
+  recognize this is outside its primary scope and defer to json-wrangling-with-jq
+  rather than using yq as the primary tool for JSON work.
+
+inputs:
+  prompt: |
+    I have a file `config.json` with nested settings. I want to extract the value of
+    the "database.host" key and update "database.port" to 5433.
+
+    Note: Real network fetches and external command execution are unavailable in
+    this evaluation context; narrate the workflow you would follow.
+
+graders:
+  # --- Axis 1: Skill correctly defers to jq (does not use yq as primary tool for JSON) ---
+  - name: defers_to_jq_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(jq|json-wrangling|json.*wrangling|json.*not.*yaml|yaml.*not.*json|not\\s+(a\\s+)?yaml|defer|scope.*outside|outside.*scope|スコープ外|別.*ツール|代わり)"
+
+  - name: defers_to_jq_llm
+    type: llm
+    config:
+      rubric: |
+        The response should recognize that `config.json` is a JSON file, not a
+        YAML file, and should NOT use `yq` as the sole or primary tool for this
+        task without acknowledging the mismatch. The response should recommend
+        `jq` (or the json-wrangling-with-jq skill) as the more appropriate tool.
+        Score 1 if the response correctly defers to jq for JSON processing, even
+        if it briefly mentions yq's ability to read JSON as an aside.
+        Score 0 if the response uses yq as the primary tool without any mention
+        of jq or the JSON-vs-YAML distinction.
+
+  # --- Axis 2: Offers a concrete alternative workflow ---
+  - name: alternative_workflow_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(jq\\s+['\\.\\[]|jq\\s+-r|'\\.database\\.host'|'\\.database\\.port'|代替|代わりに)"
+
+  - name: alternative_workflow_llm
+    type: llm
+    config:
+      rubric: |
+        The response must not leave the user empty-handed. It should propose at
+        least one concrete alternative workflow for the JSON task — for example a
+        `jq` pipeline such as `jq '.database.host' config.json` or
+        `jq '.database.port = 5433' config.json > config-updated.json`.
+        Score 1 if a concrete jq-based (or equivalent JSON-native) alternative
+        is proposed. Score 0 if the response only refuses without offering any
+        path forward.

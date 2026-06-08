@@ -7,6 +7,26 @@ description: Build a composable CLI for Codex from API docs, an OpenAPI spec, ex
 
 Create a real CLI that future Codex threads can run by command name from any working directory.
 
+## When to Use This Skill
+
+Use this skill when the user wants to:
+
+- Wrap an API, OpenAPI spec, curl examples, or SDK into a reusable command-line tool.
+- Turn a web app, admin panel, or browser-captured workflow into shell commands an agent can run.
+- Package a local script into a durable, installable binary that works from any repo.
+
+## When NOT to Use This Skill
+
+Do not use this skill for:
+
+- **Fixing bugs in an existing CLI** (e.g., patching `gh`, `kubectl`, or any tool you did not create here). Use the relevant tool's issue tracker or a targeted code fix instead.
+- **Building GUI or desktop applications** (Electron, native app, web frontend). This skill produces command-line tools only.
+- **Creating libraries, SDKs, or packages** intended for import, not direct execution.
+- **One-off scripts** that will only run manually a handful of times in a single repo. Write the script in the repo instead.
+- **Optimizing or refactoring an existing script** that is not being promoted to a durable installed CLI.
+
+## Scope Discipline
+
 This skill is for durable tools, not one-off scripts. If a short script in the current repo solves the task, write the script there instead.
 
 ## Start
@@ -143,7 +163,12 @@ Add a `Makefile` target such as `make install-local` that installs the command o
 
 ## Companion Skill
 
-After the CLI works, create or update a small skill for it. Use `$skill-creator` when it is available. Use `$CODEX_HOME/skills/<tool-name>/SKILL.md` for a personal companion skill unless the user names a repo-local `.codex/skills/...` path or another skill repo.
+After the CLI works, create or update a small skill for it. Use the `skill-creator` skill when it is available. Place the companion skill at:
+
+- `$XDG_DATA_HOME/skills/<tool-name>/SKILL.md` (or `~/.local/share/skills/<tool-name>/SKILL.md` when `XDG_DATA_HOME` is unset) for a personal, cross-repo skill.
+- A repo-local path such as `.claude/skills/<tool-name>/SKILL.md` or `.codex/skills/<tool-name>/SKILL.md` when the CLI is project-specific.
+
+Ask the user which location fits if neither is obvious from context.
 
 Write the companion skill in the order a future Codex thread should use the CLI, not as a tour of every feature. Explain:
 

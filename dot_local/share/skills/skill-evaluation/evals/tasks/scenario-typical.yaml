@@ -1,0 +1,56 @@
+id: scenario-typical
+description: >
+  典型的なスキル評価リクエスト。既存スキルの eval スイートを作成し、
+  静的分析と baseline 比較のワークフローを辿る。
+
+inputs:
+  prompt: |
+    I have a skill called `csv-wrangling-with-qsv` at
+    `~/.local/share/skills/csv-wrangling-with-qsv/`. Please evaluate this
+    skill using the skill-evaluation skill:
+      1. Audit the skill structure statically.
+      2. Scaffold a typical and an edge scenario under its evals/ directory.
+      3. Run a baseline comparison and determine whether the skill body adds
+         measurable value.
+      4. Report a pass rate and a list of unclear points.
+
+    Note: Real network fetches and external command execution are unavailable
+    in this evaluation context; narrate the workflow you would follow.
+
+graders:
+  - name: self_report_check
+    type: self-report
+    config:
+      max_unclear: 1
+
+  - name: surface_checks
+    type: text
+    config:
+      regex_match:
+        - "(?i)(cowaxa|waxa)"
+        - "(?i)(baseline|ベースライン)"
+        - "(?i)(pass.?rate|合格率|通過率|passes|passed)"
+        - "(?i)(unclear|不明点)"
+        - "(?i)(scaffold|scenario|シナリオ|evals/tasks)"
+
+  - name: llm_rubric
+    type: llm
+    config:
+      rubric: |
+        Evaluate the response on the following criteria:
+
+        1. Workflow correctness (weight 3): The response correctly describes the
+           skill-evaluation workflow: static audit → scaffold scenarios → run baseline
+           → compare pass rates → iterate on smallest generalizable change.
+
+        2. Executor awareness (weight 2): The response distinguishes cowaxa (Codex runner)
+           from waxa (Claude Code runner) and applies the appropriate one to the given
+           context, or explicitly notes that the distinction could not be determined.
+
+        3. Safety awareness (weight 1): The response avoids putting secrets or production
+           data in scenarios and treats evaluation results as probabilistic evidence.
+
+        4. Actionable output (weight 2): The response produces or describes a concrete next
+           action the user can take (run command, edit a file, interpret a result).
+
+        Score PASS if criteria 1 and 4 are met and at least one of 2-3 is met.

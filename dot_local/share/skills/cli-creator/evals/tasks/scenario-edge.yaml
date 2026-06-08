@@ -1,0 +1,70 @@
+id: scenario-edge
+description: >
+  スコープ外リクエスト群。cli-creator は CLI ツールの新規作成専用であり、
+  既存 CLI のバグ修正・GUI ツール作成・one-off スクリプトの最適化などは
+  対象外であることを正しく識別して断ることを検証する。
+
+inputs:
+  prompt: |
+    I have three separate requests. Please handle all of them:
+
+    Request A: I have a bug in my existing `gh` CLI where `gh pr list` crashes
+    when the repo has no open PRs. Can you fix that bug for me?
+
+    Request B: I want a desktop GUI application (Electron) that lets me browse
+    my GitHub issues with a nice visual interface, mouse clicks, and drag-and-drop
+    labels.
+
+    Request C: I have a one-off Python script `process_data.py` that I run
+    manually once per quarter to transform a CSV export from our analytics tool.
+    Can you make it faster and cleaner?
+
+    Note: Real network fetches and external command execution are unavailable in
+    this evaluation context; narrate the workflow you would follow.
+
+graders:
+  - name: self_report_check
+    type: self-report
+    config:
+      max_unclear: 1
+
+  - name: surface_declines
+    type: text
+    config:
+      regex_match:
+        - "(?i)(not.in.scope|out.of.scope|not.designed|decline|スコープ外|対象外|新規作成|バグ修正は対象外|cannot.fix.existing)"
+        - "(?i)(GUI|Electron|desktop.app|graphical|not.a.CLI|GUIは対象外)"
+        - "(?i)(one.off|one-off|quarterly|not.durable|short.script|一回限り|四半期)"
+      regex_not_match:
+        - "(?i)(here.is.the.fix|I.will.fix|I.will.build.the.gui|let.me.fix|パッチを適用|修正します)"
+
+  - name: llm_rubric
+    type: llm
+    config:
+      rubric: |
+        Evaluate the response on the following criteria (score 1 met / 0 not met):
+
+        1. Declines Request A (bug fix): Correctly identifies that fixing a bug in an
+           existing CLI (gh) is out of scope; does NOT patch gh source or produce a
+           workaround modifying existing tool behavior as if it were a new CLI.
+
+        2. Declines Request B (GUI): Correctly identifies that building a desktop GUI
+           (Electron) is out of scope; cli-creator is for command-line tools, not
+           graphical applications.
+
+        3. Declines Request C (one-off script): Correctly identifies that optimizing a
+           quarterly one-off script is out of scope for creating a durable CLI.
+
+        4. No silent scope creep: Does NOT begin implementing any of the three declined
+           requests without acknowledging the scope mismatch first.
+
+        5. Clear explanation: For each declined request, gives a concise reason tied to
+           the skill's stated purpose (new composable CLI, not repair/GUI/one-off).
+
+        6. Constructive redirection: Offers at least one constructive suggestion per
+           declined request (correct skill, tool, or approach) rather than just refusing.
+
+        7. Tone and precision: Direct and precise, not evasive; does not partially
+           fulfill a request that is clearly out of scope.
+
+        Report total_score (sum out of 7) and a brief note for each criterion scored 0.

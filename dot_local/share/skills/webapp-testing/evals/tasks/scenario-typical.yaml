@@ -1,0 +1,57 @@
+id: scenario-typical
+description: |
+  Typical use case: user asks to test a local React app running on port 5173
+  using Playwright, verify a login flow, and capture a screenshot.
+
+inputs:
+  prompt: |
+    I have a React development server running on http://localhost:5173. Please
+    test the login flow: navigate to the login page, fill in username "testuser"
+    and password "secret", click the Login button, and verify that the dashboard
+    heading is visible after login. Capture a screenshot of the dashboard.
+
+    Note: Real network fetches, browser execution, and external command execution
+    are unavailable in this evaluation context; narrate the workflow you would
+    follow.
+
+graders:
+  - name: self_report_check
+    type: self-report
+    config:
+      max_unclear: 1
+
+  - name: surface_checks
+    type: text
+    config:
+      regex_match:
+        - "(?i)(playwright|sync_playwright)"
+        - "(?i)(screenshot|スクリーンショット)"
+        - "(?i)(networkidle|wait_for_load_state|wait_for_selector|ネットワーク待機)"
+        - "(?i)(fill|type|入力|login)"
+        - "(?i)(locator|selector|text=|role=|CSS|セレクタ)"
+
+  - name: llm_rubric
+    type: llm
+    config:
+      rubric: |
+        Evaluate the response on the following criteria:
+
+        1. Playwright script structure (weight 2): The response shows or describes a valid
+           Playwright Python script that launches a browser, navigates to the URL, performs
+           actions, and closes the browser.
+
+        2. Network idle wait (weight 2): The response explicitly waits for networkidle (or
+           equivalent) before reading the DOM or taking a screenshot, consistent with the
+           skill's documented best practice.
+
+        3. Selector strategy (weight 1): The response identifies how to locate the username,
+           password, and submit button elements (e.g., by role, text, CSS, or id).
+
+        4. Screenshot capture (weight 1): The response describes or includes a
+           page.screenshot() call to capture the dashboard state.
+
+        5. Scope discipline (weight 1): The response does not suggest unit-test frameworks
+           (Jest, pytest), API-only tools (curl, httpx), or external site testing; stays
+           focused on local Playwright browser automation.
+
+        Score PASS if criteria 1, 2, and at least one of 3-5 are met.

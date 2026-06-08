@@ -5,6 +5,18 @@ description: Help the user define a concrete, measurable goal before starting wo
 
 # Define Goal
 
+## When to Use
+
+Use this skill when:
+- The user explicitly asks for `$define-goal`, to create or set a goal, or to use the goal tool.
+- The user has a fuzzy intention ("make X better", "investigate Y", "improve Z") and needs it sharpened into a verifiable objective.
+- The user asks to clarify success criteria or define what "done" means.
+
+Do NOT use this skill when:
+- The user's goal is already concrete and verifiable — confirm it as-is and proceed to implementation.
+- The user asks for ordinary implementation work without mentioning goals, objectives, or success criteria.
+- The user asks for a plan, investigation, or explanation that does not need a formal goal statement.
+
 ## Overview
 
 Shape the user's intent into an objective an agent can pursue honestly. Prefer measurable outcomes, explicit evidence, and bounded scope over activity descriptions.
@@ -16,7 +28,7 @@ snapshots, ledgers, decision logs, or resume files from this skill.
 ## Workflow
 
 1. Confirm that goal definition is actually needed.
-   - Use this skill when the user asks for `$define-goal`, asks to create or set a goal, asks for the goal tool, or wants help turning an intention into a clear objective.
+   - If the stated goal already passes the Goal Quality Bar below, confirm it as-is and skip to step 5. Do NOT paraphrase, restructure, or add stop conditions to a goal that is already concrete — confirm the user's wording verbatim and proceed.
    - If the user only asks for ordinary implementation work, do the work directly instead of forcing goal creation.
 
 2. Restate the likely goal in concrete terms.
@@ -48,11 +60,12 @@ snapshots, ledgers, decision logs, or resume files from this skill.
    - If goal tools are not available, produce the goal statement and validation criteria without pretending to create durable goal state.
 
 6. Create or state the goal only after it passes the quality bar.
-   - Use a single concise objective string.
+   - Use a single concise objective string in a blockquote ("> Objective: …").
    - Include the verification evidence in the objective itself.
    - Include scope bounds when they constrain the work.
    - Include a token budget only when the user explicitly requested one.
    - Do not call `create_goal` for an ordinary multi-step task unless the user explicitly asked for goal-backed work.
+   - When goal tools are not available, output the objective string and verification criteria as plain text. Do not simulate tool calls or pretend to create durable goal state.
 
 ## Goal Quality Bar
 

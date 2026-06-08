@@ -1,0 +1,57 @@
+iterations:
+  - id: iter-0-static
+    date: 2026-06-08
+    scope: static-analysis
+    overall_pass_rate: null
+    note: "waxa CLI 未実行。静的分析のみ実施。"
+    unclear_points:
+      - issue: >
+          "When to invoke" と "When NOT to use" が SKILL.md に存在せず、
+          発火条件と委譲先が曖昧だった。
+        cause: >
+          スキルの冒頭に用途説明の prose はあるが、箇条書きのトリガーリストと
+          否定ケース（兄弟スキルへの委譲）が明示されていなかった。
+        general_fix_rule: >
+          スキルは "When to Invoke" と "When NOT to Use" を明示的なセクションとして
+          持つべきである。否定ケースには具体的な兄弟スキル名を列挙する。
+      - issue: >
+          出力フォーマットが文章で説明されており、エージェントが一貫した
+          構造を生成するためのテンプレートが提示されていなかった。
+        cause: >
+          "Lead with severity-ranked findings" という指示は方向性を示すが、
+          ヘッダー・表・セクション順序の具体例がなかった。
+        general_fix_rule: >
+          出力フォーマットセクションには、エージェントが直接参照できる
+          マークダウンテンプレートを含める。
+    actions:
+      - >
+        SKILL.md: "When to Invoke" セクションを追加。LLM/エージェント/
+        ツール呼び出し/メモリを含む系が対象であることを箇条書きで明示。
+        典型的なトリガーフレーズも追記。
+      - >
+        SKILL.md: "When NOT to Use" セクションを追加。一般的な Web
+        セキュリティ・コードレビュー・TDD・CI 障害など、エージェント固有でない
+        ケースを兄弟スキル名と共に列挙。
+      - >
+        SKILL.md: "Output Format" セクションを拡張。Findings テーブル・
+        Architecture Diagnosis 段落・Fix Plan 番号付きリストを含む
+        マークダウンテンプレートを追加。
+      - >
+        evals/eval.yaml を新規作成（trials_per_task: 2、2 タスク参照）。
+      - >
+        evals/tasks/scenario-typical.yaml を新規作成。
+        典型ケース: ツール呼び出しの隠れリトライ/回答書き換え疑惑の監査依頼。
+        グレーダー: self-report + text (severity/layer/fix/evidence 正規表現) +
+        llm (5 節ルーブリック)。
+      - >
+        evals/tasks/scenario-edge.yaml を新規作成。
+        スコープ外ケース: LLM を持たない Rails EC サイトのセキュリティ監査依頼。
+        グレーダー: self-report + text (リダイレクト確認) +
+        llm (no-spurious-audit 重み 3 を含む 3 節ルーブリック)。
+
+convergence:
+  status: pending-waxa-run
+  rationale: |
+    静的分析のみ実施。eval ファイルは作成済み。
+    waxa CLI による実際のトライアル実行は別途必要。
+    iter-0 の静的修正が pass rate にどう影響するかは waxa 実行後に確認する。

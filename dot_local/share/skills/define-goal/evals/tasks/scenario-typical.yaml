@@ -1,0 +1,123 @@
+id: scenario-typical
+description: >
+  User has a fuzzy intention ("make the dashboard faster") and asks for help
+  turning it into a concrete, measurable goal. The skill should restate the
+  intent as a verifiable objective, apply quantification heuristics, ask at most
+  one clarifying question when a key validator is missing, and produce a
+  goal-quality-bar-passing objective string — without creating planning artifacts
+  or durable snapshots.
+
+inputs:
+  prompt: |
+    I want to make the dashboard faster. Can you help me define a goal for this?
+
+    The dashboard is a React app that fetches data from a REST API. Users complain
+    it feels slow when loading. I haven't measured anything yet.
+
+    Note: Real network fetches and external command execution are unavailable in
+    this evaluation context; narrate the workflow you would follow, including what
+    clarifying question (if any) you would ask, how you would restate the goal in
+    measurable terms, and what the final objective string would look like.
+
+graders:
+  - name: measurable_restatement_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(p95|p99|latency|ms|millisecond|lcp|fcp|time.?to|threshold|metric|under|below|measur|定量|測定|閾値|ミリ秒|レイテンシ)"
+
+  - name: measurable_restatement_llm
+    type: llm
+    config:
+      rubric: |
+        The response must restate the user's fuzzy goal ("make the dashboard faster")
+        into a concrete, measurable objective. It should include at least two of:
+        1. A specific performance metric (e.g., p95 latency, LCP, FCP, Time to Interactive)
+        2. A numeric threshold (e.g., "under 300 ms", "below 2.5 s")
+        3. A measurement method (e.g., a Lighthouse run, a specific test command,
+           a local benchmark, or a monitoring tool)
+        4. A number of required runs or reproducibility condition
+        Score PASS if at least 2 of these 4 elements are present in the restated goal.
+
+  - name: scope_bounds_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(scope|in.?scope|out.?of.?scope|affect|limit|bound|only|constrain|スコープ|範囲|対象|制約|のみ)"
+
+  - name: scope_bounds_llm
+    type: llm
+    config:
+      rubric: |
+        The response must include explicit scope bounds for the goal — either:
+        1. What is in scope (e.g., "dashboard load only, not other pages")
+        2. What is out of scope (e.g., "backend API changes are out of scope")
+        3. The specific component or user flow to optimize (e.g., "initial load of the
+           main dashboard page", "data fetch for the overview widget")
+        Score PASS if at least one meaningful scope boundary is stated.
+
+  - name: verification_evidence_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(verif|evidence|proof|test|benchmark|lighthouse|measure|command|run|pass|確認|検証|証拠|テスト|ベンチマーク|コマンド)"
+
+  - name: verification_evidence_llm
+    type: llm
+    config:
+      rubric: |
+        The response must state what evidence will prove the goal is complete. This should be
+        a specific, executable verification method such as:
+        - A named test or benchmark command
+        - A Lighthouse or WebPageTest run with an expected score
+        - A monitoring dashboard showing the metric below the threshold
+        - A manual measurement procedure with a minimum number of runs
+        Score PASS if the verification method is concrete enough that another agent could
+        execute it without further clarification.
+
+  - name: clarifying_question_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(clarif|question|ask|which|what|metric|environment|staging|production|local|質問|確認|どの|どちら|環境)"
+
+  - name: clarifying_question_llm
+    type: llm
+    config:
+      rubric: |
+        When the user has not specified a metric or environment, the response may ask
+        at most one concise clarifying question oriented around the missing validator
+        (e.g., "Which metric should define success: LCP, p95 API latency, or something else?")
+        OR it may propose the most honest binary validator and ask for confirmation.
+        Score PASS if:
+        - The response asks at most one clarifying question AND that question targets
+          the missing metric, threshold, or environment; OR
+        - The response proposes a concrete default metric and asks the user to confirm.
+        Score FAIL if the response asks multiple unrelated questions or no question at all
+        when a key validator is genuinely ambiguous.
+
+  - name: no_activity_goal_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(make.*faster|improve.*performance|keep.*investigat|make.*progress|活動|調査を続ける|進捗)"
+      negate: true
+
+  - name: no_activity_goal_llm
+    type: llm
+    config:
+      rubric: |
+        The response must NOT produce a pure activity goal such as "make the dashboard
+        faster", "keep investigating performance", or "improve things". The final
+        objective string must be verifiable — it must name a metric, a threshold, and
+        evidence, not merely describe an activity.
+        Score PASS if the final goal statement is verifiable (not a pure activity).
+        Score FAIL if the response leaves the goal as a vague activity without measurable
+        success criteria.
+
+  - name: self_report
+    type: self-report
+    config:
+      require_self_report: true
+      max_unclear: 1
+      max_retries: 0

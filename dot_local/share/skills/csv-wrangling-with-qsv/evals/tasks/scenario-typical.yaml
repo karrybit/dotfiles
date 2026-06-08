@@ -1,0 +1,86 @@
+id: scenario-typical
+description: >
+  Typical trigger: user asks to inspect, filter, and summarize a local CSV file.
+  The skill should engage, recommend qsv inspection commands, plan filtering with
+  qsv search, and validate output — not fall back to awk/sed/cut.
+
+inputs:
+  prompt: |
+    I have a local CSV file `orders.csv` with columns: order_id, customer_id, status, amount, created_at.
+    I want to:
+    1. Check how many rows it has and what the columns look like.
+    2. Filter rows where status is "completed".
+    3. Get summary statistics on the amount column.
+    4. Save the filtered result to `completed_orders.csv` without overwriting the original.
+
+    Note: Real network fetches and external command execution are unavailable in this
+    evaluation context; narrate the workflow you would follow, including the exact
+    qsv commands you would run and why.
+
+graders:
+  # --- Axis 1: Inspection before transformation ---
+  - name: inspect_first_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(qsv\\s+headers|qsv\\s+count|qsv\\s+stats|qsv\\s+sample)"
+
+  - name: inspect_first_llm
+    type: llm
+    config:
+      rubric: |
+        The response must recommend inspecting the CSV file before applying any
+        transformation. Specifically it should suggest running one or more of:
+        `qsv headers`, `qsv count`, `qsv stats`, or `qsv sample` on orders.csv.
+        Score 1 if the inspection step is present and clearly precedes filtering.
+        Score 0 if the response jumps straight to filtering without inspection.
+
+  # --- Axis 2: qsv-first filtering (not awk/sed/cut) ---
+  - name: qsv_filter_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(qsv\\s+search|qsv\\s+filter)"
+
+  - name: qsv_filter_llm
+    type: llm
+    config:
+      rubric: |
+        The response must use a qsv subcommand (`qsv search` or `qsv filter`)
+        to filter rows where status equals "completed". It must NOT propose using
+        `awk`, `sed`, `cut`, `grep`, or shell IFS-based parsing for this filtering
+        step. Score 1 if qsv filtering is proposed. Score 0 if only non-qsv tools
+        are proposed for the filtering step.
+
+  # --- Axis 3: Preserve source file ---
+  - name: preserve_source_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(complet(ed)?_orders\\.csv|new\\s+file|output\\s+file|separate\\s+file|without.*overwr|overwr.*not|redirect|>\\s*complet)"
+
+  - name: preserve_source_llm
+    type: llm
+    config:
+      rubric: |
+        The response must explicitly state or demonstrate that the transformed
+        output will be written to a new file (e.g., `completed_orders.csv`) and
+        that the original `orders.csv` will not be overwritten. Score 1 if source
+        preservation is addressed. Score 0 if the response overwrites or ignores
+        the original file.
+
+  # --- Axis 4: Validation of output ---
+  - name: validate_output_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(qsv\\s+(headers|count|stats|sample).*complet|validat|structural\\s+check|result.*check|確認|検証)"
+
+  - name: validate_output_llm
+    type: llm
+    config:
+      rubric: |
+        The response must include a validation step on the output file
+        `completed_orders.csv` — for example running `qsv count`, `qsv headers`,
+        or `qsv stats` on the result. Score 1 if at least one structural check on
+        the output is mentioned. Score 0 if no validation of the result is proposed.

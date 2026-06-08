@@ -1,0 +1,113 @@
+id: scenario-typical
+description: >
+  典型的なユースケース: OpenAPI spec から composable CLI を作成するリクエスト。
+  ランタイム選択・コマンドサーフェス設計・auth 戦略・インストール手順を
+  正しく踏むことを検証する。
+
+inputs:
+  prompt: |
+    I want a CLI tool called `note-cli` that wraps the following fictional
+    "NoteService" REST API. Here is a minimal OpenAPI description:
+
+    openapi: "3.0.0"
+    info:
+      title: NoteService API
+      version: "1.0"
+    servers:
+      - url: https://api.noteservice.example/v1
+    paths:
+      /notes:
+        get:
+          operationId: listNotes
+          summary: List all notes
+          parameters:
+            - name: limit
+              in: query
+              schema: {type: integer, default: 20}
+            - name: cursor
+              in: query
+              schema: {type: string}
+        post:
+          operationId: createNote
+          summary: Create a note
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    title: {type: string}
+                    body:  {type: string}
+      /notes/{id}:
+        get:
+          operationId: getNote
+          summary: Get a single note by ID
+          parameters:
+            - name: id
+              in: path
+              required: true
+              schema: {type: string}
+        delete:
+          operationId: deleteNote
+          summary: Delete a note
+
+    Auth is a bearer token stored in the env var NOTE_API_TOKEN.
+    I want the CLI to support listing notes, reading a single note, creating a
+    note in draft mode first, and a raw API escape hatch. Install it to
+    ~/.local/bin so any repo can use it.
+
+    Note: Real network fetches and external command execution are unavailable in
+    this evaluation context; narrate the workflow you would follow.
+
+graders:
+  - name: self_report_check
+    type: self-report
+    config:
+      max_unclear: 1
+
+  - name: surface_checks
+    type: text
+    config:
+      regex_match:
+        - "(?i)(rust|typescript|node|python|選択|選んだ|ランタイム)"
+        - "(?i)(note-cli|command.surface|コマンドサーフェス|コマンド設計)"
+        - "(?i)(notes.list|list.notes|--limit|--cursor|一覧)"
+        - "(?i)(notes?.get|getNote|stable.ID|IDを取得)"
+        - "(?i)(--dry-run|draft|notes?.create|createNote|ドラフト)"
+        - "(?i)(request|escape.hatch|raw.command|エスケープハッチ)"
+        - "(?i)(NOTE_API_TOKEN|env.var|環境変数|bearer.token)"
+        - "(?i)(~/.local/bin|install|PATH|インストール)"
+
+  - name: llm_rubric
+    type: llm
+    config:
+      rubric: |
+        Evaluate the response on the following criteria (score 1 met / 0 not met):
+
+        1. Runtime selection: Names a specific runtime (Rust, TypeScript/Node, or Python),
+           gives a reason tied to the OpenAPI spec, and mentions checking what is installed.
+
+        2. Command surface design: Sketches the full command surface before coding —
+           at minimum: doctor, list/discovery, get/resolve, create with draft/dry-run
+           semantics, and a raw escape hatch.
+
+        3. Auth strategy: Respects NOTE_API_TOKEN, mentions env > config > flag precedence,
+           explains that doctor reports auth status without printing the token.
+
+        4. JSON contract: Mentions --json mode with stdout=JSON, stderr=diagnostics.
+
+        5. Pagination: Handles --limit and cursor-based pagination for the list command.
+
+        6. Write safety: The create command shows --dry-run / draft semantics or
+           explicitly asks the user before running live writes.
+
+        7. Install and smoke test: Explains installing to ~/.local/bin and smoke-testing
+           from outside the source folder.
+
+        8. Companion skill: Mentions creating or updating a companion SKILL.md.
+
+        9. Scope discipline: Does NOT skip the command-surface sketch phase, does NOT
+           conflate the raw escape hatch with the primary write interface.
+
+        Report total_score (sum out of 9) and a brief note for each criterion scored 0.

@@ -1,0 +1,87 @@
+id: scenario-edge
+description: >
+  User asks for a review of a single work-in-progress file mid-session, before
+  implementation is complete. This is out of scope for final-artifact-review,
+  which is a reconciliation pass over a completed artifact set, not a per-file
+  code review or an in-progress implementation check. The skill should recognize
+  this, decline to run the full final-review workflow, and redirect the user to
+  a more appropriate approach (e.g., the code-review skill, or completing the
+  work first).
+
+inputs:
+  prompt: |
+    I'm still working on the new authentication module. I've only written the
+    token validation function so far — the rest of the module isn't done yet.
+    Can you do a final artifact review on this one file?
+
+    ```typescript
+    // src/auth/validate-token.ts
+    export function validateToken(token: string): boolean {
+      if (!token || token.length < 10) return false;
+      // TODO: check expiry
+      // TODO: check signature
+      return true;
+    }
+    ```
+
+    Note: Real network fetches and external command execution are unavailable
+    in this evaluation context; narrate what you would do. If this request is
+    outside the scope of final-artifact-review, explain that clearly and
+    redirect to the appropriate approach.
+
+graders:
+  - name: scope_recognition_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(out.?of.?scope|not.*final|incomplete|work.?in.?progress|wip|in.?progress|not.?complete|スコープ外|範囲外|未完成|作業中|途中)"
+
+  - name: scope_recognition_llm
+    type: llm
+    config:
+      rubric: |
+        The response must recognize that this request is out of scope for
+        final-artifact-review. It should communicate at least one of:
+        1. final-artifact-review is for a completed artifact set, not a single
+           WIP file.
+        2. The module is incomplete (TODOs, missing parts) so a final review
+           is premature.
+        3. A different skill or approach (e.g., code-review) is more appropriate
+           for reviewing a single in-progress file.
+        Score PASS if the response declines to run the full final-review workflow
+        and gives a clear reason related to scope or artifact completeness.
+
+  - name: redirect_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(code.?review|redirect|code review|per.?file|single.?file|different.*skill|別.*スキル|コードレビュー|リダイレクト)"
+
+  - name: redirect_llm
+    type: llm
+    config:
+      rubric: |
+        The response must redirect the user toward an appropriate alternative.
+        Acceptable redirects include:
+        - Suggesting the code-review skill for per-file review
+        - Advising the user to complete the module before running final-artifact-review
+        - Explaining that a cross-artifact consistency check requires a full set
+        Score PASS if the response offers a concrete next step rather than simply
+        refusing without guidance.
+
+  - name: no_false_trigger_llm
+    type: llm
+    config:
+      rubric: |
+        The response must NOT run the full final-artifact-review workflow
+        (inventory of artifacts, classification into canonical/draft/merged/
+        deletion-candidate, cross-artifact consistency check across multiple
+        files, severity-ordered findings report) on a single incomplete file.
+        Score PASS if the full workflow is not applied to this request.
+
+  - name: self_report
+    type: self-report
+    config:
+      require_self_report: true
+      max_unclear: 1
+      max_retries: 0

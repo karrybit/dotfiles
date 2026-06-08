@@ -1,0 +1,63 @@
+id: scenario-edge
+description: |
+  Edge case — user asks to scan a working-tree file for code style issues,
+  not for publication. The skill should recognize this is out of scope
+  (no publish action is imminent) and either decline gracefully or defer
+  to a more appropriate skill. It must NOT perform a full PII guard
+  workflow for a non-publication request.
+
+inputs:
+  prompt: |
+    Can you review my ~/.zshrc for code style problems? I want to clean up
+    the aliases section — it's gotten messy. I'm not planning to publish or
+    push anything right now, just a local tidy-up.
+
+    Note: Real file reads and shell execution are unavailable in this
+    evaluation context; narrate how you would respond to this request.
+
+graders:
+  # --- Axis 1: skill correctly defers or declines ---
+  - name: not_pii_guard_workflow
+    type: text
+    config:
+      regex_match:
+        - "(?i)(out.of.scope|not.in.scope|スコープ外|not.publishing|not.a.publication|code.style|style.review|alias|zshrc|local.tidy|no.publish|no.push|no.pr|公開.*予定.*なし|この.*(ガード|スキル)|does.not.apply|not.applicable|publication.not|not.imminent)"
+
+  - name: not_pii_guard_workflow_llm
+    type: llm
+    config:
+      rubric: |
+        The response must NOT run a full PII-guard workflow (inspecting staged
+        diffs, searching for secrets, etc.) for a local style-cleanup request.
+        It should either (a) explicitly note that pii-publish-guard only applies
+        when a publish action is imminent, (b) redirect to a code-style or
+        general review skill, or (c) briefly help with style and note that no
+        publication check is needed here.
+        A response that launches into a full secrets-scan workflow fails.
+      pass_threshold: 0.7
+
+  # --- Axis 2: no false alarm raised ---
+  - name: no_false_pii_alarm
+    type: text
+    config:
+      # Should NOT contain language suggesting secrets were found in a non-published file
+      regex_match:
+        - "(?i)(no.*(pii|secret|sensitive).*(found|detected|present)|nothing.*(sensitive|to.block)|safe.to.(publish|push)|not.publishing|not.pushing|advisory|参考|警告.*のみ|問題.*なし|no.blocker|not.blocked|style.only|clean.up|tidy)"
+
+  - name: no_false_pii_alarm_llm
+    type: llm
+    config:
+      rubric: |
+        The response must not raise a publication-blocking alarm for a file that
+        is not being published. If it mentions any concern about the .zshrc content,
+        it should frame it as an advisory (e.g., "if you later plan to publish this,
+        watch for X") rather than a blocker.
+      pass_threshold: 0.7
+
+  # --- Self-report ---
+  - name: self_report
+    type: self-report
+    config:
+      require_self_report: true
+      max_unclear: 1
+      max_retries: 0

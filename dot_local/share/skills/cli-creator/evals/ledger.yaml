@@ -1,0 +1,35 @@
+iterations:
+  - id: iter-0-static
+    date: 2026-06-08
+    scope: static-analysis
+    overall_pass_rate: null
+    note: "waxa CLI 未実行。静的分析のみ実施。"
+    unclear_points:
+      - issue: "When NOT to use セクションが存在せず、スコープ外リクエスト（GUI・既存CLIバグ修正・ライブラリ作成・one-offスクリプト最適化）が明示的に除外されていなかった"
+        cause: "SKILL.md 冒頭に「durable tools, not one-off scripts」の一文のみで、スコープ外のケースが列挙されていなかった"
+        general_fix_rule: "スキルの invoke 条件と同じ重みで When NOT to use セクションを設ける。境界が曖昧なスキルほど否定例が必要。"
+
+      - issue: "Companion skill の配置先パスに $CODEX_HOME という Codex 固有の環境変数が使われており、Claude Code や他のエージェント環境では無効になる"
+        cause: "スキルが Codex 専用として書かれた当初の前提が残存していた"
+        general_fix_rule: "エージェント横断スキルでは XDG_DATA_HOME など標準パス変数を優先し、エージェント固有変数は代替として記載する。"
+
+      - issue: "本文中に When to Use セクションがなく、invoke トリガーがフロントマターの description にのみ記載されていた"
+        cause: "フロントマター description は自動マッチングに使われるが、エージェントが文脈判断するための明示的なトリガーリストが本文にない"
+        general_fix_rule: "スキル本文冒頭に When to Use と When NOT to Use を並置し、フロントマターとの整合を保つ。"
+
+    actions:
+      - "SKILL.md に When to Use This Skill セクションを追加（API docs, OpenAPI spec, curl examples, SDK, web app, admin tool, local script の 6 ソース種別を列挙）"
+      - "SKILL.md に When NOT to Use This Skill セクションを追加（既存CLIバグ修正・GUI/デスクトップアプリ・ライブラリ・one-offスクリプト・既存スクリプト最適化の 5 除外ケースを列挙）"
+      - "SKILL.md の Companion Skill セクションで $CODEX_HOME を XDG_DATA_HOME ベースのパスに置き換え、repo-local パスの代替も明示"
+      - "evals/eval.yaml を作成（trials_per_task: 2、2 タスク参照）"
+      - "evals/tasks/scenario-typical.yaml を作成（OpenAPI spec から note-cli を作成するリクエスト、self-report + text 10 checks + llm 10 criteria rubric）"
+      - "evals/tasks/scenario-edge.yaml を作成（GUI・既存CLIバグ修正・one-off スクリプトの 3 スコープ外リクエスト、self-report + text 4 checks + llm 7 criteria rubric）"
+
+convergence:
+  status: pending-waxa-run
+  rationale: |
+    静的分析のみ実施。eval ファイルは作成済み。
+    waxa CLI を用いた実際のトライアル実行は別途必要。
+    unclear_points はいずれも SKILL.md への直接編集で対処済みのため、
+    waxa 実行後は scenario-typical の llm rubric スコアと
+    scenario-edge の negative regex 不一致を重点確認すること。

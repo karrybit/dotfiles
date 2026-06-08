@@ -1,0 +1,106 @@
+id: scenario-typical
+description: >
+  Typical security review request for a Python/FastAPI backend with a React
+  frontend. The agent should identify relevant reference files, load them,
+  produce a structured vulnerability report, and offer to fix findings.
+
+inputs:
+  prompt: |
+    I have a FastAPI backend (Python) and a React frontend (TypeScript).
+    Please perform a full security best-practices review of my project and
+    produce a `security_best_practices_report.md` file.
+
+    Here is a representative excerpt of my backend code:
+
+    ```python
+    # main.py
+    from fastapi import FastAPI, Request
+    import sqlite3, os
+
+    app = FastAPI()
+    DB = os.environ.get("DATABASE_URL", "sqlite:///./dev.db")
+
+    @app.get("/user")
+    async def get_user(request: Request):
+        user_id = request.query_params.get("id")
+        conn = sqlite3.connect("dev.db")
+        cur = conn.cursor()
+        # BUG: SQL injection - string interpolation instead of parameterised query
+        cur.execute(f"SELECT * FROM users WHERE id = {user_id}")
+        row = cur.fetchone()
+        return {"user": row}
+
+    @app.post("/login")
+    async def login(request: Request):
+        body = await request.json()
+        password = body.get("password")
+        # BUG: password stored in plain text
+        conn = sqlite3.connect("dev.db")
+        conn.execute(
+            "INSERT INTO users (password) VALUES (?)", (password,)
+        )
+        conn.commit()
+        return {"status": "ok"}
+    ```
+
+    And a frontend snippet:
+
+    ```tsx
+    // UserProfile.tsx
+    function UserProfile({ bio }: { bio: string }) {
+      return (
+        <div>
+          {/* BUG: XSS - dangerouslySetInnerHTML without sanitisation */}
+          <p dangerouslySetInnerHTML={{ __html: bio }} />
+        </div>
+      );
+    }
+    ```
+
+    Note: Real network fetches and external command execution are unavailable
+    in this evaluation context; narrate the workflow you would follow.
+
+graders:
+  - name: self_report_check
+    type: self-report
+    config:
+      max_unclear: 1
+
+  - name: surface_checks
+    type: text
+    config:
+      regex_match:
+        - "(?i)(fastapi|FastAPI)"
+        - "(?i)(react|typescript.*react)"
+        - "(?i)(python-fastapi-web-server-security|fastapi.*reference|references.*fastapi|fastapi.*security.*\\.md|fastapi.*security.*file|reference.*python|python.*security.*reference)"
+        - "(?i)(javascript-typescript-react|react.*security|references.*react)"
+        - "(?i)(sql.?injection|SQL.インジェクション|parameterized|parameterised)"
+        - "(?i)(plain.?text.*password|password.*plain.?text|hashing|bcrypt|argon2)"
+        - "(?i)(dangerouslySetInnerHTML|XSS|cross.?site.?scripting|sanitiz)"
+        - "(?i)(executive.summary|エグゼクティブサマリー|概要)"
+        - "(?i)(critical|high|medium|low|severity|深刻度)"
+        - "(?i)(offer.to.fix|fix.*finding|would.you.like.*fix|修正)"
+
+  - name: llm_rubric
+    type: llm
+    config:
+      rubric: |
+        Evaluate the response on the following criteria:
+
+        1. Framework detection: Correctly identifies both the Python/FastAPI backend and
+           the TypeScript/React frontend as the scope of the review.
+
+        2. Reference file lookup: Explicitly states it is checking or loading the relevant
+           reference files from the references/ directory for both frameworks.
+
+        3. Finding completeness: Identifies all three planted vulnerabilities: SQL injection
+           in the backend, plain-text password storage, and XSS via dangerouslySetInnerHTML
+           in the frontend.
+
+        4. Report structure: Produces or fully describes a report with an executive summary
+           and severity-delineated sections, and assigns numeric IDs to findings.
+
+        5. Fix offer: After producing the report, offers to begin performing fixes rather
+           than applying them unilaterally.
+
+        Score PASS if all 5 criteria are met.

@@ -1,0 +1,28 @@
+iterations:
+  - id: iter-0-static
+    date: 2026-06-08
+    scope: static-analysis
+    overall_pass_rate: null
+    note: "waxa CLI 未実行。静的分析のみ実施。"
+    unclear_points:
+      - issue: "When to invoke セクションが存在せず、発火条件が frontmatter description のみに記述されていた"
+        cause: "SKILL.md のテンプレートに When to invoke セクションが含まれていなかった"
+        general_fix_rule: "スキル作成時は When to Use / When NOT to Use セクションを必ず明示し、隣接スキルへの委譲フローを記載する"
+      - issue: "Workflow のステップ 1 が分類 (classify) から始まっており、index.md の参照が Required Sources セクションにのみ記載されていた"
+        cause: "オリエンテーションステップ（index.md の事前読み込み）がワークフローに統合されていなかった"
+        general_fix_rule: "調査系スキルのワークフローはオリエンテーション（全体状態の把握）を最初のステップとして明示する"
+      - issue: "出力形式 (Output Format) セクションが完全に欠落していた"
+        cause: "SKILL.md 作成時に出力の構造が定義されなかった"
+        general_fix_rule: "すべての research / reporting スキルには Output Format セクションを必須とし、返すべき情報の項目・順序・粒度を明記する"
+    actions:
+      - "When to Use セクションを追加（4 つの発火条件を列挙）"
+      - "When NOT to Use セクションを追加（実装変更、汎用 Web 調査、外部チャネル投稿を除外対象として列挙し、隣接スキルへの委譲先を記載）"
+      - "Workflow のステップ 1 として index.md の事前読み込みを挿入し、残りのステップ番号をずらした"
+      - "Output Format セクションを追加（Track / Sources / Ledger changes / Candidate actions / Run record location / Deferred items の 6 項目）"
+
+convergence:
+  status: pending-waxa-run
+  rationale: |
+    静的分析のみ実施。eval ファイルは作成済み（eval.yaml, scenario-typical.yaml, scenario-edge.yaml）。
+    waxa 実行は別途必要。実行後に overall_pass_rate を記録し、
+    unclear_points の general_fix_rule が SKILL.md 改善に反映されているか確認する。

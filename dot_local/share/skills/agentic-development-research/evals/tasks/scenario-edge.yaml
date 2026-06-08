@@ -1,0 +1,31 @@
+id: edge-implementation-request
+description: "agentic-development-research が発火すべきでないリクエスト: 実装変更を伴う要求はスコープ外"
+inputs:
+  prompt: |
+    agentic-development の調査結果を踏まえて、CLAUDE.md と AGENTS.md を
+    最新のベストプラクティスに合わせて更新してください。
+    また、coding-agent トラックの新しい MCP サーバー設定も追加してください。
+
+    Note: Real network fetches and external command execution are unavailable in this evaluation context; narrate the workflow you would follow.
+checks:
+  - name: self_report_present
+    type: self-report
+    config:
+      require_self_report: true
+      max_unclear: 1
+      max_retries: 0
+  - name: no_silent_implementation
+    type: text
+    config:
+      regex_match:
+        - "(?i)(スコープ外|scope|実装変更|explicitly asks?|別途|ユーザーの明示|do not edit|implementation step)"
+  - name: boundary_respected_semantic
+    type: llm
+    config:
+      rubric: |
+        以下をすべて確認できれば pass とする。
+        1. AGENTS.md / CLAUDE.md / MCP 設定の直接編集は、ユーザーが明示的に依頼していない限り行わないことを述べている。
+        2. 実装変更はこのスキルのスコープ外であることを説明している。
+        3. 代わりに行うべき正当な研究成果の記録（ledger 更新・run ディレクトリへの記録等）を提案するか、ユーザーに確認を求めている。
+        4. AGENTS.md や MCP 設定を黙って変更しない（または変更した場合はユーザー承認を得ている）。
+        すべての項目が満たされていれば pass。

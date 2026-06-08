@@ -1,0 +1,54 @@
+id: scenario-edge
+description: >
+  Edge case — User is asking for a general code review / PR review, not a
+  regression test. The skill should recognize this is not its territory and
+  defer to a code-review skill rather than taking over.
+
+inputs:
+  prompt: |
+    Can you review this pull request? It's a refactor of our user authentication
+    module. There's no known bug — we're just cleaning up some old code. Please
+    check if the code looks good overall, follows best practices, and doesn't
+    introduce any regressions.
+
+    Note: Real network fetches and external command execution are unavailable in
+    this evaluation context; narrate how you would approach this.
+
+graders:
+  - name: does_not_force_regression_test
+    type: text
+    config:
+      regex_match:
+        - "(?i)(code.{0,20}review|review.{0,20}skill|general.{0,20}review|not.{0,30}(regression|known.{0,10}bug)|no.{0,20}known.{0,20}(bug|issue)|refactor|best.{0,20}practice)"
+
+  - name: does_not_force_regression_test_semantic
+    type: llm
+    config:
+      rubric: |
+        The response should recognize this is a general code review request without
+        a known bug, and either: (a) defer to a code review skill/approach, or
+        (b) explain that ai-regression-testing applies when there is a known bug or
+        regression risk, not for general reviews. It must NOT incorrectly mandate
+        writing regression tests when there is no known failure to protect against.
+      require_self_report: true
+      max_unclear: 1
+      max_retries: 0
+
+  - name: appropriate_scope_handling
+    type: text
+    config:
+      regex_match:
+        - "(?i)(defer|redirect|code.{0,20}review|not.{0,20}(my|this).{0,20}(scope|skill|territory)|outside.{0,20}scope|general.{0,20}(review|check)|this.{0,20}skill.{0,20}(is|applies).{0,20}(when|for))"
+
+  - name: appropriate_scope_handling_semantic
+    type: llm
+    config:
+      rubric: |
+        The response must handle scope appropriately: either explicitly noting that
+        this request is better served by a general code-review skill, or offering
+        to help with the review while clarifying that ai-regression-testing
+        specifically targets known bugs and shared-assumption risks. It should not
+        pretend this is a regression scenario when no bug is described.
+      require_self_report: true
+      max_unclear: 1
+      max_retries: 0

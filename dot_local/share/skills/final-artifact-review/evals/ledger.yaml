@@ -1,0 +1,45 @@
+iterations:
+  - id: iter-0-static
+    date: 2026-06-08
+    scope: static-analysis
+    overall_pass_rate: null
+    note: "waxa CLI 未実行。静的分析のみ実施。"
+    unclear_points:
+      - issue: >
+          When NOT to use の記述が frontmatter description の末尾1文のみで、
+          本文に WIP / 単一ファイルへの不適用が明示されていなかった。
+          eval の scenario-edge はこのスコープ外ケースをカバーするシナリオであり、
+          実行前から想定される失敗パターンとして特定。
+        cause: >
+          Scope セクションは「何に使えるか」の列挙のみで、
+          「何に使ってはいけないか」のセクションが存在しなかった。
+        general_fix_rule: >
+          スキルの Scope セクションに "Do not use this skill for:" ブロックを追加し、
+          WIP・単一ファイル・調査タスクを明示的に除外する。
+      - issue: >
+          Output Shape の <severity> プレースホルダに取りうる値が定義されておらず、
+          実行ごとに出力の表記が不統一になるリスクがあった。
+        cause: >
+          severity のボキャブラリが暗黙知として扱われており、
+          スキル本文に定義が存在しなかった。
+        general_fix_rule: >
+          フォーマット定義の直前に severity レベル一覧（critical / warn / info）と
+          それぞれの基準を記述する。
+    actions:
+      - "SKILL.md: Scope セクションに 'Do not use this skill for:' ブロックを追加
+         (WIP ファイル、未完成実装、調査・デバッグタスクを明示除外)"
+      - "SKILL.md: Output Shape セクションの前に severity レベル定義
+         (critical / warn / info) と判定基準を追加"
+      - "evals/eval.yaml: 新規作成"
+      - "evals/tasks/scenario-typical.yaml: 新規作成
+         (複数アーティファクトの最終レビュー、フラグ名不整合・スキル説明齟齬・ランタイム状態混入を含む)"
+      - "evals/tasks/scenario-edge.yaml: 新規作成
+         (WIP 単一ファイルへのスコープ外リクエスト)"
+
+convergence:
+  status: pending-waxa-run
+  rationale: |
+    静的分析のみ実施。eval ファイルは作成済み。
+    waxa 実行は別途必要。
+    次のステップ: waxa run evals/eval.yaml を実行してパス率を確認し、
+    unclear_points を実際の失敗パターンで更新する。

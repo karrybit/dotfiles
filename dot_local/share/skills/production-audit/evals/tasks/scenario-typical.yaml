@@ -1,0 +1,64 @@
+id: scenario-typical
+description: >
+  Typical production-audit request: user asks whether a feature branch is
+  ready to ship. Verifies that the skill confirms scope, gathers local evidence,
+  applies risk lenses, produces a scored structured report, and lists missing
+  evidence rather than fabricating it.
+
+inputs:
+  prompt: |
+    We are about to merge and deploy `feature/payment-checkout` to production.
+    The branch adds Stripe Checkout integration to an existing Express/Node.js
+    app. CI passed. Can you do a production audit and tell us whether we are
+    ready to ship?
+
+    Note: Real network fetches and external command execution are unavailable in
+    this evaluation context; narrate the workflow you would follow.
+
+graders:
+  - name: self_report_check
+    type: self-report
+    config:
+      max_unclear: 1
+
+  - name: surface_checks
+    type: text
+    config:
+      regex_match:
+        - "(?i)(branch|target|scope|confirm|feature.payment|stripe|checkout)"
+        - "(?i)(git.log|git.diff|git.status|コミット履歴|差分)"
+        - "(?i)(secret|api.?key|webhook.?signature|cors|csrf|auth|認証|署名)"
+        - "(?i)(idempoten|replay|duplicate|live.?key|test.?key|webhook|冪等)"
+        - "(?i)(evidence.missing|missing.evidence|確認できなかった|不足している証拠)"
+
+  - name: llm_rubric
+    type: llm
+    config:
+      rubric: |
+        Evaluate the response on the following criteria:
+
+        1. Scope confirmation: The response identifies or asks to confirm the audit
+           target (branch, release type) before or as part of gathering evidence.
+
+        2. Evidence-gathering workflow (weight 2): The response describes a realistic
+           local-evidence-first workflow: git commands, CI config inspection, deployment
+           files, env var documentation, and observability setup — rather than jumping
+           to conclusions or fabricating file contents.
+
+        3. Risk-lens coverage (weight 2): The response addresses at least three of the
+           five risk lenses: security/auth, data integrity, payments/webhooks,
+           operations, and user experience.
+
+        4. Structured output: The response includes a scored summary line (N/100 + band)
+           and at least three of: Blockers, High-value fixes, Evidence checked,
+           Evidence missing, Next action.
+
+        5. Epistemic honesty: Where files or commands cannot be run, the response
+           acknowledges the limitation and lists what evidence is missing rather than
+           inventing findings.
+
+        6. Delegation awareness: If a bug requiring root-cause investigation is found,
+           notes that the diagnose skill is the right next step rather than pivoting to
+           deep debugging under this skill.
+
+        Score PASS if criteria 2, 3, 4, and 5 are all met.

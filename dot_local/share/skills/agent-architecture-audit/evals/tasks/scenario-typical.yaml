@@ -1,0 +1,58 @@
+id: scenario-typical
+description: >
+  Typical invocation — user suspects their tool-calling agent is silently
+  retrying failed tool calls and rewriting the user-visible answer without
+  disclosure. This matches the core use-case of the skill.
+
+inputs:
+  prompt: |
+    私のエージェントアプリケーションを監査してほしい。
+    ツール呼び出しが失敗したとき、エージェントが気づかないうちにリトライして
+    ユーザーに見せる回答を書き換えているように見える。
+    コードを調べて、問題の層と深刻度を特定し、修正案を出してほしい。
+
+    Note: Real network fetches and external command execution are unavailable
+    in this evaluation context; narrate the workflow you would follow.
+
+graders:
+  - name: self_report_check
+    type: self-report
+    config:
+      max_unclear: 1
+
+  - name: surface_checks
+    type: text
+    config:
+      regex_match:
+        - "(?i)(severity|深刻度|critical|high|medium|low)"
+        - "(?i)(layer|層|retry|リトライ|repair|hidden|隠れ)"
+        - "(?i)(fix|修正|enforce|code.first|コード)"
+        - "(?i)(evidence|エビデンス|rg |ripgrep|grep|検索)"
+
+  - name: llm_rubric
+    type: llm
+    config:
+      rubric: |
+        Evaluate the response on the following criteria:
+
+        1. Layer coverage: The response identifies which audit layer(s) are relevant
+           to the retry/repair-loop symptom (e.g. tool discipline, agent repair loop),
+           or explains why the layer cannot be determined without codebase access.
+
+        2. Severity ranking: The response assigns or explains severity
+           (critical / high / medium / low) for the suspected finding, not merely
+           restating the user's description.
+
+        3. Code-first fix: The response proposes a code-level fix (e.g., surfacing
+           retry count in the tool result, adding a disclosure flag, enforcing explicit
+           disclosure) rather than only a prompt-text instruction.
+
+        4. Scope discipline: The response does not audit unrelated application concerns
+           (general security, CI pipeline, unrelated business logic) outside the agent
+           architecture layers.
+
+        5. Workflow narration: Because live execution is unavailable, the response
+           narrates the evidence-collection steps it would take (ripgrep pattern, files
+           to inspect) rather than claiming to have run them.
+
+        Score PASS if criteria 1, 2, 3 are met and at least one of 4-5 is met.

@@ -1,0 +1,24 @@
+iterations:
+  - id: iter-0-static
+    date: 2026-06-08
+    scope: static-analysis
+    overall_pass_rate: null
+    note: "waxa CLI 未実行。静的分析のみ実施。eval ファイルおよびシナリオを手動作成。"
+    unclear_points:
+      - "Claude Code 環境での waxa vs cowaxa の判定基準が SKILL.md 本文から読み取れなかった（フロントマターのみ）。"
+      - "出力形式（pass rate の数値、unclear_points の構造）が SKILL.md に未記載だった。"
+      - "When NOT to use の記述が本文になくフロントマターのみに限定されていた。"
+    actions:
+      - "SKILL.md に ## When to Use / When NOT to Use セクションを追加。"
+      - "SKILL.md に Executor Selection テーブルを追加（cowaxa vs waxa の使い分け明示）。"
+      - "SKILL.md に ## Output Format セクションを追加（pass rate・baseline delta・unclear points・next action）。"
+      - "evals/eval.yaml を新規作成（trials_per_task: 2）。"
+      - "evals/tasks/scenario-typical.yaml を新規作成（self-report + text + llm グレーダー）。"
+      - "evals/tasks/scenario-edge.yaml を新規作成（スコープ外リクエストの拒否確認）。"
+
+convergence:
+  status: pending-waxa-run
+  rationale: >
+    静的分析のみ実施。eval ファイルとシナリオは作成済み。
+    waxa または cowaxa を実行して pass rate と baseline delta を計測した後、
+    iter-1 以降で収束判定を行う。

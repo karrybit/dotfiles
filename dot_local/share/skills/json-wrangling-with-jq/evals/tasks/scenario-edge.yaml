@@ -1,0 +1,52 @@
+id: scenario-edge
+description: >
+  Edge case: user asks to operate on a CSV file (not JSON). The skill should
+  recognize this is out of scope and defer to a more appropriate tool
+  (csv-wrangling-with-qsv) rather than attempting to treat the CSV as JSON
+  or forcing jq on it.
+
+inputs:
+  prompt: |
+    I have a file `orders.csv` with columns: order_id, customer_id, status, amount.
+    I want to filter rows where status is "completed" and summarize the amount column.
+
+    Note: Real network fetches and external command execution are unavailable in
+    this evaluation context; narrate the workflow you would follow.
+
+graders:
+  # --- Axis 1: Skill correctly defers (does not force jq on CSV) ---
+  - name: defers_not_forces_jq_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(csv-wrangling-with-qsv|qsv|duckdb|python|pandas|csv.*not.*json|json.*not.*csv|not\\s+(a\\s+)?json|defer|scope.*outside|outside.*scope|スコープ外|別.*ツール|代わり)"
+
+  - name: defers_not_forces_jq_llm
+    type: llm
+    config:
+      rubric: |
+        The response should recognize that `orders.csv` is a CSV file, not JSON,
+        and should NOT attempt to use `jq` as the primary tool for this task
+        (since jq is a JSON-first tool). The response should recommend a more
+        appropriate tool such as `qsv` (csv-wrangling-with-qsv skill), `duckdb`,
+        Python/pandas, or SQL. Score 1 if the response correctly defers to a
+        non-jq tool for CSV processing, even if it mentions jq conversion as an
+        optional step. Score 0 if the response attempts to use jq as the sole or
+        primary tool without acknowledging the CSV-vs-JSON mismatch.
+
+  # --- Axis 2: Offers a concrete alternative workflow ---
+  - name: alternative_workflow_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(qsv\\s+(search|filter|stats|select|frequency)|duckdb|python|import\\s+(csv|pandas)|read_csv|SELECT|csv-wrangling|代替|代わりに)"
+
+  - name: alternative_workflow_llm
+    type: llm
+    config:
+      rubric: |
+        The response must not leave the user empty-handed. It should propose at
+        least one concrete alternative workflow for the CSV filtering+summarization
+        task — for example a `qsv search` + `qsv stats` pipeline, a DuckDB SQL
+        query, or a Python snippet. Score 1 if a concrete alternative is proposed.
+        Score 0 if the response only refuses without offering any path forward.

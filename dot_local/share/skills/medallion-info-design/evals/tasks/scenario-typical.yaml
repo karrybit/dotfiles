@@ -1,0 +1,92 @@
+id: scenario-typical
+description: >
+  Typical trigger: user wants to build a data pipeline for research/reporting
+  from an external service, and needs a layered architecture before collecting data.
+
+inputs:
+  prompt: |
+    私はGitHubのAPIを使って、自分のリポジトリのIssueとPRのトレンドを分析したいと思っています。
+    最終的には週次レポートと、優先度付きのアクションリストを作りたいです。
+    どうやってデータフローを設計すればよいでしょうか？
+
+    Note: Real network fetches and external command execution are unavailable in this evaluation context; narrate the workflow you would follow.
+
+graders:
+  - name: bronze_layer_defined
+    type: text
+    config:
+      regex_match:
+        - "(?i)(bronze|ブロンズ|生データ|raw\\s*(data|observations?)|least.transformed|policy.filtered)"
+
+  - name: bronze_layer_semantic
+    type: llm
+    config:
+      rubric: |
+        The response must define a Bronze layer that:
+        1. Describes storing raw or minimally-transformed data from the source (GitHub API or similar).
+        2. Specifies what is retained at this layer (e.g., raw JSON, API responses, event records).
+        3. Does NOT include credentials, tokens, or secrets in the stored data.
+        Assign PASS if all three criteria are met, FAIL otherwise.
+
+  - name: silver_layer_defined
+    type: text
+    config:
+      regex_match:
+        - "(?i)(silver|シルバー|正規化|normalized?|dedup(licated?)?|deduplicate|重複排除|transform|変換|validation|検証|status.deriv|freshness)"
+
+  - name: silver_layer_semantic
+    type: llm
+    config:
+      rubric: |
+        The response must define a Silver layer that:
+        1. Describes normalization, deduplication, or validation of Bronze data.
+        2. Makes records comparable (e.g., consistent schema, parsed dates, entity resolution).
+        3. Does not mix in Gold-level opinions or prioritizations.
+        Assign PASS if all three criteria are met, FAIL otherwise.
+
+  - name: gold_layer_defined
+    type: text
+    config:
+      regex_match:
+        - "(?i)(gold|ゴールド|action.ready|アクション|summary|サマリー|ダッシュボード|dashboard|report|レポート|weekly|週次|priority|優先)"
+
+  - name: gold_layer_semantic
+    type: llm
+    config:
+      rubric: |
+        The response must define a Gold layer that:
+        1. Describes action-ready outputs (reports, dashboards, summaries, task lists).
+        2. Covers the user's stated goal (weekly report and/or prioritized action list).
+        3. Notes that Gold should be reproducible from Bronze/Silver where practical.
+        Assign PASS if all three criteria are met, FAIL otherwise.
+
+  - name: safety_exclusions
+    type: text
+    config:
+      regex_match:
+        - "(?i)(credential|secret|token|認証情報|トークン|シークレット|パスワード|password|cookie|セッション).{0,60}(not|never|don.t|除外|含めない|保存しない|store)"
+
+  - name: safety_exclusions_semantic
+    type: llm
+    config:
+      rubric: |
+        The response must explicitly state that credentials, tokens, or secrets
+        must NOT be stored in any layer of the pipeline. The warning should be
+        actionable (not merely mentioned in passing).
+        Assign PASS if this safety rule is clearly present, FAIL otherwise.
+
+  - name: output_shape_present
+    type: text
+    config:
+      regex_match:
+        - "(?i)(retention|schema|transform|consumer|update.cadence|更新.{0,10}頻度|スキーマ|保持|変換ルール)"
+
+  - name: output_shape_semantic
+    type: llm
+    config:
+      rubric: |
+        The response must provide structured planning output that includes at minimum:
+        1. A source/retention policy for Bronze.
+        2. A schema or transformation rules for Silver.
+        3. Consumers or update cadence for Gold.
+        Assign PASS if at least 2 of these 3 elements are present, FAIL otherwise.

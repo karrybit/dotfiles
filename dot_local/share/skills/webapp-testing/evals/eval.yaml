@@ -1,0 +1,5 @@
+skill: webapp-testing
+trials_per_task: 2
+tasks:
+  - tasks/scenario-typical.yaml
+  - tasks/scenario-edge.yaml

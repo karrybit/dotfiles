@@ -1,0 +1,97 @@
+id: scenario-typical
+description: >
+  Typical trigger: user asks to add a reference file to an existing skill that
+  currently embeds official API documentation inline in SKILL.md. The skill should
+  engage, evaluate the content against reference placement criteria, propose creating
+  a references/ file with proper structure, and explain how to link it from SKILL.md —
+  without rewriting the skill's workflow logic or creating a new skill.
+
+inputs:
+  prompt: |
+    I have a skill called `gh-pr-review` that helps agents review GitHub pull requests.
+    The SKILL.md currently contains a long section pasting the GitHub REST API response
+    shape for pull request review objects (fields like `id`, `user`, `body`, `state`,
+    `submitted_at`, `commit_id`, and `_links`). This section is about 60 lines long and
+    makes SKILL.md hard to scan.
+
+    I want to move this API documentation to a reference file so SKILL.md stays concise.
+    Please tell me:
+    1. Whether a references/ file is warranted here.
+    2. What the reference file should be named and what structure it should follow.
+    3. How SKILL.md should link to it (exact loading instruction wording).
+    4. What source URL and freshness metadata to include.
+
+    Note: Real network fetches and external command execution are unavailable in this
+    evaluation context; narrate the workflow you would follow, including the exact
+    content and structure decisions you would make.
+
+graders:
+  # --- Axis 1: Correctly affirms that a reference file is warranted ---
+  - name: affirms_reference_warranted_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(reference.*warrant|warrant.*reference|references/|move.*reference|reference.*file|yes.*reference|参照.*ファイル|リファレンス.*作成)"
+
+  - name: affirms_reference_warranted_llm
+    type: llm
+    config:
+      rubric: |
+        The response must clearly affirm that moving the 60-line API schema section to a
+        references/ file is appropriate. It should cite at least one concrete reason:
+        the content is source-grounded official documentation, it is narrower than the
+        skill itself, or it would make SKILL.md more scannable.
+        Score 1 if the response affirms the move with a reason.
+        Score 0 if the response hedges without committing or recommends against the move.
+
+  # --- Axis 2: Proposes a correctly structured reference file ---
+  - name: reference_structure_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(last.?checked|last_checked|revalidation|source.*url|sources:|## source|## practical)"
+
+  - name: reference_structure_llm
+    type: llm
+    config:
+      rubric: |
+        The response must describe or sketch a reference file that includes at minimum:
+        a topic heading, a `last_checked` date field, a source URL pointing to GitHub
+        REST API docs, and a revalidation trigger (e.g., "when GitHub REST API version
+        changes" or "when a new api-version is released"). The compact structure from
+        reference-design.md should be evident.
+        Score 1 if all four elements (heading, last_checked, source URL, revalidation
+        trigger) are present.
+        Score 0 if two or more of these elements are missing.
+
+  # --- Axis 3: Provides a correct SKILL.md loading instruction ---
+  - name: loading_instruction_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(read.*references/|references/.*when|load.*when|読む.*when|when.*read.*references)"
+
+  - name: loading_instruction_llm
+    type: llm
+    config:
+      rubric: |
+        The response must provide a concrete loading instruction for SKILL.md — a line
+        that tells the agent when to read the reference file. The instruction should
+        follow the pattern "Read [references/<file>.md] when <condition>" rather than
+        "read all references first." It should be conditional (e.g., "when the task
+        inspects review objects" or "when handling PR review API responses").
+        Score 1 if a conditional loading instruction is provided.
+        Score 0 if the response says to always load the reference or provides no
+        loading instruction at all.
+
+  # --- Axis 4: Stays within scope (does not rewrite workflow logic) ---
+  - name: scope_discipline_llm
+    type: llm
+    config:
+      rubric: |
+        The response must stay focused on reference file creation and SKILL.md linking.
+        It must NOT propose rewriting the skill's workflow steps, changing its triggers,
+        renaming the skill, or suggesting that a new skill should be created instead.
+        Score 1 if the response stays within the reference curation scope.
+        Score 0 if the response proposes changes outside the reference curation scope
+        (workflow edits, trigger changes, new skill creation).

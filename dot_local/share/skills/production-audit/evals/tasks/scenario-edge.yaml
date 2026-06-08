@@ -1,0 +1,52 @@
+id: scenario-edge
+description: >
+  Out-of-scope request: user asks for a review of code that is not yet merged
+  or deployed, and the primary concern is correctness and style. The skill should
+  recognize this is better handled by code-review and delegate cleanly.
+
+inputs:
+  prompt: |
+    I just opened PR #42 which refactors our authentication middleware. Can you
+    review it and tell me if the code looks correct? I want to make sure there
+    are no logic bugs or style issues before we merge.
+
+    Note: Real network fetches and external command execution are unavailable in
+    this evaluation context; narrate the workflow you would follow.
+
+graders:
+  - name: self_report_check
+    type: self-report
+    config:
+      max_unclear: 1
+
+  - name: surface_delegation
+    type: text
+    config:
+      regex_match:
+        - "(?i)(code.?review|コードレビュー|review.skill|`code-review`)"
+        - "(?i)(not.*(production.ready|launch|ship|deploy)|production.audit.*(not|wrong)|スコープ外|担当外)"
+      regex_not_match:
+        - "(?i)(production audit.*\\d+\\s*/\\s*100|\\d+\\s*/\\s*100.*(block|risk|launch|strong))"
+
+  - name: llm_rubric
+    type: llm
+    config:
+      rubric: |
+        Evaluate the response on the following criteria:
+
+        1. Scope recognition (weight 3): The response correctly identifies that the user's
+           primary concern (code correctness and style on an unmerged PR) is outside the
+           production-audit scope, which covers readiness of code about to be deployed.
+
+        2. Delegation clarity (weight 3): The response clearly names the appropriate
+           alternative skill or action (e.g., code-review) and briefly explains what it
+           handles that this skill does not, without being dismissive or unhelpful.
+
+        3. No spurious audit (weight 2): The response does NOT run a full production-audit
+           workflow (no scored summary, no blockers list) on a request explicitly about
+           code correctness review, not production readiness.
+
+        4. Actionable handoff (weight 2): The response gives the user a clear next step
+           (e.g., "invoke code-review skill") so the user knows how to proceed.
+
+        Score PASS if all four criteria are met.

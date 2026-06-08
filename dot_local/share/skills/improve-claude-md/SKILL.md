@@ -7,6 +7,19 @@ description: Evaluate and improve a project's CLAUDE.md using strategies from re
 
 Analyze the current CLAUDE.md and recommend additions, removals, and structural changes based on the "operating system" principle and evidence-backed best practices.
 
+## When to use
+
+- User asks "what should go in CLAUDE.md?" or "how do I improve my CLAUDE.md?"
+- CLAUDE.md has grown beyond ~200 lines and adherence is dropping
+- Starting a new project and want to set up CLAUDE.md correctly from the start
+- CLAUDE.md contains a mix of facts, procedures, and automated-check prose
+
+## When NOT to use
+
+- User is debugging a command or tool mentioned in CLAUDE.md — help with the underlying command instead; do not run the improve-claude-md workflow
+- User wants to edit the content of `.claude/settings.json`, hooks, or skills directly — those are covered by other skills
+- User is asking about a non-Claude AI coding assistant (Copilot, Cursor rules, etc.) — the file structure and principles differ
+
 ## Quick start
 
 ```
@@ -66,11 +79,17 @@ Evaluate candidates in priority order:
 
 | Content | Correct location | Reason |
 |---------|-----------------|--------|
-| Multi-step procedures (e.g., API change flow) | skills | CLAUDE.md holds facts, not workflows |
-| Automated checks (e.g., `git diff --check`) | hooks / settings.json | Deterministic enforcement, not prose |
-| Command reference lists | Taskfile.md / docs/ | Reference documentation |
+| Multi-step procedures (e.g., API change flow, git workflow) | skills | CLAUDE.md holds facts, not workflows |
+| Automated checks (e.g., `git diff --check`, `pnpm lint` before commit) | hooks / settings.json | Deterministic enforcement, not prose |
+| Command reference lists (e.g., "how to run tests") | Taskfile.md / docs/ | Reference documentation |
 | Directory- or file-type-scoped rules | Nested CLAUDE.md | Lazy loading reduces context overhead |
 | Generic best practices | Remove entirely | Already in Claude's training |
+
+Generic best practices to remove (Claude already knows these):
+- "prefer `const` over `let`", "write descriptive variable names", "keep functions small"
+- "always write tests for new features", "avoid `any` type", "use async/await"
+- "write descriptive commit messages", "create a branch from main"
+- Any rule that applies to virtually every TypeScript/JavaScript/Python project
 
 ### Step 4: Identify nested CLAUDE.md candidates
 

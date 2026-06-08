@@ -1,0 +1,12 @@
+name: json-wrangling-with-jq
+skill: json-wrangling-with-jq
+description: Evaluate the json-wrangling-with-jq skill for correct jq-first workflow, tool-choice discipline, and guardrail adherence.
+
+trials_per_task: 2
+require_self_report: true
+max_unclear: 1
+max_retries: 0
+
+tasks:
+  - tasks/scenario-typical.yaml
+  - tasks/scenario-edge.yaml

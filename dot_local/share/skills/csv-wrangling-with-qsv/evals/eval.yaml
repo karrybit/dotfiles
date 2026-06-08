@@ -1,0 +1,12 @@
+name: csv-wrangling-with-qsv
+skill: csv-wrangling-with-qsv
+description: Evaluate the csv-wrangling-with-qsv skill for correct qsv-first workflow, tool-choice discipline, and guardrail adherence.
+
+trials_per_task: 2
+require_self_report: true
+max_unclear: 1
+max_retries: 0
+
+tasks:
+  - tasks/scenario-typical.yaml
+  - tasks/scenario-edge.yaml

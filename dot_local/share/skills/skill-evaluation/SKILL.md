@@ -8,6 +8,34 @@ description: Create and run empirical evaluations for agent skills using realist
 Evaluate agent skills with the available skill-evaluation runner. Prefer
 `cowaxa` for Codex runs and `waxa` or a Claude Code-specific runner when present.
 
+## When to Use
+
+Use this skill when:
+
+- Measuring whether an agent skill improves Codex or Claude Code behavior.
+- Authoring or extending a skill-local eval suite (`evals/tasks/*.yaml`).
+- Comparing two prompt revisions with a baseline delta.
+- Auditing a skill's structure for correctness or completeness.
+
+Do **not** use this skill for:
+
+- Writing unit tests or integration tests for application code.
+- Benchmarking application throughput, latency, or resource use.
+- Load testing or stress testing a running service.
+- Any evaluation that is not specifically about agent skill behavior.
+
+## Executor Selection
+
+| Environment | Executor | Detection |
+|-------------|----------|-----------|
+| Codex | `cowaxa` | `command -v cowaxa` succeeds |
+| Claude Code | `waxa` or project runner | `command -v waxa` succeeds |
+| Neither found | Static audit only | Both commands absent |
+
+When both executors are present, prefer `cowaxa` for Codex-backed runs and
+`waxa` for Claude Code runs. Do not treat them as interchangeable without
+checking their `--help` output and output directory behavior first.
+
 ## Start
 
 Verify the available executor:
@@ -89,6 +117,18 @@ cowaxa audit <skill-directory> --json
 
 Use the official skill validator separately when available. Static runner audits
 are intentionally not replacements for platform-specific validation.
+
+## Output Format
+
+After each eval run, report:
+
+1. **Pass rate** — fraction of grader checks that passed per scenario.
+2. **Baseline delta** — difference in pass rate with vs. without the skill body.
+3. **Unclear points** — list of items the model flagged as ambiguous; aim for ≤ 1 per run.
+4. **Next action** — the single smallest change to make before the next run, or "converged" if the skill passes representative scenarios without unnecessary instruction growth.
+
+Artifacts are written to `<skill>/evals/results/` by the executor. Commit
+them only after review.
 
 ## Safety
 

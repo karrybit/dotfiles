@@ -1,0 +1,53 @@
+id: scenario-edge
+description: >
+  Edge case: user asks to operate on a JSON file (not CSV/TSV). The skill should
+  recognize this is out of scope and defer to a more appropriate tool (jq, duckdb,
+  Python) rather than attempting to treat the JSON as a CSV or forcing qsv on it.
+
+inputs:
+  prompt: |
+    I have a file `events.json` containing an array of JSON objects with fields:
+    event_id, user_id, event_type, timestamp, and metadata (a nested object).
+    I want to filter only events where event_type is "purchase" and count how many
+    there are per user_id.
+
+    Note: Real network fetches and external command execution are unavailable in
+    this evaluation context; narrate the workflow you would follow.
+
+graders:
+  # --- Axis 1: Skill correctly defers (does not force qsv on JSON) ---
+  - name: defers_not_forces_qsv_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(jq|duckdb|python|pandas|json.*not.*csv|csv.*not.*json|not\\s+(a\\s+)?csv|defer|scope.*outside|outside.*scope|スコープ外|別.*ツール|代わり)"
+
+  - name: defers_not_forces_qsv_llm
+    type: llm
+    config:
+      rubric: |
+        The response should recognize that `events.json` is a JSON file, not a CSV,
+        and should NOT attempt to use `qsv` as the primary tool for this task
+        (since qsv is a CSV-first tool). The response should recommend a more
+        appropriate tool such as `jq`, `duckdb`, Python/pandas, or SQL.
+        Score 1 if the response correctly defers to a non-qsv tool for JSON
+        processing, even if it mentions qsv conversion as an optional step.
+        Score 0 if the response attempts to use qsv as the sole or primary tool
+        without acknowledging the JSON-vs-CSV mismatch.
+
+  # --- Axis 2: Offers a concrete alternative workflow ---
+  - name: alternative_workflow_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(jq\\s+['\\.\\[]|duckdb|python|import\\s+(json|pandas)|read_json|SELECT|sqlp|代替|代わりに)"
+
+  - name: alternative_workflow_llm
+    type: llm
+    config:
+      rubric: |
+        The response must not leave the user empty-handed. It should propose at
+        least one concrete alternative workflow for the JSON filtering+grouping
+        task — for example a `jq` pipeline, a DuckDB SQL query, or a Python
+        snippet. Score 1 if a concrete alternative is proposed. Score 0 if the
+        response only refuses without offering any path forward.

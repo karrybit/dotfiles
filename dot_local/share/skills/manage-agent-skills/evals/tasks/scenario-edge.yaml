@@ -1,0 +1,56 @@
+id: scenario-edge
+description: >
+  User asks to audit ALL existing skills for quality issues — this is the
+  territory of audit-agent-skills, not manage-agent-skills. The skill should
+  delegate/defer rather than do the audit itself.
+
+inputs:
+  prompt: |
+    Please review all my agent skills and tell me which ones have quality
+    issues — things like missing When-NOT-to-use sections, overly long bodies,
+    or unclear trigger conditions. Give me a comprehensive quality report.
+
+    Note: Real network fetches and external command execution are unavailable
+    in this evaluation context; narrate the workflow you would follow.
+
+graders:
+  - name: delegation_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(audit.?agent.?skills|audit-agent-skills|delegate|defer|refer|redirect|別のスキル|委ね|audit.*skill|skill.*audit)"
+
+  - name: delegation_llm
+    type: llm
+    config:
+      rubric: |
+        The response must recognize that a broad quality audit of all skills
+        is NOT within the scope of manage-agent-skills (which handles creation,
+        placement, movement, and structural decisions about individual skills).
+        The response should:
+        1. Redirect or mention audit-agent-skills as the appropriate skill for this task.
+        2. NOT attempt to perform the full audit itself without mentioning the delegation.
+        Score PASS if the response defers to audit-agent-skills or clearly explains
+        the scope boundary between managing and auditing skills.
+
+  - name: scope_boundary_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(scope|範囲|out.?of.?scope|スコープ外|この.*スキル|manage.*skill|manage-agent-skill|audit)"
+
+  - name: scope_boundary_llm
+    type: llm
+    config:
+      rubric: |
+        The response must articulate a clear scope boundary:
+        manage-agent-skills handles individual skill lifecycle (create, place,
+        update, move, remove), while broad quality audits belong to audit-agent-skills.
+        Score PASS if this boundary is stated or strongly implied.
+
+  - name: self_report
+    type: self-report
+    config:
+      require_self_report: true
+      max_unclear: 1
+      max_retries: 0

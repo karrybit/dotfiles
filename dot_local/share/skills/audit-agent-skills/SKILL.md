@@ -17,7 +17,7 @@ Use `scripts/audit-skills.sh` for the initial structural pass:
 bash <audit-agent-skills>/scripts/audit-skills.sh <skill-root>...
 ```
 
-The script reports structural errors and maintainability warnings. Treat its output as evidence, not a complete audit.
+The script checks: frontmatter `name` and `description` fields, presence of `openai.yaml`, file line count, TODO markers, and duplicate skill names across roots. Treat its output as evidence, not a complete audit.
 
 ## Manual Audit
 
@@ -57,3 +57,7 @@ Lead with findings ordered by severity. Include the skill path, evidence, impact
 - Maintainability warnings.
 
 If no issues are found, state that clearly and list remaining checks or runtime behavior that could not be verified. Do not edit files during an audit-only request.
+
+## Scope Boundary
+
+This skill produces a findings report only. Do not modify any skill files as part of an audit run, even if the user requests fixes in the same message. When the user asks for both audit and implementation in one message, complete the audit and report findings, then explicitly state that applying fixes requires a separate follow-up request.

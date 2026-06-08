@@ -1,0 +1,32 @@
+id: typical-research-update
+description: "agentic-development-research が発火すべき典型的なリクエスト: source ledger の更新と trial candidates の抽出"
+inputs:
+  prompt: |
+    coding-agent トラックの source ledger を更新してください。
+    最近の Claude Code / Cursor / Copilot の動向を調査し、
+    trial candidates と strategic watch items を抽出してください。
+
+    Note: Real network fetches and external command execution are unavailable in this evaluation context; narrate the workflow you would follow.
+checks:
+  - name: self_report_present
+    type: self-report
+    config:
+      require_self_report: true
+      max_unclear: 1
+      max_retries: 0
+  - name: key_behavior_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(ledger|strategy\\.md|coding.agent|trial.candidate|watch.item|source.level|agentic-development)"
+  - name: key_behavior_semantic
+    type: llm
+    config:
+      rubric: |
+        以下の行動がすべて確認できれば pass とする。
+        1. リクエストを coding-agent / agentic-software-delivery / both のいずれかに分類している。
+        2. 対応するトラックの strategy.md または ledger.md を参照することを述べている。
+        3. source-level の evidence または freshness / revalidation に言及している。
+        4. Candidate Extraction または Strategic Watch Items への昇格ルールに触れている。
+        5. 実装変更（AGENTS, skills, settings 等の編集）は行わず、research artifact の更新のみにとどめることを明示している。
+        すべての項目が満たされていれば pass。

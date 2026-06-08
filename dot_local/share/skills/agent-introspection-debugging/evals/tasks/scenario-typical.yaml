@@ -1,0 +1,128 @@
+id: scenario-typical
+description: |
+  Typical case: an agent is looping and failing repeatedly on a git operation.
+  The skill should capture evidence, classify the failure, run a discriminating check,
+  take the smallest reversible recovery action, and emit an Agent Debug Report.
+
+inputs:
+  prompt: |
+    An agent has been retrying `git push origin main` for the last 5 attempts.
+    Each time it fails with "remote: Permission to repo denied to user".
+    The agent is stuck in a loop: it keeps running the same push command after
+    each failure without changing the approach.
+
+    Your objective is: push the current feature branch to the remote.
+
+    Note: Real network fetches and external command execution are unavailable in
+    this evaluation context; narrate the workflow you would follow and describe
+    the commands you would run, with expected outputs.
+
+require_self_report: true
+max_unclear: 1
+max_retries: 0
+
+graders:
+  # Axis 1: Failure capture (evidence gathering)
+  - name: failure_capture_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(permission.{0,20}(denied|repo)|remote.{0,20}(denied|reject)|repo denied|Permission to repo).{0,200}(user|origin|remote|push|git|repeated|attempt|5|failed)"
+        - "(?i)(last|same|identical|repeated|繰り返|同じ|直前|最後).{0,80}(command|push|attempt|試み|コマンド|操作|回|retry|5.times|5回)"
+
+  - name: failure_capture_llm
+    type: llm
+    config:
+      rubric: |
+        The response must capture evidence of the failure before attempting recovery.
+        Check ALL of the following:
+        1. It identifies the specific error message or symptom ("Permission to repo denied").
+        2. It notes the repeated pattern (same command retried multiple times).
+        3. It identifies what the last attempted action was (git push).
+        Score PASS if at least 2 of 3 criteria are met.
+
+  # Axis 2: Failure classification
+  - name: failure_classification_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(this.{0,30}(is|suggests|appears|indicates|looks|seems|falls).{0,40}(environment|policy|credential|permission|access|authentication)|environment.{0,40}(failure|error|issue|problem|type|category)|classif|categor|diagnos|分類|判定)"
+        - "(?i)(environment|policy).{0,80}(credential|authentication|auth|ssh|key|permission|branch|protect|access|denied|cred|identity|権限|鍵|認証|保護|ブランチ)"
+
+  - name: failure_classification_llm
+    type: llm
+    config:
+      rubric: |
+        The response must classify the failure type using the skill's taxonomy.
+        Check:
+        1. It uses one of the skill's categories: logic, state, environment, context, or policy.
+        2. It assigns the correct category (environment or policy — permission denied is
+           either a missing credential/SSH key issue = environment, or a blocked action = policy).
+        3. It explains why that category applies.
+        Score PASS if criteria 1 and 2 are both met.
+
+  # Axis 3: Discriminating check
+  - name: discriminating_check_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(check|verify|confirm|run|test|確認|検証|チェック|実行).{0,80}(ssh|credential|token|permission|access|remote|鍵|権限|アクセス|トークン|認証)"
+        - "(?i)(ssh\\s*-T|git\\s+remote|gh\\s+auth|git\\s+config|authorized_keys)"
+
+  - name: discriminating_check_llm
+    type: llm
+    config:
+      rubric: |
+        The response must propose or describe one specific discriminating check to
+        prove or falsify the failure classification.
+        Check:
+        1. It names a concrete command or action (e.g., "run ssh -T git@github.com",
+           "check gh auth status", "verify SSH key", "check remote URL").
+        2. The check would produce information that distinguishes between
+           "wrong credentials" vs "no repository access" vs "wrong remote URL".
+        Score PASS if criterion 1 is met.
+
+  # Axis 4: Smallest reversible recovery action
+  - name: recovery_action_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(stop|halt|avoid|cease|don.t.retry|do.not.retry|instead|change|最小|停止|やめ|変更|切り替|別のアプローチ|再試行.*停止|ループ.*停止).{0,120}(retry|loop|push|繰り返|ループ|approach|plan)"
+        - "(?i)(git.push|ssh.key|credential|token|remote.url|access|push.to|feature.branch|HEAD|upstream|修正|対処|解決|root.cause)"
+
+  - name: recovery_action_llm
+    type: llm
+    config:
+      rubric: |
+        The response must recommend the smallest safe reversible recovery action.
+        Check:
+        1. It advises stopping the retry loop (not continuing to retry the same command).
+        2. It proposes a concrete next step to resolve the root cause, not just retry.
+        3. The proposed action is scoped and does not require destructive operations
+           (e.g., it does not suggest force-pushing or deleting the remote branch).
+        Score PASS if criteria 1 and 2 are both met.
+
+  # Axis 5: Agent Debug Report format
+  - name: debug_report_surface
+    type: text
+    config:
+      regex_match:
+        - "(?i)(##\\s*Agent\\s+Debug\\s+Report|Agent\\s+Debug\\s+Report)"
+        - "(?i)(Objective:|Failure\\s+pattern:|Root.cause\\s+hypothesis:|Check\\s+run:|Recovery\\s+action:|Result:)"
+
+  - name: debug_report_llm
+    type: llm
+    config:
+      rubric: |
+        The response must end with a structured Agent Debug Report.
+        Check:
+        1. The report includes at minimum: Objective, Failure pattern, Root-cause hypothesis,
+           Recovery action, and Result fields.
+        2. Each field contains a non-trivial value (not just "N/A" or blank).
+        3. The Result field uses one of the allowed values: success, partial, or blocked.
+        Score PASS if criteria 1 and 2 are both met.
+
+  - name: self_report_check
+    type: self-report
+    config:
+      require_phases: [Understanding, Planning, Execution, Formatting]

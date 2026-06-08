@@ -1,0 +1,91 @@
+name: improve-claude-md-ledger
+skill: improve-claude-md
+purpose: |
+  Iteration ledger for improve-claude-md, following empirical-prompt-tuning
+  methodology (convergence = 2 consecutive zero-unclear runs).
+  Note: waxa CLI execution was blocked by sandbox network restrictions (Vertex AI
+  endpoint not in allowedDomains). Iterations 1 was conducted via static analysis
+  against the authored grader criteria. Live eval runs should be performed once
+  sandbox allows Vertex/Anthropic API access from waxa subprocesses.
+
+iterations:
+  - id: iter-1
+    date: 2026-06-08
+    scope: static-analysis (waxa CLI blocked by Vertex API sandbox restriction)
+    overall_pass_rate: null
+    per_task: []
+    unclear_points:
+      - issue: |
+          SKILL.md had no "When to use" or "When NOT to use" section. The edge
+          scenario tests whether the skill correctly refuses to run its workflow
+          when the user is debugging a command from CLAUDE.md (not asking to
+          improve CLAUDE.md structure). Without an explicit halt condition, the
+          executor would likely apply the five-layer assessment workflow to an
+          out-of-scope command-debugging request.
+        cause: |
+          The skill frontmatter description covered trigger conditions in one
+          sentence but the skill body went directly to core principles and workflow
+          without a pre-flight check that explicitly halts for out-of-scope requests.
+          Meta-skills that have a clear scope boundary must state that boundary
+          before the workflow, otherwise the body's workflow is the dominant signal
+          for the executor.
+        general_fix_rule: |
+          Skills with a well-defined scope (improve X, not debug X or configure Y)
+          must include explicit "When to use" and "When NOT to use" sections before
+          the workflow. Out-of-scope cases that an adjacent request might accidentally
+          trigger (e.g., "my CLAUDE.md says to run lint but it's failing") must be
+          explicitly named as halt conditions. Without this, the executor's default
+          is to run the skill body.
+      - issue: |
+          Step 3 (remove/relocate) listed "Generic best practices — Remove entirely"
+          but gave no examples. The typical scenario contains a CLAUDE.md with 8+
+          generic rules (prefer const, write descriptive names, keep functions small,
+          etc.) that should be removed. Without examples, the executor might not
+          confidently identify these as removals vs. project-specific conventions.
+        cause: |
+          The table row was accurate but the lack of concrete examples left a
+          discretionary gap: the executor must infer from "generic best practices"
+          what counts as generic. When the skill body is silent, executors fill in
+          with their own judgment, which introduces variance across trials.
+        general_fix_rule: |
+          When a skill instructs "remove X type of content", enumerate 3-5 canonical
+          examples of X so the executor can pattern-match reliably. Abstract category
+          names ("generic best practices") are necessary but insufficient — examples
+          anchor the category to avoid discretionary fill-in.
+    actions:
+      - "Added 'When to use' section with 4 bullet trigger conditions"
+      - "Added 'When NOT to use' section with 3 explicit halt conditions (debugging commands, editing settings.json/hooks/skills, non-Claude assistants)"
+      - "Expanded Step 3 remove/relocate table rows with concrete examples in parentheses (e.g., API change flow, git workflow, pnpm lint before commit)"
+      - "Added 'Generic best practices to remove' sub-list with 8 canonical examples from common TypeScript/JavaScript projects"
+
+convergence:
+  status: converging
+  rationale: |
+    Iter 1 was static analysis only (waxa CLI blocked by Vertex API sandbox
+    restriction — the eval network path requires *.googleapis.com or the Vertex
+    endpoint, which is not in sandbox.network.allowedDomains).
+
+    Two structural gaps were identified and fixed:
+    1. Missing "When NOT to use" halt condition (Stage 1 — structural fix).
+    2. Missing concrete examples for generic-best-practices removal (Stage 1 — structural fix).
+
+    Both are Stage 1 issues: the executor would fail LLM and surface graders for
+    the edge scenario without the halt condition, and might miss the remove step
+    for the typical scenario without examples.
+
+    After fixes, projected behavior:
+    - Typical scenario: five-layer assessment ✓, remove/relocate with examples ✓,
+      line-count target ✓ — expected to pass all graders.
+    - Edge scenario: "When NOT to use" now explicitly names command-debugging as
+      out of scope — expected to redirect rather than invoke the workflow.
+
+    Live waxa runs required to confirm convergence. Once sandbox allows
+    Vertex API access, run:
+      cd /Users/takumikaribe/.local/share/chezmoi/dot_local/share/skills/improve-claude-md
+      waxa evals/eval.yaml --baseline
+
+next_review:
+  trigger: |
+    Re-run when (a) sandbox network access is restored for waxa subprocesses,
+    (b) a new failure shape is encountered in real CLAUDE.md improvement flows,
+    or (c) a new "When NOT to use" case is identified from user requests.

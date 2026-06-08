@@ -5,9 +5,35 @@ description: Use when asked whether an app, feature, release, or PR is productio
 
 # Production Audit
 
-Use this skill for pre-launch reviews, post-merge checks, release readiness, deployed URL smoke checks, and "what did we miss?" questions.
+## When to Use
+
+Use this skill when the user asks:
+- "Is this ready to ship / launch / go live?"
+- "What could break in production?"
+- "What do we need to fix before release?"
+- "Can you do a pre-launch review / post-merge audit?"
+- "What did we miss before deploying?"
+
+Covers: pre-launch reviews, post-merge checks, release readiness assessments, deployed URL smoke checks, and retrospective "what went wrong?" analyses.
+
+## When NOT to Use
+
+Do not invoke this skill when the request is primarily:
+- **Code correctness or style review** → use `code-review` skill instead
+- **Active bug diagnosis with reproduction steps** → use `diagnose` skill instead
+- **Security audit only** → use `security-review` skill instead
+- **Legal, financial, medical, or compliance certification** → out of scope entirely
+
+If a production-audit request uncovers a bug requiring root-cause investigation, hand off to `diagnose` for that specific defect rather than continuing under this skill.
 
 This is engineering triage, not a legal, financial, medical, or compliance certification.
+
+## Audit Scope (Confirm First)
+
+Before gathering evidence, clarify:
+1. **Target**: which branch, tag, PR number, or deployed URL is under review.
+2. **Release type**: first-ever launch, incremental feature, hotfix, or infrastructure change.
+3. **User approval**: confirm before running any credentialed or mutating commands.
 
 ## Evidence Order
 
@@ -55,24 +81,28 @@ Cap at `84` if CI is not green or the launch-critical path was not tested end to
 
 ## Output Format
 
+Required fields (always present):
+
 ```text
-Production audit: <score>/100, <band>, because <top risk>.
+Production audit: <score>/100, <band>, because <top risk in one phrase>.
 
-Blockers:
-- ...
+Blockers (required if score < 70, else omit if empty):
+- <specific finding — file/line/endpoint where known>
 
-High-value fixes:
-- ...
+High-value fixes (required; list at least one unless score >= 85):
+- <finding with evidence location>
 
-Evidence checked:
-- ...
+Evidence checked (required; list every source inspected):
+- <file, URL, command, or document>
 
-Evidence missing:
-- ...
+Evidence missing (required; omit section only if nothing relevant was skipped):
+- <what would change the score if available>
 
-Next action:
-- ...
+Next action (required; one concrete step the team should take first):
+- <owner if known>: <action>
 ```
+
+Band labels: `blocked` (0-49) | `risky` (50-69) | `launchable with caveats` (70-84) | `strong` (85-100).
 
 ## Source
 

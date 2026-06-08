@@ -1,0 +1,14 @@
+skill: audit-agent-skills
+skill_path: ../SKILL.md
+description: >
+  Evaluates the audit-agent-skills skill: structural discovery pass,
+  manual audit dimensions, and report formatting discipline.
+
+trials_per_task: 2
+require_self_report: true
+max_unclear: 1
+max_retries: 0
+
+tasks:
+  - tasks/scenario-typical.yaml
+  - tasks/scenario-edge.yaml
