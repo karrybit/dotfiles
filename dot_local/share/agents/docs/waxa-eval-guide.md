@@ -1,24 +1,27 @@
-# waxa Eval 実行ガイド
+# waxa Eval Execution Guide
 
-waxa (`@mizchi/waxa`) を使って user-global skill を評価・改善する際の手順と注意点。
+Procedures and gotchas for evaluating and improving user-global skills with
+waxa (`@mizchi/waxa`).
 
 - Source: https://github.com/mizchi/skills/tree/main/tools/waxa
 - Checked: 2026-06-09 (waxa-src v0.3.1 / Deno native)
 
 ---
 
-## 前提条件
+## Prerequisites
 
-### npm 版は使用不可
+### Do not use the npm package
 
-`@mizchi/waxa` npm パッケージ (v0.1.1) は Node.js 上で `dntShim.Deno.Command is not a constructor` エラーが発生し、LLM グレーダーが動作しない。
+`@mizchi/waxa` npm package (v0.1.1) throws
+`dntShim.Deno.Command is not a constructor` on Node.js, breaking the LLM
+grader. Use the Deno-native source instead.
 
-**Deno ネイティブソースを使う**:
+**Use the Deno-native source**:
 
-- ソース: `~/.local/share/agents/tools/waxa-src/tools/waxa/src/cli.ts`
-- ラッパー: `~/.local/bin/waxa-deno` (chezmoi 管理済み)
+- Source: `~/.local/share/agents/tools/waxa-src/tools/waxa/src/cli.ts`
+- Wrapper: `~/.local/bin/waxa-deno` (chezmoi-managed)
 
-waxa-src は chezmoi 管理外の独立した git リポジトリ。最新化する場合:
+`waxa-src` is a standalone git repository outside chezmoi. To update it:
 
 ```bash
 cd ~/.local/share/agents/tools/waxa-src && git pull
@@ -26,39 +29,42 @@ cd ~/.local/share/agents/tools/waxa-src && git pull
 
 ---
 
-## サンドボックス制限（最重要）
+## Sandbox restriction (critical)
 
-waxa は内部で `claude -p` をサブプロセスとして呼ぶ。`claude -p` の SessionEnd hook が `~/.config/claude/projects/...` に書き込もうとするが、Claude Code のデフォルトサンドボックスがこの書き込みをブロックする。
+waxa spawns `claude -p` as a subprocess. The `claude -p` SessionEnd hook
+tries to write to `~/.config/claude/projects/...`, which Claude Code's default
+sandbox blocks.
 
-**症状**:
-- 全グレーダーが 0%
+**Symptoms**:
+- All graders score 0%
 - `judge-error: claude exit 1`
 - `self-report: (not extracted)`
-- 実行時間が数秒で終わる（正常時は数分）
+- Execution finishes in a few seconds instead of several minutes
 
-**対策**: Claude Code の Bash ツールから実行する場合は必ず `dangerouslyDisableSandbox: true` を指定する。
+**Fix**: Always pass `dangerouslyDisableSandbox: true` to the Bash tool when
+running waxa from within Claude Code.
 
 ---
 
-## 実行コマンド
+## Run commands
 
 ```bash
-# skill ディレクトリに移動して実行
+# Run from the skill directory
 cd ~/.local/share/skills/<skill-name>
 deno run -A ~/.local/share/agents/tools/waxa-src/tools/waxa/src/cli.ts evals/eval.yaml
 
-# または waxa-deno ラッパー経由
+# Or via the waxa-deno wrapper
 ~/.local/bin/waxa-deno evals/eval.yaml
 ```
 
-複数スキルを並行実行する場合:
+Running multiple skills in parallel:
 
 ```bash
 WAXA_SRC="${HOME}/.local/share/agents/tools/waxa-src/tools/waxa"
 run_skill() {
   local name="$1"
-  local dir="${HOME}/.local/share/skills/${name}"
-  cd "$dir" && deno run -A "${WAXA_SRC}/src/cli.ts" evals/eval.yaml 2>&1 \
+  cd "${HOME}/.local/share/skills/${name}" \
+    && deno run -A "${WAXA_SRC}/src/cli.ts" evals/eval.yaml 2>&1 \
     | grep "^Overall pass rate"
 }
 run_skill agent-architecture-audit &
@@ -68,23 +74,23 @@ wait
 
 ---
 
-## ファイル構造
+## Directory structure
 
 ```
 ~/.local/share/skills/<skill-name>/
 ├── SKILL.md
 ├── evals/
-│   ├── eval.yaml              # eval 定義
-│   ├── ledger.yaml            # 収束状況の記録
+│   ├── eval.yaml              # eval definition
+│   ├── ledger.yaml            # convergence log
 │   └── tasks/
-│       ├── scenario-typical.yaml   # 典型ケース
-│       └── scenario-edge.yaml      # エッジケース / 非発火ケース
+│       ├── scenario-typical.yaml   # happy path
+│       └── scenario-edge.yaml      # out-of-scope / non-firing case
 ```
 
-`results/` ディレクトリはランタイム出力なので gitignore 済み
-(`dot_local/share/skills/.gitignore` に `results/` を記載)。
+The `results/` directory is gitignored (`dot_local/share/skills/.gitignore`
+contains `results/`).
 
-### eval.yaml 例
+### eval.yaml example
 
 ```yaml
 id: my-skill-eval
@@ -97,16 +103,16 @@ tasks:
 
 ---
 
-## task YAML 形式 (waxa 0.3.1)
+## task YAML format (waxa 0.3.1)
 
 ```yaml
 id: scenario-typical
 description: |
-  シナリオ説明
+  Scenario description.
 
 inputs:
   prompt: |
-    ユーザープロンプト本文。
+    User prompt text.
     Note: Real network fetches and external command execution are unavailable
     in this evaluation context; narrate the workflow you would follow.
 
@@ -128,47 +134,49 @@ graders:
     type: llm
     config:
       rubric: |
-        評価基準を記述する。
-        Score PASS if <条件>.
+        Evaluation criteria.
+        Score PASS if <condition>.
 ```
 
 ---
 
-## YAML 記述の落とし穴
+## YAML gotchas
 
-| 症状 | 原因 | 対処 |
-|------|------|------|
-| `TypeError: Cannot read properties of undefined (reading 'prompt')` | top-level に `prompt:` を書いた | `inputs:\n  prompt:` に変更 |
-| `negate: true` が効かず常に PASS | waxa が未サポート | `regex_not_match` を使用 |
-| ダブルクォート YAML 文字列内の `\.` でエラー | YAML のエスケープ衝突 | `.` のままにする（正規表現でも機能する） |
-| YAML SyntaxError: `missing colon` | リスト項目中の `: ` が mapping として解釈 | ブロックスカラー (`|`) かシングルクォートで囲む |
-| `regex_match` の複数パターンが全部 fail | AND ロジック（全パターンが一致必要） | パターンを分割し独立したグレーダーにする |
-| 長いチェーン正規表現 `.{0,N}` が不安定 | パターンが長すぎて表現が届かない | `{0,N}` の N を大きくするか独立パターンに分割 |
-
----
-
-## 4ステージ反復パターン
-
-| Stage | 症状 | 診断 | 対処 |
-|-------|------|------|------|
-| 1. Structural fix | LLM + surface 両方失敗 | SKILL.md に必要な手順が欠落 | SKILL.md に手順・例・分類ルールを追加 |
-| 2. Grader breadth | LLM pass、surface fail（同軸） | モデルは正解だが regex が狭い | alternation 拡張・`{0,N}` の N を増やす |
-| 3. Surface-form coverage | 一部パターンだけ fail | 英語/日本語/略語の揺れ | バリアント・同義語を追加 |
-| 4. Residual | ネットワーク制約など構造的 | eval 環境の制限 | ledger に記録して終了 |
-
-### グレーダーペアの原則
-
-各評価軸に `text`（正規表現）と `llm`（意味判定）を対にする。
-
-- LLM pass + surface fail → Stage 2（regex が狭い）
-- LLM fail + surface pass → Stage 1 の可能性（モデルが指示通りに動いていない）
-- 両方 fail → Stage 1（SKILL.md の構造的問題）
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| `TypeError: Cannot read properties of undefined (reading 'prompt')` | Used top-level `prompt:` | Change to `inputs:\n  prompt:` |
+| `negate: true` has no effect | Not supported by waxa | Use `regex_not_match` instead |
+| YAML parse error on `\.` in a double-quoted string | YAML escape conflict | Use `.` directly — it matches the literal dot in regex too |
+| YAML SyntaxError: `missing colon` | `: ` inside a list item parsed as a mapping | Wrap in a block scalar (`\|`) or single quotes |
+| Multiple patterns in `regex_match` all fail | AND logic — every pattern must match | Split into separate graders |
+| Long chained regex `.{0,N}` misses content | Distance too short or expression too strict | Increase N or split into independent patterns |
 
 ---
 
-## プロンプトの推奨パターン
+## Four-stage iteration pattern
 
-ネットワーク・外部コマンドが使えない eval 環境では、プロンプトにその旨を明記する:
+| Stage | Symptom | Diagnosis | Fix |
+|-------|---------|-----------|-----|
+| 1. Structural fix | LLM + surface both fail | SKILL.md missing required instruction | Add the missing step, example, or classification rule to SKILL.md |
+| 2. Grader breadth | LLM passes, surface fails (same axis) | Regex too narrow for actual model output | Widen alternation, increase `{0,N}` distance |
+| 3. Surface-form coverage | Some patterns miss | English/Japanese/abbreviation variation | Add synonyms and variant forms |
+| 4. Residual | Network constraint or structural eval limit | Cannot be fixed without changing eval environment | Record in ledger and close |
+
+### Grader pair principle
+
+Pair a `text` grader (regex) with an `llm` grader (semantic) for each
+evaluation axis.
+
+- LLM passes, surface fails → Stage 2 (regex too narrow)
+- LLM fails, surface passes → Stage 1 or misclassification (model not following SKILL.md)
+- Both fail → Stage 1 (structural SKILL.md issue)
+
+---
+
+## Prompt boilerplate for eval context
+
+Since network access and external commands are unavailable during evals,
+include this note in the prompt:
 
 ```
 Note: Real network fetches and external command execution are unavailable
@@ -178,7 +186,7 @@ describe the commands you would run, with expected outputs.
 
 ---
 
-## 収束状況の記録 (ledger.yaml)
+## Convergence log (ledger.yaml)
 
 ```yaml
 iterations:
@@ -190,5 +198,5 @@ iterations:
 convergence:
   status: converged   # converged | near_convergence | converging
   rationale: |
-    全グレーダー pass。残留 unclear なし。
+    All graders pass. No residual unclear points.
 ```
