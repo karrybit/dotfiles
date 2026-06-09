@@ -1,6 +1,0 @@
-interface:
-  display_name: "Improve CLAUDE.md"
-  short_description: "Evaluate and improve a project CLAUDE.md"
-  default_prompt: "Use $improve-claude-md to evaluate and improve the current project's CLAUDE.md."
-policy:
-  allow_implicit_invocation: true

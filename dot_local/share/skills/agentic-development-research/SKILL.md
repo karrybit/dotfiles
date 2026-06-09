@@ -25,7 +25,7 @@ Invoke this skill when the user explicitly requests one of the following:
 Do not invoke this skill for:
 - Editing `AGENTS.md`, `CLAUDE.md`, skills, subagents, MCP configuration, or
   settings files — use the appropriate implementation skill instead (e.g.
-  `improve-claude-md`, `update-config`).
+  `maintain-claude-md`, `update-config`).
 - General web research unrelated to agentic development — use `WebSearch`
   directly.
 - Summarising or publishing research findings to external channels — use the

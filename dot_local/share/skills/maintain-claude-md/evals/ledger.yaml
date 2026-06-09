@@ -1,7 +1,7 @@
-name: improve-claude-md-ledger
-skill: improve-claude-md
+name: maintain-claude-md-ledger
+skill: maintain-claude-md
 purpose: |
-  Iteration ledger for improve-claude-md, following empirical-prompt-tuning
+  Iteration ledger for maintain-claude-md, following empirical-prompt-tuning
   methodology (convergence = 2 consecutive zero-unclear runs).
   Note: waxa CLI execution was blocked by sandbox network restrictions (Vertex AI
   endpoint not in allowedDomains). Iterations 1 was conducted via static analysis
@@ -12,6 +12,7 @@ iterations:
   - id: iter-1
     date: 2026-06-08
     scope: static-analysis (waxa CLI blocked by Vertex API sandbox restriction)
+    skill_version: improve-claude-md (predecessor)
     overall_pass_rate: null
     per_task: []
     unclear_points:
@@ -58,34 +59,40 @@ iterations:
       - "Expanded Step 3 remove/relocate table rows with concrete examples in parentheses (e.g., API change flow, git workflow, pnpm lint before commit)"
       - "Added 'Generic best practices to remove' sub-list with 8 canonical examples from common TypeScript/JavaScript projects"
 
+  - id: iter-2
+    date: 2026-06-09
+    scope: static-analysis (skill renamed and extended to maintain-claude-md)
+    skill_version: maintain-claude-md v1.0
+    overall_pass_rate: null
+    per_task: []
+    unclear_points: []
+    actions:
+      - "Renamed skill from improve-claude-md to maintain-claude-md"
+      - "Added Step 0 (phase detection) routing to Bootstrap, Restructure, or Drift-correct"
+      - "Added Phase 1 (Bootstrap) workflow for projects with no CLAUDE.md"
+      - "Added Phase 3 (Drift-correct) workflow for fact verification against project state"
+      - "Added docs/references.md with substantive summaries of all five key sources"
+      - "Added scenario-bootstrap.yaml and scenario-drift.yaml eval scenarios"
+      - "'When to use' updated to include CLAUDE.md-absent and feels-out-of-date triggers"
+
 convergence:
-  status: converging
+  status: pending-live-eval
   rationale: |
-    Iter 1 was static analysis only (waxa CLI blocked by Vertex API sandbox
-    restriction — the eval network path requires *.googleapis.com or the Vertex
-    endpoint, which is not in sandbox.network.allowedDomains).
+    Iter 1 (static analysis on improve-claude-md predecessor) fixed two Stage 1
+    structural gaps: missing halt condition and missing generic-best-practices examples.
 
-    Two structural gaps were identified and fixed:
-    1. Missing "When NOT to use" halt condition (Stage 1 — structural fix).
-    2. Missing concrete examples for generic-best-practices removal (Stage 1 — structural fix).
+    Iter 2 (static analysis on maintain-claude-md v1.0) extended the skill with
+    phase detection and two new workflows (Bootstrap and Drift-correct). No new
+    structural gaps identified in static analysis, but two new scenarios
+    (scenario-bootstrap, scenario-drift) add coverage that requires live eval runs.
 
-    Both are Stage 1 issues: the executor would fail LLM and surface graders for
-    the edge scenario without the halt condition, and might miss the remove step
-    for the typical scenario without examples.
-
-    After fixes, projected behavior:
-    - Typical scenario: five-layer assessment ✓, remove/relocate with examples ✓,
-      line-count target ✓ — expected to pass all graders.
-    - Edge scenario: "When NOT to use" now explicitly names command-debugging as
-      out of scope — expected to redirect rather than invoke the workflow.
-
-    Live waxa runs required to confirm convergence. Once sandbox allows
-    Vertex API access, run:
-      cd /Users/takumikaribe/.local/share/chezmoi/dot_local/share/skills/improve-claude-md
+    Live waxa runs required to confirm convergence across all four scenarios.
+    Once sandbox allows Vertex API access, run:
+      cd /Users/takumikaribe/.local/share/chezmoi/dot_local/share/skills/maintain-claude-md
       waxa evals/eval.yaml --baseline
 
 next_review:
   trigger: |
     Re-run when (a) sandbox network access is restored for waxa subprocesses,
-    (b) a new failure shape is encountered in real CLAUDE.md improvement flows,
-    or (c) a new "When NOT to use" case is identified from user requests.
+    (b) a new failure shape is encountered in real CLAUDE.md maintenance flows,
+    or (c) a new phase or "When NOT to use" case is identified from user requests.

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Maintain CLAUDE.md"
+  short_description: "Full-lifecycle CLAUDE.md maintenance: create, restructure, or drift-correct"
+  default_prompt: "Use $maintain-claude-md to evaluate and maintain the current project's CLAUDE.md."
+policy:
+  allow_implicit_invocation: true

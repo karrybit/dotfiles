@@ -1,0 +1,121 @@
+id: scenario-drift
+description: >
+  User calls the skill on a project whose CLAUDE.md is well-structured
+  (five-layer compliant, under 200 lines, no procedures or generic rules) but
+  contains a fact that has drifted from reality: it states Node.js 18 while
+  package.json declares >=20. The skill should detect Phase 3 (Drift-correct),
+  extract factual claims, verify them against the project files, classify the
+  mismatch as Stale, and propose a targeted correction without touching
+  correctly stated facts.
+
+inputs:
+  prompt: |
+    Here is my project's CLAUDE.md:
+
+    ```markdown
+    # Project Instructions
+
+    ## Tech stack
+    - Node.js 18, TypeScript 5.4, Vitest 1.6
+    - Fastify 4.x REST API (src/api/)
+    - React 18 + Vite 5 (src/web/)
+
+    ## Architecture
+    - Routes layer (src/api/routes/): HTTP handlers only
+    - Service layer (src/api/services/): business logic
+    - Repository layer (src/api/repositories/): database access via Drizzle ORM
+
+    ## Source-of-truth constraints
+    - API changes must start from src/api/schema/openapi.yaml
+    - Never edit migration files directly; use `pnpm db:generate`
+    - src/api/generated/ is auto-generated; do not edit by hand
+    ```
+
+    And here is the relevant portion of package.json:
+
+    ```json
+    {
+      "engines": { "node": ">=20" },
+      "devDependencies": {
+        "typescript": "^5.4.0",
+        "vitest": "^1.6.0"
+      }
+    }
+    ```
+
+    Note: Real file reads and external command execution are unavailable in
+    this evaluation context; narrate the workflow you would follow, including
+    which phase you detect, which claims you verify, what mismatches you find,
+    how you classify them, and the targeted correction you would propose.
+
+graders:
+  - name: phase_detection_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(phase.?3|drift|stale|out.?of.?date|mismatch|フェーズ3|乖離|古い|不一致)"
+
+  - name: phase_detection_llm
+    type: llm
+    config:
+      rubric: |
+        The response must identify this as a Phase 3 (Drift-correct) case — the
+        CLAUDE.md is well-structured but contains at least one stale fact. Score
+        PASS if the response explicitly names the phase, the condition (structure is
+        correct but facts may be stale), or the drift detection step before running
+        the verification workflow.
+
+  - name: claim_extraction_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(node.?18|node.?20|version|claim|fact|package\\.json|engines|verif|バージョン|事実|確認)"
+
+  - name: claim_extraction_llm
+    type: llm
+    config:
+      rubric: |
+        The response must extract at least the Node.js version claim from CLAUDE.md
+        ("Node.js 18") and verify it against the package.json engines field (">=20").
+        Score PASS if the response identifies the Node.js version mismatch specifically
+        — not just a generic mention of version checking.
+
+  - name: classification_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(stale|outdated|mismatch|wrong|incorrect|differ|古い|誤り|不正確|違う)"
+
+  - name: classification_llm
+    type: llm
+    config:
+      rubric: |
+        The response must classify the Node.js version mismatch as a Stale fact
+        (the claim in CLAUDE.md is factually wrong compared to the project state).
+        Score PASS if the response:
+        1. Identifies the Node.js version as the drifted fact
+        2. Proposes updating CLAUDE.md to reflect Node.js >=20 (or "Node.js 20")
+        3. Does NOT propose changes to correctly stated facts (TypeScript 5.4,
+           Vitest 1.6, architecture layers, source-of-truth constraints)
+
+  - name: targeted_correction_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(update|correct|fix|change.*node|node.*change|targeted|minimal|提案|修正|更新)"
+
+  - name: targeted_correction_llm
+    type: llm
+    config:
+      rubric: |
+        The response must propose a targeted correction — updating only the Node.js
+        version line — without rewriting the rest of CLAUDE.md. Score PASS if the
+        proposed change is limited to the Node.js version and the response explicitly
+        states or implies that the remaining content is accurate and should be kept.
+
+  - name: self_report
+    type: self-report
+    config:
+      require_self_report: true
+      max_unclear: 1
+      max_retries: 0

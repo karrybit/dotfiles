@@ -2,7 +2,7 @@ id: scenario-edge
 description: >
   User asks about CLAUDE.md but for a purely procedural reason — they want
   to know how to run a specific linting command. This is out of scope for
-  improve-claude-md, which improves CLAUDE.md structure and content, not
+  maintain-claude-md, which maintains CLAUDE.md structure and content, not
   executes or explains commands from existing CLAUDE.md files. The skill
   should recognize it cannot help with this request and redirect appropriately,
   or clarify its scope.
@@ -20,7 +20,7 @@ inputs:
 
     Note: Real network fetches and external command execution are unavailable
     in this evaluation context; narrate what you would do to help. If this
-    request is outside the scope of improving CLAUDE.md, explain that clearly
+    request is outside the scope of maintaining CLAUDE.md, explain that clearly
     and redirect to the appropriate approach.
 
 graders:
@@ -36,14 +36,14 @@ graders:
       rubric: |
         The response must handle this out-of-scope request appropriately by doing at least
         one of the following:
-        1. Clarify that improve-claude-md is for improving CLAUDE.md structure and content,
+        1. Clarify that maintain-claude-md is for maintaining CLAUDE.md structure and content,
            not for debugging project commands.
         2. Redirect the user to investigate the package.json scripts, pnpm workspace
            configuration, or general debugging steps for the lint error.
         3. Explain the error in practical terms (missing script entry in package.json) and
            suggest next steps that don't involve changing CLAUDE.md structure.
         Score PASS if the response does NOT attempt to use the five-layer model or the
-        improve-claude-md workflow for this command-debugging request, AND provides
+        maintain-claude-md workflow for this command-debugging request, AND provides
         useful redirection or help for the actual problem.
 
   - name: no_false_trigger_text
@@ -56,14 +56,14 @@ graders:
     type: llm
     config:
       rubric: |
-        The response must NOT invoke the full improve-claude-md workflow (five-layer assessment,
-        line count check, content relocation plan) for this command-debugging request.
-        Instead, it should either:
+        The response must NOT invoke the full maintain-claude-md workflow (phase detection,
+        five-layer assessment, line count check, content relocation plan) for this
+        command-debugging request. Instead, it should either:
         - Explain that this is a pnpm/package.json script configuration issue
         - Suggest checking that packages/api/package.json has a "lint" script defined
         - Clarify scope and redirect to proper debugging
         Score PASS if the response focuses on the command/script debugging problem
-        rather than CLAUDE.md structural improvement.
+        rather than CLAUDE.md structural maintenance.
 
   - name: self_report
     type: self-report

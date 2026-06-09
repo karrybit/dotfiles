@@ -1,0 +1,130 @@
+id: scenario-bootstrap
+description: >
+  User calls the skill on a project that has no CLAUDE.md. The skill should
+  detect Phase 1 (Bootstrap), discover project metadata from package.json and
+  the directory structure, draft a minimal facts-only CLAUDE.md, and present
+  the draft for user confirmation without writing the file.
+
+inputs:
+  prompt: |
+    I just started a new project and don't have a CLAUDE.md yet. Can you help
+    me set one up?
+
+    Here is the relevant project structure:
+
+    ```
+    package.json
+    src/
+      api/
+        routes/
+        services/
+        db/
+          migrations/
+          schema.ts
+      web/
+        components/
+        pages/
+    ```
+
+    Contents of package.json:
+    ```json
+    {
+      "name": "my-app",
+      "engines": { "node": ">=20" },
+      "dependencies": {
+        "fastify": "^4.28.0",
+        "drizzle-orm": "^0.36.0",
+        "@tanstack/react-query": "^5.59.0"
+      },
+      "devDependencies": {
+        "typescript": "^5.6.0",
+        "vitest": "^2.1.0",
+        "vite": "^5.4.0"
+      }
+    }
+    ```
+
+    There is no `.claude/settings.json` or `.claude/skills/` directory yet.
+
+    Note: Real file writes and external command execution are unavailable in
+    this evaluation context; narrate the workflow you would follow, including
+    which phase you detect, what you read, what you include in the draft, and
+    that you would present the draft for confirmation before writing.
+
+graders:
+  - name: phase_detection_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(phase.?1|bootstrap|does not exist|no claude\\.md|missing|create|フェーズ1|存在しない|作成)"
+
+  - name: phase_detection_llm
+    type: llm
+    config:
+      rubric: |
+        The response must identify this as a Phase 1 (Bootstrap) case — CLAUDE.md
+        does not exist. Score PASS if the response explicitly names the phase or
+        the condition (CLAUDE.md missing / absent) before running the workflow.
+
+  - name: project_discovery_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(package\\.json|fastify|drizzle|vitest|typescript|node.?20|5\\.6|2\\.1|バージョン|スタック)"
+
+  - name: project_discovery_llm
+    type: llm
+    config:
+      rubric: |
+        The response must extract project metadata from the provided package.json:
+        - Node.js version (>=20)
+        - At least two of: Fastify 4.x, Drizzle ORM, TypeScript 5.6, Vitest 2.1
+        - Or the directory structure (src/api, src/web, migrations)
+        Score PASS if the response demonstrates reading of at least two concrete
+        version or structural facts from the provided project files.
+
+  - name: facts_only_draft_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(tech.?stack|architecture|source.?of.?truth|convention|migration|draft|スタック|アーキテクチャ|ドラフト)"
+
+  - name: facts_only_draft_llm
+    type: llm
+    config:
+      rubric: |
+        The response must produce or describe a CLAUDE.md draft that contains
+        only project-specific facts:
+        - Tech stack with versions (from package.json)
+        - Architecture layer model (src/api layers, src/web structure)
+        - At least one source-of-truth or migration constraint (e.g., "never edit
+          migration files directly")
+        The draft must NOT include procedures (how to run tests), enforcement prose
+        (run lint before commit), or generic rules (prefer const over let).
+        Score PASS if the draft contains facts only and avoids at least one
+        explicitly prohibited category.
+
+  - name: confirm_before_write_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(confirm|confirmation|review|approve|before.*writ|present|check|確認|承認|書く前)"
+
+  - name: confirm_before_write_llm
+    type: llm
+    config:
+      rubric: |
+        The response must indicate that it will NOT write the CLAUDE.md file
+        until the user confirms the draft. Acceptable signals include:
+        - "I'll present this for your review before writing"
+        - "Please confirm and I'll create the file"
+        - "Here is the draft — let me know if you'd like to proceed"
+        Score FAIL if the response states it is writing the file or implies the
+        file has already been created without user confirmation.
+
+  - name: self_report
+    type: self-report
+    config:
+      require_self_report: true
+      max_unclear: 1
+      max_retries: 0

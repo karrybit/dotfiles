@@ -2,8 +2,9 @@ id: scenario-typical
 description: >
   User asks to review and improve a project CLAUDE.md that has grown too large
   and contains procedures, automated checks, and generic advice mixed with
-  project-specific facts. The skill should assess the current state, identify
-  what to add/remove/relocate, and produce a concrete improvement plan.
+  project-specific facts. The skill should detect Phase 2 (Restructure), assess
+  the current state, identify what to add/remove/relocate, and produce a
+  concrete improvement plan.
 
 inputs:
   prompt: |
@@ -66,10 +67,26 @@ inputs:
 
     Note: Real network fetches and external command execution are unavailable
     in this evaluation context; narrate the workflow you would follow, including
-    what you would read, what assessment you would make using the five-layer model,
-    and the concrete improvement plan you would produce.
+    what you would read, what phase you would detect, what assessment you would
+    make using the five-layer model, and the concrete improvement plan you would
+    produce.
 
 graders:
+  - name: phase_detection_text
+    type: text
+    config:
+      regex_match:
+        - "(?i)(phase.?2|restructure|restructuring|phase\\s+2|フェーズ2|再構成)"
+
+  - name: phase_detection_llm
+    type: llm
+    config:
+      rubric: |
+        The response must identify this as a Phase 2 (Restructure) case — the
+        CLAUDE.md exists but contains wrong-layer content (procedures, enforcement
+        prose, generic rules). Score PASS if the response explicitly names the
+        phase or the condition that triggered it before running the workflow.
+
   - name: five_layer_assessment_text
     type: text
     config:

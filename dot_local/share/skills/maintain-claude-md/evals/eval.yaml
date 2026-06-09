@@ -1,4 +1,4 @@
-skill: improve-claude-md
+skill: maintain-claude-md
 skill_path: ../SKILL.md
 trials_per_task: 2
 require_self_report: true
@@ -8,3 +8,5 @@ max_retries: 0
 tasks:
   - tasks/scenario-typical.yaml
   - tasks/scenario-edge.yaml
+  - tasks/scenario-bootstrap.yaml
+  - tasks/scenario-drift.yaml
