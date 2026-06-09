@@ -1,49 +1,90 @@
 tap "aquaproj/aqua"
 tap "microsoft/apm"
 tap "olets/tap"
+# Plugin manager for zsh, inspired by antigen and antibody
 brew "antidote"
+# Declarative CLI Version manager
 brew "aqua"
+# Automatic configure script builder
 brew "autoconf"
+# Official Amazon AWS command-line interface
 brew "awscli"
+# Binary installation for rust projects
 brew "cargo-binstall"
+# Display information on the cargo cache, plus optional cache pruning
 brew "cargo-cache"
+# Utility for managing cargo dependencies from the command-line
 brew "cargo-edit"
+# Show what Rust code looks like with macros expanded
 brew "cargo-expand"
+# Tool to check that your Cargo.toml dependencies are sorted alphabetically
 brew "cargo-sort"
+# Cargo subcommand for checking and applying updates to installed executables
 brew "cargo-update"
+# Manage your dotfiles across multiple diverse machines, securely
 brew "chezmoi"
+# Cross-platform make
 brew "cmake"
+# Distributed revision control system
 brew "git"
+# Syntax-highlighting pager for git and diff output
 brew "git-delta"
+# GNU implementation of the famous stream editor
 brew "gnu-sed"
+# Postgres C API library
 brew "libpq"
+# Development kit for the Java programming language
 brew "openjdk"
+# Interpreted, interactive, object-oriented programming language
 brew "python@3.13"
+# Terminal multiplexer
 brew "tmux"
+# Plugin manager for tmux
 brew "tpm"
+# Display directories as trees (with optional color/HTML output)
 brew "tree"
+# Internet file retriever
 brew "wget"
+# Fish-like fast/unobtrusive autosuggestions for zsh
 brew "zsh-autosuggestions"
+# Additional completion definitions for zsh
 brew "zsh-completions"
-brew "olets/tap/zsh-abbr"
+# Password manager that keeps all passwords secure behind one password
 cask "1password"
+# Screen capturing tool
 cask "cleanshot"
+# Universal database tool and SQL client
 cask "dbeaver-community"
+# Voice and text chat software
 cask "discord"
+# App to build and share containerised applications and microservices
 cask "docker-desktop"
+# Online diagram software
 cask "drawio"
+# Notification Center widget and menu bar application to monitor fans
 cask "fanny"
 cask "font-hack-nerd-font"
+# Set of tools to manage resources and applications hosted on Google Cloud
 cask "gcloud-cli"
+# Terminal emulator that uses platform-native UI and GPU acceleration
 cask "ghostty"
+# Japanese input software
 cask "google-japanese-ime"
+# Java IDE by JetBrains
 cask "intellij-idea"
+# Menu bar calendar
 cask "itsycal"
+# JetBrains tools manager
 cask "jetbrains-toolbox"
+# Keyboard customiser
 cask "karabiner-elements"
+# Software for Logitech devices
 cask "logi-options+"
+# Provides updates to various Microsoft products
 cask "microsoft-auto-update"
+# Meet, chat, call, and collaborate in just one place
 cask "microsoft-teams"
+# Knowledge base that works on top of a local folder of plain text Markdown files
 cask "obsidian"
 vscode "christian-kohler.path-intellisense"
 vscode "github.vscode-github-actions"
