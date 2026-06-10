@@ -32,7 +32,6 @@ packages:
   - name: go-task/task@v3.51.1
   - name: golang-migrate/migrate@v4.19.1
   - name: golang/go@go1.26.4
-  - name: golangci/golangci-lint@v2.12.2
   - name: gradle/gradle-distributions@v9.5.1
   - name: grafana/k6@v2.0.0
   - name: hashicorp/terraform@v1.15.5
