@@ -25,6 +25,8 @@ brew "cargo-update"
 brew "chezmoi"
 # Cross-platform make
 brew "cmake"
+# Lightweight, framework-agnostic database migration tool
+brew "dbmate"
 # Distributed revision control system
 brew "git"
 # Syntax-highlighting pager for git and diff output
@@ -87,6 +89,7 @@ cask "microsoft-teams"
 # Knowledge base that works on top of a local folder of plain text Markdown files
 cask "obsidian"
 vscode "christian-kohler.path-intellisense"
+vscode "eamodio.gitlens"
 vscode "github.vscode-github-actions"
 vscode "github.vscode-pull-request-github"
 vscode "golang.go"
