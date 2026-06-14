@@ -23,12 +23,12 @@
 
 | ステップ | 状態 | メモ |
 |---|---|---|
-| 0.1 git status 確認 | ⬜ | |
+| 0.1 git status 確認 | ✅ | clean(未コミット変更は今セッション分のみ) |
 | 0.2 `.chezmoiignore` に `snapshots` 追記 | ✅ | `PROGRESS.md` / `snapshots` を同時追記 |
-| 0.3 テキストスナップショット取得 | ⬜ | `snapshots/Brewfile.snapshot`, `aqua-list.txt`, `which-all.txt` |
-| 0.4 `~/.config` tar ローカル退避 | ⬜ | リポジトリ外(`~/`) |
-| 0.5 `snapshots/` コミット | ⬜ | |
-| 0.6 ロールバック手段確認 | ⬜ | `git revert + chezmoi apply` |
+| 0.3 テキストスナップショット取得 | ✅ | `snapshots/Brewfile.snapshot`(112行), `aqua-list.txt`(2383行), `which-all.txt`(20行) |
+| 0.4 `~/.config` tar ローカル退避 | ✅ | `~/dotconfig-backup-20260614.tar.gz`(168MB, リポジトリ外) |
+| 0.5 `snapshots/` コミット | ✅ | 4f0a8d2 |
+| 0.6 ロールバック手段確認 | ✅ | darwin-rebuild 未導入のため `git revert + chezmoi apply` |
 
 ## フェーズ 1: Nix 本体の導入
 
