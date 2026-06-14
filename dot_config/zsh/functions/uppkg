@@ -4,7 +4,6 @@ __require_commands chezmoi git jq || return 1
     set -eo pipefail
 
     __update_homebrew
-    __update_aqua
     __update_rust_tools
     __update_gcloud
     __update_ghq_repositories

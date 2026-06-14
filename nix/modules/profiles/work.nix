@@ -22,6 +22,15 @@
       runn
       tbls
 
+      # Phase 6 (aqua migration): work-specific tools
+      air
+      cargo-make
+      golang-migrate
+      mockgen
+      protobuf
+      sccache
+      wasm-pack
+
       # Phase 5: Rust toolchain + cargo tools
       rustup
       cargo-binstall

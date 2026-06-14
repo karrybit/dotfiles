@@ -34,11 +34,19 @@
     terraform
     tflint
 
-    # Batch3: common tools (gradle stays in aqua: nixpkgs 8.x vs aqua 9.x)
+    # Batch3: common tools
     jwt-cli
     qsv
     tfsec
     volta
+
+    # Phase 6 (aqua migration): common tools
+    act
+    delve
+    direnv
+    gradle_9
+    starship
+    uv
   ];
 
   programs.home-manager.enable = true;

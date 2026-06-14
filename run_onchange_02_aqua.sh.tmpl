@@ -1,9 +1,0 @@
-#!/bin/bash
-# run_onchange_: aqua.{profile}.yaml が変わった時だけ再実行される
-# hash: {{ include (printf "dot_config/aquaproj-aqua/aqua.%s.yaml" .profile) | sha256sum }}
-{{ if ne .profile "personal_minipc" -}}
-set -e
-
-aqua install --all \
-  --config "${XDG_CONFIG_HOME:-$HOME/.config}/aquaproj-aqua/aqua.{{ .profile }}.yaml"
-{{- end }}
