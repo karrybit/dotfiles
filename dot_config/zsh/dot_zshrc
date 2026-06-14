@@ -55,12 +55,8 @@ eval "$(starship init zsh)"
 # Docker completions
 fpath=("$HOME/.docker/completions" $fpath)
 
-# antidote (nix managed — system package on darwin, home profile on linux)
-if [[ -f "/run/current-system/sw/share/antidote/antidote.zsh" ]]; then
-  source "/run/current-system/sw/share/antidote/antidote.zsh"
-else
-  source "${HOME}/.nix-profile/share/antidote/antidote.zsh"
-fi
+# antidote (nix managed — home.file symlink to nix store)
+source "${XDG_DATA_HOME:-$HOME/.local/share}/antidote/antidote.zsh"
 antidote load "$ZDOTDIR/.zsh_plugins.txt"
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down

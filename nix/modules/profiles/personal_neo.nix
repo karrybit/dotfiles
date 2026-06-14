@@ -5,7 +5,6 @@
 
   users.users.${username}.home = "/Users/${username}";
 
-  environment.systemPackages = with pkgs; [ antidote ];
 
   home-manager.users.${username} = { pkgs, ... }: {
     home.packages = with pkgs; [
@@ -117,6 +116,9 @@
         side-by-side = true;
       };
     };
+
+    home.file.".local/share/antidote/antidote.zsh".source =
+      "${pkgs.antidote}/share/antidote/antidote.zsh";
 
     programs.direnv = {
       enable = true;

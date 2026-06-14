@@ -6,8 +6,6 @@
 
   fonts.packages = [ pkgs.nerd-fonts.hack ];
 
-  environment.systemPackages = [ pkgs.antidote ];
-
   home-manager.users.${username} = { pkgs, ... }: {
     home.packages = with pkgs; [
       # CLI tools
@@ -170,6 +168,9 @@
         side-by-side = true;
       };
     };
+
+    home.file.".local/share/antidote/antidote.zsh".source =
+      "${pkgs.antidote}/share/antidote/antidote.zsh";
 
     programs.direnv = {
       enable = true;

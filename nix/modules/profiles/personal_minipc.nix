@@ -175,10 +175,12 @@
 
     # Shell / env tools
     act
-    antidote
     delve
     gradle_9
     starship
     uv
   ];
+
+  home.file.".local/share/antidote/antidote.zsh".source =
+    "${pkgs.antidote}/share/antidote/antidote.zsh";
 }
