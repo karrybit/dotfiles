@@ -93,9 +93,7 @@
   homebrew.brews = [];
   homebrew.casks = [
     "dbeaver-community"
-    "discord"
     "docker-desktop"
-    "drawio"
     "font-hack-nerd-font"
     "gcloud-cli"
     "jetbrains-toolbox"

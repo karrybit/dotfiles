@@ -35,7 +35,6 @@
     casks = [
       "1password"
       "cleanshot"
-      "fanny"
       "ghostty"
       "google-japanese-ime"
       "intellij-idea"
