@@ -6,7 +6,52 @@
 
   home-manager.users.${username} = { pkgs, ... }: {
     home.packages = with pkgs; [
-      # Batch2: work-specific k8s / backend tools
+      # CLI tools
+      bat
+      curlie
+      delta
+      deno
+      dust
+      eza
+      fd
+      fzf
+      ghq
+      gping
+      hyperfine
+      jq
+      lazygit
+      neovim
+      ripgrep
+      shellcheck
+      tree-sitter
+      yq-go
+
+      # Dev tools
+      actionlint
+      awscli2
+      gh
+      go
+      go-task
+      nickel
+      pkl
+      terraform
+      tflint
+
+      # CLI tools (misc)
+      jwt-cli
+      qsv
+      tfsec
+      volta
+
+      # Shell / env tools
+      act
+      delve
+      direnv
+      gradle_9
+      starship
+      uv
+
+      # k8s / backend (work)
       buf
       dbmate
       gofumpt
@@ -18,11 +63,11 @@
       k6
       skaffold
 
-      # Batch3: work-specific tools
+      # Work tools
       runn
       tbls
 
-      # Phase 6 (aqua migration): work-specific tools
+      # Work dev tools
       air
       cargo-make
       go-migrate
@@ -31,7 +76,7 @@
       sccache
       wasm-pack
 
-      # Phase 5: Rust toolchain + cargo tools
+      # Rust toolchain + cargo tools (work)
       rustup
       cargo-binstall
       cargo-cache
@@ -45,7 +90,6 @@
     ];
   };
 
-  # Phase 4: work-specific Homebrew packages (cargo-* moved to nix)
   homebrew.brews = [];
   homebrew.casks = [
     "dbeaver-community"

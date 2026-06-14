@@ -36,3 +36,27 @@
 
 - Review the relevant README when a change affects documented behavior,
   configuration layout, package management, or common operations.
+
+## Nix Package Management Design
+
+### Profile-per-package principle
+
+Each profile (`nix/modules/profiles/*.nix`) declares its own complete package
+list independently. Do **not** move packages into `home/common.nix` to avoid
+duplication across profiles.
+
+**Reason:** Two profiles happening to use the same tool does not mean those
+tools are universally required. Putting them in `common.nix` imposes a
+declaration of shared intent that does not exist. Each environment is
+independent; overlap is coincidental, not contractual.
+
+**Consequences:**
+- Adding a tool to one profile never requires touching another file.
+- Removing a tool from one profile is a single-file change with no need to
+  check whether another profile still needs it.
+- Divergence between profiles is natural and expected, not a signal to
+  refactor toward a shared layer.
+
+`home/common.nix` exists only for home-manager framework settings
+(`home.stateVersion`, `programs.home-manager.enable`). It must not contain
+packages.
