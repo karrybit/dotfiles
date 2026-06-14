@@ -58,7 +58,7 @@
 
 | ステップ | 状態 | メモ |
 |---|---|---|
-| 3.0 PATH 優先順位是正(`dot_zshrc:91`) | ⬜ | |
+| 3.0 PATH 優先順位是正(`dot_zshrc:91`) | ✅ | `10_path_system.zsh` + `dot_zshrc:91` 修正。Nix > Homebrew > tools > system 確認 |
 | 3.1〜 Batch1(ripgrep/fd/bat/eza/fzf/jq/yq/delta/dust/hyperfine/gping/curlie/shellcheck/lazygit/ghq/tree-sitter/neovim/deno) | ⬜ | |
 | 3.2〜 Batch2(go/terraform/tflint/actionlint/kustomize/kubectl/kind/helm/k6/buf/gofumpt/skaffold/kubectx/go-task/nickel/pkl/awscli2/gh) | ⬜ | |
 | 3.3〜 Batch3(qsv/tbls/runn/jwt-cli/tfsec/volta/gradle 系 ― 在庫確認後判断) | ⬜ | |
@@ -112,12 +112,15 @@
 
 ## 次セッションの開始点
 
-**最初にやること: ステップ 3.0 PATH 優先順位是正**
+**最初にやること: ステップ 3.1 Batch1 ツール移行**
 
-フェーズ2 全ステップ完了。次はフェーズ3 (PATH 是正 → CLI ツール移行)。
+3.0 完了。PATH 順: Nix > Homebrew > go/cargo/aqua > system。
 
-3.0: `dot_zshrc:91` 付近の PATH 設定を確認し、Nix が最優先になるよう是正する。
-3.1〜: Batch1 ツール群(ripgrep/fd/bat/eza/fzf 等)を `home.packages` へ移行。
+3.1 の進め方:
+- `home/common.nix` の `home.packages` に nixpkgs 在庫を確認しながら 1 本ずつ追加
+- `nixr switch` で適用 → `which <tool>` でパス確認
+- Brewfile / aqua.yaml から対応エントリを削除
+- Batch1 対象: ripgrep fd bat eza fzf jq yq delta dust hyperfine gping curlie shellcheck lazygit ghq tree-sitter neovim deno
 
 ---
 

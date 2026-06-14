@@ -87,6 +87,14 @@ bindkey '^r' __select_history_with_fzf
 # Interactive init for manually installed tools (gcloud, SDKMAN, etc.)
 for f in "$ZDOTDIR/env.d/"*.zsh(N); do source "$f"; done
 
-# Ensure Homebrew takes precedence after shell integration (VS Code etc.) rewrites PATH
-path=(/opt/homebrew/bin /opt/homebrew/sbin $path)
+# Ensure Nix takes precedence after shell integration (VS Code etc.) rewrites PATH
+path=(
+  $HOME/.nix-profile/bin
+  /etc/profiles/per-user/$USER/bin
+  /run/current-system/sw/bin
+  /nix/var/nix/profiles/default/bin
+  /opt/homebrew/bin
+  /opt/homebrew/sbin
+  $path
+)
 typeset -U path
