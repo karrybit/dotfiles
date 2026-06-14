@@ -54,9 +54,7 @@
       zsh-abbr
 
       # GUI apps (migrated from homebrew cask)
-      dbeaver-bin
       google-cloud-sdk
-      obsidian
 
       # System tools (migrated from homebrew)
       autoconf
@@ -266,7 +264,9 @@
     "intellij-idea"
     "itsycal"
     "karabiner-elements"   # DriverKit 拡張のインストールが必要 — cask のみ
+    "obsidian"             # アプリ内自動更新のため cask で管理
     # work 固有
+    "dbeaver-community"    # アプリ内自動更新のため cask で管理
     "docker-desktop"
     "jetbrains-toolbox"
     "logi-options+"
