@@ -103,12 +103,21 @@
 antidote / tmux / tpm / zsh-autosuggestions / zsh-completions は Phase 6 の zsh/tmux 設定引き継ぎ完了後に homebrew.nix から削除する。
 tpm → `home-manager.users.*.programs.tmux.plugins` で代替する。
 
+## フェーズ 6補: aqua 廃止・Homebrew formula 整理(フェーズ5直後に実施)
+
+| ステップ | 状態 | メモ |
+|---|---|---|
+| aqua の global package 管理廃止 | ✅ | aqua.work.yaml / aqua.personal_neo.yaml / run_onchange_02 削除。aqua 本体は Homebrew に残置(nixpkgs 未収録) |
+| 残 Homebrew formula の nix 移行 | ✅ | autoconf cmake git gnused libpq openjdk python313 tree wget → work/personal_neo に追加 |
+| zsh-abbr の nix 移行 | ✅ | work/personal_neo に追加 |
+| common.nix からパッケージ除去 | ✅ | プロファイル別完全独立に設計変更。AGENTS.md に設計思想を記録 |
+
 ## フェーズ 7: 後片付け・ドキュメント
 
 | ステップ | 状態 | メモ |
 |---|---|---|
 | 7.1 `run_onchange_01_homebrew` 削除 | ✅ | 4.5 と同時に実施 |
-| 7.2 `run_onchange_02_aqua` 削除 | ⬜ | |
+| 7.2 `run_onchange_02_aqua` 削除 | ✅ | フェーズ6補で実施 |
 | 7.3 `run_onchange_03/04` 整理 | ⬜ | |
 | 7.4 `05_claude_settings`/`06_sync-skills` 残置確認 | ⬜ | |
 | 7.5 README 更新 | ⬜ | |
@@ -117,18 +126,18 @@ tpm → `home-manager.users.*.programs.tmux.plugins` で代替する。
 
 ## 次セッションの開始点
 
-**最初にやること: フェーズ6 設定引き継ぎ**
-
-フェーズ5 全完了。nix 管理: rustup + 9本の cargo ツール(work profile)。
+**最初にやること: フェーズ6 設定引き継ぎ — 6.1 git**
 
 残る run_onchange:
-- run_onchange_02_aqua: aqua 残存ツール管理(direnv/starship/gradle 等)
 - run_onchange_03_rustup_components: rustup components (cargo/clippy/rustfmt)
 - run_onchange_04_cargo_packages: cargo-upgrades のみ
 - run_onchange_05_claude_settings: Claude 設定
 - run_onchange_06_sync-skills: スキル同期
 
-フェーズ6: home-manager で git/starship/tmux/nvim/direnv/fzf/zsh 設定を引き継ぎ。
+Homebrew に残る formula(Phase 6 完了後に削除):
+- antidote / tmux / tpm / zsh-autosuggestions / zsh-completions
+- tpm → Phase 6 で `programs.tmux.plugins` に置換
+- aqua → nixpkgs 未収録のため永続的に Homebrew 管理
 
 ---
 
