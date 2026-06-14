@@ -17,7 +17,10 @@
             useGlobalPkgs = true;
             useUserPackages = true;
             extraSpecialArgs = { inherit username; };
-            users.${username}.imports = [ ../modules/home/common.nix ];
+            users.${username}.imports = [
+              ../modules/home/common.nix
+              ../modules/home/programs.nix
+            ];
           };
         }
       ] ++ extraModules;
@@ -34,6 +37,7 @@
       modules = [
         ../modules/home/common.nix
         ../modules/home/linux.nix
+        ../modules/home/programs.nix
       ] ++ extraModules;
     };
 }
