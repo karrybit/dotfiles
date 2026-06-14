@@ -55,7 +55,6 @@
 
       # GUI apps (migrated from homebrew cask)
       dbeaver-bin
-      ghostty
       google-cloud-sdk
       karabiner-elements
       obsidian
@@ -260,9 +259,10 @@
 
   homebrew.brews = [];
   homebrew.casks = [
-    # nixpkgs 未収録 or macOS 統合が必要なもの
+    # nixpkgs 未収録 or macOS 限定
     "1password"
     "cleanshot"
+    "ghostty"              # nixpkgs は Linux 専用ビルドのみ
     "google-japanese-ime"
     "intellij-idea"
     "itsycal"

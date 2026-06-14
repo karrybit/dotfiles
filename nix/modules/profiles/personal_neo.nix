@@ -53,7 +53,6 @@
       zsh-abbr
 
       # GUI apps (migrated from homebrew cask)
-      ghostty
       google-chrome
       karabiner-elements
       obsidian
@@ -208,10 +207,11 @@
   };
 
   homebrew.casks = [
-    # nixpkgs 未収録 or macOS 統合が必要なもの
+    # nixpkgs 未収録 or macOS 限定
     "1password"
     "cleanshot"
     "codex"
+    "ghostty"              # nixpkgs は Linux 専用ビルドのみ
     "google-japanese-ime"
     "intellij-idea"
     "itsycal"
