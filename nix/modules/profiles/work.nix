@@ -53,8 +53,13 @@
       uv
       zsh-abbr
 
-      # GUI apps (migrated from homebrew cask)
-      google-cloud-sdk
+      # gcloud SDK (CLI) — extra components declared here, not via `gcloud components`
+      (google-cloud-sdk.withExtraComponents (with google-cloud-sdk.components; [
+        alpha
+        beta
+        cloud-sql-proxy
+        gke-gcloud-auth-plugin
+      ]))
 
       # System tools (migrated from homebrew)
       autoconf

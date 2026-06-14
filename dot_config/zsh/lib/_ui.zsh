@@ -1,9 +1,13 @@
 echo_failure() {
-    printf "\033[31m${1}\033[0m" >&2
+    printf '\033[31m%b\033[0m' "$1" >&2
+}
+
+echo_warning() {
+    printf '\033[33m%b\033[0m' "$1" >&2
 }
 
 echo_success() {
-    printf "\033[32m${1}\033[0m"
+    printf '\033[32m%b\033[0m' "$1"
 }
 
 clipboard_copy() {

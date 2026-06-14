@@ -1,4 +1,9 @@
 [[ -z "$CARGO_HOME" ]] && return 1
 rm -rf "$CARGO_HOME/git"
 rm -rf "$CARGO_HOME/registry"
-rm -rf "$(sccache -s | grep 'Cache location' | awk '{print $5}' | sed -e 's/^"//g; s/"$//g')"
+
+if command -v sccache >/dev/null 2>&1; then
+    local _cache_dir
+    _cache_dir=$(sccache -s | grep 'Cache location' | awk '{print $5}' | sed -e 's/^"//g; s/"$//g')
+    [[ -n "$_cache_dir" ]] && rm -rf "$_cache_dir"
+fi

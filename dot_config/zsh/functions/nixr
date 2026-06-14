@@ -1,30 +1,42 @@
-__require_commands chezmoi jq || return 1
-
-local flake="$HOME/.local/share/chezmoi/nix"
+local repo="$HOME/.local/share/chezmoi"
+local flake="${repo}/nix"
 local profile
-profile=$(chezmoi data | jq -r .profile)
+profile=$(__chezmoi_profile) || return 1
 
 local subcmd="${1:-switch}"
 
+local -a _switch _rollback _list
 case "$profile" in
     work|personal_neo)
-        case "$subcmd" in
-            switch)   sudo darwin-rebuild switch --flake "${flake}#${profile}" ;;
-            rollback) sudo darwin-rebuild --rollback ;;
-            list)     sudo darwin-rebuild --list-generations ;;
-            *)        printf "usage: nixr [switch|rollback|list]\n" >&2; return 1 ;;
-        esac
+        _switch=(sudo darwin-rebuild switch --flake "${flake}#${profile}")
+        _rollback=(sudo darwin-rebuild --rollback)
+        _list=(sudo darwin-rebuild --list-generations)
         ;;
     personal_minipc)
-        case "$subcmd" in
-            switch)   home-manager switch --flake "${flake}#${profile}" ;;
-            rollback) home-manager generations ;;
-            list)     home-manager generations ;;
-            *)        printf "usage: nixr [switch|rollback|list]\n" >&2; return 1 ;;
-        esac
+        _switch=(home-manager switch --flake "${flake}#${profile}")
+        _rollback=(home-manager generations)
+        _list=(home-manager generations)
         ;;
     *)
-        printf "\033[31munknown profile: %s\n\033[0m" "$profile" >&2
+        echo_failure "unknown profile: ${profile}\n"
+        return 1
+        ;;
+esac
+
+case "$subcmd" in
+    switch)   "${_switch[@]}" ;;
+    rollback) "${_rollback[@]}" ;;
+    list)     "${_list[@]}" ;;
+    update)
+        nix flake update --flake "${flake}" || return 1
+        git -C "${repo}" add nix/flake.lock || return 1
+        if ! git -C "${repo}" diff --cached --quiet -- nix/flake.lock; then
+            git -C "${repo}" commit -m "chore(nix): update flake.lock" || return 1
+        fi
+        "${_switch[@]}"
+        ;;
+    *)
+        printf "usage: nixr [switch|rollback|list|update]\n" >&2
         return 1
         ;;
 esac

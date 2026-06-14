@@ -8,7 +8,7 @@ __require_commands chezmoi git uppkg || return 1
     _source_path=$(chezmoi source-path)
 
     if [[ -n "$(git -C "${_source_path}" status --porcelain)" ]]; then
-        printf "\033[31mchezmoi source repo has uncommitted changes\033[0m\n" >&2
+        echo_failure "chezmoi source repo has uncommitted changes\n"
         git -C "${_source_path}" status --short >&2
         exit 1
     fi
@@ -16,7 +16,7 @@ __require_commands chezmoi git uppkg || return 1
     local _chezmoi_status
     _chezmoi_status=$(chezmoi status)
     if [[ -n "${_chezmoi_status}" ]]; then
-        printf "\033[31mchezmoi has unapplied differences\033[0m\n" >&2
+        echo_failure "chezmoi has unapplied differences\n"
         printf "%s\n" "${_chezmoi_status}" >&2
         exit 1
     fi

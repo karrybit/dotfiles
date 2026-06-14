@@ -1,2 +1,2 @@
-if [ -z $1 ]; then return; fi
+[[ -z "$1" ]] && return 1
 ln -s "$(mktemp -d)" "./$1"

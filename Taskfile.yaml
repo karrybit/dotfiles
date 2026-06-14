@@ -6,33 +6,25 @@ vars:
 tasks:
   default:
     silent: true
-    cmds:
-      - task --list
+    cmd: task --list
 
   nix:check:
-    desc: "nix flake check (linux skipped on macOS)"
+    desc: "nix flake check"
     cmds:
       - nix flake check {{.FLAKE}}
-
-  nix:lint:
-    desc: "Lint nix files with statix (antipatterns) and deadnix (unused code)"
-    cmds:
       - nix run nixpkgs#statix -- check {{.FLAKE}}
       - nix run nixpkgs#deadnix -- --fail {{.FLAKE}}
 
   nix:rebuild:
     desc: "Rebuild and activate current profile (requires interactive shell for nixr)"
-    cmds:
-      - zsh -i -c nixr
-
-  test:lint:
-    desc: "Render chezmoi templates (3 profiles) and zsh -n lint"
-    cmds:
-      - test/render-and-lint.sh
+    cmd: zsh -i -c nixr
 
   test:
-    desc: "Run all checks: nix:check + nix:lint + test:lint"
+    desc: "Render chezmoi templates (3 profiles) and zsh -n lint"
+    cmd: test/render-and-lint.sh
+
+  check:
+    desc: "Run all checks: nix:check + nix:lint + test"
     cmds:
       - task: nix:check
-      - task: nix:lint
-      - task: test:lint
+      - task: test

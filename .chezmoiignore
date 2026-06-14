@@ -3,9 +3,10 @@ nix
 Taskfile.yaml
 test
 
-# Source-only docs
+# Source-only docs and instructions
 AGENTS.md
 CLAUDE.md
+MIGRATION.md
 README.md
 docs
 .config/nvim/AGENTS.md
