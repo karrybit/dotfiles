@@ -95,8 +95,8 @@
 | 6.6 fzf | ❌ | スキップ。カスタム関数は chezmoi zsh ファイルで管理継続。fzf バイナリは home.packages 管理済み |
 | 6.7a zsh 非テンプレ単独ファイル | ❌ | スキップ。functions/widgets/lib/abbreviations/zshenv.d は chezmoi で管理継続。home-manager への逐語移送はツール責務の観点から不適切(NIX_ZSH_MIGRATION_PLAN.md 参照) |
 | 6.7b antidote の nix 移行 | ✅ | `brew --prefix` 依存を撤去。home.file で `~/.local/share/antidote/antidote.zsh` → nix store へのシンボリックリンクを作成。homebrew.nix から antidote / zsh-autosuggestions / zsh-completions を削除。share-only パッケージは profile に展開されないため home.file 方式が正解 |
-| 6.7c shell init を zshrc から除去 | ⬜ | dot_zshrc の `eval "$(direnv hook zsh)"` と `eval "$(starship init zsh)"` を削除。programs.direnv/starship の enableZshIntegration で代替 — ただし programs.zsh.enable が前提 |
-| 6.7d dot_zshrc / dot_zshenv 最終整理 | ⬜ | 6.7b/c 完了後に chezmoi 残置が適切か再評価 |
+| 6.7c shell init を zshrc から除去 | ❌ | スキップ。programs.zsh.enable が必要で chezmoi 管理の .zshrc と競合する。eval 行はバイナリが nix 管理されていれば実害なし。chezmoi(設定) / nix(パッケージ) の責務分離を維持する |
+| 6.7d dot_zshrc / dot_zshenv 最終整理 | ❌ | 6.7c スキップに伴い不要。chezmoi による .zshrc 管理継続が確定 |
 | 6.7e テンプレ静的化 | ✅ | aqua 廃止時に 20_tool_aqua.zsh.tmpl 削除済み。残テンプレなし |
 
 
@@ -129,9 +129,9 @@
 |---|---|---|
 | 7.1 `run_onchange_01_homebrew` 削除 | ✅ | 4.5 と同時に実施 |
 | 7.2 `run_onchange_02_aqua` 削除 | ✅ | フェーズ6補で実施 |
-| 7.3 `run_onchange_03/04` 整理 | ⬜ | |
-| 7.4 `05_claude_settings`/`06_sync-skills` 残置確認 | ⬜ | |
-| 7.5 README 更新 | ⬜ | |
+| 7.3 `run_onchange_03/04` 整理 | ✅ | 03: cargo は default toolchain 同梱のため component リストから削除。clippy/rustfmt のみ残置。04: cargo-upgrades のみ(nixpkgs 未収録)。両スクリプトは Phase 5 で既に最小化済み |
+| 7.4 `05_claude_settings`/`06_sync-skills` 残置確認 | ✅ | 両スクリプトとも参照ファイル存在確認済み。Nix 移行の影響なし。変更不要 |
+| 7.5 README 更新 | ✅ | Nix ブートストラップ手順・nixr 使用法・パッケージ管理方針・run_onchange テーブル更新。Brewfile/aqua re-add 手順を削除 |
 
 ---
 

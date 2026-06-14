@@ -1,17 +1,25 @@
 # dotfiles
 
-Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/).
+Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/) and [Nix](https://nixos.org/).
+
+- **chezmoi** manages configuration files (what goes in `~/.config/`, `~/.local/`, etc.)
+- **Nix** (nix-darwin + home-manager) manages packages and tools
 
 ## Directory Structure
 
 ```
-~/.local/share/chezmoi/   ← source (this repository)
-~/.config/                ← live (files read by each application)
-~/.config/agents/         ← shared user-level agent instructions
-~/.local/share/agents/docs/ ← reusable local agent source summaries
-~/.local/share/skills/     ← shared user-level agent skills (canonical)
-~/.agents/skills/         ← Codex skill entrypoints (per-skill symlinks → ~/.local/share/skills/*)
-~/.config/claude/skills/  ← Claude Code skill entrypoints (per-skill symlinks → ~/.local/share/skills/*)
+~/.local/share/chezmoi/       ← source (this repository)
+  nix/                        ← Nix flake (packages, Homebrew casks, system config)
+    modules/profiles/         ← per-machine profiles (work, personal_neo, personal_minipc)
+  dot_config/                 ← configuration files → ~/.config/
+  dot_local/                  ← local data/bin → ~/.local/
+
+~/.config/                    ← live configuration files
+~/.config/agents/             ← shared user-level agent instructions
+~/.local/share/agents/docs/   ← reusable local agent source summaries
+~/.local/share/skills/        ← shared user-level agent skills (canonical)
+~/.agents/skills/             ← Codex skill entrypoints (per-skill symlinks → ~/.local/share/skills/*)
+~/.config/claude/skills/      ← Claude Code skill entrypoints (per-skill symlinks → ~/.local/share/skills/*)
 ```
 
 `chezmoi apply` deploys source → live. The `dot_` prefix is converted to `.` (e.g. `dot_config/` → `~/.config/`).
@@ -63,10 +71,10 @@ tests and with-skill versus without-skill baseline comparisons.
 ### Apply dotfiles to a new machine
 
 ```sh
-# Install Homebrew
+# 1. Install Homebrew
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-# Install chezmoi and apply dotfiles
+# 2. Install chezmoi and apply dotfiles
 brew install chezmoi
 chezmoi init --apply karrybit/dotfiles
 ```
@@ -74,29 +82,54 @@ chezmoi init --apply karrybit/dotfiles
 `chezmoi init --apply` automatically:
 
 1. Clones this repository to `~/.local/share/chezmoi/`
-2. Prompts for machine profile: enter `work` or `personal`
+2. Prompts for machine profile: enter `work`, `personal_neo`, or `personal_minipc`
 3. Runs `chezmoi apply` to deploy live files
-4. Executes `run_onchange_` scripts (installs Homebrew packages, aqua tools, and Rust tools)
+4. Executes `run_onchange_` scripts (Rust components, Claude settings, skills sync)
+
+```sh
+# 3. Install Determinate Nix
+curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+
+# 4. Apply Nix configuration (installs all packages and Homebrew casks)
+nixr
+```
+
+`nixr` selects the flake configuration based on the chezmoi profile set in step 2.
 
 On first launch, Neovim will automatically install plugins via lazy.nvim.
 
 ---
 
-### Set profile on an existing machine (without re-running init)
+### Rebuild Nix configuration
 
-Edit `~/.config/chezmoi/chezmoi.toml` directly:
+Use `nixr` whenever `nix/` changes (packages added/removed, Homebrew casks updated, etc.).
 
-```toml
-[data]
-    name = "karrybit"
-    profile = "work"   # or "personal"
+```sh
+# Rebuild and switch to the new configuration
+nixr
+
+# Roll back to the previous generation
+nixr rollback
+
+# List generations
+nixr list
 ```
 
-Then run `chezmoi apply`.
+`nixr` maps the chezmoi profile to the appropriate flake attribute:
+
+| Profile | Flake attribute | Manager |
+|---|---|---|
+| `work` | `darwinConfigurations.work` | nix-darwin + home-manager |
+| `personal_neo` | `darwinConfigurations.personal-neo` | nix-darwin + home-manager |
+| `personal_minipc` | `homeConfigurations.personal-minipc` | home-manager |
+
+Package changes go in `nix/modules/profiles/<profile>.nix`. Each profile declares
+its own complete package list independently — do not move packages into shared
+modules to avoid duplication across profiles.
 
 ---
 
-### Edit source and apply to machine
+### Edit dotfiles source and apply to machine
 
 ```sh
 # Edit source using the live path (applies automatically on save)
@@ -125,24 +158,6 @@ chezmoi add ~/.config/foo/bar
 chezmoi status
 
 # Commit and push
-chezmoi git add -- .
-chezmoi git commit -- -m "..."
-chezmoi git push
-```
-
----
-
-### Sync live changes back to source (re-add)
-
-Use this when a tool automatically updates a live file (e.g. `brew bundle dump` rewrites the Brewfile, or `aqua update` rewrites the aqua config).
-
-```sh
-# Write live → source (profile-specific files)
-chezmoi re-add ~/.config/homebrew/Brewfile.work   # or Brewfile.personal
-chezmoi re-add ~/.config/aquaproj-aqua/aqua.work.yaml   # or aqua.personal.yaml
-
-# Review and commit
-chezmoi git diff
 chezmoi git add -- .
 chezmoi git commit -- -m "..."
 chezmoi git push
@@ -209,8 +224,20 @@ These scripts run during `chezmoi apply` only when their tracked files change.
 
 | Script | Trigger | Action |
 |--------|---------|--------|
-| `run_onchange_01_homebrew.sh.tmpl` | `Brewfile.{profile}` changed | `brew bundle install` |
-| `run_onchange_02_aqua.sh.tmpl` | `aqua.{profile}.yaml` changed | `aqua install --all` |
-| `run_onchange_03_rustup_components.sh.tmpl` | `rust/component` changed | `rustup component add` |
-| `run_onchange_04_cargo_packages.sh.tmpl` | `rust/package` changed | `cargo install` |
-| `run_onchange_06_sync-skills.sh.tmpl` | skills added/removed under `dot_local/share/skills/` | symlink each skill into `~/.config/claude/skills/` and `~/.agents/skills/` |
+| `run_onchange_03_rustup_components.sh.tmpl` | `rust/component` changed | `rustup component add` for clippy, rustfmt |
+| `run_onchange_04_cargo_packages.sh.tmpl` | `rust/package` changed | `cargo install` for packages not in nixpkgs (cargo-upgrades) |
+| `run_onchange_05_claude_settings.sh.tmpl` | Claude settings pkl files changed | Regenerate `~/.config/claude/settings.json` |
+| `run_onchange_06_sync-skills.sh.tmpl` | Skills added/removed under `dot_local/share/skills/` | Symlink each skill into `~/.config/claude/skills/` and `~/.agents/skills/` |
+
+Homebrew casks and CLI packages are managed by Nix (`nix/modules/profiles/<profile>.nix`),
+not by `run_onchange_` scripts.
+
+## Package Management Policy
+
+| Category | Manager |
+|---|---|
+| CLI tools and development packages | Nix (`home.packages`) |
+| macOS GUI apps with self-update or system extensions | Homebrew cask (declared in nix profile) |
+| Rust toolchain | `rustup` (nix-managed binary, components via run_onchange_03) |
+| Cargo packages not in nixpkgs | `cargo install` via run_onchange_04 |
+| `aqua`, `chezmoi` | Homebrew (permanent: nixpkgs-unlisted / bootstrap dependency) |
