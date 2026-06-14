@@ -29,8 +29,6 @@ brew "cmake"
 brew "dbmate"
 # Distributed revision control system
 brew "git"
-# Syntax-highlighting pager for git and diff output
-brew "git-delta"
 # GNU implementation of the famous stream editor
 brew "gnu-sed"
 # Postgres C API library

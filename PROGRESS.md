@@ -59,7 +59,7 @@
 | ステップ | 状態 | メモ |
 |---|---|---|
 | 3.0 PATH 優先順位是正(`dot_zshrc:91`) | ✅ | `10_path_system.zsh` + `dot_zshrc:91` 修正。Nix > Homebrew > tools > system 確認 |
-| 3.1〜 Batch1(ripgrep/fd/bat/eza/fzf/jq/yq/delta/dust/hyperfine/gping/curlie/shellcheck/lazygit/ghq/tree-sitter/neovim/deno) | ⬜ | |
+| 3.1〜 Batch1(ripgrep/fd/bat/eza/fzf/jq/yq/delta/dust/hyperfine/gping/curlie/shellcheck/lazygit/ghq/tree-sitter/neovim/deno) | ✅ | home.packages に追加。aqua 両ファイル・Brewfile.work(git-delta)から削除。/etc/profiles/per-user/.../bin/ に全18本を確認 |
 | 3.2〜 Batch2(go/terraform/tflint/actionlint/kustomize/kubectl/kind/helm/k6/buf/gofumpt/skaffold/kubectx/go-task/nickel/pkl/awscli2/gh) | ⬜ | |
 | 3.3〜 Batch3(qsv/tbls/runn/jwt-cli/tfsec/volta/gradle 系 ― 在庫確認後判断) | ⬜ | |
 | 3.last 3 profile 全台 rebuild & which 確認 | ⬜ | |
@@ -112,15 +112,14 @@
 
 ## 次セッションの開始点
 
-**最初にやること: ステップ 3.1 Batch1 ツール移行**
+**最初にやること: ステップ 3.2 Batch2 ツール移行**
 
-3.0 完了。PATH 順: Nix > Homebrew > go/cargo/aqua > system。
+3.1 完了。新しいターミナル(tmux 新セッション)では PATH 順が Nix > aqua となり正しく動作する。
+既存 tmux セッションは `exec zsh` か新ウィンドウで PATH を更新すること。
 
-3.1 の進め方:
-- `home/common.nix` の `home.packages` に nixpkgs 在庫を確認しながら 1 本ずつ追加
-- `nixr switch` で適用 → `which <tool>` でパス確認
-- Brewfile / aqua.yaml から対応エントリを削除
-- Batch1 対象: ripgrep fd bat eza fzf jq yq delta dust hyperfine gping curlie shellcheck lazygit ghq tree-sitter neovim deno
+Batch2 対象: go/terraform/tflint/actionlint/kustomize/kubectl/kind/helm/k6/buf/gofumpt/skaffold/kubectx/go-task/nickel/pkl/awscli2/gh
+- nixpkgs 在庫確認 → home.packages または darwin/work profile に追加
+- work 専用ツールは `modules/profiles/work.nix` に分離を検討
 
 ---
 
