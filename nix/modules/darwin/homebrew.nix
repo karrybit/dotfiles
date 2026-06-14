@@ -1,6 +1,3 @@
-# Declarative Homebrew managed by nix-darwin.
-# cleanup = "none": existing unlisted packages are kept (safe during migration).
-# Switch to "zap" in step 4.5 after all packages are listed here.
 { ... }:
 {
   homebrew = {
@@ -8,28 +5,17 @@
     onActivation.cleanup = "zap";
 
     taps = [
-      "aquaproj/aqua"
       "microsoft/apm"
       "olets/tap"
     ];
 
     brews = [
-      "antidote"           # zsh plugin manager (until phase 6)
-      "aqua"               # CLI version manager (used at work; global package mgmt moved to nix)
-      "autoconf"
-      "chezmoi"            # bootstrapping: keep in Brew
-      "cmake"
-      "git"
-      "gnu-sed"
-      "libpq"
-      "openjdk"
-      "python@3.13"
-      "tmux"               # until phase 6
-      "tpm"                # until phase 6
-      "tree"
-      "wget"
-      "zsh-autosuggestions" # until phase 6
-      "zsh-completions"     # until phase 6
+      "antidote"            # zsh plugin manager — Phase 6
+      "chezmoi"             # bootstrapping: must exist before nix is set up
+      "tmux"                # Phase 6
+      "tpm"                 # Phase 6 — replace with programs.tmux.plugins
+      "zsh-autosuggestions" # Phase 6
+      "zsh-completions"     # Phase 6
     ];
 
     casks = [

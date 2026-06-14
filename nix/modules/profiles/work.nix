@@ -51,6 +51,18 @@
       starship
       uv
 
+      # System tools (migrated from homebrew)
+      aqua
+      autoconf
+      cmake
+      git
+      gnused
+      libpq
+      openjdk
+      python313
+      tree
+      wget
+
       # k8s / backend (work)
       buf
       dbmate

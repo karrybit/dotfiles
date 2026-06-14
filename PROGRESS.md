@@ -89,7 +89,7 @@
 |---|---|---|
 | 6.1 git | ⬜ | |
 | 6.2 starship | ⬜ | |
-| 6.3 tmux(tpm は残置) | ⬜ | |
+| 6.3 tmux | ⬜ | tpm は homebrew.nix に残置中。Phase 6 で `programs.tmux.plugins` に置き換える |
 | 6.4 nvim | ⬜ | |
 | 6.5 direnv | ⬜ | |
 | 6.6 fzf | ⬜ | |
@@ -97,6 +97,11 @@
 | 6.7b zsh zshenv.d(非tmpl) / dot_zshenv / dot_zshrc | ⬜ | |
 | 6.7c starship/direnv/fzf init を home-manager 生成へ | ⬜ | |
 | 6.7d テンプレ残置 → aqua 撤去後に静的化 | ⬜ | |
+
+### homebrew.nix Phase 6 残置 formula
+
+antidote / tmux / tpm / zsh-autosuggestions / zsh-completions は Phase 6 の zsh/tmux 設定引き継ぎ完了後に homebrew.nix から削除する。
+tpm → `home-manager.users.*.programs.tmux.plugins` で代替する。
 
 ## フェーズ 7: 後片付け・ドキュメント
 

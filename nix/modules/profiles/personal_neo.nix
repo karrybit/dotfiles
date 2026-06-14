@@ -51,6 +51,17 @@
       gradle_9
       starship
       uv
+
+      # System tools (migrated from homebrew)
+      autoconf
+      cmake
+      git
+      gnused
+      libpq
+      openjdk
+      python313
+      tree
+      wget
     ];
   };
 
