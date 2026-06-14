@@ -1,8 +1,10 @@
-{ lib, username, ... }:
+{ lib, pkgs, username, ... }:
 {
   networking.hostName = "Takumis-MacBook-Pro";
 
   users.users.${username}.home = "/Users/${username}";
+
+  fonts.packages = [ pkgs.nerd-fonts.hack ];
 
   home-manager.users.${username} = { pkgs, ... }: {
     home.packages = with pkgs; [
@@ -50,6 +52,13 @@
       starship
       uv
       zsh-abbr
+
+      # GUI apps (migrated from homebrew cask)
+      dbeaver-bin
+      ghostty
+      google-cloud-sdk
+      karabiner-elements
+      obsidian
 
       # System tools (migrated from homebrew)
       autoconf
@@ -251,10 +260,14 @@
 
   homebrew.brews = [];
   homebrew.casks = [
-    "dbeaver-community"
+    # nixpkgs 未収録 or macOS 統合が必要なもの
+    "1password"
+    "cleanshot"
+    "google-japanese-ime"
+    "intellij-idea"
+    "itsycal"
+    # work 固有
     "docker-desktop"
-    "font-hack-nerd-font"
-    "gcloud-cli"
     "jetbrains-toolbox"
     "logi-options+"
     "microsoft-auto-update"

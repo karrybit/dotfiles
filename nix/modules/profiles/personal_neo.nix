@@ -52,6 +52,12 @@
       uv
       zsh-abbr
 
+      # GUI apps (migrated from homebrew cask)
+      ghostty
+      google-chrome
+      karabiner-elements
+      obsidian
+
       # System tools (migrated from homebrew)
       autoconf
       cmake
@@ -202,7 +208,12 @@
   };
 
   homebrew.casks = [
+    # nixpkgs 未収録 or macOS 統合が必要なもの
+    "1password"
+    "cleanshot"
     "codex"
-    "google-chrome"
+    "google-japanese-ime"
+    "intellij-idea"
+    "itsycal"
   ];
 }

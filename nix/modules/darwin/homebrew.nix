@@ -18,15 +18,5 @@
       "zsh-completions"     # Phase 6
     ];
 
-    casks = [
-      "1password"
-      "cleanshot"
-      "ghostty"
-      "google-japanese-ime"
-      "intellij-idea"
-      "itsycal"
-      "karabiner-elements"
-      "obsidian"
-    ];
   };
 }
