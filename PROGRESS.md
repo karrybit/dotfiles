@@ -62,7 +62,7 @@
 | 3.1〜 Batch1(ripgrep/fd/bat/eza/fzf/jq/yq/delta/dust/hyperfine/gping/curlie/shellcheck/lazygit/ghq/tree-sitter/neovim/deno) | ✅ | home.packages に追加。aqua 両ファイル・Brewfile.work(git-delta)から削除。/etc/profiles/per-user/.../bin/ に全18本を確認 |
 | 3.2〜 Batch2(go/terraform/tflint/actionlint/kustomize/kubectl/kind/helm/k6/buf/gofumpt/skaffold/kubectx/go-task/nickel/pkl/awscli2/gh) | ✅ | common 9本(home/common.nix) + work専用9本(profiles/work.nix)。全て /etc/profiles/per-user/.../bin/ を確認 |
 | 3.3〜 Batch3(qsv/tbls/runn/jwt-cli/tfsec/volta/gradle 系 ― 在庫確認後判断) | ✅ | 6本移行(qsv jwt-cli tfsec volta common / runn tbls work)。gradle は nixpkgs 8.x vs aqua 9.x のため aqua 残置 |
-| 3.last 3 profile 全台 rebuild & which 確認 | ⬜ | |
+| 3.last 3 profile 全台 rebuild & which 確認 | ✅ | work profile: 全33本 /etc/profiles/per-user/.../bin/ を確認。jwt-cli パッケージのバイナリ名は `jwt` |
 
 ## フェーズ 4: Homebrew 宣言化(Mac のみ)
 
@@ -112,16 +112,17 @@
 
 ## 次セッションの開始点
 
-**最初にやること: ステップ 3.last 全プロファイル rebuild & which 確認**
+**最初にやること: ステップ 4.1 Homebrew 宣言化**
 
-Batch1/2/3 完了。nixr switch 後に全移行ツールの which を確認する。
+フェーズ3 全完了。Nix 管理ツール: 33本(Batch1〜3)。
 
-aqua 残置(理由あり):
-- gradle 9.x (nixpkgs は 8.x)
-- direnv / starship (フェーズ6で home-manager 設定に移行予定)
-- air / uv / sccache / delve / golang-migrate / act / protoc / rustup / cargo-make / uber-go/mock / wasm-pack (Batch2 以降の対象外)
+aqua 残置(意図的):
+- gradle 9.x (nixpkgs は 8.x のため)
+- direnv / starship (フェーズ6 home-manager 設定移行時に除去予定)
+- air / uv / sccache / delve / golang-migrate / act / protoc / rustup / cargo-make / mock / wasm-pack (移行対象外)
 
-3.last 後はフェーズ4(Homebrew 宣言化)へ。
+フェーズ4: `modules/darwin/homebrew.nix` を cleanup="none" で作成し、
+Brewfile.work の brew/cask を nix-darwin homebrew モジュールへ段階的に移植。
 
 ---
 
