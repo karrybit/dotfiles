@@ -4,4 +4,10 @@
   networking.hostName = "personal-neo";
 
   users.users.${username}.home = "/Users/${username}";
+
+  # Phase 4: personal_neo-specific Homebrew packages
+  homebrew.casks = [
+    "codex"
+    "google-chrome"
+  ];
 }

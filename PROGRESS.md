@@ -68,11 +68,11 @@
 
 | ステップ | 状態 | メモ |
 |---|---|---|
-| 4.1 `modules/darwin/homebrew.nix` 空構成 | ⬜ | cleanup="none" |
-| 4.2 cask 少数ずつ移植 | ⬜ | |
-| 4.3 CLI brew → home.packages 移行 | ⬜ | |
-| 4.4 全 cask 移植・Brewfile 集約 | ⬜ | |
-| 4.5 cleanup="zap" 切替(全列挙後) | ⬜ | |
+| 4.1 `modules/darwin/homebrew.nix` 空構成 | ✅ | cleanup="none" / system.primaryUser 必須(nix-darwin 新要件) |
+| 4.2 cask 少数ずつ移植 | ✅ | 4.4 と同時実施 |
+| 4.3 CLI brew → home.packages 移行 | ✅ | awscli/dbmate/git-delta を nix 移行・Brewfile から除去 |
+| 4.4 全 cask 移植・Brewfile 集約 | ✅ | work/personal_neo 全 cask を homebrew.nix + profile nix に集約 |
+| 4.5 cleanup="zap" 切替(全列挙後) | ⬜ | VSCode extensions / cargo lines の扱いを決めてから |
 
 ## フェーズ 5: Rust
 
@@ -112,17 +112,16 @@
 
 ## 次セッションの開始点
 
-**最初にやること: ステップ 4.1 Homebrew 宣言化**
+**最初にやること: ステップ 4.5 cleanup="zap" 切替**
 
-フェーズ3 全完了。Nix 管理ツール: 33本(Batch1〜3)。
+4.1〜4.4 完了。`sudo darwin-rebuild switch` で homebrew.nix が適用済み。
 
-aqua 残置(意図的):
-- gradle 9.x (nixpkgs は 8.x のため)
-- direnv / starship (フェーズ6 home-manager 設定移行時に除去予定)
-- air / uv / sccache / delve / golang-migrate / act / protoc / rustup / cargo-make / mock / wasm-pack (移行対象外)
+4.5 を実施するには:
+- VSCode extensions の扱いを決定(nix-darwin masApps/homebrew 非対応 → 別手段)
+- cargo lines は run_onchange_04 で管理継続
+- 上記を整理後に `onActivation.cleanup = "zap"` に変更
 
-フェーズ4: `modules/darwin/homebrew.nix` を cleanup="none" で作成し、
-Brewfile.work の brew/cask を nix-darwin homebrew モジュールへ段階的に移植。
+4.5 の後はフェーズ5(Rust 移行)→ フェーズ6(設定引き継ぎ)へ。
 
 ---
 

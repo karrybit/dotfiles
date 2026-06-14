@@ -8,6 +8,7 @@
     home.packages = with pkgs; [
       # Batch2: work-specific k8s / backend tools
       buf
+      dbmate
       gofumpt
       kind
       kubectl
@@ -22,4 +23,26 @@
       tbls
     ];
   };
+
+  # Phase 4: work-specific Homebrew packages
+  homebrew.brews = [
+    "cargo-binstall"
+    "cargo-cache"
+    "cargo-edit"
+    "cargo-expand"
+    "cargo-sort"
+    "cargo-update"
+  ];
+  homebrew.casks = [
+    "dbeaver-community"
+    "discord"
+    "docker-desktop"
+    "drawio"
+    "font-hack-nerd-font"
+    "gcloud-cli"
+    "jetbrains-toolbox"
+    "logi-options+"
+    "microsoft-auto-update"
+    "microsoft-teams"
+  ];
 }

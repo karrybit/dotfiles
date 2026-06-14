@@ -7,16 +7,12 @@ brew "antidote"
 brew "aqua"
 # Automatic configure script builder
 brew "autoconf"
-# Official Amazon AWS command-line interface
-brew "awscli"
 # Manage your dotfiles across multiple diverse machines, securely
 brew "chezmoi"
 # Cross-platform make
 brew "cmake"
 # Distributed revision control system
 brew "git"
-# Syntax-highlighting pager for git and diff output
-brew "git-delta"
 # GNU implementation of the famous stream editor
 brew "gnu-sed"
 # Postgres C API library

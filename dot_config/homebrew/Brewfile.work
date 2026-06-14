@@ -7,8 +7,6 @@ brew "antidote"
 brew "aqua"
 # Automatic configure script builder
 brew "autoconf"
-# Official Amazon AWS command-line interface
-brew "awscli"
 # Binary installation for rust projects
 brew "cargo-binstall"
 # Display information on the cargo cache, plus optional cache pruning
@@ -25,8 +23,6 @@ brew "cargo-update"
 brew "chezmoi"
 # Cross-platform make
 brew "cmake"
-# Lightweight, framework-agnostic database migration tool
-brew "dbmate"
 # Distributed revision control system
 brew "git"
 # GNU implementation of the famous stream editor
