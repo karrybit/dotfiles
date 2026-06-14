@@ -5,6 +5,8 @@
 
   users.users.${username}.home = "/Users/${username}";
 
+  environment.systemPackages = with pkgs; [ antidote ];
+
   home-manager.users.${username} = { pkgs, ... }: {
     home.packages = with pkgs; [
       # CLI tools
@@ -46,7 +48,6 @@
 
       # Shell / env tools
       act
-      antidote
       delve
       gradle_9
       starship
