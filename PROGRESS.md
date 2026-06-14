@@ -88,7 +88,7 @@
 | ステップ | 状態 | メモ |
 |---|---|---|
 | 6.1 git | ✅ | programs.git + programs.delta。chezmoi の dot_config/git/ を削除 |
-| 6.2 starship | ⬜ | |
+| 6.2 starship | ✅ | programs.starship.settings。chezmoi の dot_config/starship.toml を削除 |
 | 6.3 tmux | ⬜ | tpm は homebrew.nix に残置中。Phase 6 で `programs.tmux.plugins` に置き換える |
 | 6.4 nvim | ⬜ | |
 | 6.5 direnv | ⬜ | |
