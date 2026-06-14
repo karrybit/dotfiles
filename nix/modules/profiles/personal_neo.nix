@@ -53,7 +53,6 @@
       zsh-abbr
 
       # GUI apps (migrated from homebrew cask)
-      google-chrome
       obsidian
 
       # System tools (migrated from homebrew)
@@ -215,5 +214,6 @@
     "intellij-idea"
     "itsycal"
     "karabiner-elements"   # DriverKit 拡張のインストールが必要 — cask のみ
+    "google-chrome"        # 自己更新機能が nix store の読み取り専用制約で壊れる
   ];
 }
