@@ -1,0 +1,30 @@
+__require_commands chezmoi jq || return 1
+
+local flake="$HOME/.local/share/chezmoi/nix"
+local profile
+profile=$(chezmoi data | jq -r .profile)
+
+local subcmd="${1:-switch}"
+
+case "$profile" in
+    work|personal_neo)
+        case "$subcmd" in
+            switch)   sudo darwin-rebuild switch --flake "${flake}#${profile}" ;;
+            rollback) sudo darwin-rebuild --rollback ;;
+            list)     sudo darwin-rebuild --list-generations ;;
+            *)        printf "usage: nixr [switch|rollback|list]\n" >&2; return 1 ;;
+        esac
+        ;;
+    personal_minipc)
+        case "$subcmd" in
+            switch)   home-manager switch --flake "${flake}#${profile}" ;;
+            rollback) home-manager generations ;;
+            list)     home-manager generations ;;
+            *)        printf "usage: nixr [switch|rollback|list]\n" >&2; return 1 ;;
+        esac
+        ;;
+    *)
+        printf "\033[31munknown profile: %s\n\033[0m" "$profile" >&2
+        return 1
+        ;;
+esac

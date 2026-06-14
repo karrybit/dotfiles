@@ -49,8 +49,8 @@
 | 2.5 `modules/profiles/{work,personal_neo,personal_minipc}.nix` | ✅ | personal_neo の hostname は仮("personal-neo") |
 | 2.6 `nix flake check` | ✅ | darwin 2構成 ✅、x86_64-linux は Mac では skip(正常) |
 | 2.7 初回適用(Mac: darwin-rebuild / Linux: home-manager) | ✅ | nix-darwin 26.11.aabb203 + home-manager 同時 activate 成功。generation 1 作成。詳細は課題ログ参照 |
-| 2.8 ロールバック往復テスト | ⬜ | **次セッション最初のタスク** |
-| 2.9 rebuild ラッパ関数追加 | ⬜ | |
+| 2.8 ロールバック往復テスト | ✅ | gen 2 作成→rollback→再 switch 成功。初回ブートストラップが `nix run` 経由のため gen 0 なし(正常) |
+| 2.9 rebuild ラッパ関数追加 | ✅ | `dot_config/zsh/functions/nixr` 作成。chezmoi data .profile で darwin-rebuild/home-manager を自動選択 |
 | 2.10a テストハーネス即時層(Taskfile / render / zsh-lint) | ⬜ | |
 | 2.10b テストハーネス Nix 層(checks.nix) | ⬜ | |
 
@@ -112,35 +112,17 @@
 
 ## 次セッションの開始点
 
-**最初にやること: ステップ 2.8 ロールバック往復テスト**
+**最初にやること: ステップ 2.10a テストハーネス即時層**
 
-```bash
-# 1. darwin-rebuild が PATH に入っているか確認(新ターミナルを開いた後)
-#    → まだなら /run/current-system/sw/bin/ を使う
-which darwin-rebuild || export PATH="/run/current-system/sw/bin:$PATH"
+2.8/2.9 完了済み。`nixr` を使うには新しいシェルを開くか `autoload -Uz nixr` を実行。
 
-# 2. 現在の generation を確認
-sudo darwin-rebuild --list-generations
+2.10a でやること:
+- `Taskfile.yml` 作成(rebuild / check / test ターゲット)
+- `test/render-and-lint.sh` — chezmoi テンプレートを3プロファイル分レンダリングして zsh -n でリント
+- `test/Dockerfile` — Linux (personal_minipc) 相当環境
 
-# 3. 何か小変更して gen 2 を作る
-#    例: nix/modules/darwin/common.nix に何かコメントを追加して
-darwin-rebuild switch --flake ~/.local/share/chezmoi/nix#work
-
-# 4. ロールバック
-sudo darwin-rebuild --rollback
-
-# 5. gen 1 で動作確認後、gen 2 に戻す
-darwin-rebuild switch --flake ~/.local/share/chezmoi/nix#work
-```
-
-**ロールバック後の流れ (2.9〜):**
-
-- 2.9: rebuild ラッパ関数を `dot_config/zsh/functions/nixr` などに作成
-  - `chezmoi data | jq -r .profile` でプロファイル読み取り
-  - `work`/`personal_neo` → `darwin-rebuild switch --flake ~/.local/share/chezmoi/nix#<profile>`
-  - `personal_minipc` → `home-manager switch --flake ~/.local/share/chezmoi/nix#personal_minipc`
-- 2.10a: `Taskfile.yml` + `test/render-and-lint.sh` + `test/Dockerfile` 作成
-- 2.10b: `nix/checks.nix` 作成
+2.10b でやること:
+- `nix/checks.nix` — nix flake check に組み込むテスト記述
 
 **その後はフェーズ3 (PATH 是正 → CLI ツール移行) へ。**
 
