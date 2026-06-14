@@ -112,6 +112,20 @@ antidote / zsh-autosuggestions / zsh-completions は 6.7b で nix 移行後に h
 | zsh-abbr の nix 移行 | ✅ | work/personal_neo に追加 |
 | common.nix からパッケージ除去 | ✅ | プロファイル別完全独立に設計変更。AGENTS.md に設計思想を記録 |
 
+## フェーズ 6補2: Homebrew cask 解体・再整理
+
+| ステップ | 状態 | メモ |
+|---|---|---|
+| homebrew.nix グローバル cask を解体 | ✅ | 共通 cask を各プロファイルに分配。homebrew.nix の casks セクション削除 |
+| nix 移行可能な cask の選定・実施 | ✅ | google-cloud-sdk → nix(work)。nerd-fonts.hack → fonts.packages(work) |
+| ghostty の cask 差し戻し | ✅ | nixpkgs ghostty は Linux 専用ビルド。aarch64-darwin で評価エラー |
+| karabiner-elements の cask 差し戻し | ✅ | DriverKit Virtual HID Device カーネル拡張が nix では未インストール |
+| obsidian / dbeaver-community の cask 差し戻し | ✅ | nix store が読み取り専用のためアプリ内自動更新が不可 |
+| google-chrome の cask 差し戻し(personal_neo) | ✅ | 同上 |
+| karabiner.json の復旧 | ✅ | chezmoi ソース(dot_config/private_karabiner/karabiner.json)が保持済み。chezmoi apply で復元 |
+
+**確立した方針**: macOS GUI アプリ(自動更新・システム拡張が必要)は Homebrew cask。CLI ツールは nix。
+
 ## フェーズ 7: 後片付け・ドキュメント
 
 | ステップ | 状態 | メモ |
@@ -126,7 +140,7 @@ antidote / zsh-autosuggestions / zsh-completions は 6.7b で nix 移行後に h
 
 ## 次セッションの開始点
 
-**最初にやること: 6.7b antidote の nix 移行**
+**最初にやること: nixr を実行して karabiner-elements / obsidian / dbeaver-community / google-chrome を cask から再インストール。その後 6.7b に進む。**
 
 フェーズ6 の残作業:
 1. **6.7b**: antidote を nix パッケージ化し `brew --prefix` 依存を撤去。homebrew.nix から antidote / zsh-autosuggestions / zsh-completions を削除。
@@ -135,6 +149,7 @@ antidote / zsh-autosuggestions / zsh-completions は 6.7b で nix 移行後に h
 
 設計方針:
 - functions/widgets/lib/abbreviations/zshenv.d は chezmoi 管理継続(home-manager 逐語移送は責務不一致のため行わない)
+- macOS GUI アプリ(自動更新・システム拡張が必要)は Homebrew cask。CLI ツールは nix。
 - NIX_ZSH_MIGRATION_PLAN.md に詳細方針を記録
 
 残る run_onchange:
