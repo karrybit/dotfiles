@@ -52,7 +52,7 @@
 | 2.8 ロールバック往復テスト | ✅ | gen 2 作成→rollback→再 switch 成功。初回ブートストラップが `nix run` 経由のため gen 0 なし(正常) |
 | 2.9 rebuild ラッパ関数追加 | ✅ | `dot_config/zsh/functions/nixr` 作成。chezmoi data .profile で darwin-rebuild/home-manager を自動選択 |
 | 2.10a テストハーネス即時層(Taskfile / render / zsh-lint) | ✅ | `Taskfile.yml` + `test/render-and-lint.sh` + `test/Dockerfile` 作成。65 files / 0 failed 確認済み |
-| 2.10b テストハーネス Nix 層(checks.nix) | ⬜ | |
+| 2.10b テストハーネス Nix 層(checks.nix) | ✅ | `nix/checks.nix` 作成。darwin 4 checks ✅ / linux は Mac で skip(正常) |
 
 ## フェーズ 3: PATH 是正 → CLI ツール移行
 
@@ -112,16 +112,12 @@
 
 ## 次セッションの開始点
 
-**最初にやること: ステップ 2.10b テストハーネス Nix 層**
+**最初にやること: ステップ 3.0 PATH 優先順位是正**
 
-2.10a 完了済み。`task test:lint` で zsh lint 実行可能。
+フェーズ2 全ステップ完了。次はフェーズ3 (PATH 是正 → CLI ツール移行)。
 
-2.10b でやること:
-- `nix/checks.nix` — nix flake check に組み込むテスト記述
-  - nixpkgs overlay が空でないこと、各 profile の packages が評価できること等
-  - flake.nix の `checks` output に追加
-
-2.10b の後はフェーズ3 (PATH 是正 → CLI ツール移行) へ。
+3.0: `dot_zshrc:91` 付近の PATH 設定を確認し、Nix が最優先になるよう是正する。
+3.1〜: Batch1 ツール群(ripgrep/fd/bat/eza/fzf 等)を `home.packages` へ移行。
 
 ---
 

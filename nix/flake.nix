@@ -38,8 +38,7 @@
           username = "takumikaribe";
         };
       };
-    in
-    {
+
       darwinConfigurations = nixpkgs.lib.mapAttrs (name: cfg:
         myLib.mkDarwin (cfg // {
           extraModules = [ ./modules/profiles/${name}.nix ];
@@ -51,5 +50,14 @@
           extraModules = [ ./modules/profiles/${name}.nix ];
         })
       ) linuxHosts;
+
+      checks = import ./checks.nix {
+        inherit nixpkgs;
+        darwinConfigs = darwinConfigurations;
+        homeConfigs   = homeConfigurations;
+      };
+    in
+    {
+      inherit darwinConfigurations homeConfigurations checks;
     };
 }
