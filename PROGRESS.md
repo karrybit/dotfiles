@@ -89,7 +89,7 @@
 |---|---|---|
 | 6.1 git | ✅ | programs.git + programs.delta。chezmoi の dot_config/git/ を削除 |
 | 6.2 starship | ✅ | programs.starship.settings。chezmoi の dot_config/starship.toml を削除 |
-| 6.3 tmux | ⬜ | tpm は homebrew.nix に残置中。Phase 6 で `programs.tmux.plugins` に置き換える |
+| 6.3 tmux | ✅ | programs.tmux.plugins で TPM 置換。tmux/tpm を homebrew から削除 |
 | 6.4 nvim | ⬜ | |
 | 6.5 direnv | ⬜ | |
 | 6.6 fzf | ⬜ | |
@@ -100,8 +100,7 @@
 
 ### homebrew.nix Phase 6 残置 formula
 
-antidote / tmux / tpm / zsh-autosuggestions / zsh-completions は Phase 6 の zsh/tmux 設定引き継ぎ完了後に homebrew.nix から削除する。
-tpm → `home-manager.users.*.programs.tmux.plugins` で代替する。
+antidote / zsh-autosuggestions / zsh-completions は Phase 6 の zsh 設定引き継ぎ完了後に homebrew.nix から削除する。
 
 ## フェーズ 6補: aqua 廃止・Homebrew formula 整理(フェーズ5直後に実施)
 
