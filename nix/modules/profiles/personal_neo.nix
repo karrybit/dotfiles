@@ -51,6 +51,7 @@
       gradle_9
       starship
       uv
+      zsh-abbr
 
       # System tools (migrated from homebrew)
       autoconf
