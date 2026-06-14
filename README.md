@@ -241,3 +241,58 @@ not by `run_onchange_` scripts.
 | Rust toolchain | `rustup` (nix-managed binary, components via run_onchange_03) |
 | Cargo packages not in nixpkgs | `cargo install` via run_onchange_04 |
 | `aqua`, `chezmoi` | Homebrew (permanent: nixpkgs-unlisted / bootstrap dependency) |
+
+**Why macOS GUI apps stay as Homebrew casks:** The Nix store is read-only, so
+any app that tries to update itself in-place (Obsidian, DBeaver, Chrome, etc.)
+will fail silently or crash. Apps that require kernel/system extensions
+(Karabiner-Elements uses DriverKit) must be installed via cask because Nix
+cannot register system extensions. Apps whose nixpkgs package only targets
+Linux (Ghostty) will cause evaluation errors on macOS.
+
+---
+
+## Maintaining Nix Configuration
+
+### Profile-per-package principle
+
+Each profile (`nix/modules/profiles/<profile>.nix`) declares its own **complete**
+package list independently. Do **not** move packages into `nix/modules/home/common.nix`
+or any shared module to avoid duplication across profiles.
+
+Two profiles sharing a tool is coincidence, not a contract. Shared packages:
+- impose a false declaration that every environment needs that tool
+- require touching multiple files to add or remove a package from one profile
+- make divergence between profiles look like something to fix rather than something natural
+
+`home/common.nix` exists only for home-manager framework settings
+(`home.stateVersion`, `programs.home-manager.enable`).
+
+### share-only packages (no binary)
+
+Some nixpkgs packages install only into `share/` with no `bin/` directory
+(e.g. `antidote`, shell plugin collections). Adding these to `home.packages`
+is not enough: with `useUserPackages = true`, the package's `share/` directory
+is **not** merged into the user environment's `share/`.
+
+Use `home.file` to create a stable symlink directly to the nix store path:
+
+```nix
+home.file.".local/share/antidote/antidote.zsh".source =
+  "${pkgs.antidote}/share/antidote/antidote.zsh";
+```
+
+The symlink path (`~/.local/share/antidote/antidote.zsh`) is then stable across
+rebuilds and can be sourced directly from shell config.
+
+### chezmoi vs Nix responsibility boundary
+
+| Managed by | Examples |
+|---|---|
+| chezmoi | `~/.config/zsh/`, `~/.config/nvim/`, `~/.config/tmux/`, `~/.config/karabiner/` |
+| Nix | All binaries, Homebrew casks, tmux plugins, starship/git/direnv settings |
+
+Shell configuration files (`.zshrc`, `.zshenv`, functions, widgets) remain
+chezmoi-managed. Migrating them into `programs.zsh` would require
+`programs.zsh.enable = true`, which conflicts with the chezmoi-managed `.zshrc`.
+The `eval "$(direnv hook zsh)"` and `eval "$(starship init zsh)"` lines in
+`.zshrc` call nix-managed binaries and do not need to be moved into Nix.

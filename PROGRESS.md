@@ -135,28 +135,29 @@
 
 ---
 
-## 次セッションの開始点
+## 移行完了状態
 
-**最初にやること: 6.7c のトレードオフ判断 → 実施 or スキップを決めてから次へ**
+**全フェーズ完了。通常運用フェーズへ移行。**
 
-フェーズ6 の残作業:
-1. **6.7c** ⏸: dot_zshrc の `eval "$(direnv hook zsh)"` と `eval "$(starship init zsh)"` を削除し `programs.direnv/starship.enableZshIntegration` で代替。ただし `programs.zsh.enable = true` が必要で、chezmoi 管理の `.zshrc` と home-manager 生成の `.zshrc` が競合する。実施判断が必要。
-2. **6.7d** ⬜: 6.7c 完了後 or スキップ確定後に dot_zshrc/dot_zshenv の chezmoi 残置が適切か再評価。
+### 設計方針(確定)
 
-設計方針:
-- functions/widgets/lib/abbreviations/zshenv.d は chezmoi 管理継続(home-manager 逐語移送は責務不一致のため行わない)
-- macOS GUI アプリ(自動更新・システム拡張が必要)は Homebrew cask。CLI ツールは nix。
-- share-only nix パッケージ(バイナリなし)は `home.file` でシンボリックリンクを作成する(profile への展開は行われない)
+- **chezmoi/nix の責務分離**: chezmoi = 設定ファイル管理、nix = パッケージ管理。`.zshrc` は chezmoi 管理継続。
+- **プロファイル別完全独立**: 各プロファイルが自身のパッケージリストを完全宣言。`common.nix` にパッケージを追加しない。
+- **macOS GUI アプリは Homebrew cask**: 自動更新・システム拡張が必要なアプリは cask。CLI ツールのみ nix。
+- **share-only パッケージは `home.file`**: バイナリなしのパッケージ(antidote 等)は `home.packages` だけでは不十分。`home.file` でシンボリックリンクを作成する。
 
-残る run_onchange:
-- run_onchange_03_rustup_components: rustup components (cargo/clippy/rustfmt)
-- run_onchange_04_cargo_packages: cargo-upgrades のみ
-- run_onchange_05_claude_settings: Claude 設定
-- run_onchange_06_sync-skills: スキル同期
+### 残留事項(要対応ではあるが緊急でない)
 
-Homebrew に残る formula:
-- aqua → nixpkgs 未収録のため永続的に Homebrew 管理
-- chezmoi → bootstrap 依存のため永続的に Homebrew 管理
+- `personal_neo` の hostname が仮(`"personal-neo"`) → 実機で `scutil --get LocalHostName` を確認して修正
+
+### 通常の運用操作
+
+| 操作 | コマンド |
+|---|---|
+| パッケージ追加・変更 | profile nix を編集 → `nixr` |
+| dotfile 変更 | `chezmoi edit --apply <path>` |
+| 全体更新 | `syncup` |
+| パッケージ更新のみ | `uppkg` |
 
 ---
 
