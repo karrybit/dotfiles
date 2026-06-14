@@ -21,7 +21,6 @@ packages:
   - name: mozilla/sccache@v0.15.0
   - name: nektos/act@v0.2.89
   - name: protocolbuffers/protobuf/protoc@v35.1
-  - name: rust-lang/rustup@1.29.0
   - name: sagiegurari/cargo-make@0.37.24
   - name: starship/starship@v1.25.1
   - name: uber-go/mock@v0.6.0

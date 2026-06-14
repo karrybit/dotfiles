@@ -78,10 +78,10 @@
 
 | ステップ | 状態 | メモ |
 |---|---|---|
-| 5.1 `rustup` を home.packages へ | ⬜ | |
-| 5.2 nixpkgs 在庫 cargo bin を 1 本ずつ移行 | ⬜ | Brewfile/run_onchange_04 双方から除去 |
-| 5.3 残り cargo bin を run_onchange_04 に集約 | ⬜ | |
-| 5.4 run_onchange_03/04 縮小 | ⬜ | |
+| 5.1 `rustup` を home.packages へ | ✅ | aqua.work.yaml から除去 |
+| 5.2 nixpkgs 在庫 cargo bin を 1 本ずつ移行 | ✅ | cargo-binstall/cache/edit/expand/modules/sort/update/workspaces/sea-orm-cli → work.nix。homebrew.brews から削除 |
+| 5.3 残り cargo bin を run_onchange_04 に集約 | ✅ | cargo-upgrades のみ残置(nixpkgs 未収録) |
+| 5.4 run_onchange_03/04 縮小 | ✅ | rust/package を 1 行に縮小。run_onchange_03 は継続(rustup components) |
 
 ## フェーズ 6: 設定引き継ぎ
 
@@ -112,15 +112,18 @@
 
 ## 次セッションの開始点
 
-**最初にやること: フェーズ5 Rust 移行**
+**最初にやること: フェーズ6 設定引き継ぎ**
 
-フェーズ4 全完了。Homebrew は nix-darwin が完全宣言管理。Brewfile は廃止。
+フェーズ5 全完了。nix 管理: rustup + 9本の cargo ツール(work profile)。
 
-次: フェーズ5 Rust
-5.1: rustup を home.packages へ(aqua から除去)
-5.2: nixpkgs 在庫 cargo bin を home.packages へ
-5.3: 残り cargo bin を run_onchange_04 に集約
-5.4: run_onchange_03/04 縮小
+残る run_onchange:
+- run_onchange_02_aqua: aqua 残存ツール管理(direnv/starship/gradle 等)
+- run_onchange_03_rustup_components: rustup components (cargo/clippy/rustfmt)
+- run_onchange_04_cargo_packages: cargo-upgrades のみ
+- run_onchange_05_claude_settings: Claude 設定
+- run_onchange_06_sync-skills: スキル同期
+
+フェーズ6: home-manager で git/starship/tmux/nvim/direnv/fzf/zsh 設定を引き継ぎ。
 
 ---
 

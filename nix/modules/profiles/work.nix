@@ -21,18 +21,23 @@
       # Batch3: work-specific tools
       runn
       tbls
+
+      # Phase 5: Rust toolchain + cargo tools
+      rustup
+      cargo-binstall
+      cargo-cache
+      cargo-edit
+      cargo-expand
+      cargo-modules
+      cargo-sort
+      cargo-update
+      cargo-workspaces
+      sea-orm-cli
     ];
   };
 
-  # Phase 4: work-specific Homebrew packages
-  homebrew.brews = [
-    "cargo-binstall"
-    "cargo-cache"
-    "cargo-edit"
-    "cargo-expand"
-    "cargo-sort"
-    "cargo-update"
-  ];
+  # Phase 4: work-specific Homebrew packages (cargo-* moved to nix)
+  homebrew.brews = [];
   homebrew.casks = [
     "dbeaver-community"
     "discord"
