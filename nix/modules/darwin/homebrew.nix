@@ -8,12 +8,14 @@
     onActivation.cleanup = "zap";
 
     taps = [
+      "aquaproj/aqua"
       "microsoft/apm"
       "olets/tap"
     ];
 
     brews = [
       "antidote"           # zsh plugin manager (until phase 6)
+      "aqua"               # CLI version manager (used at work; global package mgmt moved to nix)
       "autoconf"
       "chezmoi"            # bootstrapping: keep in Brew
       "cmake"
