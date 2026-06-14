@@ -56,7 +56,6 @@
       # GUI apps (migrated from homebrew cask)
       dbeaver-bin
       google-cloud-sdk
-      karabiner-elements
       obsidian
 
       # System tools (migrated from homebrew)
@@ -266,6 +265,7 @@
     "google-japanese-ime"
     "intellij-idea"
     "itsycal"
+    "karabiner-elements"   # DriverKit 拡張のインストールが必要 — cask のみ
     # work 固有
     "docker-desktop"
     "jetbrains-toolbox"

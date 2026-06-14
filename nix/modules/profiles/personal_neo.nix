@@ -54,7 +54,6 @@
 
       # GUI apps (migrated from homebrew cask)
       google-chrome
-      karabiner-elements
       obsidian
 
       # System tools (migrated from homebrew)
@@ -215,5 +214,6 @@
     "google-japanese-ime"
     "intellij-idea"
     "itsycal"
+    "karabiner-elements"   # DriverKit 拡張のインストールが必要 — cask のみ
   ];
 }
