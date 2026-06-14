@@ -13,10 +13,12 @@
         home-manager.darwinModules.home-manager
         ../modules/darwin/common.nix
         {
-          home-manager.useGlobalPkgs = true;
-          home-manager.useUserPackages = true;
-          home-manager.extraSpecialArgs = { inherit username; };
-          home-manager.users.${username}.imports = [ ../modules/home/common.nix ];
+          home-manager = {
+            useGlobalPkgs = true;
+            useUserPackages = true;
+            extraSpecialArgs = { inherit username; };
+            users.${username}.imports = [ ../modules/home/common.nix ];
+          };
         }
       ] ++ extraModules;
     };

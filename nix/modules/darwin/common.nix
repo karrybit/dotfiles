@@ -1,4 +1,4 @@
-{ lib, username, ... }:
+{ username, ... }:
 {
   imports = [ ./homebrew.nix ];
 
