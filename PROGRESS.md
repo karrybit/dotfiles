@@ -90,7 +90,7 @@
 | 6.1 git | ✅ | programs.git + programs.delta。chezmoi の dot_config/git/ を削除 |
 | 6.2 starship | ✅ | programs.starship.settings。chezmoi の dot_config/starship.toml を削除 |
 | 6.3 tmux | ✅ | programs.tmux.plugins で TPM 置換。tmux/tpm を homebrew から削除 |
-| 6.4 nvim | ⬜ | |
+| 6.4 nvim | ❌ | スキップ。lazy.nvim ベースの Lua 構成を chezmoi で管理継続。neovim バイナリは home.packages で nix 管理済み |
 | 6.5 direnv | ⬜ | |
 | 6.6 fzf | ⬜ | |
 | 6.7a zsh 非テンプレ単独ファイル | ⬜ | functions/widgets/lib/abbreviations |
