@@ -175,6 +175,7 @@
 
     # Shell / env tools
     act
+    antidote
     delve
     gradle_9
     starship
