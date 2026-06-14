@@ -33,6 +33,12 @@
     pkl
     terraform
     tflint
+
+    # Batch3: common tools (gradle stays in aqua: nixpkgs 8.x vs aqua 9.x)
+    jwt-cli
+    qsv
+    tfsec
+    volta
   ];
 
   programs.home-manager.enable = true;

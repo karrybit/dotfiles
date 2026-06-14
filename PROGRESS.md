@@ -61,7 +61,7 @@
 | 3.0 PATH 優先順位是正(`dot_zshrc:91`) | ✅ | `10_path_system.zsh` + `dot_zshrc:91` 修正。Nix > Homebrew > tools > system 確認 |
 | 3.1〜 Batch1(ripgrep/fd/bat/eza/fzf/jq/yq/delta/dust/hyperfine/gping/curlie/shellcheck/lazygit/ghq/tree-sitter/neovim/deno) | ✅ | home.packages に追加。aqua 両ファイル・Brewfile.work(git-delta)から削除。/etc/profiles/per-user/.../bin/ に全18本を確認 |
 | 3.2〜 Batch2(go/terraform/tflint/actionlint/kustomize/kubectl/kind/helm/k6/buf/gofumpt/skaffold/kubectx/go-task/nickel/pkl/awscli2/gh) | ✅ | common 9本(home/common.nix) + work専用9本(profiles/work.nix)。全て /etc/profiles/per-user/.../bin/ を確認 |
-| 3.3〜 Batch3(qsv/tbls/runn/jwt-cli/tfsec/volta/gradle 系 ― 在庫確認後判断) | ⬜ | |
+| 3.3〜 Batch3(qsv/tbls/runn/jwt-cli/tfsec/volta/gradle 系 ― 在庫確認後判断) | ✅ | 6本移行(qsv jwt-cli tfsec volta common / runn tbls work)。gradle は nixpkgs 8.x vs aqua 9.x のため aqua 残置 |
 | 3.last 3 profile 全台 rebuild & which 確認 | ⬜ | |
 
 ## フェーズ 4: Homebrew 宣言化(Mac のみ)
@@ -112,21 +112,16 @@
 
 ## 次セッションの開始点
 
-**最初にやること: ステップ 3.3 Batch3 在庫確認**
+**最初にやること: ステップ 3.last 全プロファイル rebuild & which 確認**
 
-3.1/3.2 完了。Nix 経由で 27 本のツールが稼働中。
+Batch1/2/3 完了。nixr switch 後に全移行ツールの which を確認する。
 
-Batch3 対象(aqua に残存、nixpkgs 在庫要確認):
-- qsv (dathere/qsv) — Rust 製 CSV ツール
-- tbls (k1LoW/tbls) — DB スキーマ文書化
-- runn (k1LoW/runn) — API シナリオテスト
-- jwt-cli (mike-engel/jwt-cli) — JWT デコード
-- tfsec (aquasecurity/tfsec) — Terraform セキュリティスキャン
-- volta (volta-cli/volta) — JS ツールチェーン管理
-- gradle (gradle/gradle-distributions) — Java ビルドツール
+aqua 残置(理由あり):
+- gradle 9.x (nixpkgs は 8.x)
+- direnv / starship (フェーズ6で home-manager 設定に移行予定)
+- air / uv / sccache / delve / golang-migrate / act / protoc / rustup / cargo-make / uber-go/mock / wasm-pack (Batch2 以降の対象外)
 
-nixpkgs に在庫があれば移行、なければ aqua 残置。
-3.last の後に 3.last 確認フェーズ実施。
+3.last 後はフェーズ4(Homebrew 宣言化)へ。
 
 ---
 

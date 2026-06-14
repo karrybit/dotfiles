@@ -4,9 +4,9 @@
 
   users.users.${username}.home = "/Users/${username}";
 
-  # Batch2: work-specific k8s / backend tools
   home-manager.users.${username} = { pkgs, ... }: {
     home.packages = with pkgs; [
+      # Batch2: work-specific k8s / backend tools
       buf
       gofumpt
       kind
@@ -16,6 +16,10 @@
       kustomize
       k6
       skaffold
+
+      # Batch3: work-specific tools
+      runn
+      tbls
     ];
   };
 }
