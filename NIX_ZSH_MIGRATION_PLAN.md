@@ -44,14 +44,17 @@
 - **history オプション**(`dot_zshrc:45-50`)/ **補完初期化**(`compinit`/`bashcompinit`):
   `programs.zsh` の `history`/`enableCompletion` 等へ寄せられる分は寄せる。
 
-### B. 逐語維持(`xdg.configFile.source`。書き直さない)
+### B. chezmoi 残置(逐語移送は行わない — 方針変更)
 - `functions/*`・`widgets/*`・`lib/*`・`abbreviations.zsh`・`completions/*`・
-  `zshenv.d/*`(非テンプレ)・`env.d/*`。内容はファイルのまま store シンボリックリンク化。
-- これらは `programs.zsh.initExtra`/`fpath`/`autoload` で読み込み配線のみ home-manager 側に持たせる。
+  `zshenv.d/*`(非テンプレ)・`env.d/*` は **chezmoi で管理継続**。
+- **変更理由**: `xdg.configFile.source` による home-manager 移送を当初計画したが、以下の理由で不採用とした。
+  1. **責務不一致**: chezmoi の責務は任意ファイルの配備。custom shell スクリプト群はまさにその対象であり、home-manager に移す理由がない。
+  2. **不変性の弊害**: nix store 経由のシンボリックリンクになると読み取り専用になり、関数を開発中に直接編集できなくなる。すべての変更が `nixr` 経由になる。
+  3. **Linux 互換の誤解**: これらのファイルには Homebrew パスが含まれていない。Linux 互換の問題は antidote の `brew --prefix` 依存(A の課題)であり B は無関係。
+- `programs.zsh.initExtra`/`fpath`/`autoload` の配線は dot_zshrc(chezmoi 管理)に残す。
 
-### C. chezmoi 残置(home-manager がそのまま読めない)
-- `zshenv.d/20_tool_aqua.zsh.tmpl` … profile 変数を含むテンプレ。**aqua 完全撤去(本体計画
-  フェーズ7.2)まで chezmoi 残置**し、撤去後に削除 or `pkgs.writeText` で静的化。
+### C. chezmoi 残置(その他)
+- `zshenv.d/20_tool_aqua.zsh.tmpl` … **aqua 廃止(フェーズ6補)時に削除済み**。テンプレート残置なし。
 - 手動配置の `port_forward.zsh`(`dot_zshrc:32-34`、chezmoi 管理外)はそのまま。
 
 ## 既存の OS 分岐と Linux 対応
@@ -64,19 +67,20 @@ fpath)。`programs.zsh` 化の際は home-manager の `lib.mkIf pkgs.stdenv.isDa
 - `:91` の `/opt/homebrew` prepend は darwin 限定にガードする(本体計画フェーズ3.0 の PATH
   是正と整合)。
 
-## インクリメンタル手順(案)
+## インクリメンタル手順(改訂版)
 
-各ステップは「home-manager 宣言追加 → `.chezmoiignore` 追加 → 旧ターゲット `rm` → rebuild →
-検証 → コミット」で閉じる(本体計画 §パス所有権と同じ不変条件)。順序:
+各ステップは「home-manager 宣言追加 → 旧ターゲット `rm` → rebuild → 検証 → コミット」で閉じる。
 
-1. **shell init の宣言化**(direnv → starship → fzf)。各々 home-manager 統合を有効化し、
-   `dot_zshrc` の対応手書き行を同一コミットで削除。検証: 新シェルで hook/プロンプト/`^r` が従来通り。
-2. **プラグイン宣言化**(antidote → `programs.zsh.antidote`)。`brew --prefix` 依存撤去。
-   検証: syntax-highlighting/autosuggestions/history-substring-search が機能。
-3. **逐語ファイル群の移送**(B)。`functions`/`widgets`/`lib`/`abbreviations`/`zshenv.d` を
-   `xdg.configFile.source` で移し、読み込み配線を `programs.zsh` 側へ。検証: 補完・abbr・widget。
-4. **エントリ最終化**。`dot_zshrc`/`dot_zshenv` の残余を `programs.zsh.initExtra` 等へ整理。
-5. **テンプレ(C)の静的化**。aqua 撤去後に `20_tool_aqua.zsh.tmpl` を削除/静的化。
+1. **antidote の nix 移行**(6.7b)。nix パッケージ化し `brew --prefix` 依存を撤去。
+   `dot_zshrc` の antidote source 行を nix store パス経由に修正。
+   homebrew.nix から antidote / zsh-autosuggestions / zsh-completions を削除。
+   検証: syntax-highlighting / autosuggestions / history-substring-search が機能。
+2. **shell init の除去**(6.7c)。`programs.direnv.enableZshIntegration` /
+   `programs.starship.enableZshIntegration` を有効化し `dot_zshrc` の eval 行を削除。
+   ※ `programs.zsh.enable = true` が必要かを先に判断する。
+3. **dot_zshrc/dot_zshenv の再評価**(6.7d)。上記完了後に chezmoi 残置が適切かを判断。
+
+**B(functions/widgets/lib 等)は chezmoi 管理継続。逐語移送は行わない。**
 
 ## 検証とロールバック
 
@@ -86,8 +90,9 @@ fpath)。`programs.zsh` 化の際は home-manager の `lib.mkIf pkgs.stdenv.isDa
 - ロールバック: home-manager 宣言削除 + `.chezmoiignore` 解除 + `chezmoi apply` で復帰
   (1 ステップ=1 コミット)。
 
-## 当面の結論
+## 当面の結論(更新)
 
-今は **B/C を維持したまま A のうち direnv/starship/fzf/antidote のみを優先的に宣言化**する
-余地がある(Homebrew 依存撤去 = Linux 対応の前提)。それ以外は逐語維持で十分。完全な
-`programs.zsh` 化は本体計画フェーズ6.7 の中で段階的に判断する。
+- **A(nix-native 化)のうち direnv/starship は完了**。fzf はスキップ(カスタム実装を維持)。**antidote が残り**。
+- **B(逐語ファイル群)は chezmoi 残置に方針変更**。責務不一致・不変性の弊害・Linux 互換への無関係を根拠とする。
+- **C のテンプレートは削除済み**(aqua 廃止時)。
+- 完全な `programs.zsh` 化は必須ではない。antidote の `brew --prefix` 依存撤去が実質的なゴール。
