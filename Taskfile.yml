@@ -1,0 +1,31 @@
+version: '3'
+
+vars:
+  FLAKE: '{{.ROOT_DIR}}/nix'
+
+tasks:
+  default:
+    silent: true
+    cmds:
+      - task --list
+
+  nix:check:
+    desc: "nix flake check (linux skipped on macOS)"
+    cmds:
+      - nix flake check {{.FLAKE}}
+
+  nix:rebuild:
+    desc: "Rebuild and activate current profile (requires interactive shell for nixr)"
+    cmds:
+      - zsh -i -c nixr
+
+  test:lint:
+    desc: "Render chezmoi templates (3 profiles) and zsh -n lint"
+    cmds:
+      - test/render-and-lint.sh
+
+  test:
+    desc: "Run all checks: nix:check + test:lint"
+    cmds:
+      - task: nix:check
+      - task: test:lint
