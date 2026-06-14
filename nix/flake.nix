@@ -52,7 +52,7 @@
       ) linuxHosts;
 
       checks = import ./checks.nix {
-        inherit nixpkgs;
+        inherit nixpkgs self;
         darwinConfigs = darwinConfigurations;
         homeConfigs   = homeConfigurations;
       };

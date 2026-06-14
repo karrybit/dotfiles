@@ -1,7 +1,7 @@
 # Smoke-test checks for `nix flake check`.
 # Each derivation forces evaluation of a key attribute; wrong types or missing
 # attrs fail at evaluation time before the derivation even builds.
-{ nixpkgs, darwinConfigs, homeConfigs }:
+{ nixpkgs, self, darwinConfigs, homeConfigs }:
 let
   # Force evaluation of `value` (must coerce to string) and write it to $out.
   mkCheck = pkgs: name: value:
@@ -14,6 +14,20 @@ let
 in
 {
   "aarch64-darwin" = {
+    statix = darwinPkgs.runCommand "statix" {
+      nativeBuildInputs = [ darwinPkgs.statix ];
+    } ''
+      statix check ${self}
+      touch $out
+    '';
+
+    deadnix = darwinPkgs.runCommand "deadnix" {
+      nativeBuildInputs = [ darwinPkgs.deadnix ];
+    } ''
+      deadnix --fail ${self}
+      touch $out
+    '';
+
     work-hostname =
       mkCheck darwinPkgs "work-hostname"
         darwinConfigs.work.config.networking.hostName;

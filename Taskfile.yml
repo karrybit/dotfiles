@@ -14,6 +14,12 @@ tasks:
     cmds:
       - nix flake check {{.FLAKE}}
 
+  nix:lint:
+    desc: "Lint nix files with statix (antipatterns) and deadnix (unused code)"
+    cmds:
+      - nix run nixpkgs#statix -- check {{.FLAKE}}
+      - nix run nixpkgs#deadnix -- --fail {{.FLAKE}}
+
   nix:rebuild:
     desc: "Rebuild and activate current profile (requires interactive shell for nixr)"
     cmds:
@@ -25,7 +31,8 @@ tasks:
       - test/render-and-lint.sh
 
   test:
-    desc: "Run all checks: nix:check + test:lint"
+    desc: "Run all checks: nix:check + nix:lint + test:lint"
     cmds:
       - task: nix:check
+      - task: nix:lint
       - task: test:lint
