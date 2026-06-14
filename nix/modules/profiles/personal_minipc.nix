@@ -2,20 +2,6 @@
 {
   programs.git = {
     enable = true;
-    userName = "karrybit";
-    userEmail = "karrybit@users.noreply.github.com";
-    aliases = {
-      br  = "branch";
-      fc  = "fetch --prune";
-      pl  = "pull";
-      df  = "diff";
-      dfs = "diff --name-status";
-      a   = "add";
-      cm  = "commit -m";
-      cme = "commit --allow-empty-message -m ''";
-      ps  = "push";
-      st  = "status --short";
-    };
     ignores = [
       ".DS_Store" ".AppleDouble" ".LSOverride" "Icon" "._*"
       ".DocumentRevisions-V100" ".fseventsd" ".Spotlight-V100"
@@ -28,24 +14,40 @@
       "**/.config/claude/settings.json"
       "**/.config/claude/settings.work.pkl"
     ];
-    delta = {
-      enable = true;
-      options = {
-        plus-style    = "syntax #012800";
-        minus-style   = "syntax #340001";
-        syntax-theme  = "Monokai Extended";
-        navigate      = true;
-        line-numbers  = true;
-        side-by-side  = true;
-      };
-    };
-    extraConfig = {
+    settings = {
+      user.name          = "karrybit";
+      user.email         = "karrybit@users.noreply.github.com";
       commit.template    = "~/.stCommitMsg";
       fetch.prune        = true;
       pull.rebase        = false;
       push.default       = "current";
       ghq.root           = "~/work/ghq";
       init.defaultBranch = "main";
+      alias = {
+        br  = "branch";
+        fc  = "fetch --prune";
+        pl  = "pull";
+        df  = "diff";
+        dfs = "diff --name-status";
+        a   = "add";
+        cm  = "commit -m";
+        cme = "commit --allow-empty-message -m ''";
+        ps  = "push";
+        st  = "status --short";
+      };
+    };
+  };
+
+  programs.delta = {
+    enable = true;
+    enableGitIntegration = true;
+    options = {
+      plus-style   = "syntax #012800";
+      minus-style  = "syntax #340001";
+      syntax-theme = "Monokai Extended";
+      navigate     = true;
+      line-numbers = true;
+      side-by-side = true;
     };
   };
 
