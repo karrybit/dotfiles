@@ -91,8 +91,8 @@
 | 6.2 starship | ✅ | programs.starship.settings。chezmoi の dot_config/starship.toml を削除 |
 | 6.3 tmux | ✅ | programs.tmux.plugins で TPM 置換。tmux/tpm を homebrew から削除 |
 | 6.4 nvim | ❌ | スキップ。lazy.nvim ベースの Lua 構成を chezmoi で管理継続。neovim バイナリは home.packages で nix 管理済み |
-| 6.5 direnv | ⬜ | |
-| 6.6 fzf | ⬜ | |
+| 6.5 direnv | ✅ | programs.direnv + nix-direnv。shell hook は 6.7c で処理 |
+| 6.6 fzf | ❌ | スキップ。カスタム関数は chezmoi zsh ファイルで管理継続。fzf バイナリは home.packages 管理済み |
 | 6.7a zsh 非テンプレ単独ファイル | ⬜ | functions/widgets/lib/abbreviations |
 | 6.7b zsh zshenv.d(非tmpl) / dot_zshenv / dot_zshrc | ⬜ | |
 | 6.7c starship/direnv/fzf init を home-manager 生成へ | ⬜ | |
