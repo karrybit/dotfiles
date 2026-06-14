@@ -1,5 +1,8 @@
 # tmux Usage
 
+> Configuration is managed by `programs.tmux` in `nix/modules/profiles/<profile>.nix`.
+> Plugins are installed by home-manager at rebuild time — no manual plugin installation required.
+
 ## Prefix Key
 
 Changed from the default `Ctrl+b` to **`Ctrl+t`**.
@@ -121,21 +124,10 @@ With text selected in copy mode:
 
 ---
 
-## Plugins (TPM)
-
-| Action | Key |
-|--------|-----|
-| Install plugins | `<prefix> I` |
-| Update plugins | `<prefix> U` |
-| Remove unused plugins | `<prefix> Alt+u` |
-
-> Plugins are auto-installed on first launch if not present.
-
-### Installed Plugins
+## Installed Plugins
 
 | Plugin | Description |
 |--------|-------------|
-| tmux-plugins/tpm | Plugin manager |
 | arcticicestudio/nord-tmux | Nord color theme |
 | tmux-plugins/tmux-prefix-highlight | Status bar indicator for prefix / copy / sync mode |
 | tmux-plugins/tmux-sensible | Sensible default settings |

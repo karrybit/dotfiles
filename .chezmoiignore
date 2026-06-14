@@ -7,12 +7,10 @@ test
 AGENTS.md
 CLAUDE.md
 README.md
+docs
 .config/nvim/AGENTS.md
 .config/nvim/CLAUDE.md
 .config/nvim/README.md
-.config/tmux/AGENTS.md
-.config/tmux/CLAUDE.md
-.config/tmux/README.md
 
 # Repository-specific Codex skills
 .agents/skills/audit-dotfiles-bootstrap
