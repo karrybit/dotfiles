@@ -100,9 +100,7 @@
       cargo-workspaces
       sea-orm-cli
     ];
-  };
 
-  home-manager.users.${username} = { ... }: {
     programs.git = {
       enable = true;
       userName = "karrybit";

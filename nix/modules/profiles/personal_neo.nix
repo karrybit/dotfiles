@@ -64,9 +64,7 @@
       tree
       wget
     ];
-  };
 
-  home-manager.users.${username} = { ... }: {
     programs.git = {
       enable = true;
       userName = "karrybit";
