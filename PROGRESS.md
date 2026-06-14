@@ -134,11 +134,12 @@
 |---|---|
 | Nix バージョン | Determinate Nix 3.21.1 (nix 2.34.7) |
 | nix-darwin バージョン | 26.11.aabb203 |
-| system generation | 1 (system-1-link) |
-| darwin-rebuild PATH | `/run/current-system/sw/bin/darwin-rebuild` (新シェルで PATH に入るはず) |
+| system generation | 2 (2.8 のロールバックテストで switch ×2 実施済み) |
+| darwin-rebuild PATH | `/run/current-system/sw/bin/darwin-rebuild` — 新シェルで PATH に入ることを確認済み ✅ |
 | flake パス | `~/.local/share/chezmoi/nix` |
 | flake attribute | `darwinConfigurations.work` (このMac) |
-| rebuild コマンド | `darwin-rebuild switch --flake ~/.local/share/chezmoi/nix#work` |
+| rebuild コマンド | `nixr` または `sudo darwin-rebuild switch --flake ~/.local/share/chezmoi/nix#work` |
+| nixr 関数 | `dot_config/zsh/functions/nixr` — 新シェルで自動 autoload。サブコマンド: switch / rollback / list |
 | nix.custom.conf | nix-darwin + Determinate が共同管理。内容は `cores=0 / sandbox=false` |
 | personal_neo hostname | 仮("personal-neo") → 実機で確認して修正 |
 
@@ -154,4 +155,4 @@
 | 2026-06-14 | profile | `personal` → `personal_neo` リネーム実施。`Brewfile.personal_neo`/`aqua.personal_neo.yaml` に改名。`run_onchange_02_aqua` に `personal_minipc` ガード追加(aqua は Linux で動かさない)。 | ✅ 解決済み |
 | 2026-06-14 | 2.7 | 初回 darwin-rebuild に sudo が必要。`nix run github:LnL7/nix-darwin/... -- switch` だと activation で "must be run as root" エラー。`sudo nix run ...` で解決。 | ✅ 解決済み |
 | 2026-06-14 | 2.7 | `/etc/nix/nix.custom.conf` が Determinate Nix インストーラが作成した空ファイルで存在しており、nix-darwin の activation が衝突してエラー。`sudo mv /etc/nix/nix.custom.conf /etc/nix/nix.custom.conf.before-nix-darwin` でリネームして解決。nix-darwin が書き込んだ内容は `cores=0 / sandbox=false`(Determinate module 管理)。 | ✅ 解決済み |
-| 2026-06-14 | 2.7 | darwin-rebuild は activation 後 `/run/current-system/sw/bin/` に存在するが、現行シェルの PATH には入っていない。新しいターミナルを開くと zsh 設定で PATH が更新される(要確認)。 | ⬜ 次セッションで確認 |
+| 2026-06-14 | 2.7 | darwin-rebuild は activation 後 `/run/current-system/sw/bin/` に存在するが、現行シェルの PATH には入っていない。新しいターミナルを開くと zsh 設定で PATH が更新される(要確認)。 | ✅ 解決済み — 翌セッションで `which darwin-rebuild` = `/run/current-system/sw/bin/darwin-rebuild` を確認 |
