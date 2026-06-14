@@ -46,7 +46,6 @@
       # Shell / env tools
       act
       delve
-      direnv
       gradle_9
       starship
       uv
@@ -163,6 +162,11 @@
         line-numbers = true;
         side-by-side = true;
       };
+    };
+
+    programs.direnv = {
+      enable = true;
+      nix-direnv.enable = true;
     };
 
     programs.tmux = {

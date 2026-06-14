@@ -51,6 +51,11 @@
     };
   };
 
+  programs.direnv = {
+    enable = true;
+    nix-direnv.enable = true;
+  };
+
   programs.tmux = {
     enable = true;
     prefix = "C-t";
@@ -171,7 +176,6 @@
     # Shell / env tools
     act
     delve
-    direnv
     gradle_9
     starship
     uv
