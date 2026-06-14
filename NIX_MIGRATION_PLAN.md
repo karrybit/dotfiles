@@ -101,10 +101,26 @@ $XDG_BIN_HOME, /usr/local/sbin, system
 
 ## インクリメンタル工程
 
-### フェーズ 0: 準備・退避(変更なし)
-- **0.1** 現状スナップショット記録: `brew bundle dump`(参照用)、`aqua list`、主要ツールの `which -a`(rg/jq/go/kubectl 等)を控える。リポジトリが clean か `git status` 確認。
-- **0.2** `~/.config` を tar で退避。`darwin-rebuild` 未導入のため現時点のロールバックは git revert + chezmoi apply であることを確認。
-- 完了条件: スナップショットとバックアップが取得済み。
+### フェーズ 0: 準備・退避
+- **0.1** リポジトリが clean か `git status` 確認。
+- **0.2** `snapshots/` ディレクトリをリポジトリ内に作成し、`.chezmoiignore` に `snapshots` を追記する。chezmoi は配備せず git のみが管理する(環境を汚さない)。
+- **0.3** テキストスナップショットを `snapshots/` へ保存:
+  ```sh
+  brew bundle dump --file=snapshots/Brewfile.snapshot
+  aqua list > snapshots/aqua-list.txt
+  which -a rg jq go kubectl gh delta bat eza fzf > snapshots/which-all.txt
+  ```
+- **0.4** `~/.config` の tar はサイズが大きいためリポジトリ外にローカル退避:
+  ```sh
+  tar czf ~/dotconfig-backup-$(date +%Y%m%d).tar.gz ~/.config
+  ```
+- **0.5** `.chezmoiignore` の追記と `snapshots/` をコミット:
+  ```sh
+  git add .chezmoiignore snapshots/
+  git commit -m "chore: add snapshots dir and pre-nix migration snapshots"
+  ```
+- **0.6** `darwin-rebuild` 未導入のため現時点のロールバックは `git revert + chezmoi apply` であることを確認。
+- 完了条件: `snapshots/` が git 管理下にあり、`chezmoi managed | grep snapshots` が 0 件。スナップショットと `~/.config` バックアップが取得済み。
 
 ### フェーズ 1: Nix 本体の導入(パッケージ移行はまだしない)
 - **1.1** Determinate Nix インストーラ実行。
@@ -215,7 +231,7 @@ $XDG_BIN_HOME, /usr/local/sbin, system
 
 - 新規(Nix): `nix/flake.nix`(inputs follows ピン + ホスト属性集合 × `mkDarwin`/`mkHome` で 2 darwinConfigurations + 1 homeConfigurations 生成), `nix/lib/default.nix`(`mkDarwin`/`mkHome` ビルダ。必要なら `mkDarwin.nix`/`mkHome.nix` に分割), `nix/modules/darwin/{common,homebrew}.nix`, `nix/modules/home/{common,zsh,linux}.nix`, `nix/modules/profiles/{work,personal_neo,personal_minipc}.nix`(ホスト固有データのみ), `nix/checks.nix`
 - 新規(テスト): `Taskfile.yml`, `test/render-and-lint.sh`, `test/Dockerfile`
-- `/Users/takumikaribe/.local/share/chezmoi/.chezmoiignore`(`nix`・`Taskfile.yml`・`test` と移行済み config パスを追記)
+- `/Users/takumikaribe/.local/share/chezmoi/.chezmoiignore`(`snapshots`・`nix`・`Taskfile.yml`・`test` と移行済み config パスを追記)
 - `/Users/takumikaribe/.local/share/chezmoi/dot_config/zsh/dot_zshrc`(91行目の Homebrew 再 prepend を Nix 優先へ是正)
 - `.chezmoi.toml.tmpl`(profile プロンプトを work / personal_neo / personal_minipc の3値に更新)
 - `dot_config/homebrew/Brewfile.{work,personal_neo}`(Mac のみ。`Brewfile.personal` をリネーム。cask/vscode は残し brew を削減 → 最終的に homebrew.nix へ集約。Linux 用 Brewfile は作らない)
