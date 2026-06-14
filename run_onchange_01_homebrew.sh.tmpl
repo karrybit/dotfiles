@@ -1,9 +1,0 @@
-#!/bin/bash
-# run_onchange_: Brewfile の内容が変わった時だけ再実行される
-# hash: {{ include (printf "dot_config/homebrew/Brewfile.%s" .profile) | sha256sum }}
-{{ if eq .chezmoi.os "darwin" -}}
-set -e
-brew bundle install --cleanup \
-  --file "${XDG_CONFIG_HOME:-$HOME/.config}/homebrew/Brewfile.{{ .profile }}" || \
-  echo "Warning: some packages failed to install"
-{{- end }}

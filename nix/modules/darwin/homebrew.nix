@@ -5,7 +5,7 @@
 {
   homebrew = {
     enable = true;
-    onActivation.cleanup = "none";
+    onActivation.cleanup = "zap";
 
     taps = [
       "aquaproj/aqua"

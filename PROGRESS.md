@@ -72,7 +72,7 @@
 | 4.2 cask 少数ずつ移植 | ✅ | 4.4 と同時実施 |
 | 4.3 CLI brew → home.packages 移行 | ✅ | awscli/dbmate/git-delta を nix 移行・Brewfile から除去 |
 | 4.4 全 cask 移植・Brewfile 集約 | ✅ | work/personal_neo 全 cask を homebrew.nix + profile nix に集約 |
-| 4.5 cleanup="zap" 切替(全列挙後) | ⬜ | VSCode extensions / cargo lines の扱いを決めてから |
+| 4.5 cleanup="zap" 切替(全列挙後) | ✅ | VSCode extensions → settings sync / cargo lines → run_onchange_04 継続。Brewfile 両ファイル削除・run_onchange_01 削除(7.1 前倒し) |
 
 ## フェーズ 5: Rust
 
@@ -102,7 +102,7 @@
 
 | ステップ | 状態 | メモ |
 |---|---|---|
-| 7.1 `run_onchange_01_homebrew` 削除 | ⬜ | |
+| 7.1 `run_onchange_01_homebrew` 削除 | ✅ | 4.5 と同時に実施 |
 | 7.2 `run_onchange_02_aqua` 削除 | ⬜ | |
 | 7.3 `run_onchange_03/04` 整理 | ⬜ | |
 | 7.4 `05_claude_settings`/`06_sync-skills` 残置確認 | ⬜ | |
@@ -112,16 +112,15 @@
 
 ## 次セッションの開始点
 
-**最初にやること: ステップ 4.5 cleanup="zap" 切替**
+**最初にやること: フェーズ5 Rust 移行**
 
-4.1〜4.4 完了。`sudo darwin-rebuild switch` で homebrew.nix が適用済み。
+フェーズ4 全完了。Homebrew は nix-darwin が完全宣言管理。Brewfile は廃止。
 
-4.5 を実施するには:
-- VSCode extensions の扱いを決定(nix-darwin masApps/homebrew 非対応 → 別手段)
-- cargo lines は run_onchange_04 で管理継続
-- 上記を整理後に `onActivation.cleanup = "zap"` に変更
-
-4.5 の後はフェーズ5(Rust 移行)→ フェーズ6(設定引き継ぎ)へ。
+次: フェーズ5 Rust
+5.1: rustup を home.packages へ(aqua から除去)
+5.2: nixpkgs 在庫 cargo bin を home.packages へ
+5.3: 残り cargo bin を run_onchange_04 に集約
+5.4: run_onchange_03/04 縮小
 
 ---
 
