@@ -1,3 +1,8 @@
+# Nix configuration (git-managed, not deployed by chezmoi)
+nix
+Taskfile.yml
+test
+
 # Source-only docs
 AGENTS.md
 CLAUDE.md

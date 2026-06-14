@@ -35,20 +35,20 @@
 | ステップ | 状態 | メモ |
 |---|---|---|
 | 1.1 Determinate Nix インストール | ✅ | インストール済み。新ターミナルを開くまで PATH に反映されない |
-| 1.2 `nix --version` / flakes 有効確認 | ⬜ | **次セッションで新ターミナルを開いてから実施** |
-| 1.3 既存ツールが無変更で動くこと | ⬜ | **次セッションで実施** |
+| 1.2 `nix --version` / flakes 有効確認 | ✅ | Determinate Nix 3.21.1 / `/etc/nix/nix.conf` に `extra-experimental-features = nix-command flakes` 確認済み |
+| 1.3 既存ツールが無変更で動くこと | ✅ | aqua/brew/zsh/git が従来の供給元のまま動作確認済み |
 
 ## フェーズ 2: flake 骨格のブートストラップ
 
 | ステップ | 状態 | メモ |
 |---|---|---|
-| 2.1 `nix/` 作成・`.chezmoiignore` 追記 | ⬜ | |
-| 2.2 `flake.nix` 最小構成 | ⬜ | inputs follows ピン + mkDarwin/mkHome map |
-| 2.3 `modules/darwin/common.nix` | ⬜ | Determinate + system.stateVersion |
-| 2.4 `modules/home/common.nix` + `linux.nix` スケルトン | ⬜ | |
-| 2.5 `modules/profiles/{work,personal_neo,personal_minipc}.nix` | ⬜ | |
-| 2.6 `nix flake check` | ⬜ | |
-| 2.7 初回適用(Mac: darwin-rebuild / Linux: home-manager) | ⬜ | |
+| 2.1 `nix/` 作成・`.chezmoiignore` 追記 | ✅ | `chezmoi managed \| grep nix/` = 0 確認済み |
+| 2.2 `flake.nix` 最小構成 | ✅ | nixpkgs-unstable + follows ピン + mkDarwin/mkHome map |
+| 2.3 `modules/darwin/common.nix` | ✅ | determinateNix.enable + system.stateVersion = 5 |
+| 2.4 `modules/home/common.nix` + `linux.nix` スケルトン | ✅ | allowUnfree は linux.nix のみ(useGlobalPkgs 非互換) |
+| 2.5 `modules/profiles/{work,personal_neo,personal_minipc}.nix` | ✅ | personal_neo の hostname は仮("personal-neo") |
+| 2.6 `nix flake check` | ✅ | darwin 2構成 ✅、x86_64-linux は Mac では skip(正常) |
+| 2.7 初回適用(Mac: darwin-rebuild / Linux: home-manager) | ⬜ | **次: `darwin-rebuild switch --flake ./nix#work`** |
 | 2.8 ロールバック往復テスト | ⬜ | |
 | 2.9 rebuild ラッパ関数追加 | ⬜ | |
 | 2.10a テストハーネス即時層(Taskfile / render / zsh-lint) | ⬜ | |
@@ -115,3 +115,6 @@
 | 日付 | フェーズ | 内容 | 状態 |
 |---|---|---|---|
 | 2026-06-14 | 計画 | フェーズ0のバックアップをリポジトリ外に置く設計だったが、`snapshots/` をリポジトリ内に作り `.chezmoiignore` で除外する方式に修正。git 管理されるが chezmoi は配備しない。 | ✅ 解決済み |
+| 2026-06-14 | 2.4 | home/common.nix で `nixpkgs.config.allowUnfree` を設定すると `useGlobalPkgs=true` と非互換の警告。Mac(darwin)は darwin/common.nix で設定、Linux(personal_minipc)は home/linux.nix で設定する設計に修正。 | ✅ 解決済み |
+| 2026-06-14 | 2.2 | nix-darwin の flake URL は `github:nix-community/nix-darwin` ではなく `github:LnL7/nix-darwin`。 | ✅ 解決済み |
+| 2026-06-14 | profile | `personal` → `personal_neo` リネーム実施。`Brewfile.personal_neo`/`aqua.personal_neo.yaml` に改名。`run_onchange_02_aqua` に `personal_minipc` ガード追加(aqua は Linux で動かさない)。 | ✅ 解決済み |
