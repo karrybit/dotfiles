@@ -48,8 +48,8 @@
 | 2.4 `modules/home/common.nix` + `linux.nix` スケルトン | ✅ | allowUnfree は linux.nix のみ(useGlobalPkgs 非互換) |
 | 2.5 `modules/profiles/{work,personal_neo,personal_minipc}.nix` | ✅ | personal_neo の hostname は仮("personal-neo") |
 | 2.6 `nix flake check` | ✅ | darwin 2構成 ✅、x86_64-linux は Mac では skip(正常) |
-| 2.7 初回適用(Mac: darwin-rebuild / Linux: home-manager) | ⬜ | **次: `darwin-rebuild switch --flake ./nix#work`** |
-| 2.8 ロールバック往復テスト | ⬜ | |
+| 2.7 初回適用(Mac: darwin-rebuild / Linux: home-manager) | ✅ | nix-darwin 26.11.aabb203 + home-manager 同時 activate 成功。generation 1 作成。詳細は課題ログ参照 |
+| 2.8 ロールバック往復テスト | ⬜ | **次セッション最初のタスク** |
 | 2.9 rebuild ラッパ関数追加 | ⬜ | |
 | 2.10a テストハーネス即時層(Taskfile / render / zsh-lint) | ⬜ | |
 | 2.10b テストハーネス Nix 層(checks.nix) | ⬜ | |
@@ -110,6 +110,58 @@
 
 ---
 
+## 次セッションの開始点
+
+**最初にやること: ステップ 2.8 ロールバック往復テスト**
+
+```bash
+# 1. darwin-rebuild が PATH に入っているか確認(新ターミナルを開いた後)
+#    → まだなら /run/current-system/sw/bin/ を使う
+which darwin-rebuild || export PATH="/run/current-system/sw/bin:$PATH"
+
+# 2. 現在の generation を確認
+sudo darwin-rebuild --list-generations
+
+# 3. 何か小変更して gen 2 を作る
+#    例: nix/modules/darwin/common.nix に何かコメントを追加して
+darwin-rebuild switch --flake ~/.local/share/chezmoi/nix#work
+
+# 4. ロールバック
+sudo darwin-rebuild --rollback
+
+# 5. gen 1 で動作確認後、gen 2 に戻す
+darwin-rebuild switch --flake ~/.local/share/chezmoi/nix#work
+```
+
+**ロールバック後の流れ (2.9〜):**
+
+- 2.9: rebuild ラッパ関数を `dot_config/zsh/functions/nixr` などに作成
+  - `chezmoi data | jq -r .profile` でプロファイル読み取り
+  - `work`/`personal_neo` → `darwin-rebuild switch --flake ~/.local/share/chezmoi/nix#<profile>`
+  - `personal_minipc` → `home-manager switch --flake ~/.local/share/chezmoi/nix#personal_minipc`
+- 2.10a: `Taskfile.yml` + `test/render-and-lint.sh` + `test/Dockerfile` 作成
+- 2.10b: `nix/checks.nix` 作成
+
+**その後はフェーズ3 (PATH 是正 → CLI ツール移行) へ。**
+
+---
+
+## 確立済み事実(次セッションの前提知識)
+
+| 項目 | 値 |
+|---|---|
+| Nix バージョン | Determinate Nix 3.21.1 (nix 2.34.7) |
+| nix-darwin バージョン | 26.11.aabb203 |
+| system generation | 1 (system-1-link) |
+| darwin-rebuild PATH | `/run/current-system/sw/bin/darwin-rebuild` (新シェルで PATH に入るはず) |
+| flake パス | `~/.local/share/chezmoi/nix` |
+| flake attribute | `darwinConfigurations.work` (このMac) |
+| rebuild コマンド | `darwin-rebuild switch --flake ~/.local/share/chezmoi/nix#work` |
+| nix.custom.conf | nix-darwin + Determinate が共同管理。内容は `cores=0 / sandbox=false` |
+| personal_neo hostname | 仮("personal-neo") → 実機で確認して修正 |
+
+---
+
 ## 課題ログ
 
 | 日付 | フェーズ | 内容 | 状態 |
@@ -118,3 +170,6 @@
 | 2026-06-14 | 2.4 | home/common.nix で `nixpkgs.config.allowUnfree` を設定すると `useGlobalPkgs=true` と非互換の警告。Mac(darwin)は darwin/common.nix で設定、Linux(personal_minipc)は home/linux.nix で設定する設計に修正。 | ✅ 解決済み |
 | 2026-06-14 | 2.2 | nix-darwin の flake URL は `github:nix-community/nix-darwin` ではなく `github:LnL7/nix-darwin`。 | ✅ 解決済み |
 | 2026-06-14 | profile | `personal` → `personal_neo` リネーム実施。`Brewfile.personal_neo`/`aqua.personal_neo.yaml` に改名。`run_onchange_02_aqua` に `personal_minipc` ガード追加(aqua は Linux で動かさない)。 | ✅ 解決済み |
+| 2026-06-14 | 2.7 | 初回 darwin-rebuild に sudo が必要。`nix run github:LnL7/nix-darwin/... -- switch` だと activation で "must be run as root" エラー。`sudo nix run ...` で解決。 | ✅ 解決済み |
+| 2026-06-14 | 2.7 | `/etc/nix/nix.custom.conf` が Determinate Nix インストーラが作成した空ファイルで存在しており、nix-darwin の activation が衝突してエラー。`sudo mv /etc/nix/nix.custom.conf /etc/nix/nix.custom.conf.before-nix-darwin` でリネームして解決。nix-darwin が書き込んだ内容は `cores=0 / sandbox=false`(Determinate module 管理)。 | ✅ 解決済み |
+| 2026-06-14 | 2.7 | darwin-rebuild は activation 後 `/run/current-system/sw/bin/` に存在するが、現行シェルの PATH には入っていない。新しいターミナルを開くと zsh 設定で PATH が更新される(要確認)。 | ⬜ 次セッションで確認 |
