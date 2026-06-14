@@ -1,6 +1,6 @@
 # Nix configuration (git-managed, not deployed by chezmoi)
 nix
-Taskfile.yml
+Taskfile.yaml
 test
 
 # Source-only docs
