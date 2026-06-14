@@ -25,7 +25,7 @@
       # Phase 6 (aqua migration): work-specific tools
       air
       cargo-make
-      golang-migrate
+      go-migrate
       mockgen
       protobuf
       sccache
