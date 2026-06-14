@@ -94,7 +94,7 @@
 | 6.5 direnv | ✅ | programs.direnv + nix-direnv。shell hook は 6.7c で処理 |
 | 6.6 fzf | ❌ | スキップ。カスタム関数は chezmoi zsh ファイルで管理継続。fzf バイナリは home.packages 管理済み |
 | 6.7a zsh 非テンプレ単独ファイル | ❌ | スキップ。functions/widgets/lib/abbreviations/zshenv.d は chezmoi で管理継続。home-manager への逐語移送はツール責務の観点から不適切(NIX_ZSH_MIGRATION_PLAN.md 参照) |
-| 6.7b antidote の nix 移行 | ⬜ | `brew --prefix/opt/antidote` 依存を撤去。nix パッケージ化 + dot_zshrc の source 行を修正。homebrew.nix から antidote / zsh-autosuggestions / zsh-completions を削除 |
+| 6.7b antidote の nix 移行 | ✅ | `brew --prefix` 依存を撤去。home.file で `~/.local/share/antidote/antidote.zsh` → nix store へのシンボリックリンクを作成。homebrew.nix から antidote / zsh-autosuggestions / zsh-completions を削除。share-only パッケージは profile に展開されないため home.file 方式が正解 |
 | 6.7c shell init を zshrc から除去 | ⬜ | dot_zshrc の `eval "$(direnv hook zsh)"` と `eval "$(starship init zsh)"` を削除。programs.direnv/starship の enableZshIntegration で代替 — ただし programs.zsh.enable が前提 |
 | 6.7d dot_zshrc / dot_zshenv 最終整理 | ⬜ | 6.7b/c 完了後に chezmoi 残置が適切か再評価 |
 | 6.7e テンプレ静的化 | ✅ | aqua 廃止時に 20_tool_aqua.zsh.tmpl 削除済み。残テンプレなし |
