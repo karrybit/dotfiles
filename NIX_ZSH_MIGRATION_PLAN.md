@@ -5,7 +5,7 @@
 本ドキュメントに沿って**インクリメンタル**に進める。今は方針の蓄積が目的で、実移行は
 後続セッションで段階実施する。
 
-関連: `NIX_MIGRATION_PLAN.md` フェーズ6.7(zsh)、§テストハーネス(`task render`/`task zsh-lint`)。
+関連: `NIX_MIGRATION_PLAN.md` フェーズ6.7(zsh)、§テストハーネス(`task render`/`task zsh-lint`)、§参考(antidote→`programs.zsh.antidote` 等の外部実例)。
 
 ## なぜ慎重に進めるか
 

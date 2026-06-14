@@ -23,17 +23,23 @@
 ```
 chezmoi リポジトリ (~/.local/share/chezmoi)
 ├── nix/                         # chezmoi 管理外(.chezmoiignore)。git 管理されるが dotfile 配備しない
-│   ├── flake.nix / flake.lock   # profile → 構成 の静的マップ
+│   ├── flake.nix / flake.lock   # ホスト属性集合 + mkDarwin/mkHome の map で outputs 生成
 │   ├── checks.nix               # checks.<system>(fmt/statix/deadnix/eval/home-build)
+│   ├── lib/default.nix          # mkDarwin / mkHome ビルダ(ホスト分の outputs を DRY 生成)
 │   └── modules/
 │       ├── darwin/common.nix    # darwin システム設定 + Determinate モジュール(Mac 2 profile 共有)
 │       ├── darwin/homebrew.nix  # cask/mas(宣言的。Mac のみ)
 │       ├── home/common.nix      # home-manager: パッケージ + xdg.configFile 群(全3 profile 共有)
 │       ├── home/linux.nix       # personal_minipc 固有(Linux 専用)
-│       └── profiles/{work,personal_neo,personal_minipc}.nix
+│       └── profiles/{work,personal_neo,personal_minipc}.nix  # ホスト固有データのみ(hostname/system/username/追加pkg)
 ├── dot_config/...               # zsh等のソースは残るが「home-manager が読む元」になる
 └── (run_onchange の package 系は撤去 / claude・skills 系は残置)
 ```
+
+### flake 配置の設計判断
+
+- **採用**: `nix/` をソース専用(`.chezmoiignore`)とし、chezmoi 配備しない。`darwin-rebuild`/`home-manager switch` は `--flake ~/.local/share/chezmoi/nix#<host>` で参照する。**理由**: flake ディレクトリを chezmoi と home-manager が二重所有しない(§パス所有権の不変条件と整合)。配備ツリーを汚さない。
+- **不採用の代替**: flake を `dot_config/home-manager/` 経由で `~/.config/home-manager` へ配備する方式(mizchi/chezmoi-dotfiles。`home-manager switch` で `--flake` 省略可になる利点)。本プランは不変条件を優先して見送る。rebuild ラッパが `--flake` パスを補うため運用 ergonomics は同等(§参考)。
 
 flake 出力:
 - `darwinConfigurations.work`, `darwinConfigurations.personal_neo`(macOS / nix-darwin)
@@ -108,10 +114,15 @@ $XDG_BIN_HOME, /usr/local/sbin, system
 
 ### フェーズ 2: flake 骨格のブートストラップ(空パッケージ)
 - **2.1** `nix/` 作成し `.chezmoiignore` に `nix` 追記。検証: `chezmoi managed | grep -c '^.*nix/'` が 0。
-- **2.2** `flake.nix` 最小(inputs: nixpkgs, determinate, nix-darwin, home-manager, flake-utils)。**profile→構成の静的マップ**(work/personal_neo=darwin、personal_minipc=linux)を定義。
+- **2.2** `flake.nix` 最小(inputs: nixpkgs, determinate, nix-darwin, home-manager, flake-utils)。**inputs の nixpkgs を一本化**して評価健全性・クロージャ肥大を防ぐ(home-manager マニュアル推奨):
+  ```
+  home-manager.inputs.nixpkgs.follows = "nixpkgs";
+  nix-darwin.inputs.nixpkgs.follows   = "nixpkgs";
+  ```
+  outputs は **ホスト属性集合 + `mkDarwin`/`mkHome` の map** で生成する(profile→構成 の静的マップを lib ヘルパへ括り出し、ホストごとの home-manager ブロック重複を排除。§別添 のホスト追加コスト参照)。`mkDarwin` は `inputs.home-manager.darwinModules.home-manager` を modules に含め `home-manager.useGlobalPkgs=true`/`useUserPackages=true` を設定(home-manager を nix-darwin モジュールへ畳み込む top-down 構成)。`mkHome` は standalone `homeConfigurations.personal_minipc` を生成。両ビルダへ共有 `modules/home/*` を渡す。lib 本体は `nix/lib/default.nix`。
 - **2.3** `modules/darwin/common.nix`: Determinate darwin モジュール + `determinateNix.enable = true`、`system.stateVersion`、ユーザ定義(Mac 2 profile 共有)。
 - **2.4** `modules/home/common.nix`: 空 `home.packages`、`home.stateVersion`、`useGlobalPkgs/useUserPackages`(全3 profile 共有)。`modules/home/linux.nix` スケルトン(personal_minipc 固有)。
-- **2.5** `modules/profiles/{work,personal_neo,personal_minipc}.nix` スケルトン + flake outputs に **2 darwinConfigurations(work, personal_neo)+ 1 homeConfigurations(personal_minipc)**。
+- **2.5** `modules/profiles/{work,personal_neo,personal_minipc}.nix` を**ホスト固有データ**(hostname/system/username/追加パッケージ)に縮小し、`nix/lib/default.nix` の `mkDarwin`/`mkHome` を map して outputs を生成 → **2 darwinConfigurations(work, personal_neo)+ 1 homeConfigurations(personal_minipc)**。共有部は lib 経由で注入し、ホスト追加は属性 1 件の追加で済む形にする。
 - **2.6** `nix flake check` が通る。
 - **2.7** 初回適用。Mac: `darwin-rebuild switch --flake ./nix#work`(初回のみ `nix run nix-darwin -- switch ...`)、検証 `darwin-rebuild --list-generations`。Linux(mini PC): `nix run home-manager -- switch --flake ./nix#personal_minipc`、検証 `home-manager generations`。
 - **2.8** **ロールバック往復テスト**: Mac=`darwin-rebuild --rollback` → 再 switch、Linux=`home-manager` 旧 generation を再 activate。以後のフェーズの安全網を確認。
@@ -202,7 +213,7 @@ $XDG_BIN_HOME, /usr/local/sbin, system
 
 ## 主要編集ファイル
 
-- 新規(Nix): `nix/flake.nix`(profile→構成 静的マップ + 2 darwinConfigurations + 1 homeConfigurations), `nix/modules/darwin/{common,homebrew}.nix`, `nix/modules/home/{common,zsh,linux}.nix`, `nix/modules/profiles/{work,personal_neo,personal_minipc}.nix`, `nix/checks.nix`
+- 新規(Nix): `nix/flake.nix`(inputs follows ピン + ホスト属性集合 × `mkDarwin`/`mkHome` で 2 darwinConfigurations + 1 homeConfigurations 生成), `nix/lib/default.nix`(`mkDarwin`/`mkHome` ビルダ。必要なら `mkDarwin.nix`/`mkHome.nix` に分割), `nix/modules/darwin/{common,homebrew}.nix`, `nix/modules/home/{common,zsh,linux}.nix`, `nix/modules/profiles/{work,personal_neo,personal_minipc}.nix`(ホスト固有データのみ), `nix/checks.nix`
 - 新規(テスト): `Taskfile.yml`, `test/render-and-lint.sh`, `test/Dockerfile`
 - `/Users/takumikaribe/.local/share/chezmoi/.chezmoiignore`(`nix`・`Taskfile.yml`・`test` と移行済み config パスを追記)
 - `/Users/takumikaribe/.local/share/chezmoi/dot_config/zsh/dot_zshrc`(91行目の Homebrew 再 prepend を Nix 優先へ是正)
@@ -254,4 +265,34 @@ $XDG_BIN_HOME, /usr/local/sbin, system
 
 14. **会社情報/シークレットの恒久方針**: claude `settings.json`(Vertex AI 環境値)など会社情報を含むファイルは **pkl 生成 + chezmoi 非管理**(`run_onchange_05` が base+personal+work の pkl から生成)。**nix へは移さない**。同種(将来の k8s 設定等)が出ても pkl パターンで回避し、nix/chezmoi 配布対象から外す。karabiner は引き続き chezmoi 暗号化シークレット。
 
+    **シークレット方式の選択(既定 chezmoi+age / sops-nix・agenix は将来オプション)**: secret 管理は「暗号化ファイルを git commit し、機械上の鍵でのみ復号」という共通モデルの三択。Nix store は全ユーザ可読のため平文を置けない(これが agenix/sops-nix の解く問題)。
+
+    | 観点 | chezmoi + age(既定) | agenix | sops-nix |
+    |---|---|---|---|
+    | Nix 必須 | 不要 | 必要 | 必要 |
+    | クロスプラットフォーム/非Nix機 | 最良 | 不可 | 不可 |
+    | 鍵種別 | age/gpg/git-crypt + パスワードマネージャ | age(SSH 鍵由来) | age **and** PGP・key group |
+    | home-manager 対応 | 該当せず(これ自体が manager) | あり(後発モジュール) | 充実 |
+    | 粒度 | ファイル全体/テンプレ値 | ファイル全体 | ファイル内の構造化値 |
+    | 複雑さ | 最小(単一バイナリ・可搬) | 最小(age のみ) | 多機能・設定多め |
+
+    **採用判断基準**: 可搬 dotfiles の secret(karabiner 等)は **chezmoi+age 継続**。**Nix activation 時に復号して service/宣言設定へ渡す必要がある secret が出た場合のみ**、PGP+age・key group・構造化値・home-manager モジュール充実の **sops-nix** を第一候補、SSH 鍵基盤主体なら **agenix** を検討する。現時点では該当ユースケースが無いため導入しない。
+
 15. **profile 値リネームの影響範囲**: `personal` → `personal_neo` への変更は `.chezmoi.toml.tmpl`・`Brewfile.personal`・`aqua.personal.yaml`・`run_onchange_*` の hash 対象に波及する。リネームは1コミットで一括し、`chezmoi diff`/`task render` で全 profile の描画が壊れないことを確認してから進める。
+
+16. **top-down(home-manager を nix-darwin モジュール化)のトレードオフ**: §フェーズ2.2 の `mkDarwin` は home-manager を darwin モジュールへ畳み込むため、**Mac では standalone `home-manager switch` が使えず `darwin-rebuild switch` 経由のみ**になる。Linux(`personal_minipc`)は `mkHome` で standalone のまま。この非対称は意図的で、profile→builder の静的マップ(work/personal_neo=`darwin-rebuild`、personal_minipc=`home-manager switch`)と整合する。rebuild ラッパがこの差異を吸収する。
+
+17. **nixpkgs / home-manager のブランチ整合**: §フェーズ2.2 で `home-manager.inputs.nixpkgs.follows = "nixpkgs"`(nix-darwin も同様)を必須とする。unstable 系を追う場合は home-manager も master 系を合わせる(home-manager マニュアル推奨)。follows を怠ると nixpkgs が二重評価されクロージャ肥大・差異の温床になる。
+
+---
+
+# 参考(実例・一次情報)
+
+判断根拠の追跡用。各エントリに採否を付す。
+
+- **mizchi/chezmoi-dotfiles** — chezmoi→home-manager/nix-darwin ブリッジの最近接実装(`dot_config/home-manager/{flake,common,darwin}.nix` + `run_once_before_install-brew.sh`)。flake を `~/.config/home-manager` へ配備する方式は**不採用**(二重所有回避。§flake 配置の設計判断)が、common/darwin の層分けと Determinate 前提の bootstrap は参考にした。
+- **home-manager マニュアル** — nix-darwin モジュール / standalone の利用形態、`inputs.nixpkgs.follows`、`useGlobalPkgs`/`useUserPackages`。§フェーズ2.2/2.4 の根拠。
+- **NixOS Discourse「Avoid repeating home-manager configuration for every host」** — `mkHome`/`mkDarwin` ビルダで重複排除する動機。**採用**(§lib ヘルパ)。
+- **wantguns.dev / bullo.sk(multi-host nix-darwin)** — `mkHost` と shared/platform/per-host の層分け。**採用**(profiles をホスト固有データへ縮小)。
+- **secrets: agenix / sops-nix README、maxclax/dotfiles** — chezmoi+age × home-manager 併用例と Nix 側 secret の比較。既定は chezmoi+age 継続、sops-nix/agenix は将来オプション(§別添 #14)。
+- **不採用の実践(理由付き)**: dendritic/import-tree auto-import(3 ホスト規模では過剰)、hostname ベース選択(profile 単一真実と衝突)、chezmoi run スクリプトからの `darwin-rebuild switch` 自動呼び出し(インクリメンタル安全性のため手動ラッパ維持)。
