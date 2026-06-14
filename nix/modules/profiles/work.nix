@@ -52,7 +52,6 @@
       uv
 
       # System tools (migrated from homebrew)
-      aqua
       autoconf
       cmake
       git
