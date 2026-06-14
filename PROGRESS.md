@@ -99,9 +99,6 @@
 | 6.7d dot_zshrc / dot_zshenv 最終整理 | ⬜ | 6.7b/c 完了後に chezmoi 残置が適切か再評価 |
 | 6.7e テンプレ静的化 | ✅ | aqua 廃止時に 20_tool_aqua.zsh.tmpl 削除済み。残テンプレなし |
 
-### homebrew.nix Phase 6 残置 formula
-
-antidote / zsh-autosuggestions / zsh-completions は 6.7b で nix 移行後に homebrew.nix から削除する。
 
 ## フェーズ 6補: aqua 廃止・Homebrew formula 整理(フェーズ5直後に実施)
 
@@ -140,17 +137,16 @@ antidote / zsh-autosuggestions / zsh-completions は 6.7b で nix 移行後に h
 
 ## 次セッションの開始点
 
-**最初にやること: nixr を実行して karabiner-elements / obsidian / dbeaver-community / google-chrome を cask から再インストール。その後 6.7b に進む。**
+**最初にやること: 6.7c のトレードオフ判断 → 実施 or スキップを決めてから次へ**
 
 フェーズ6 の残作業:
-1. **6.7b**: antidote を nix パッケージ化し `brew --prefix` 依存を撤去。homebrew.nix から antidote / zsh-autosuggestions / zsh-completions を削除。
-2. **6.7c**: dot_zshrc の direnv/starship eval 行を削除(programs.zsh.enable が必要か検討)。
-3. **6.7d**: dot_zshrc/dot_zshenv の残置が適切か再評価。
+1. **6.7c** ⏸: dot_zshrc の `eval "$(direnv hook zsh)"` と `eval "$(starship init zsh)"` を削除し `programs.direnv/starship.enableZshIntegration` で代替。ただし `programs.zsh.enable = true` が必要で、chezmoi 管理の `.zshrc` と home-manager 生成の `.zshrc` が競合する。実施判断が必要。
+2. **6.7d** ⬜: 6.7c 完了後 or スキップ確定後に dot_zshrc/dot_zshenv の chezmoi 残置が適切か再評価。
 
 設計方針:
 - functions/widgets/lib/abbreviations/zshenv.d は chezmoi 管理継続(home-manager 逐語移送は責務不一致のため行わない)
 - macOS GUI アプリ(自動更新・システム拡張が必要)は Homebrew cask。CLI ツールは nix。
-- NIX_ZSH_MIGRATION_PLAN.md に詳細方針を記録
+- share-only nix パッケージ(バイナリなし)は `home.file` でシンボリックリンクを作成する(profile への展開は行われない)
 
 残る run_onchange:
 - run_onchange_03_rustup_components: rustup components (cargo/clippy/rustfmt)
@@ -159,7 +155,6 @@ antidote / zsh-autosuggestions / zsh-completions は 6.7b で nix 移行後に h
 - run_onchange_06_sync-skills: スキル同期
 
 Homebrew に残る formula:
-- antidote / zsh-autosuggestions / zsh-completions → 6.7b で nix 移行後に削除
 - aqua → nixpkgs 未収録のため永続的に Homebrew 管理
 - chezmoi → bootstrap 依存のため永続的に Homebrew 管理
 
@@ -171,7 +166,7 @@ Homebrew に残る formula:
 |---|---|
 | Nix バージョン | Determinate Nix 3.21.1 (nix 2.34.7) |
 | nix-darwin バージョン | 26.11.aabb203 |
-| system generation | 2 (2.8 のロールバックテストで switch ×2 実施済み) |
+| system generation | 23 以降(フェーズ6補2〜6.7b で多数の nixr を実施) |
 | darwin-rebuild PATH | `/run/current-system/sw/bin/darwin-rebuild` — 新シェルで PATH に入ることを確認済み ✅ |
 | flake パス | `~/.local/share/chezmoi/nix` |
 | flake attribute | `darwinConfigurations.work` (このMac) |
@@ -193,3 +188,5 @@ Homebrew に残る formula:
 | 2026-06-14 | 2.7 | 初回 darwin-rebuild に sudo が必要。`nix run github:LnL7/nix-darwin/... -- switch` だと activation で "must be run as root" エラー。`sudo nix run ...` で解決。 | ✅ 解決済み |
 | 2026-06-14 | 2.7 | `/etc/nix/nix.custom.conf` が Determinate Nix インストーラが作成した空ファイルで存在しており、nix-darwin の activation が衝突してエラー。`sudo mv /etc/nix/nix.custom.conf /etc/nix/nix.custom.conf.before-nix-darwin` でリネームして解決。nix-darwin が書き込んだ内容は `cores=0 / sandbox=false`(Determinate module 管理)。 | ✅ 解決済み |
 | 2026-06-14 | 2.7 | darwin-rebuild は activation 後 `/run/current-system/sw/bin/` に存在するが、現行シェルの PATH には入っていない。新しいターミナルを開くと zsh 設定で PATH が更新される(要確認)。 | ✅ 解決済み — 翌セッションで `which darwin-rebuild` = `/run/current-system/sw/bin/darwin-rebuild` を確認 |
+| 2026-06-15 | 6.7b | nixpkgs の antidote は share-only パッケージ(bin/ なし)。`useUserPackages=true` 環境では `home.packages` や `environment.systemPackages` 経由では `/etc/profiles` や `/run/current-system/sw` の `share/` に展開されない。`home.file` で `~/.local/share/antidote/antidote.zsh` → nix store パスのシンボリックリンクを作成する方式(home-manager の programs.zsh.antidote モジュールと同じアプローチ)が正解。 | ✅ 解決済み |
+| 2026-06-15 | 6補2 | macOS GUI アプリの nix 移行で判明: ghostty は nixpkgs が Linux 専用ビルド、karabiner-elements は DriverKit カーネル拡張が必要、obsidian/dbeaver/chrome はアプリ内自動更新が nix store の読み取り専用制約で壊れる。GUI アプリは原則 Homebrew cask で管理する。CLI ツールのみ nix。 | ✅ 解決済み |
