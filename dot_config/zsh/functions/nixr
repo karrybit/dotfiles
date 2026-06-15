@@ -7,12 +7,12 @@ local subcmd="${1:-switch}"
 
 local -a _switch _rollback _list
 case "$profile" in
-    work|personal_neo)
+    work|private_neo)
         _switch=(sudo darwin-rebuild switch --flake "${flake}#${profile}")
         _rollback=(sudo darwin-rebuild --rollback)
         _list=(sudo darwin-rebuild --list-generations)
         ;;
-    personal_minipc)
+    private_minipc)
         _switch=(home-manager switch --flake "${flake}#${profile}")
         _rollback=(home-manager generations)
         _list=(home-manager generations)

@@ -10,7 +10,7 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/) and [Nix](http
 ```
 ~/.local/share/chezmoi/       ← source (this repository)
   nix/                        ← Nix flake (packages, Homebrew casks, system config)
-    modules/profiles/         ← per-machine profiles (work, personal_neo, personal_minipc)
+    modules/profiles/         ← per-machine profiles (work, private_neo, private_minipc)
   dot_config/                 ← configuration files → ~/.config/
   dot_local/                  ← local data/bin → ~/.local/
 
@@ -34,7 +34,7 @@ for how agents interact with this repository.
 
 ### Apply dotfiles to a new machine
 
-#### macOS (`work`, `personal_neo`)
+#### macOS (`work`, `private_neo`)
 
 ```sh
 # 1. Install Homebrew
@@ -48,7 +48,7 @@ chezmoi init --apply karrybit/dotfiles
 `chezmoi init --apply` automatically:
 
 1. Clones this repository to `~/.local/share/chezmoi/`
-2. Prompts for machine profile: enter `work` or `personal_neo`
+2. Prompts for machine profile: enter `work` or `private_neo`
 3. Runs `chezmoi apply` to deploy live files
 4. Executes `run_onchange_` scripts (Rust components, Claude settings, skills sync)
 
@@ -64,12 +64,12 @@ nixr
 
 On first launch, Neovim will automatically install plugins via lazy.nvim.
 
-> **personal_neo note:** `nix/modules/profiles/personal_neo.nix` contains a
+> **private_neo note:** `nix/modules/profiles/private_neo.nix` contains a
 > placeholder hostname (`networking.hostName = "personal-neo"`). Verify the
 > actual hostname with `scutil --get LocalHostName` and update the file before
 > running `nixr` — nix-darwin will write that value to the system.
 
-#### Linux (`personal_minipc`)
+#### Linux (`private_minipc`)
 
 No Homebrew. Install chezmoi directly, then follow the same flow.
 
@@ -77,7 +77,7 @@ No Homebrew. Install chezmoi directly, then follow the same flow.
 # 1. Install chezmoi and apply dotfiles
 sh -c "$(curl -fsLS get.chezmoi.io)"
 chezmoi init --apply karrybit/dotfiles
-# When prompted, enter: personal_minipc
+# When prompted, enter: private_minipc
 ```
 
 ```sh
@@ -88,7 +88,7 @@ curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix 
 ```sh
 # 3. Apply Nix configuration
 # home-manager is not yet on PATH, so run it via nix on first apply:
-nix run home-manager -- switch --flake ~/.local/share/chezmoi/nix#personal_minipc
+nix run home-manager -- switch --flake ~/.local/share/chezmoi/nix#private_minipc
 ```
 
 After the first switch, `home-manager` becomes available on PATH and subsequent
@@ -114,8 +114,8 @@ nixr list      # list generations
 | Profile | Flake attribute | Manager |
 |---|---|---|
 | `work` | `darwinConfigurations.work` | nix-darwin + home-manager |
-| `personal_neo` | `darwinConfigurations.personal_neo` | nix-darwin + home-manager |
-| `personal_minipc` | `homeConfigurations.personal_minipc` | home-manager (Linux) |
+| `private_neo` | `darwinConfigurations.private_neo` | nix-darwin + home-manager |
+| `private_minipc` | `homeConfigurations.private_minipc` | home-manager (Linux) |
 
 `nixr update` runs `nix flake update`, commits the updated `flake.lock`, then
 switches. `uppkg` calls it internally to upgrade all Nix-managed packages and casks.
@@ -159,4 +159,4 @@ These run automatically during `chezmoi apply` when their tracked content change
 - [docs/CHEZMOI.md](docs/CHEZMOI.md) — chezmoi 操作、status シンボル
 - [docs/NIX.md](docs/NIX.md) — パッケージ管理ポリシー、chezmoi vs Nix 境界、flake 構造、設計原則
 - [docs/TMUX.md](docs/TMUX.md) — tmux キーバインド一覧
-- [MIGRATION.md](MIGRATION.md) — personal_neo への移行手順
+- [MIGRATION.md](MIGRATION.md) — private_neo への移行手順

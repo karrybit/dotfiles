@@ -13,8 +13,8 @@ Edit the profile for the target machine:
 
 ```
 nix/modules/profiles/work.nix
-nix/modules/profiles/personal_neo.nix
-nix/modules/profiles/personal_minipc.nix
+nix/modules/profiles/private_neo.nix
+nix/modules/profiles/private_minipc.nix
 ```
 
 Add the package name to `home.packages`:
@@ -121,8 +121,8 @@ nix/
       programs.nix       # shared programs: tmux (plugins), direnv (nix-direnv)
     profiles/
       work.nix           # work MacBook packages + casks
-      personal_neo.nix   # personal MacBook packages + casks
-      personal_minipc.nix # Linux mini-PC packages
+      private_neo.nix   # personal MacBook packages + casks
+      private_minipc.nix # Linux mini-PC packages
 ```
 
 ---

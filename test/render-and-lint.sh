@@ -53,7 +53,7 @@ printf "\n\e[1mTemplate files\e[0m\n"
 
 tmpls=("${(@f)$(find "$source_dir/dot_config/zsh" -name "*.tmpl" | LC_ALL=C sort)}")
 
-for profile in work personal_neo personal_minipc; do
+for profile in work private_neo private_minipc; do
     tmpconfig="$TMPDIR/chezmoi-lint-${profile}.toml"
     printf '[data]\n    name = "karrybit"\n    profile = "%s"\n' "$profile" > "$tmpconfig"
 

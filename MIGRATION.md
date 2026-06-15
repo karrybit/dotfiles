@@ -1,4 +1,4 @@
-# Migration: personal_neo
+# Migration: private_neo
 
 MacBook Neo を nix-darwin + chezmoi の管理下に移行する手順。
 
@@ -8,15 +8,15 @@ MacBook Neo を nix-darwin + chezmoi の管理下に移行する手順。
 
 ### 1. ホスト名プレースホルダーを解決する
 
-`nix/modules/profiles/personal_neo.nix` の `networking.hostName` はまだプレースホルダー。
+`nix/modules/profiles/private_neo.nix` の `networking.hostName` はまだプレースホルダー。
 
-personal_neo 上で実際のホスト名を確認する:
+private_neo 上で実際のホスト名を確認する:
 
 ```sh
 scutil --get LocalHostName
 ```
 
-返ってきた値（例: `karrybit-MacBook-Neo`）で `personal_neo.nix` を更新する:
+返ってきた値（例: `karrybit-MacBook-Neo`）で `private_neo.nix` を更新する:
 
 ```nix
 networking.hostName = "karrybit-MacBook-Neo";  # 実際の値に変更
@@ -25,14 +25,14 @@ networking.hostName = "karrybit-MacBook-Neo";  # 実際の値に変更
 更新後にコミット・プッシュしてから作業マシンに移る。
 
 ```sh
-git add nix/modules/profiles/personal_neo.nix
-git commit -m "fix(personal_neo): set actual hostname"
+git add nix/modules/profiles/private_neo.nix
+git commit -m "fix(private_neo): set actual hostname"
 git push
 ```
 
 ---
 
-## 移行手順（personal_neo 上で実行）
+## 移行手順（private_neo 上で実行）
 
 ### 2. Homebrew をインストール（未インストールの場合）
 
@@ -45,7 +45,7 @@ git push
 ```sh
 brew install chezmoi
 chezmoi init --apply karrybit/dotfiles
-# プロファイルを聞かれたら: personal_neo
+# プロファイルを聞かれたら: private_neo
 ```
 
 chezmoi apply が行うこと:
@@ -79,7 +79,7 @@ nixr
 内部的には以下を実行する:
 
 ```sh
-sudo darwin-rebuild switch --flake ~/.local/share/chezmoi/nix#personal_neo
+sudo darwin-rebuild switch --flake ~/.local/share/chezmoi/nix#private_neo
 ```
 
 ---
@@ -97,7 +97,7 @@ sudo darwin-rebuild switch --flake ~/.local/share/chezmoi/nix#personal_neo
 |------|-----------|------|
 | formula | `aqua` | nixpkgs 未収録 |
 | formula | `chezmoi` | ブートストラップ依存 |
-| cask | `personal_neo.nix` の `homebrew.casks` に列挙されたもの | nix-darwin 管理 |
+| cask | `private_neo.nix` の `homebrew.casks` に列挙されたもの | nix-darwin 管理 |
 
 それ以外の `brew install` でインストールしていたものはすべて削除される。
 これは意図した動作（nix が代替する）だが、削除前に確認したい場合:

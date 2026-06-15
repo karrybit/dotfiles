@@ -38,20 +38,20 @@ in
 
     personal-neo-hostname =
       mkCheck darwinPkgs "personal-neo-hostname"
-        darwinConfigs.personal_neo.config.networking.hostName;
+        darwinConfigs.private_neo.config.networking.hostName;
 
     personal-neo-state-version =
       mkCheck darwinPkgs "personal-neo-state-version"
-        darwinConfigs.personal_neo.config.system.stateVersion;
+        darwinConfigs.private_neo.config.system.stateVersion;
   };
 
   "x86_64-linux" = {
     personal-minipc-state-version =
       mkCheck linuxPkgs "personal-minipc-state-version"
-        homeConfigs.personal_minipc.config.home.stateVersion;
+        homeConfigs.private_minipc.config.home.stateVersion;
 
     personal-minipc-username =
       mkCheck linuxPkgs "personal-minipc-username"
-        homeConfigs.personal_minipc.config.home.username;
+        homeConfigs.private_minipc.config.home.username;
   };
 }

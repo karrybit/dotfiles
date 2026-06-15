@@ -20,7 +20,7 @@ self-updating GUI casks stay in Homebrew, declared from Nix. See
 | rustup components (e.g. clippy, rustfmt) | `dot_config/rust/component` |
 | Globally installed cargo binaries **not** packaged in nixpkgs | `dot_config/rust/package` |
 
-Profiles are `work`, `personal_neo`, and `personal_minipc`. Use the active profile
+Profiles are `work`, `private_neo`, and `private_minipc`. Use the active profile
 from `chezmoi data --format json` (`.profile`) when the request concerns the
 current machine. Each profile declares its **complete** package list
 independently — do not move packages into a shared module to reduce duplication

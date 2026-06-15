@@ -26,14 +26,14 @@
           system = "aarch64-darwin";
           username = "takumikaribe";
         };
-        personal_neo = {
+        private_neo = {
           system = "aarch64-darwin";
           username = "takumikaribe";
         };
       };
 
       linuxHosts = {
-        personal_minipc = {
+        private_minipc = {
           system = "x86_64-linux";
           username = "takumikaribe";
         };
