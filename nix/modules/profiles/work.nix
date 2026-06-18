@@ -106,6 +106,9 @@
       cargo-update
       cargo-workspaces
       sea-orm-cli
+
+      # GUI apps
+      obsidian
     ];
 
     home.file.".local/share/antidote/antidote.zsh".source =
@@ -122,7 +125,6 @@
     "intellij-idea"
     "itsycal"
     "karabiner-elements"   # DriverKit 拡張のインストールが必要 — cask のみ
-    "obsidian"             # アプリ内自動更新のため cask で管理
     # work 固有
     "dbeaver-community"    # アプリ内自動更新のため cask で管理
     "docker-desktop"
