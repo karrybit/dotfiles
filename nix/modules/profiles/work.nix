@@ -1,7 +1,5 @@
 { pkgs, username, ... }:
 {
-  networking.hostName = "Takumis-MacBook-Pro";
-
   users.users.${username}.home = "/Users/${username}";
 
   fonts.packages = [ pkgs.nerd-fonts.hack ];
