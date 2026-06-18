@@ -60,6 +60,9 @@
       python313
       tree
       wget
+
+      # GUI apps
+      obsidian
     ];
 
     home.file.".local/share/antidote/antidote.zsh".source =
@@ -77,6 +80,5 @@
     "itsycal"
     "karabiner-elements"   # DriverKit 拡張のインストールが必要 — cask のみ
     "google-chrome"        # 自己更新機能が nix store の読み取り専用制約で壊れる
-    "obsidian"             # アプリ内自動更新のため cask で管理
   ];
 }
