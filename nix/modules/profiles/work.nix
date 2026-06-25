@@ -41,7 +41,7 @@
       jwt-cli
       qsv
       tfsec
-      volta
+      nodejs_22
 
       # Shell / env tools
       act
