@@ -25,7 +25,7 @@ __require_commands chezmoi git jq || return 1
     # --no-go --no-uv: suppress aqua-proxy calls for aqua-managed go/uv binaries
     brew bundle dump -f --no-go --no-uv --file "${_brewfile}"
 
-    __chezmoi_commit_file \
+    __lib_chezmoi_commit_file \
         "${_brewfile}" \
         "dot_config/homebrew/Brewfile.${_profile}" \
         "chore: update Brewfile"

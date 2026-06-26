@@ -2,7 +2,7 @@ local _repo="$HOME/.local/share/chezmoi"
 local _flake="${_repo}/nix"
 local _profile
 
-_profile=$(__chezmoi_profile) || return 1
+_profile=$(__lib_chezmoi_profile) || return 1
 
 (
     set -eo pipefail

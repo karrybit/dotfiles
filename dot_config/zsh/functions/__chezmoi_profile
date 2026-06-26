@@ -1,8 +1,0 @@
-__require_commands chezmoi jq || return 1
-
-local _profile
-_profile=$(chezmoi data --format json | jq -r '.profile // empty')
-if [[ -z "${_profile}" && -n "$1" ]]; then
-    _profile=$1
-fi
-printf '%s' "${_profile}"
