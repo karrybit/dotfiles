@@ -1,17 +1,27 @@
 tap "aquaproj/aqua"
 tap "microsoft/apm"
 tap "olets/tap"
-
+# Declarative CLI Version manager
 brew "aqua"
+# Manage your dotfiles across multiple diverse machines, securely
 brew "chezmoi"
-
+# Password manager that keeps all passwords secure behind one password
 cask "1password"
+# Screen capturing tool
 cask "cleanshot"
+# OpenAI's coding agent that runs in your terminal
 cask "codex"
+# Terminal emulator that uses platform-native UI and GPU acceleration
 cask "ghostty"
+# Web browser
 cask "google-chrome"
+# Japanese input software
 cask "google-japanese-ime"
+# Java IDE by JetBrains
 cask "intellij-idea"
+# Menu bar calendar
 cask "itsycal"
+# Keyboard customiser
 cask "karabiner-elements"
+# Knowledge base that works on top of a local folder of plain text Markdown files
 cask "obsidian"
