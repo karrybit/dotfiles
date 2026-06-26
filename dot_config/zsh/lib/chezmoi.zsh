@@ -1,5 +1,5 @@
 __lib_chezmoi_profile() {
-    __require_commands chezmoi jq || return 1
+    __lib_require_commands chezmoi jq || return 1
 
     local _profile
     _profile=$(chezmoi data --format json | jq -r '.profile // empty')
@@ -15,7 +15,7 @@ __lib_chezmoi_commit_file() {
     local _message=$3
     local _source_path
 
-    __require_commands chezmoi git || return 1
+    __lib_require_commands chezmoi git || return 1
 
     _source_path=$(chezmoi source-path) || return 1
 

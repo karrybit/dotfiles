@@ -1,4 +1,4 @@
-__require_commands chezmoi git __uppkg || return 1
+__lib_require_commands chezmoi git __uppkg || return 1
 
 # Use a subshell to keep strict mode and locals scoped to this command.
 (

@@ -1,4 +1,4 @@
-__require_commands ghq fzf code || return 1
+__lib_require_commands ghq fzf code || return 1
 local dir
 dir=$(__lib_fzf_pick_ghq_dir) || return 1
 code "$dir"

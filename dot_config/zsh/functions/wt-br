@@ -1,4 +1,4 @@
-__require_commands git fzf || return 1
+__lib_require_commands git fzf || return 1
 local selected
 selected=$(__lib_fzf_select_worktree) || return
 if [[ -z "$selected" ]]; then

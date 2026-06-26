@@ -1,0 +1,9 @@
+__lib_require_commands() {
+    local cmd
+    for cmd in "$@"; do
+        if ! command -v "$cmd" >/dev/null 2>&1; then
+            __lib_echo_failure "required command not found: ${cmd}\n"
+            return 1
+        fi
+    done
+}

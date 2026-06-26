@@ -62,6 +62,7 @@ bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
 
 source "$XDG_CONFIG_HOME/zsh/lib/print.zsh"
+source "$XDG_CONFIG_HOME/zsh/lib/guard.zsh"
 source "$XDG_CONFIG_HOME/zsh/lib/clipboard.zsh"
 source "$XDG_CONFIG_HOME/zsh/lib/chezmoi.zsh"
 source "$XDG_CONFIG_HOME/zsh/lib/fzf.zsh"
