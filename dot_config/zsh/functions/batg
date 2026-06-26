@@ -1,4 +1,4 @@
 __require_commands ghq fzf bat || return 1
 local file
-file=$(_fzf_pick_ghq_file) || return 1
+file=$(__lib_fzf_pick_ghq_file) || return 1
 bat "$file"

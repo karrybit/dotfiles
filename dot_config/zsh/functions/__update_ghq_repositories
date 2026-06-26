@@ -11,7 +11,7 @@ while IFS= read -r _repo; do
 done < <(ghq list)
 
 if (( _failed != 0 )); then
-    echo_warning "one or more ghq repositories failed to update; continuing\n"
+    __lib_echo_warning "one or more ghq repositories failed to update; continuing\n"
 fi
 
 return 0

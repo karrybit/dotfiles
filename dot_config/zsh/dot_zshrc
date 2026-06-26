@@ -61,8 +61,8 @@ antidote load "$ZDOTDIR/.zsh_plugins.txt"
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
 
-source "$XDG_CONFIG_HOME/zsh/lib/_ui.zsh"
-source "$XDG_CONFIG_HOME/zsh/lib/_fzf.zsh"
+source "$XDG_CONFIG_HOME/zsh/lib/ui.zsh"
+source "$XDG_CONFIG_HOME/zsh/lib/fzf.zsh"
 
 fpath=("$XDG_CONFIG_HOME/zsh/functions" $fpath)
 autoload -Uz "$XDG_CONFIG_HOME/zsh/functions/"*(N.)
