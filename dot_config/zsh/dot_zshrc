@@ -61,7 +61,8 @@ antidote load "$ZDOTDIR/.zsh_plugins.txt"
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
 
-source "$XDG_CONFIG_HOME/zsh/lib/ui.zsh"
+source "$XDG_CONFIG_HOME/zsh/lib/print.zsh"
+source "$XDG_CONFIG_HOME/zsh/lib/clipboard.zsh"
 source "$XDG_CONFIG_HOME/zsh/lib/fzf.zsh"
 
 fpath=("$XDG_CONFIG_HOME/zsh/functions" $fpath)
