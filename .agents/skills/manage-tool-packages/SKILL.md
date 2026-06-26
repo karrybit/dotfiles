@@ -35,9 +35,12 @@ one profile unless the requested scope clearly requires it.
    `dot_config/rust/package`). Prefer nixpkgs (`nix search nixpkgs <keyword>`)
    before adding a cask or a cargo/rustup entry.
 3. Understand how each owner is applied:
-   - Nix packages and Homebrew casks/formulae: applied by `nixr` (rebuild) or
-     `nixr update` (also bump `nix/flake.lock`). `homebrew.onActivation.cleanup =
-     "zap"` removes any Homebrew package not declared in Nix.
+   - Nix packages: applied by `darwin-rebuild switch` / `home-manager switch`
+     (see README). `__uppkg` calls `__update_nix` internally to update
+     `nix/flake.lock` and rebuild.
+   - Homebrew casks/formulae: declared in `dot_config/homebrew/Brewfile.<profile>`,
+     applied manually via `brew bundle install`. `__uppkg` calls `__update_homebrew`
+     to upgrade and dump the current state.
    - rustup components: `run_onchange_01_rustup_components.sh.tmpl` runs
      `rustup component add` on `chezmoi apply` when `dot_config/rust/component`
      changes.
@@ -45,8 +48,8 @@ one profile unless the requested scope clearly requires it.
      `cargo install` on `chezmoi apply` when `dot_config/rust/package` changes.
 4. State the intended manifest and profile changes before editing.
 5. Preserve the existing file format, grouping comments, and ordering conventions.
-6. Do not run `nixr`, `nixr update`, `nix flake update`, `uppkg`, `syncup`,
-   `brew upgrade`, or other networked updates unless explicitly requested.
+6. Do not run `darwin-rebuild switch`, `home-manager switch`, `nix flake update`,
+   `__uppkg`, `upup`, `brew upgrade`, or other networked updates unless explicitly requested.
 7. Review `README.md` and `docs/NIX.md` when package-management or bootstrap
    behavior changes.
 

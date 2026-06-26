@@ -56,18 +56,17 @@ chezmoi init --apply karrybit/dotfiles
 # 3. Install Determinate Nix
 curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
 
-# 4. Apply Nix configuration (installs all packages and Homebrew casks)
-nixr
-```
+# 4. Apply Nix configuration (first time: home-manager is not yet on PATH)
+nix run home-manager -- switch --flake ~/.local/share/chezmoi/nix#<profile>
 
-`nixr` selects the flake configuration based on the chezmoi profile set in step 2.
+# 5. Install Homebrew packages
+brew bundle install --file ~/.config/homebrew/Brewfile.<profile>
+```
 
 On first launch, Neovim will automatically install plugins via lazy.nvim.
 
-> **private_neo note:** `nix/modules/profiles/private_neo.nix` contains a
-> placeholder hostname (`networking.hostName = "personal-neo"`). Verify the
-> actual hostname with `scutil --get LocalHostName` and update the file before
-> running `nixr` — nix-darwin will write that value to the system.
+> **private_neo note:** verify the hostname with `scutil --get LocalHostName`
+> before running `home-manager switch` if any hostname-dependent config is present.
 
 #### Linux (`private_minipc`)
 
@@ -91,8 +90,7 @@ curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix 
 nix run home-manager -- switch --flake ~/.local/share/chezmoi/nix#private_minipc
 ```
 
-After the first switch, `home-manager` becomes available on PATH and subsequent
-rebuilds can use `nixr` (requires opening a new shell after step 1).
+After the first switch, `home-manager` becomes available on PATH for subsequent rebuilds.
 
 On first launch, Neovim will automatically install plugins via lazy.nvim.
 
@@ -100,25 +98,20 @@ On first launch, Neovim will automatically install plugins via lazy.nvim.
 
 ### Rebuild Nix configuration
 
-Use `nixr` whenever `nix/` changes (packages added/removed, Homebrew casks updated, etc.).
+Use the following command whenever `nix/` changes (packages added/removed, etc.).
 
 ```sh
-nixr           # rebuild and switch
-nixr update    # update flake.lock, commit it, then rebuild and switch
-nixr rollback  # roll back to the previous generation
-nixr list      # list generations
+home-manager switch --flake ~/.local/share/chezmoi/nix#<profile>
 ```
-
-`nixr` reads the chezmoi profile and dispatches to the appropriate flake attribute:
 
 | Profile | Flake attribute | Manager |
 |---|---|---|
-| `work` | `darwinConfigurations.work` | nix-darwin + home-manager |
-| `private_neo` | `darwinConfigurations.private_neo` | nix-darwin + home-manager |
-| `private_minipc` | `homeConfigurations.private_minipc` | home-manager (Linux) |
+| `work` | `homeConfigurations.work` | home-manager |
+| `private_neo` | `homeConfigurations.private_neo` | home-manager |
+| `private_minipc` | `homeConfigurations.private_minipc` | home-manager |
 
-`nixr update` runs `nix flake update`, commits the updated `flake.lock`, then
-switches. `uppkg` calls it internally to upgrade all Nix-managed packages and casks.
+`upup` calls `__uppkg` internally, which runs `nix flake update`, commits
+the updated `flake.lock`, then switches.
 
 Package changes go in `nix/modules/profiles/<profile>.nix`. See [docs/NIX.md](docs/NIX.md)
 for the package management policy, flake structure, and design decisions.
@@ -137,8 +130,7 @@ See [docs/CHEZMOI.md](docs/CHEZMOI.md) for the full chezmoi workflow and status 
 ### Sync and update
 
 ```sh
-syncup  # pull + apply dotfiles, update all packages, push generated commits
-uppkg   # update packages and tools only (no pull/push/apply)
+upup    # pull + apply dotfiles, update all packages, push generated commits
 ```
 
 ### run_onchange scripts

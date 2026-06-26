@@ -39,7 +39,7 @@ chezmoi status
 chezmoi execute-template --file <template-file>
 ```
 
-Use `bash -n` or `zsh -n` for scripts with the corresponding interpreter. Do not run `chezmoi apply`, `chezmoi init --apply`, `syncup`, `uppkg`, or package-manager commands during an audit.
+Use `bash -n` or `zsh -n` for scripts with the corresponding interpreter. Do not run `chezmoi apply`, `chezmoi init --apply`, `upup`, `__uppkg`, or package-manager commands during an audit.
 
 ## Report Format
 

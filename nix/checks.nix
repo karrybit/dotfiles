@@ -1,7 +1,7 @@
 # Smoke-test checks for `nix flake check`.
 # Each derivation forces evaluation of a key attribute; wrong types or missing
 # attrs fail at evaluation time before the derivation even builds.
-{ nixpkgs, self, darwinConfigs, homeConfigs }:
+{ nixpkgs, self, homeConfigs }:
 let
   # Force evaluation of `value` (must coerce to string) and write it to $out.
   mkCheck = pkgs: name: value:
@@ -28,21 +28,21 @@ in
       touch $out
     '';
 
-    work-hostname =
-      mkCheck darwinPkgs "work-hostname"
-        darwinConfigs.work.config.networking.hostName;
-
     work-state-version =
       mkCheck darwinPkgs "work-state-version"
-        darwinConfigs.work.config.system.stateVersion;
+        homeConfigs.work.config.home.stateVersion;
 
-    personal-neo-hostname =
-      mkCheck darwinPkgs "personal-neo-hostname"
-        darwinConfigs.private_neo.config.networking.hostName;
+    work-username =
+      mkCheck darwinPkgs "work-username"
+        homeConfigs.work.config.home.username;
 
     personal-neo-state-version =
       mkCheck darwinPkgs "personal-neo-state-version"
-        darwinConfigs.private_neo.config.system.stateVersion;
+        homeConfigs.private_neo.config.home.stateVersion;
+
+    personal-neo-username =
+      mkCheck darwinPkgs "personal-neo-username"
+        homeConfigs.private_neo.config.home.username;
   };
 
   "x86_64-linux" = {

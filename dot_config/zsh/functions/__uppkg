@@ -1,7 +1,8 @@
 (
     set -eo pipefail
 
-    nixr update
+    __update_homebrew
+    __update_nix
     __update_rust_tools
     __update_ghq_repositories
 )

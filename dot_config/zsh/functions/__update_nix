@@ -1,0 +1,16 @@
+local _repo="$HOME/.local/share/chezmoi"
+local _flake="${_repo}/nix"
+local _profile
+
+_profile=$(__chezmoi_profile) || return 1
+
+(
+    set -eo pipefail
+
+    nix flake update --flake "${_flake}"
+    git -C "${_repo}" add nix/flake.lock
+    if ! git -C "${_repo}" diff --cached --quiet -- nix/flake.lock; then
+        git -C "${_repo}" commit -m "chore(nix): update flake.lock"
+    fi
+    home-manager switch --flake "${_flake}#${_profile}"
+)

@@ -25,7 +25,7 @@ Work from the chezmoi source repository and preserve its source-to-target mappin
 - Map a leading dot in a target filename or directory to a `dot_` source prefix.
 - Use `.tmpl` only when the file needs chezmoi template data or conditionals.
 - Keep source-only documentation listed in `.chezmoiignore`.
-- Do not run `chezmoi apply`, `chezmoi update`, `syncup`, or package updates unless the user explicitly requests the live or remote side effect.
+- Do not run `chezmoi apply`, `chezmoi update`, `upup`, or package updates unless the user explicitly requests the live or remote side effect.
 - Do not manage secrets, generated runtime state, histories, caches, or machine-local credentials.
 
 ## Verification

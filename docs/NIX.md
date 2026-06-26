@@ -1,9 +1,8 @@
 # Nix Configuration Reference
 
-Nix (nix-darwin + home-manager) manages all packages, Homebrew casks, and
+Nix (home-manager) manages all packages, and
 programs that require Nix store integration (tmux plugins, nix-direnv).
-Configuration lives in `nix/`. Use `nixr` (defined in `dot_config/zsh/functions/nixr`)
-to rebuild; see README for the command reference.
+Configuration lives in `nix/`. See README for rebuild commands.
 
 ---
 
@@ -26,7 +25,7 @@ home.packages = with pkgs; [
 ];
 ```
 
-Then rebuild with `nixr` (see README). To find a package name: `nix search nixpkgs <keyword>` or
+Then rebuild (see README). To find a package name: `nix search nixpkgs <keyword>` or
 [search.nixos.org](https://search.nixos.org/packages).
 
 ---
@@ -36,11 +35,11 @@ Then rebuild with `nixr` (see README). To find a package name: `nix search nixpk
 | Category | Manager |
 |---|---|
 | CLI tools and development packages | Nix (`home.packages` in profile) |
-| macOS GUI apps with self-update or system extensions | Homebrew cask (declared in profile's `homebrew.casks`) |
+| macOS GUI apps with self-update or system extensions | Homebrew cask (declared in `~/.config/homebrew/Brewfile.${profile}`) |
 | tmux plugins, nix-direnv | Nix (`nix/modules/home/programs.nix`) |
 | Rust toolchain | `rustup` (nix-managed binary; components via `run_onchange_01`) |
 | Cargo packages not in nixpkgs | `cargo install` via `run_onchange_02` |
-| `aqua`, `chezmoi` | Homebrew formula (permanent: nixpkgs-unlisted / bootstrap dependency) |
+| `aqua`, `chezmoi` | Homebrew formula (permanent: nixpkgs-unlisted / bootstrap dependency) — declared in `Brewfile.${profile}` |
 
 **Why macOS GUI apps stay as Homebrew casks:**
 - The Nix store is read-only — apps that self-update in-place (Obsidian, DBeaver, Chrome) fail silently or crash.
@@ -112,9 +111,8 @@ nix/
   lib/
     default.nix          # mkDarwin / mkHome helpers
   modules/
-    darwin/
-      common.nix         # nix-darwin base (determinateNix, nixpkgs, system settings)
-      homebrew.nix       # Homebrew setup (taps, permanent brews, cleanup policy)
+    home/
+      darwin.nix         # macOS home-manager base (username, homeDirectory, allowUnfree)
     home/
       common.nix         # home-manager framework settings (stateVersion)
       linux.nix          # Linux-only home-manager settings
@@ -133,7 +131,7 @@ nix/
 task check       # all checks: nix:check + test
 task nix:check   # nix flake check + statix (antipatterns) + deadnix (unused bindings)
 task test        # render chezmoi templates (3 profiles) + zsh -n lint
-task nix:rebuild # rebuild and activate current profile (nixr)
+task nix:rebuild # rebuild and activate current profile
 ```
 
 New files imported by the flake must be staged before `task nix:check` will

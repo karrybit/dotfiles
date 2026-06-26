@@ -1,1 +1,1 @@
-uuidgen | tr '[:upper:]' '[:lower:]' | tr -d '\n' | clipboard_copy
+uuidgen | tr '[:upper:]' '[:lower:]' | tr -d '\n'

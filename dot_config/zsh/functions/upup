@@ -1,4 +1,4 @@
-__require_commands chezmoi git uppkg || return 1
+__require_commands chezmoi git __uppkg || return 1
 
 # Use a subshell to keep strict mode and locals scoped to this command.
 (
@@ -23,7 +23,7 @@ __require_commands chezmoi git uppkg || return 1
 
     chezmoi update
 
-    uppkg
+    __uppkg
 
     local _ahead
     _ahead=$(git -C "${_source_path}" rev-list --count @{upstream}..HEAD 2>/dev/null || printf "0")

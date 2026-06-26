@@ -1,0 +1,32 @@
+if [[ "${OSTYPE}" != darwin* ]]; then
+    return 0
+fi
+
+if ! command -v brew >/dev/null 2>&1; then
+    printf "\033[33mbrew not found; skipping Homebrew update\033[0m\n" >&2
+    return 0
+fi
+
+_require_commands chezmoi git jq || return 1
+
+(
+    set -eo pipefail
+
+    local _profile
+    local _brewfile
+
+    _profile=$(chezmoi data --format json | jq -r '.profile // "work"')
+    _brewfile="${XDG_CONFIG_HOME:-$HOME/.config}/homebrew/Brewfile.${_profile}"
+
+    brew upgrade
+    brew autoremove
+    brew cleanup
+
+    # --no-go --no-uv: suppress aqua-proxy calls for aqua-managed go/uv binaries
+    brew bundle dump -f --no-go --no-uv --file "${_brewfile}"
+
+    _chezmoi_commit_file \
+        "${_brewfile}" \
+        "dot_config/homebrew/Brewfile.${_profile}" \
+        "chore: update Brewfile"
+)

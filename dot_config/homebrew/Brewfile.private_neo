@@ -1,0 +1,17 @@
+tap "aquaproj/aqua"
+tap "microsoft/apm"
+tap "olets/tap"
+
+brew "aqua"
+brew "chezmoi"
+
+cask "1password"
+cask "cleanshot"
+cask "codex"
+cask "ghostty"
+cask "google-chrome"
+cask "google-japanese-ime"
+cask "intellij-idea"
+cask "itsycal"
+cask "karabiner-elements"
+cask "obsidian"
