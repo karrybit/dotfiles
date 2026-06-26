@@ -8,7 +8,7 @@ WORKDIR /dotfiles
 
 COPY nix/ ./nix/
 
-RUN echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
+RUN mkdir -p /etc/nix && printf 'experimental-features = nix-command flakes\nsandbox = false\nfilter-syscalls = false\n' > /etc/nix/nix.conf
 
 # Verify the flake evaluates cleanly on Linux
 RUN nix flake check ./nix --print-build-logs
