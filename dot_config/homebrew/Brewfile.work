@@ -1,21 +1,56 @@
 tap "aquaproj/aqua"
 tap "microsoft/apm"
 tap "olets/tap"
-
+# Declarative CLI Version manager
 brew "aqua"
+# Manage your dotfiles across multiple diverse machines, securely
 brew "chezmoi"
-
+# Password manager that keeps all passwords secure behind one password
 cask "1password"
+# Screen capturing tool
 cask "cleanshot"
+# Universal database tool and SQL client
 cask "dbeaver-community"
+# App to build and share containerised applications and microservices
 cask "docker-desktop"
+# Terminal emulator that uses platform-native UI and GPU acceleration
 cask "ghostty"
+# Japanese input software
 cask "google-japanese-ime"
+# Java IDE by JetBrains
 cask "intellij-idea"
+# Menu bar calendar
 cask "itsycal"
+# JetBrains tools manager
 cask "jetbrains-toolbox"
+# Keyboard customiser
 cask "karabiner-elements"
+# Software for Logitech devices
 cask "logi-options+"
+# Provides updates to various Microsoft products
 cask "microsoft-auto-update"
+# Meet, chat, call, and collaborate in just one place
 cask "microsoft-teams"
-cask "obsidian"
+vscode "christian-kohler.path-intellisense"
+vscode "eamodio.gitlens"
+vscode "github.vscode-github-actions"
+vscode "github.vscode-pull-request-github"
+vscode "golang.go"
+vscode "hashicorp.terraform"
+vscode "mechatroner.rainbow-csv"
+vscode "ms-vsliveshare.vsliveshare"
+vscode "roscop.activefileinstatusbar"
+vscode "terrastruct.d2"
+vscode "zainchen.json"
+cargo "cargo-cache"
+cargo "cargo-deps"
+cargo "cargo-edit"
+cargo "cargo-expand"
+cargo "cargo-make"
+cargo "cargo-modules"
+cargo "cargo-sort"
+cargo "cargo-update"
+cargo "cargo-upgrades"
+cargo "cargo-workspaces"
+cargo "sea-orm-cli"
+cargo "wasm-pack"
