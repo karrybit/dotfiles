@@ -20,6 +20,7 @@
     shellcheck
     tree-sitter
     yq-go
+    alloy6
 
     # Dev tools
     actionlint
