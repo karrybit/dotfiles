@@ -151,4 +151,3 @@ These run automatically during `chezmoi apply` when their tracked content change
 - [docs/CHEZMOI.md](docs/CHEZMOI.md) — chezmoi 操作、status シンボル
 - [docs/NIX.md](docs/NIX.md) — パッケージ管理ポリシー、chezmoi vs Nix 境界、flake 構造、設計原則
 - [docs/TMUX.md](docs/TMUX.md) — tmux キーバインド一覧
-- [MIGRATION.md](MIGRATION.md) — private_neo への移行手順
