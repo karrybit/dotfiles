@@ -1,8 +1,12 @@
-(
-    set -eo pipefail
+local _failed=0
 
-    __update_homebrew
-    __update_nix
-    __update_rust_tools
-    __update_ghq_repositories
-)
+__update_homebrew || _failed=1
+__update_nix || _failed=1
+__update_rust_tools || _failed=1
+__update_ghq_repositories || _failed=1
+
+if (( _failed != 0 )); then
+    __lib_echo_warning "one or more package updates failed; see above\n"
+fi
+
+return $_failed
