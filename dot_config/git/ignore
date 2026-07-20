@@ -37,3 +37,5 @@ Temporary Items
 **/.claude/settings.local.json
 **/.config/claude/settings.json
 **/.config/claude/settings.work.pkl
+
+**/.claude/.cc-writes/
