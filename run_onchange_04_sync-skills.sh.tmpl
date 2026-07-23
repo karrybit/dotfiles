@@ -19,9 +19,10 @@ for dir in "$CLAUDE_DIR" "$AGENTS_DIR"; do
     mkdir -p "$dir"
 done
 
-# Create/update symlinks for each canonical skill
+# Create/update symlinks for each canonical skill (a skill must have SKILL.md;
+# other directories such as runtime outputs must not be exposed to agents)
 for skill_dir in "$CANONICAL"/*/; do
-    [ -d "$skill_dir" ] || continue
+    [ -f "${skill_dir}SKILL.md" ] || continue
     name=$(basename "$skill_dir")
     ln -sfn "$CANONICAL/$name" "$CLAUDE_DIR/$name"
     ln -sfn "$CANONICAL/$name" "$AGENTS_DIR/$name"
@@ -33,7 +34,7 @@ for target_dir in "$CLAUDE_DIR" "$AGENTS_DIR"; do
         name=$(basename "$link")
         link_target=$(readlink "$link")
         if [[ "$link_target" == *".local/share/skills/$name" ]] && \
-           [ ! -d "$CANONICAL/$name" ]; then
+           [ ! -f "$CANONICAL/$name/SKILL.md" ]; then
             rm "$link"
         fi
     done < <(find "$target_dir" -maxdepth 1 -type l 2>/dev/null)
