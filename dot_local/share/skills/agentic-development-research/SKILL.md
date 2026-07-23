@@ -50,7 +50,10 @@ Read these files before updating research artifacts:
    both.
 3. Read the matching track's `strategy.md` and `ledger.md`.
 4. Use current official or primary sources for product behavior before relying
-   on practitioner or community sources.
+   on practitioner or community sources. For a deep multi-source sweep, run
+   the built-in `deep-research` harness when available and feed its cited
+   findings into the ledger as source-level evidence instead of hand-rolling
+   the fan-out.
 5. Update the track `ledger.md` with source-level evidence, status, freshness,
    and revalidation metadata.
 6. Promote only reviewed findings into `Candidate Extraction` or

@@ -82,36 +82,19 @@ Run these checks in order and stop at the first match.
 
 **Entry condition**: `CLAUDE.md` does not exist.
 
-#### Step 1: Discover project metadata
-
-Read the following to extract exact versions and structure:
-- `package.json` (Node.js, framework, test library)
-- `go.mod` (Go version, major dependencies)
-- `pyproject.toml` or `requirements.txt` (Python version, framework)
-- `Makefile` (available commands and conventions)
-
-#### Step 2: Map the directory structure
-
-Run `ls` and a shallow `find` on major subdirectories to identify layer boundaries (e.g., `backend/`, `frontend/`, `packages/`, `cmd/`).
-
-#### Step 3: Read existing automation
-
-Check `.claude/settings.json` for hooks and `.claude/skills/` for skills. Do not duplicate content already enforced or described there.
-
-#### Step 4: Draft CLAUDE.md
-
-Include only these four categories:
+Generate the initial draft with the built-in `/init` command instead of
+hand-collecting project metadata, then immediately apply the Phase 2 content
+standards to the generated file: keep only these four fact categories and
+remove procedures, enforcement prose, and generic best practices.
 
 1. **Tech stack with exact versions** — prevents wrong library or version choices
 2. **Architecture layer model** — which layer owns what logic and which directory it lives in
 3. **Source-of-truth constraints** — generated files that must not be edited by hand; spec-first files (e.g., "API changes start from `openapi.yaml`"); migration rules
 4. **Non-obvious project conventions** — rules a reader cannot infer from the code itself
 
-Do not include procedures, enforcement prose, or generic best practices.
-
-#### Step 5: Present draft for confirmation
-
-Show the full draft. Do **not** write the file until the user confirms.
+Check `.claude/settings.json` hooks and `.claude/skills/` first and do not
+duplicate content already enforced or described there. Present the cleaned
+draft and do **not** write the file until the user confirms.
 
 ---
 
