@@ -126,6 +126,8 @@
 - Preserve unrelated and user-authored uncommitted changes.
 - Place instructions in the narrowest applicable `AGENTS.md`.
 - Do not place directory-specific instructions in a broader file.
+- When committing, group unrelated changes into separate logical commits
+  instead of one mixed commit, unless the user requests a single commit.
 
 ### Code Style
 
