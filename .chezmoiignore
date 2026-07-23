@@ -32,16 +32,8 @@ docs
 .local/share/agents/docs/*
 !.local/share/agents/docs/AGENTS.md
 !.local/share/agents/docs/agent-extension-security.md
-!.local/share/agents/docs/agent-extensions-ledger.md
 !.local/share/agents/docs/claude-md-maintenance-references.md
 !.local/share/agents/docs/medallion-information-design.md
-!.local/share/agents/docs/agentic-development-research-index.md
-!.local/share/agents/docs/coding-agent-research
-!.local/share/agents/docs/coding-agent-research/**
-!.local/share/agents/docs/agentic-software-delivery-research
-!.local/share/agents/docs/agentic-software-delivery-research/**
-!.local/share/agents/docs/agentic-development-runs
-!.local/share/agents/docs/agentic-development-runs/**
 !.local/share/agents/docs/ecc-hackathon-review.md
 !.local/share/agents/docs/qsv-csv-wrangling.md
 !.local/share/agents/docs/waxa-eval-guide.md
