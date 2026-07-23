@@ -67,6 +67,13 @@
 - When facing a problem, analyze and structure its root cause critically.
   Treat the root cause as a hypothesis and confirm it with evidence before
   acting; a plausible story is not proof.
+- Before retrying a failed action, capture the symptom, the last successful
+  step, and the assumption being tested, then run one check that can falsify
+  the leading hypothesis. Classify the failure by what the system reported,
+  not by how the agent misbehaved.
+- When the same blocker survives three focused recovery attempts, or the next
+  step would be speculative rather than evidence-seeking, stop and escalate to
+  the user with the evidence collected.
 - Generalize the lesson instead of minimizing it to the immediate case, but
   stop at the level where the trigger is identifiable and a violation is
   detectable. Over-abstraction produces unactionable advice.
@@ -126,6 +133,9 @@
 - Keep only current effective guidance in instruction files. Move rationale or
   superseded discussion to commit messages, PR notes, or a dedicated decision
   log when needed.
+- Before finishing work that changed multiple artifacts, review the final set
+  as one system: consistent terminology, correct placement and ownership,
+  valid cross-references, and documented behavior matching the actual files.
 
 ## Verification & Completion
 
@@ -137,6 +147,16 @@
   relevant README has been reviewed.
 - Before creating a file, confirm that an equivalent file does not already
   exist.
+- When fixing a bug that AI-assisted work introduced or a review missed, add
+  the smallest deterministic regression test that fails on the old behavior,
+  and cover the parallel paths the change touches (sandbox vs production,
+  mock vs real provider, feature flag on vs off).
+- Before any publish action such as `git push`, PR creation, sharing a diff,
+  or making a repository public, inspect the exact outgoing content for
+  secrets, personal data, real home paths, machine names, and private
+  organization names. Treat findings as blockers and prefer placeholders or
+  template variables over real local values. An automated hook may block
+  high-confidence secret patterns; it does not replace this inspection.
 - Report checks that could not be run.
 
 ## Maintaining Instructions
@@ -181,6 +201,13 @@
   reference that is meaningful from that file's target location.
 
 ## Environment & Tooling
+
+### Structured Data on the Command Line
+
+- Use structure-aware tools before text tools for structured data: `jq` for
+  JSON, `yq` for YAML, `qsv` for CSV/TSV. Reach for `sed`/`awk`/`cut` only for
+  genuinely plain text. Load the matching wrangling skill for non-trivial
+  transformations.
 
 ### Chezmoi-Managed Files
 

@@ -1,0 +1,51 @@
+#!/bin/bash
+# Claude Code PreToolUse hook (matcher: Bash).
+# Blocks publish commands (git push, gh pr create, gh release create) when
+# outgoing commits contain high-confidence secret patterns. Broader PII
+# judgment (home paths, org names, personal data) is an agent rule in
+# AGENTS.md, not this hook: those need context this scan cannot have.
+# Escape hatch: PII_GUARD_SKIP=1 in the hook environment skips the check.
+set -u
+
+[ "${PII_GUARD_SKIP:-}" = "1" ] && exit 0
+command -v jq >/dev/null 2>&1 || exit 0
+
+input=$(cat)
+cmd=$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)
+[ -n "$cmd" ] || exit 0
+
+case "$cmd" in
+*"git push"* | *"gh pr create"* | *"gh release create"*) ;;
+*) exit 0 ;;
+esac
+
+cwd=$(printf '%s' "$input" | jq -r '.cwd // empty' 2>/dev/null)
+[ -n "$cwd" ] && [ -d "$cwd" ] && cd "$cwd"
+git rev-parse --is-inside-work-tree >/dev/null 2>&1 || exit 0
+
+range="-1 HEAD"
+if upstream=$(git rev-parse --abbrev-ref '@{upstream}' 2>/dev/null); then
+    range="$upstream..HEAD"
+fi
+
+pattern='AKIA[0-9A-Z]{16}'
+pattern="$pattern|BEGIN (RSA |OPENSSH |EC |DSA )?PRIVATE KEY"
+pattern="$pattern|ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{22,}"
+pattern="$pattern|xox[baprs]-[A-Za-z0-9-]{10,}"
+pattern="$pattern|sk-ant-[A-Za-z0-9_-]{20,}|AIza[0-9A-Za-z_-]{35}"
+pattern="$pattern|(api[_-]?key|secret|token|password)['\"]?[[:space:]]*[:=][[:space:]]*['\"][^'\"]{8,}"
+
+# shellcheck disable=SC2086
+findings=$(git log -p --no-color $range 2>/dev/null |
+    grep -iE "^\+" | grep -icE "$pattern")
+
+if [ "${findings:-0}" -gt 0 ]; then
+    {
+        echo "pii-publish-guard: $findings added line(s) in the outgoing range ($range) match secret patterns."
+        git log -p --no-color $range 2>/dev/null | grep -iE "^\+" | grep -inE "$pattern" | head -5
+        echo "Inspect with: git log -p $range"
+        echo "Redact or amend before publishing. If every match is a confirmed false positive, ask the user to approve publishing anyway."
+    } >&2
+    exit 2
+fi
+exit 0
