@@ -7,6 +7,6 @@
 - reviewed_at: 2026-07-23
 - sync_policy: sync
 - migration_target: future personal plugin or cross-agent refactor
-- notes: Codex-specific CLI-building workflow. Codex CLI is not currently
-  installed (verified 2026-07-23); revisit whether to keep, refactor
-  cross-agent, or remove when Codex usage resumes or is ruled out.
+- notes: Codex-specific CLI-building workflow. Kept even though Codex CLI is
+  absent on this machine: Codex is installed on another managed machine
+  (user-confirmed 2026-07-23).

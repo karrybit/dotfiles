@@ -1,6 +1,9 @@
-# References for maintain-claude-md
+# CLAUDE.md Maintenance References
 
-Source summaries that inform the skill's principles and limits. Each entry includes the key finding and its instruction implication — why the skill is designed the way it is.
+Source summaries on CLAUDE.md design principles and limits. Each entry
+includes the key finding and its instruction implication. Formerly bundled
+with the maintain-claude-md skill, which was removed 2026-07-23 in favor of
+the claude-md-improver plugin skill and the built-in /init.
 
 ---
 
