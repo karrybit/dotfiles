@@ -106,6 +106,16 @@
   Prefer per-item ownership over whole-directory ownership so external additions
   survive.
 
+### Information Design
+
+- When collecting or transforming information into durable artifacts (research
+  notes, ledgers, analyses, reports, handoffs), keep three separable layers:
+  policy-safe raw observations, normalized comparable records, and
+  use-case-shaped outputs. The final artifact must never be the only source of
+  truth; it must be rebuildable from the earlier layers when the use case
+  changes. Grounding:
+  `~/.local/share/agents/docs/medallion-information-design.md`.
+
 ## Making Changes Safely
 
 ### Repository Changes

@@ -1,6 +1,6 @@
 ---
 name: manage-agent-skills
-description: Govern reusable agent skills. Use when deciding whether a workflow should become a skill, a rule, or a hook; choosing repository-local versus user-global placement; resolving overlap between skills; curating references/ content; or removing and merging skills. Covers this environment's placement, provenance, and ledger policy. Delegate hands-on authoring and eval mechanics to the skill-creator plugin, and collection-wide audits to audit-agent-skills.
+description: Govern reusable agent skills. Use when deciding whether a workflow should become a skill, a rule, or a hook; choosing repository-local versus user-global placement; resolving overlap between skills; curating references/ content; auditing the skill collection; or removing and merging skills. Covers this environment's placement, provenance, and ledger policy. Delegate hands-on authoring and eval mechanics to the skill-creator plugin.
 ---
 
 # Manage Agent Skills

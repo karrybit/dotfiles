@@ -1,8 +1,12 @@
-# Medallion Architecture Reference
+# Medallion Information Design Reference
 
 Last checked: 2026-06-07
 
-Use this reference to ground Bronze/Silver/Gold information design in established lakehouse practice without copying enterprise platform details into small local workflows.
+Grounds the Information Design rule in `~/.config/agents/AGENTS.md`
+(policy-safe raw observations / normalized comparable records /
+use-case-shaped outputs) in established lakehouse practice, without copying
+enterprise platform details into small local workflows. Formerly bundled with
+the medallion-info-design skill, generalized into the rule 2026-07-23.
 
 ## Source Summary
 
