@@ -223,6 +223,10 @@
   JSON, `yq` for YAML, `qsv` for CSV/TSV. Reach for `sed`/`awk`/`cut` only for
   genuinely plain text. Load the matching wrangling skill for non-trivial
   transformations.
+- When a preferred tool does not resolve in the current environment, do not
+  silently fall back to the tool it replaces. Recommend installing it, naming
+  the package and where to declare it, and say which fallback is being used in
+  the meantime.
 
 ### Chezmoi-Managed Files
 
