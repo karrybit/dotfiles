@@ -80,6 +80,20 @@ packages into `common.nix` would:
 (`home.stateVersion`, `programs.home-manager.enable`). It must not contain
 packages.
 
+### Exception: agent-required tools
+
+One set of tools is a contract rather than coincidence. `dot_config/agents/AGENTS.md`
+("Command-Line Tool Preferences") tells agents to prefer `rg`, `fd`, `jq`, `yq`,
+and `qsv` over their POSIX equivalents. An agent runs on every machine, so a rule
+naming a tool is only satisfiable if every profile declares it.
+
+This does not move those packages into a shared module — each profile still
+declares its own complete list. Only the *assertion* is shared:
+`agentRequiredTools` in `nix/checks.nix` maps each binary to its nixpkgs
+attribute, and `nix flake check` throws a fix-it message if any profile is
+missing one. Adding a tool to the rule therefore means adding it to all three
+profiles; removing it from the rule removes the obligation.
+
 ---
 
 ## Design: share-only packages (no binary)
@@ -133,6 +147,13 @@ task nix:check   # nix flake check + statix (antipatterns) + deadnix (unused bin
 task test        # render chezmoi templates (3 profiles) + zsh -n lint
 task nix:rebuild # rebuild and activate current profile
 ```
+
+`nix flake check` runs only the current system's checks and silently omits the
+other platform's. Checks that must cover every profile therefore cannot be split
+per system: `--all-systems` would try to *build* the other platform's derivation
+and fail with a platform mismatch. Instead register one derivation per system
+that asserts across all profiles — reading a package's name is pure evaluation,
+so `agent-required-tools` sees the Linux profile from a Mac. See `checks.nix`.
 
 New files imported by the flake must be staged before `task nix:check` will
 see them:
