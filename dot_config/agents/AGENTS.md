@@ -214,9 +214,12 @@
 
 ## Environment & Tooling
 
-### Structured Data on the Command Line
+### Command-Line Tool Preferences
 
-- Use structure-aware tools before text tools for structured data: `jq` for
+- When searching file contents or file paths from the shell, use `rg` instead of
+  `grep` and `fd` instead of `find`. Fall back to `grep` or `find` only when a
+  required capability has no `rg` or `fd` equivalent, and state that reason.
+- For structured data, use structure-aware tools before text tools: `jq` for
   JSON, `yq` for YAML, `qsv` for CSV/TSV. Reach for `sed`/`awk`/`cut` only for
   genuinely plain text. Load the matching wrangling skill for non-trivial
   transformations.
