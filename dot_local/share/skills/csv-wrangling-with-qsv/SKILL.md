@@ -26,7 +26,6 @@ Prefer `qsv` for local CSV/TSV manipulation because it handles CSV structure exp
 - When the input is JSON, use `jq`, and when it is YAML, use `yq`, instead of this skill. Mentioning `qsv` format conversion as a secondary step is acceptable only after the format-native workflow is established.
 - When the input is XML or another non-CSV/TSV format, defer to a format-native tool rather than leading with qsv.
 - Use `duckdb`, SQL, or Python when the task needs multi-step analytical modeling, complex window functions, or logic that becomes clearer as code.
-- If `qsv` is missing, do not silently fall back to unsafe text parsing. Check the local package manager or ask before installing when installation is outside the requested scope.
 
 ## References
 
