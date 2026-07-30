@@ -41,6 +41,14 @@ Then rebuild (see README). To find a package name: `nix search nixpkgs <keyword>
 | Cargo packages not in nixpkgs | `cargo install` via `run_onchange_02` |
 | `aqua`, `chezmoi` | Homebrew formula (permanent: nixpkgs-unlisted / bootstrap dependency) — declared in `Brewfile.${profile}` |
 
+**Why `aqua` is installed but manages nothing here:**
+aqua once managed global CLI packages. That was abolished — every tool moved to
+`home.packages`, and the global configs, shell hook, and update function were
+deleted from the source. The binary is kept only for work repositories that carry
+their own `aqua/aqua.yaml`; those resolve through the repo config, and any command
+they do not declare falls through to Nix. Do not reintroduce a global
+`AQUA_GLOBAL_CONFIG` — it prepends aqua's `bin` to `PATH` and shadows Nix.
+
 **Why macOS GUI apps stay as Homebrew casks:**
 - The Nix store is read-only — apps that self-update in-place (Obsidian, DBeaver, Chrome) fail silently or crash.
 - Apps requiring kernel/system extensions (Karabiner-Elements uses DriverKit) must be installed via cask; Nix cannot register system extensions.

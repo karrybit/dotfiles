@@ -22,7 +22,7 @@ __lib_require_commands chezmoi git jq || return 1
     brew autoremove
     brew cleanup
 
-    # --no-go --no-uv: suppress aqua-proxy calls for aqua-managed go/uv binaries
+    # --no-go --no-uv: go and uv install their own tools; keep them out of the Brewfile
     brew bundle dump -f --no-go --no-uv --file "${_brewfile}"
 
     __lib_chezmoi_commit_file \

@@ -1,0 +1,12 @@
+# Targets that must not exist. Removed on every `chezmoi apply`.
+#
+# Deleting a file from the chezmoi source does not remove its target, so a
+# retired tool leaves its live files behind on every machine. List them here
+# instead of cleaning each machine by hand.
+
+# Global aqua package management was abolished in 0ed0e36 (2026-06-15); 080bcf5
+# kept only the aqua binary, for work repositories that carry their own
+# aqua.yaml. These configs and the shell hook that pointed at them survived the
+# source deletion and kept prepending aqua's bin to PATH, shadowing nix.
+.config/zsh/zshenv.d/20_tool_aqua.zsh
+.config/aquaproj-aqua

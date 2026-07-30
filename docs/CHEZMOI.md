@@ -45,6 +45,29 @@ chezmoi git push
 
 ---
 
+## Retire a managed file
+
+Deleting a file from the source does **not** remove its target. The live file
+survives on every machine, unmanaged, and keeps taking effect — a retired tool's
+shell hook goes on editing `PATH` long after its source is gone.
+
+To retire a path, delete the source file *and* list the target in
+`.chezmoiremove`, which removes it on every `chezmoi apply`:
+
+```sh
+# .chezmoiremove — target paths, relative to $HOME
+.config/zsh/zshenv.d/20_tool_aqua.zsh
+.config/aquaproj-aqua
+
+# Confirm the blast radius before applying
+chezmoi apply --dry-run --verbose
+```
+
+Entries are permanent: they assert the path must not exist. Drop the entry to
+allow the path back.
+
+---
+
 ## Pull and apply changes from another machine
 
 ```sh
