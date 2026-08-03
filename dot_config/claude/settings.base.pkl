@@ -34,6 +34,10 @@ settings: Dynamic = new Dynamic {
   sandbox {
     enabled = true
     autoAllowBashIfSandboxed = false
+    // gh/gcloud/terraform 等の Go 製 CLI が sandbox 内で trustd 経由の
+    // TLS 証明書検証に失敗するため許可。セキュリティ的にはトレードオフ
+    // (trustd 経由の潜在的なデータ持ち出し経路が開く)。
+    enableWeakerNetworkIsolation = true
     excludedCommands {
       "docker *"
     }
