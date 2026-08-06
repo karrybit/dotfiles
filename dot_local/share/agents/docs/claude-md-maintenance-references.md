@@ -64,14 +64,3 @@ the claude-md-improver plugin skill and the built-in /init.
 **Summary**: CLAUDE.md is always loaded into every session. Target under 200 lines per file — longer files empirically reduce adherence. Skills are loaded on demand; each skill body has a ~5k token budget, with a 25k combined budget across all active skills. Skills are re-attached after context compaction.
 
 **Instruction implication**: The 200-line limit is not a soft suggestion — it is the primary size constraint for Phase 1 drafts and Phase 2 restructuring. Anything exceeding it should be relocated or removed, not compressed. The skill body itself should stay under ~500 lines to preserve budget for other active skills.
-
----
-
-## Coding agent research ledger
-
-- **Source**: `/Users/takumikaribe/.local/share/agents/docs/coding-agent-research/ledger.md`
-- **Type**: local research ledger (freshly fetched sources as of 2026-06-08)
-
-**Summary**: Full source entries for the official Claude Code skills docs, hooks docs, subagents docs, and Codex manual — each with evidence rating, freshness status, and local applicability notes. Contains the candidate extraction log for hook-backed skills, fresh-context reviewer subagent, and cross-tool SKILL.md portability.
-
-**Instruction implication**: Before updating any principle in this skill, check the ledger for whether the underlying source has a newer check date or a changed status. The ledger is the authoritative cache for this user's research on coding agent configuration.
