@@ -21,23 +21,36 @@ Last checked: 2026-08-06
 
 プローブAが作る成果物は**決定表**である。DMN は決定表の標準そのもので、探すべき欠陥を名前付きで定義している。プログラミング言語のコンパイラのエラーから欠陥を導くのは、同じ場所への遠回りだった。
 
-- ★ DMN は OMG の仕様。現行は 1.7 beta（2024-09）。対象は business analysts / designers / developers / business owners。「The notation shows the dependencies between a set of related decisions, and on the business knowledge and input data required to make them. It is simple enough to be readily understandable by all business stakeholders.」決定表を含み、XML で組織間交換できる。
+- ★ DMN は OMG の仕様。現行は 1.7 beta（2024-09）。**本 reference が本文で確認したのは v1.3。**対象は business analysts / designers / developers / business owners。「The notation shows the dependencies between a set of related decisions, and on the business knowledge and input data required to make them. It is simple enough to be readily understandable by all business stakeholders.」決定表を含み、XML で組織間交換できる。
 - **業務システムの意思決定が対象領域である。** Catala は法令（statutory law）のための言語で、領域が違う。
 
 ## 3つの欠陥クラス
 
 **これがプローブAが探すもの。**
 
-| 欠陥 | DMN の呼び方 | 決定表での現れ方 | 直し方 |
-| --- | --- | --- | --- |
-| 隙間 | gap / incomplete | 帰結が **0個** の行 | 原則（`例外元: なし`）を置くか条件を広げる |
-| 重複 | overlap | 帰結が **2個以上** の行 | 片方を他方の例外にするか条件を排他にする |
-| 冗長 | subsumption | 1つにまとめられる規則が複数 | まとめる（fully contracted） |
+| 欠陥 | 呼び方 | 決定表での現れ方 | 等級 | 直し方 |
+| --- | --- | --- | --- | --- |
+| 隙間 | gap | 帰結が **0個** の行 | ★ | 原則（`例外元: なし`）を置くか条件を広げる |
+| 重複 | overlap | 帰結が **2個以上** の行 | ★ | 片方を他方の例外にするか条件を排他にする |
+| 冗長 | subsumption | 1つにまとめられる規則が複数 | ▲ | まとめる（fully contracted） |
 
-- ▲ gap は「どの規則にも当たらない入力の組合せ」。不完全な表は誤りとして扱う。仕様は完全性を要求しないが、best practice は完全性を求める。
-- ▲ subsumption は「複数の規則が1つにまとめられる」状態。**fully contracted table** が best practice。
-- ▲ hit policy が重複時の解決を定める。単一ヒットは **U**（重複を許さず、重なればエラー）/ **A**（重複可だが出力が同一でなければエラー）/ **P**（重複可、出力値の順序で最優先を選ぶ）/ **F**（順序上最初の一致）。複数ヒットは C / O / R。
-- **`U`（重複を許さない）が best practice** とされる。これが本形式の「兄弟は条件が排他でなければならない」規律と一致する。
+★ **overlap は仕様が形式的に定義している。**
+
+> If two input entries of the same input expression share no values, the entries (cells) are called **disjoint**. If there is an intersection, the entries are called **overlapping** (or even equal). 'Irrelevant' ('-') overlaps with any input entry of the input expression. **Two rules are overlapping if all corresponding input entries are overlapping.**
+
+★ **hit policy は重複時の解決を定め、`Unique` が既定かつ規範である。** ここは実装者解説より仕様のほうが強い。
+
+> The hit policy **SHALL default to Unique**, in which case the hit indicator is optional. Decision tables with the Unique hit policy **SHALL NOT contain overlapping rules**.
+
+7種は `Unique / Any / Priority / First / Collect / Output order / Rule order`。**`Unique` が既定で「重複を含んではならない」と規定されている**ことが、本形式の「兄弟は条件が排他でなければならない」規律の根拠になる（best practice という以上に規範である）。
+
+★ **gap の扱いは「エラー」ではなく「null」。** 仕様は完全性を要求しない。
+
+> In that case, **no rule matches** and MinCreditScore returns the value **null**. Downstream logic referencing this variable must account for the possibility of null value.
+
+つまり DMN では隙間は実行時に null として現れ、下流がそれを扱う責任を負う。**自然言語仕様の段では「帰結が決まらない」ことそのものが指摘である**——実装に null を流して黙って通すのを避けるために、ここで潰す。
+
+▲ **subsumption は仕様の語ではない。** DMN 仕様本文に該当語は現れず、実務家の解説（Bruce Silver）に由来する。「複数の規則が1つにまとめられる」状態を指し、**fully contracted table** が best practice とされる。**gap / overlap と同格に扱わない**（プローブAでも優先度を下げてある）。
 
 ### 規則の順序に意味を持たせない
 
@@ -128,7 +141,7 @@ BR-EXP-010 上長承認（原則）
 
 ## Sources
 
-- ★ OMG, *Decision Model and Notation (DMN)* https://www.omg.org/spec/DMN/
+- ★ OMG, *Decision Model and Notation (DMN)* 仕様本文 https://www.omg.org/spec/DMN/1.3/PDF — **v1.3 の本文を直接抽出して確認**（hit policy / overlap の形式定義 / Unique の SHALL NOT / no-match は null）。1.5 の PDF は取得サイズ上限を超え、1.6 は 404。仕様ページ（現行 1.7 beta）https://www.omg.org/spec/DMN/ は位置づけと目的の確認に使用
 - ▲ Bruce Silver "DMN Hit Policy Explained", Trisotech https://www.trisotech.com/dmn-hit-policy-explained/
 - ▲ DMN（Drools ドキュメント）https://docs.drools.org/latest/drools-docs/drools/DMN/index.html
 - ▲ hit policy と完全性（SAP Signavio）https://help.sap.com/docs/signavio-process-modeler/user-guide/dmn-hit-policy
@@ -136,4 +149,4 @@ BR-EXP-010 上長承認（原則）
 - ★ Business Rules Manifesto（Business Rules Group, 2003）https://www.businessrulesgroup.org/brmanifesto.htm — 4.7 / 5.2 を本文で確認。項番は版で異なる（Ross 2003 版では 3.5 / 3.6）
 - ○ Catala 公式ドキュメント https://book.catala-lang.org/en/2-2-conditionals-exceptions.html （要約器経由。逐語引用には使わない）
 
-Revalidation trigger: DMN の hit policy か完全性の扱いが変わったとき。OMG DMN の一次仕様本文（現在は仕様ページの記述のみ確認）で hit policy と gap の定義を逐語確認したとき。subsumption をプローブAの検査に加えた効果を実測したとき。
+Revalidation trigger: DMN の hit policy か gap の扱いが変わったとき。**確認したのは v1.3 の本文なので、v1.5 以降で hit policy・overlap の定義・no-match の挙動が変わっていないかを確認したとき**（1.5 の PDF は 10MB を超えるため直接ダウンロードが必要）。subsumption をプローブAの検査に加えた効果を実測したとき。

@@ -107,11 +107,11 @@ Manifesto 2.2 の対象は **process と procedure** である。「ユースケ
 
 - Information Design 規則と根拠: `~/.config/agents/AGENTS.md`、`~/.local/share/agents/docs/medallion-information-design.md`
 - ★ Business Rules Manifesto（Business Rules Group, 2003）**一次** https://www.businessrulesgroup.org/brmanifesto.htm — 引用した 2.2 / 2.3 / 4.7 / 5.2 は本文で確認。**項番は版で異なる**（Ross 2003 版では 2.2→1.4、4.7→3.5、5.2→3.6）ので、項番を引くときは版を明示する
-- ▲ Ross による Manifesto 解説 http://www.policy-workshop.org/2003/web/policy2003/common/RonaldPresentation.pdf — **現在 HTTP 522 で到達不能。** archive.org 経由でのみ取得可
-- ▲ 業務規則が要件文書に埋め込まれる問題 https://enfocussolutions.com/business-rules/ — **ドメイン失効で 404。** archive.org（2012-08-13, John Parker）経由でのみ取得可
+- ▲ Ross による Manifesto 解説（2003 版）http://web.archive.org/web/20091229134644/http://www.policy-workshop.org:80/2003/web/policy2003/common/RonaldPresentation.pdf — 原 URL（policy-workshop.org）は HTTP 522 で到達不能。archive.org のスナップショット（2009-12-29）を正とする
+- ▲ 業務規則が要件文書に埋め込まれる問題（John Parker）http://web.archive.org/web/20240416041452/https://enfocussolutions.com/business-rules/ — 原 URL（enfocussolutions.com）はドメイン失効で 404。archive.org のスナップショット（2024-04-16）を正とする
 - ▲ ICONIX のロバストネス分析 https://sparxsystems.com/enterprise_architect_user_guide/17.1/modeling_domains/iconix_process.html
 - ○ Rosenberg & Stephens *Use Case Driven Object Modeling with UML* https://content.e-bookshelf.de/media/reading/L-5521-ca80696330.pdf — **URL の実体は前付と第1章の抜粋のみ。** 全体の主張の根拠には使えない
 - ○ RDRA（二次情報のみ）https://qiita.com/tatane616/items/f7f4e5ad818fe8b125d6 、公式 http://masuda220.jugem.jp/?eid=363 — 層構成もバリエーション・条件・状態モデルの意味も、一次資料（書籍）未確認
 - ▲ Given-When-Then がシナリオ指向であること https://www.ranorex.com/blog/given-when-then-tests/
 
-Revalidation trigger: RDRA の一次資料（書籍）で層構成と、バリエーション・条件・状態モデルの意味、規則の優先関係を扱う構成要素の有無を確認したとき（読み替え表の「不明」を埋める）。ICONIX を Rosenberg の書籍全体で確認したとき。到達不能な出典2件（Ross PDF / enfocus）を archive.org のスナップショット URL に置き換えるか、代替の一次資料を見つけたとき。実案件で正規化を1回行い、割り当て表の6種が足りたかを確認したとき。
+Revalidation trigger: RDRA の一次資料（書籍）で層構成と、バリエーション・条件・状態モデルの意味、規則の優先関係を扱う構成要素の有無を確認したとき（読み替え表の「不明」を埋める）。ICONIX を Rosenberg の書籍全体で確認したとき。archive.org のスナップショットが失われたとき、または enfocus / Ross の記述に代替できる一次資料を見つけたとき。実案件で正規化を1回行い、割り当て表の6種が足りたかを確認したとき。
