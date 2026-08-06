@@ -2,7 +2,7 @@
 
 Last checked: 2026-06-07
 
-Grounds the Information Design rule in `~/.config/agents/AGENTS.md`
+Grounds the Information Design rule in `~/.config/claude/CLAUDE.md`
 (policy-safe raw observations / normalized comparable records /
 use-case-shaped outputs) in established lakehouse practice, without copying
 enterprise platform details into small local workflows. Formerly bundled with

@@ -15,17 +15,19 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/) and [Nix](http
   dot_local/                  ← local data/bin → ~/.local/
 
 ~/.config/                    ← live configuration files
-~/.config/agents/             ← user-level agent instructions
+~/.config/claude/CLAUDE.md    ← user-level agent instructions
 ~/.local/share/agents/docs/   ← reusable local agent source summaries
+~/.local/share/agents/scripts/ ← reusable agent-operated scripts
 ~/.local/share/skills/        ← user-level agent skills (canonical)
 ~/.config/claude/skills/      ← Claude Code skill entrypoints (per-skill symlinks → ~/.local/share/skills/*)
 ```
 
 `chezmoi apply` deploys source → live. The `dot_` prefix is converted to `.` (e.g. `dot_config/` → `~/.config/`).
 
-Agent instructions, skills, and subagents are managed under `dot_config/agents/`,
-`dot_local/share/skills/`, and `dot_claude/agents/`. See [AGENTS.md](AGENTS.md)
-for how agents interact with this repository.
+Agent instructions, skills, and subagents are managed under
+`dot_config/claude/CLAUDE.md`, `dot_local/share/skills/`, and
+`dot_config/claude/agents/`. See [AGENTS.md](AGENTS.md) for how agents interact
+with this repository.
 
 ---
 

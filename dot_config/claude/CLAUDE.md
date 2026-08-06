@@ -1,4 +1,4 @@
-# User Agent Instructions
+# Claude Code Instructions
 
 ## Interpreting the Task
 
@@ -193,7 +193,7 @@
   intent, propose the smallest concrete instruction improvement before ending
   the task.
 - Classify each proposed improvement before suggesting it: user-level guidance
-  belongs in `$XDG_CONFIG_HOME/agents/AGENTS.md`; repository-specific guidance
+  belongs in `$XDG_CONFIG_HOME/claude/CLAUDE.md`; repository-specific guidance
   belongs in the narrowest applicable repository `AGENTS.md`.
 - For each proposed instruction change, provide the target file, proposed
   wording, reason, and overlap or conflict with existing rules.

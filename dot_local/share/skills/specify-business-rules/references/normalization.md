@@ -8,7 +8,7 @@ Last checked: 2026-08-06
 
 ## 3層に分ける
 
-`~/.config/agents/AGENTS.md` の Information Design 規則（生観察 / 正規化済みレコード / 用途別出力）をそのまま適用する。
+`~/.config/claude/CLAUDE.md` の Information Design 規則（生観察 / 正規化済みレコード / 用途別出力）をそのまま適用する。
 
 | 層 | 中身 | 変更するか |
 | --- | --- | --- |
@@ -105,7 +105,7 @@ Manifesto 2.2 の対象は **process と procedure** である。「ユースケ
 
 証拠の等級: **★** 一次資料を確認 / **▲** 実装者・専門家の解説 / **○** 二次情報
 
-- Information Design 規則と根拠: `~/.config/agents/AGENTS.md`、`~/.local/share/agents/docs/medallion-information-design.md`
+- Information Design 規則と根拠: `~/.config/claude/CLAUDE.md`、`~/.local/share/agents/docs/medallion-information-design.md`
 - ★ Business Rules Manifesto（Business Rules Group, 2003）**一次** https://www.businessrulesgroup.org/brmanifesto.htm — 引用した 2.2 / 2.3 / 4.7 / 5.2 は本文で確認。**項番は版で異なる**（Ross 2003 版では 2.2→1.4、4.7→3.5、5.2→3.6）ので、項番を引くときは版を明示する
 - ▲ Ross による Manifesto 解説（2003 版）http://web.archive.org/web/20091229134644/http://www.policy-workshop.org:80/2003/web/policy2003/common/RonaldPresentation.pdf — 原 URL（policy-workshop.org）は HTTP 522 で到達不能。archive.org のスナップショット（2009-12-29）を正とする
 - ▲ 業務規則が要件文書に埋め込まれる問題（John Parker）http://web.archive.org/web/20240416041452/https://enfocussolutions.com/business-rules/ — 原 URL（enfocussolutions.com）はドメイン失効で 404。archive.org のスナップショット（2024-04-16）を正とする

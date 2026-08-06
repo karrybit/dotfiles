@@ -11,7 +11,7 @@ let
       printf '%s\n' ${pkgs.lib.escapeShellArg (toString value)} > $out
     '';
 
-  # Tools that `dot_config/agents/AGENTS.md` ("Command-Line Tool Preferences")
+  # Tools that `dot_config/claude/CLAUDE.md` ("Command-Line Tool Preferences")
   # tells agents to prefer over their POSIX equivalents. These are a contract,
   # not the usual profile coincidence: an agent runs on every machine, so a rule
   # naming a tool is only satisfiable if every profile declares it. Packages stay
@@ -49,7 +49,7 @@ let
     else
       throw ''
         agent-required-tools: these profiles do not declare tools that
-        dot_config/agents/AGENTS.md tells agents to prefer:
+        dot_config/claude/CLAUDE.md tells agents to prefer:
         ${lib.concatStringsSep "\n" agentToolGaps}
         Add the package to that profile, or drop the tool from the
         Command-Line Tool Preferences rule.

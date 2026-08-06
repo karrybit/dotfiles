@@ -42,9 +42,8 @@
 ## Agent Skills and Extensions
 
 - Claude Code is the only agent this repository configures. User-level
-  instructions are in `dot_config/agents/AGENTS.md`, imported by
-  `dot_config/claude/CLAUDE.md.tmpl`; the path is kept because `nix/checks.nix`
-  and several skill references point at it.
+  instructions are a single file, `dot_config/claude/CLAUDE.md`, deployed to
+  `~/.config/claude/CLAUDE.md`. There is no separate AGENTS.md to import.
 - Skills live under `dot_local/share/skills/`. `run_onchange_04_sync-skills.sh.tmpl`
   symlinks each into `~/.config/claude/skills/` on apply, and removes deployed
   skills whose source entry is gone. Adding a skill requires only one directory

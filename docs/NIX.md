@@ -90,7 +90,7 @@ packages.
 
 ### Exception: agent-required tools
 
-One set of tools is a contract rather than coincidence. `dot_config/agents/AGENTS.md`
+One set of tools is a contract rather than coincidence. `dot_config/claude/CLAUDE.md`
 ("Command-Line Tool Preferences") tells agents to prefer `rg`, `fd`, `jq`, `yq`,
 and `qsv` over their POSIX equivalents. An agent runs on every machine, so a rule
 naming a tool is only satisfiable if every profile declares it.
