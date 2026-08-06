@@ -57,16 +57,14 @@
   supported by the sources.
 - Avoid reinventing or rethinking solved problems. Move quickly onto existing
   knowledge, then adapt it to the user's concrete constraints.
-- If external verification is unavailable, say so and distinguish cached or
-  remembered knowledge from freshly checked sources.
-- Before quoting a source verbatim, confirm the wording against the source text
-  itself. Do not build a verbatim quote from a summarizing fetch, a search
-  snippet, or recall: those have produced quotes, error strings, and example
-  sentences that do not exist in the source. For PDFs, verify with
+- Say which source was actually read, and distinguish cached knowledge and
+  summaries from freshly checked source text; a claim resting on a summary must be
+  marked as lower confidence, and say so when external verification is
+  unavailable. Never build a verbatim quote from a summarizing fetch, a search
+  snippet, or recall — those have produced quotes, error strings, and example
+  sentences that do not exist in the source. For PDFs verify with
   `$XDG_DATA_HOME/agents/scripts/pdf-cite/bin/pdf-cite <abs-path> --find "<quote>"`,
   which exits non-zero when the quote is absent.
-- When a claim rests on a summary rather than the source text, mark the
-  confidence in the artifact and say which source was actually read.
 - Do not turn "not found" into "not there". An absence is evidence only about
   the region actually examined, so a partial view never supports a claim about
   the whole: an excerpt or sample of a document, a filtered or globbed search, a
@@ -93,11 +91,10 @@
   detectable. Over-abstraction produces unactionable advice.
 - Match analysis depth to recurrence and impact: do deep root-cause work for
   recurring or high-impact defects, and apply direct fixes for one-offs.
-- Produce fundamental fixes rather than symptomatic ones, and close the
-  verification gap that let the defect through, not only the current symptom.
-- Sublimate the lesson into the most durable enforceable form available,
-  preferring a test, hook, or generated artifact over a written instruction,
-  and use prose only when mechanical enforcement is impossible.
+- Fix the cause rather than the symptom, and close the verification gap that let
+  the defect through. Sublimate the lesson into the most durable enforceable form
+  available — a test, hook, or generated artifact over a written instruction, and
+  prose only when mechanical enforcement is impossible.
 
 ### Designing Against the Real Environment
 
@@ -156,23 +153,17 @@
   and classify them as canonical, draft, merged, or deletion candidates.
 - Do not delete draft or obsolete-looking files automatically; report
   candidates with evidence unless the user explicitly requests cleanup.
-- Keep only current effective guidance in instruction files. Move rationale or
-  superseded discussion to commit messages, PR notes, or a dedicated decision
-  log when needed.
 - Before finishing work that changed multiple artifacts, review the final set
   as one system: consistent terminology, correct placement and ownership,
   valid cross-references, and documented behavior matching the actual files.
 
 ## Verification & Completion
 
-- Treat investigation, planning, and implementation as separate request scopes.
 - After editing files, run `git diff --check`.
 - After changing chezmoi-managed paths or `.chezmoiignore`, verify that the
   intended files are managed or ignored as expected.
 - A documentation-affecting configuration change is complete only after the
   relevant README has been reviewed.
-- Before creating a file, confirm that an equivalent file does not already
-  exist.
 - When fixing a bug that AI-assisted work introduced or a review missed, add
   the smallest deterministic regression test that fails on the old behavior,
   and cover the parallel paths the change touches (sandbox vs production,
@@ -230,18 +221,6 @@
   deletes it.
 - Do not add a skill that repeats general engineering practice, an existing
   skill, or a capability the harness already provides.
-
-### Claude-Related Instruction Files
-
-- When creating or editing Claude-related instruction files, including
-  `CLAUDE.md` and `CLAUDE.local.md`, reference other local instruction files
-  with Claude Code's `@` file-reference syntax.
-- Prefer `Follow the instructions in @AGENTS.md.` over prose-only references
-  such as `Follow the instructions in AGENTS.md`.
-- Do not duplicate the full contents of `AGENTS.md` into `CLAUDE.md` unless
-  explicitly requested.
-- If a Claude-related file points to another local instruction file, use an `@`
-  reference that is meaningful from that file's target location.
 
 ## Environment & Tooling
 
@@ -308,7 +287,9 @@
 
 - Before installing or enabling a public Claude Code skill, subagent, plugin, or
   MCP-backed agent extension, inspect it in a temporary or quarantined directory
-  first.
+  first, covering `SKILL.md`, subagent frontmatter, plugin manifests, hooks, MCP
+  server declarations, executable scripts, install and update commands, network
+  access, and secret-handling behavior.
 - Prefer official, canonical, or maintainer-owned sources. Pin the exact source
   repository and ref when installing from Git, and review the license for each
   imported extension.
@@ -318,9 +299,6 @@
 - When a candidate extension is available on disk, run
   `$XDG_DATA_HOME/agents/scripts/agent-extension-security/bin/vet-agent-extension`
   against the candidate directory before installing it.
-- Review `SKILL.md`, Claude subagent frontmatter, plugin manifests, hooks,
-  MCP server declarations, executable scripts, install commands, update
-  commands, network access, and secret-handling behavior before installation.
 - Treat skills, plugins, MCP servers, hooks, and subagents installed by Claude
   Code commands as runtime state, not chezmoi-managed source, unless the
   corresponding source artifact or setting is explicitly added to this
