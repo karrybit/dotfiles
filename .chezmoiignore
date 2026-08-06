@@ -34,7 +34,6 @@ docs
 .local/share/agents/docs/*
 !.local/share/agents/docs/AGENTS.md
 !.local/share/agents/docs/agent-extension-security.md
-!.local/share/agents/docs/agent-extensions-ledger.md
 !.local/share/agents/docs/claude-md-maintenance-references.md
 !.local/share/agents/docs/document-review-evidence.md
 !.local/share/agents/docs/llm-as-reviewer-evidence.md

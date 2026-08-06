@@ -50,11 +50,11 @@
   no per-agent symlink entries are needed.
 - Repository-specific skills live under `.agents/skills/` and are source-only
   (listed in `.chezmoiignore`).
-- Claude Code subagents are under `dot_claude/agents/` and deploy to `~/.claude/agents/`.
-- Managed skills must include `PROVENANCE.md`. Record installed extensions in
-  `~/.local/share/agents/docs/agent-extensions-ledger.md`. Installing via a
-  Codex or Claude Code command does not make an extension chezmoi-managed unless
-  its source artifact or setting is added to this repository.
+- Claude Code subagents are under `dot_config/claude/agents/` and deploy to
+  `~/.config/claude/agents/`.
+- Managed skills must include `PROVENANCE.md`. Installing via a Codex or Claude
+  Code command does not make an extension chezmoi-managed unless its source
+  artifact or setting is added to this repository.
 - Agent source summaries belong under `~/.local/share/agents/docs/`; only
   explicitly allowlisted summaries are chezmoi-managed.
 - Agent-operated scripts belong under `~/.local/share/agent-scripts/`; only

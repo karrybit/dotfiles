@@ -10,7 +10,7 @@ Last checked: 2026-08-06
 
 - Claude Code に skill 間の依存機構がない。詳細を持つ支持された方法は、その skill 自身の `references/` に置くこと（progressive disclosure）である。
 - このskillは `disable-model-invocation: true` で明示呼び出し専用。ユーザーが明示的に呼んだ瞬間に別の skill も同時に読み込まれることは、どこにも保証されていない。
-- skill は確率的に発火する。発火しないと手順が黙って劣化するものを依存にしてはいけない（`manage-agent-skills`）。インタビューの規律が読み込まれなければ、質問を一度に並べる形へ静かに退化する。
+- skill は確率的に発火する。発火しないと手順が黙って劣化するものを依存にしてはいけない（AGENTS.md「Choosing a Reusable Mechanism」）。インタビューの規律が読み込まれなければ、質問を一度に並べる形へ静かに退化する。
 
 したがって下の規律は、他に同種の skill があっても**ここに書く**。
 

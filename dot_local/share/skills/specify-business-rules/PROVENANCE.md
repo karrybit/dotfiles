@@ -5,8 +5,6 @@
 - source_url: local
 - license: local
 - reviewed_at: 2026-08-06
-- sync_policy: sync
-- migration_target: future personal plugin
 - notes: |
     業務規則仕様を4つの直交する規約（ORM=事実の粒度 / SBVR=語彙表記と様相 /
     EARS=前提と契機 / DMN+Catala=規則間の優先）でレビューし、作成する手順。

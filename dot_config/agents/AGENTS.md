@@ -214,6 +214,25 @@
 - Move rationale, historical context, and superseded discussion out of
   instruction files into commit messages, PR notes, or a dedicated decision log.
 
+### Choosing a Reusable Mechanism
+
+- Before adding a skill, choose the mechanism deliberately. A skill fires
+  probabilistically and costs a description line in every session, so use one
+  only for an on-demand workflow, specialized domain knowledge, a deterministic
+  helper script, or bundled reference material.
+- Put a norm that must apply every time its situation occurs in `AGENTS.md`, not
+  in a skill. A skill is the wrong mechanism when a missed trigger is a failure.
+- Prefer a plugin when an official or maintained equivalent exists, and do not
+  hand-copy upstream skill files into this environment. A copied skill has no
+  ref to compare against and drifts silently as upstream renames, splits, or
+  deletes it.
+- Do not add a skill that repeats general engineering practice, an existing
+  skill, or a capability the harness already provides.
+- When a skill must serve more than one agent, normalize around the shared
+  workflow and put agent-specific runners or metadata behind availability checks
+  or adapter files. Do not leave single-agent assumptions in the main
+  instructions unless the description scopes the skill to that agent.
+
 ### Claude-Related Instruction Files
 
 - When creating or editing Claude-related instruction files, including
@@ -305,12 +324,14 @@
   Claude Code commands as runtime state, not chezmoi-managed source, unless the
   corresponding source artifact or setting is explicitly added to this
   repository.
-- Before managing an agent extension in this repository, record its origin,
-  source URL or local source, version or ref, license, sync policy, review date,
-  and migration target in the agent extensions ledger.
-- Managed user-global skills must include `PROVENANCE.md`. Do not vendor
-  proprietary, unclear-license, or terms-restricted skill artifacts into shared
-  dotfiles; record them as `installed-only` or `do-not-vendor` instead.
+- Managed user-global skills must include `PROVENANCE.md` recording origin,
+  source, license, and review date, plus the upstream version or ref for any
+  vendored or external artifact. Keep it current when the artifact is updated or
+  re-reviewed. Provenance is per-item and lives beside the artifact; do not
+  reintroduce a hand-maintained registry of the whole collection.
+- Do not vendor proprietary, unclear-license, or terms-restricted artifacts into
+  shared dotfiles. Install them through a plugin or package manager, or leave
+  them as runtime state outside this repository.
 - Do not install or enable an extension that requests bypass permissions,
   broad write access, broad shell access, hooks, MCP servers, credential reads,
   or automatic network actions unless the user explicitly approves that risk.
