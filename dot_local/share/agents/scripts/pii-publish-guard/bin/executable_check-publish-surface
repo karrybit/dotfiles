@@ -3,7 +3,7 @@
 # Blocks publish commands (git push, gh pr create, gh release create) when
 # outgoing commits contain high-confidence secret patterns. Broader PII
 # judgment (home paths, org names, personal data) is an agent rule in
-# AGENTS.md, not this hook: those need context this scan cannot have.
+# CLAUDE.md, not this hook: those need context this scan cannot have.
 # Escape hatch: PII_GUARD_SKIP=1 in the hook environment skips the check.
 set -u
 

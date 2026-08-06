@@ -4,12 +4,10 @@ Taskfile.yaml
 test
 
 # Source-only docs and instructions
-AGENTS.md
 CLAUDE.md
 MIGRATION.md
 README.md
 docs
-.config/nvim/AGENTS.md
 .config/nvim/CLAUDE.md
 .config/nvim/README.md
 
@@ -18,7 +16,6 @@ docs
 .config/zsh/.zcompdump
 .config/zsh/.zsh_sessions
 .local/share/agents/scripts/*
-!.local/share/agents/scripts/AGENTS.md
 !.local/share/agents/scripts/agent-extension-security
 !.local/share/agents/scripts/agent-extension-security/**
 !.local/share/agents/scripts/pii-publish-guard
@@ -26,7 +23,6 @@ docs
 !.local/share/agents/scripts/pdf-cite
 !.local/share/agents/scripts/pdf-cite/**
 .local/share/agents/docs/*
-!.local/share/agents/docs/AGENTS.md
 !.local/share/agents/docs/agent-extension-security.md
 !.local/share/agents/docs/document-review-evidence.md
 !.local/share/agents/docs/llm-as-reviewer-evidence.md

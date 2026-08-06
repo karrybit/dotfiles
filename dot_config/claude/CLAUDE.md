@@ -72,7 +72,11 @@
   Before writing that something is absent, unsupported, or unaddressed, either
   bring the whole source into view or record the claim as unknown.
 - Cache reusable source summaries under `$XDG_DATA_HOME/agents/docs/`, or
-  `$HOME/.local/share/agents/docs/` when `XDG_DATA_HOME` is unset.
+  `$HOME/.local/share/agents/docs/` when `XDG_DATA_HOME` is unset. Cache only
+  what is likely to be reused, not one-off investigation notes; quote sparingly
+  and keep source attribution rather than copying long passages; and treat the
+  directory as a working set, marking stale, superseded, duplicated, or low-value
+  entries as deletion candidates when you encounter them.
 
 ### Problem-Solving Discipline
 
@@ -135,7 +139,7 @@
   its contents.
 - Reuse or update existing files and conventions when appropriate.
 - Preserve unrelated and user-authored uncommitted changes.
-- Place instructions in the narrowest applicable `AGENTS.md`.
+- Place instructions in the narrowest applicable `CLAUDE.md`.
 - Do not place directory-specific instructions in a broader file.
 - When committing, group unrelated changes into separate logical commits
   instead of one mixed commit, unless the user requests a single commit.
@@ -185,10 +189,10 @@
   the task.
 - Classify each proposed improvement before suggesting it: user-level guidance
   belongs in `$XDG_CONFIG_HOME/claude/CLAUDE.md`; repository-specific guidance
-  belongs in the narrowest applicable repository `AGENTS.md`.
+  belongs in the narrowest applicable repository `CLAUDE.md`.
 - For each proposed instruction change, provide the target file, proposed
   wording, reason, and overlap or conflict with existing rules.
-- Do not update `AGENTS.md` automatically when reviewing agent behavior.
+- Do not update `CLAUDE.md` automatically when reviewing agent behavior.
 - Do not add rules for one-off situations unless the impact is significant.
 - Write rules with a clear trigger and expected action.
 - Prefer verification commands, tests, or hooks over behavioral instructions
@@ -213,7 +217,7 @@
   probabilistically and costs a description line in every session, so use one
   only for an on-demand workflow, specialized domain knowledge, a deterministic
   helper script, or bundled reference material.
-- Put a norm that must apply every time its situation occurs in `AGENTS.md`, not
+- Put a norm that must apply every time its situation occurs in `CLAUDE.md`, not
   in a skill. A skill is the wrong mechanism when a missed trigger is a failure.
 - Prefer a plugin when an official or maintained equivalent exists, and do not
   hand-copy upstream skill files into this environment. A copied skill has no
@@ -267,13 +271,16 @@
 
 ### User-Scoped Agent Scripts
 
-- Reusable but project-specific or write-once-run-later agent scripts belong
-  under `$XDG_DATA_HOME/agents/scripts/`.
+- Use a temp directory for a script only needed during the current session. A
+  script expected to run again across sessions, be handed to another agent, or
+  kept as an executable procedure belongs under `$XDG_DATA_HOME/agents/scripts/`,
+  in a named subdirectory holding `README.md` and `bin/`.
 - The stable directory root is managed by chezmoi as
   `dot_local/share/agents/scripts/`, but arbitrary files below that root are not
-  managed by chezmoi unless explicitly requested.
-- Put directory-specific operating rules in
-  `$XDG_DATA_HOME/agents/scripts/AGENTS.md`.
+  managed by chezmoi unless explicitly requested. Promote a script set to explicit
+  management only when the user asks to sync it across machines.
+- Never put secrets, cookies, raw logs, scraped HTML, or other sensitive runtime
+  data in a chezmoi-managed file.
 - Do not add agent script directories to `PATH` by default. Invoke scripts by
   explicit file path.
 - Agent scripts must not depend on the caller's current working directory.

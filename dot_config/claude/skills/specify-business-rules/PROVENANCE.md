@@ -122,7 +122,7 @@
     **要約器による PDF 引用の捏造を3件確認**（Catala の conflict 文字列、EARS の
     例文、SBVR の credit limit 例文）。逐語引用は `agents/scripts/pdf-cite` で実在を
     検証する（語間空白の差の吸収と、未検出時の非ゼロ終了はスクリプト側で担保）。
-    この教訓は AGENTS.md の External Knowledge and Practices に規則として入れた。
+    この教訓は CLAUDE.md の External Knowledge and Practices に規則として入れた。
     要約器経由の出典は Sources で等級を落とし、逐語引用に使わないと明記した。
 
     **2026-08-06 時点で確定。** 確定の条件は「review-doc-fresh-eyes による外部レビューを
