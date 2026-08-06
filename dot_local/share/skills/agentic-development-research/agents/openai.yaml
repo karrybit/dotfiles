@@ -1,4 +1,0 @@
-interface:
-  display_name: "Agentic development research"
-  short_description: "Update coding-agent and agentic-delivery research ledgers"
-  default_prompt: "Use $agentic-development-research to run an agentic development research pass."
