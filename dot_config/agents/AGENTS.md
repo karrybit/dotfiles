@@ -201,7 +201,11 @@
 - Do not add rules for one-off situations unless the impact is significant.
 - Write rules with a clear trigger and expected action.
 - Prefer verification commands, tests, or hooks over behavioral instructions
-  when compliance can be checked mechanically.
+  when compliance can be checked mechanically. Compliance is mechanically
+  checkable when the check can inspect the artifact itself, not when it would
+  have to infer intent from a proxy such as a command string. A norm about how
+  to reason belongs in prose, paired with a requirement to state the deviation
+  so it is visible in the transcript.
 - Check proposed rules for duplication or conflicts with existing instructions.
 - Apply instruction changes only after user approval.
 - Treat instruction files as a maintained system, not an append-only log. When

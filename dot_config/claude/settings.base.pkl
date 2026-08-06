@@ -49,6 +49,15 @@ settings: Dynamic = new Dynamic {
     excludedCommands {
       "docker *"
     }
+    filesystem {
+      // The chezmoi source repository, so editing source and running git inside
+      // it do not each need the sandbox lifted. Deployment stays gated on
+      // purpose: `chezmoi apply` writes targets across $HOME, which this does
+      // not grant, and Claude Code's own config paths are protected separately.
+      allowWrite {
+        "~/.local/share/chezmoi"
+      }
+    }
     network {
       allowedDomains {
         "github.com"
