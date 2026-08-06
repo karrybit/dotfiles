@@ -59,6 +59,16 @@
   knowledge, then adapt it to the user's concrete constraints.
 - If external verification is unavailable, say so and distinguish cached or
   remembered knowledge from freshly checked sources.
+- Before quoting a source verbatim, confirm the wording against the source text
+  itself. Do not build a verbatim quote from a summarizing fetch, a search
+  snippet, or recall: those have produced quotes, error strings, and example
+  sentences that do not exist in the source. For PDFs, verify with
+  `$XDG_DATA_HOME/agent-scripts/pdf-cite/bin/pdf-cite <abs-path> --find "<quote>"`,
+  which exits non-zero when the quote is absent.
+- When a claim rests on a summary rather than the source text, mark the
+  confidence in the artifact and say which source was actually read. Keep
+  negative claims ("the source does not cover X") to sources whose full text was
+  read; an absence in an excerpt is not evidence.
 - Cache reusable source summaries under `$XDG_DATA_HOME/agents/docs/`, or
   `$HOME/.local/share/agents/docs/` when `XDG_DATA_HOME` is unset.
 

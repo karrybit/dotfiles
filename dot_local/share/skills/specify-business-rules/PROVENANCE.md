@@ -77,13 +77,16 @@
     書き、法令向け言語である Catala がそれと互いを補強していた。用途を訂正した後も
     出典を再検討していなかった。DMN は OMG 標準で対象領域が業務上の意思決定であり、
     プローブAが作る決定表の標準そのもので、欠陥を gap / overlap / subsumption として
-    名前付きで定義する。subsumption は DMN から得た第3の欠陥クラス。DMN の `First`
+    名前付きで定義する。その後 v1.3 の仕様本文を直読し、`Unique` は best practice では
+    なく**規範**（SHALL default / SHALL NOT contain overlapping rules）、gap はエラー
+    ではなく **null** を返す扱い、**subsumption は仕様の語ではない**（実務家解説由来）
+    ことを確認して等級を分けた。DMN の `First`
     hit policy が「順序に依存しない宣言性」を理由に semi-deprecated であることは、
     本形式が記述順ではなく `例外元` の親参照で優先を表す根拠になる。Catala が残すのは
     木構造（DMN の `Priority` は出力値の平坦な順序で木ではない）と、例外が親を名指し
     するために命名が load-bearing になる点。
 
-    出典照合の実績（PDF は poppler を使わず標準ライブラリの zlib で抽出）:
+    出典照合の実績（PDF は `agent-scripts/pdf-cite` で本文抽出。poppler 不要）:
     ORM 白書の CSDP 7段は Table 1 と全項目一致し、「Step 1 is the most important
     stage of the CSDP」を原典で確認（従来は二次情報からの推定）。Catala 論文の
     prioritized default logic の主張は本文で確認。一方、旧 reference が逐語の
@@ -119,13 +122,18 @@
     - 「定義は一文で書く」は SBVR と逆（"It is not a sentence"）。
 
     **要約器による PDF 引用の捏造を3件確認**（Catala の conflict 文字列、EARS の
-    例文、SBVR の credit limit 例文）。PDF は標準ライブラリの zlib で本文抽出して
-    逐語確認する。PDF によって語間空白が残る場合と落ちる場合があるため、検索は
-    両側の空白を正規化する。要約器経由の出典は Sources で等級を落とし、逐語引用に
-    使わないと明記した。
+    例文、SBVR の credit limit 例文）。逐語引用は `agent-scripts/pdf-cite` で実在を
+    検証する（語間空白の差の吸収と、未検出時の非ゼロ終了はスクリプト側で担保）。
+    この教訓は AGENTS.md の External Knowledge and Practices に規則として入れた。
+    要約器経由の出典は Sources で等級を落とし、逐語引用に使わないと明記した。
 
-    未着手: OMG DMN の一次仕様本文（現在は仕様ページの記述のみ確認）で hit policy と
-    gap の定義を逐語確認する。RDRA の一次資料（書籍）で読み替え表の「不明」を埋める。
-    到達不能な出典2件（Ross PDF は HTTP 522、enfocus はドメイン失効）を archive.org
-    へ差し替える。プローブ体数・上限件数・スキャンの語彙一覧・決定数の閾値（10件）は
-    3回使うまで暫定。
+    未着手: RDRA の一次資料（書籍）で読み替え表の「不明」3箇所を埋める（チームが
+    実際に RDRA を使う案件が来たときでよい）。DMN は v1.3 で確認したので、v1.5 以降で
+    hit policy・overlap の定義・no-match の挙動が変わっていないかを確認する。
+    プローブ体数・上限件数・スキャンの語彙一覧・決定数の閾値（10件）は3回使うまで暫定。
+
+    **書き直した文書に再レビューを当てない。** ears-patterns.md と sbvr-vocabulary.md は
+    レビュー後に全面書き直し、SKILL.md も大きく変わったが、review-doc-fresh-eyes の
+    evidence-basis が「1ラウンド追加すると真陽性 +0.39 に対し偽陽性 +3.24」を記録して
+    いる。未レビューの文書（spec-format / worked-example / interview）を初回として見るのは
+    反復に当たらないが、外部の事実主張が乏しいため優先度は低い。

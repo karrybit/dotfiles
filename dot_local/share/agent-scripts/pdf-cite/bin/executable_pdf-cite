@@ -1,0 +1,190 @@
+#!/usr/bin/env python3
+"""PDF 出典から本文を抽出し、引用が実在することを検証する。標準ライブラリのみ。
+
+要約器（WebFetch 等）に PDF を読ませた出力から逐語引用を作ると、存在しない文が
+引用の体裁で残る。実測で3件の捏造を確認している。逐語で引くなら本文を抽出して
+突き合わせる。
+
+`--find` を付けたときは**検証コマンドとして振る舞う**。指定した語句が1つでも本文に
+なければ終了コード 1 を返す。引用の実在確認をそのまま CI 的に使える。
+
+使い方:
+    pdf-cite paper.pdf                          抽出できたか確認（字数と冒頭）
+    pdf-cite paper.pdf --find "exact quote"     引用の実在を検証（無ければ exit 1）
+    pdf-cite paper.pdf --find A --find B        複数まとめて
+    pdf-cite paper.pdf --dump > paper.txt       全文を出す
+    pdf-cite --selftest                         抽出規則そのものを自己検証
+
+注意:
+- パスは呼び出し元の cwd に依存しない。**絶対パスで渡すこと。** サンドボックス下と
+  非サンドボックス下で TMPDIR が異なる環境があり、相対パスは黙って別物を指す。
+- 10MB を超える PDF は WebFetch の取得上限を超えるので `curl -sL -o` で落とす。
+- 画像だけの PDF（DCTDecode のみ）からは何も取れない。字数が極端に少ないときは
+  警告を出す。
+"""
+
+import argparse
+import re
+import sys
+import zlib
+
+STREAM = re.compile(rb"stream\r?\n(.*?)endstream", re.S)
+LITERAL = re.compile(rb"\((?:[^()\\]|\\.)*\)")
+HEXSTR = re.compile(rb"<[0-9A-Fa-f\s]{4,}>")
+UNESCAPE = re.compile(rb"\\([()\\])")
+
+THIN = 500  # これ未満なら抽出に失敗している疑い
+
+
+def extract(path):
+    try:
+        data = open(path, "rb").read()
+    except OSError as exc:
+        print(f"読み込めない: {exc}", file=sys.stderr)
+        sys.exit(2)
+
+    out = []
+    streams = decoded = hexonly = 0
+    for m in STREAM.finditer(data):
+        streams += 1
+        try:
+            dec = zlib.decompress(m.group(1))
+        except Exception:
+            continue
+        decoded += 1
+        lits = LITERAL.findall(dec)
+        if not lits and HEXSTR.search(dec):
+            hexonly += 1
+        for lit in lits:
+            out.append(UNESCAPE.sub(rb"\1", lit[1:-1]).decode("latin-1", "replace"))
+    return "".join(out), {"streams": streams, "decoded": decoded, "hexonly": hexonly}
+
+
+def norm(s):
+    """語間空白を落として突き合わせる。
+
+    PDF は語間を空白文字で持つ場合と、グリフ配置(TJ)で表す場合がある。LaTeX 由来の
+    PDF では後者になり空白が落ちる。**片側だけ正規化すると取りこぼす**（この罠で
+    実在する引用を「0件」と誤判定した実績がある）。両側を必ず正規化する。
+    """
+    return re.sub(r"\s+", "", s)
+
+
+def diagnose(text, stats):
+    if len(text) >= THIN:
+        return
+    print(
+        f"警告: 抽出できた文字数が {len(text)} 字しかない。"
+        f"stream {stats['streams']} 件のうち {stats['decoded']} 件を展開",
+        file=sys.stderr,
+    )
+    if stats["hexonly"]:
+        print(
+            f"       うち {stats['hexonly']} 件は16進文字列のみ（フォント符号化が必要）。"
+            f"このスクリプトでは取れない",
+            file=sys.stderr,
+        )
+    if stats["decoded"] == 0:
+        print("       展開できた stream が0件。画像のみの PDF かパスが誤っている", file=sys.stderr)
+
+
+def main():
+    ap = argparse.ArgumentParser(
+        description="PDF 本文を抽出し、引用の実在を検証する（標準ライブラリのみ）"
+    )
+    ap.add_argument("pdf", nargs="?", help="PDF の絶対パス")
+    ap.add_argument("--find", action="append", default=[], metavar="語句",
+                    help="実在を検証する語句。1つでも無ければ exit 1")
+    ap.add_argument("--context", type=int, default=400, help="前後に出す文字数（既定 400）")
+    ap.add_argument("--dump", action="store_true", help="全文を出力する")
+    ap.add_argument("--selftest", action="store_true", help="抽出規則を自己検証する")
+    args = ap.parse_args()
+
+    if args.selftest:
+        return selftest()
+    if not args.pdf:
+        ap.error("PDF のパスを指定する（または --selftest）")
+
+    text, stats = extract(args.pdf)
+    diagnose(text, stats)
+
+    if args.dump:
+        print(text)
+        return 0
+
+    if not args.find:
+        print(f"抽出: {len(text)} 字")
+        print("--- 冒頭 300 字 ---")
+        print(text[:300])
+        return 0
+
+    flat = norm(text)
+    missing = []
+    for phrase in args.find:
+        key = norm(phrase)
+        hits = [m.start() for m in re.finditer(re.escape(key), flat)]
+        print(f"\n===== 「{phrase}」: {hits and len(hits) or 0}件 =====")
+        if not hits:
+            missing.append(phrase)
+            print("  本文に存在しない。要約器由来の引用でないか確認する")
+            continue
+        for p in hits[:2]:
+            lo = max(0, p - args.context // 4)
+            print("  " + flat[lo:p + args.context])
+
+    if missing:
+        print(f"\n未検出 {len(missing)}件: " + " / ".join(f"「{m}」" for m in missing))
+        return 1
+    print(f"\n{len(args.find)}件すべて本文で確認")
+    return 0
+
+
+def selftest():
+    """最小の PDF を組み立てて抽出・検索・終了コードを検証する。"""
+    import os
+    import tempfile
+
+    body = b"BT /F1 12 Tf (Hello World) Tj (spaced  out  text) Tj ET"
+    pdf = b"%PDF-1.4\n1 0 obj\n<< /Length 99 /Filter /FlateDecode >>\nstream\n"
+    pdf += zlib.compress(body) + b"\nendstream\nendobj\n%%EOF\n"
+    with tempfile.NamedTemporaryFile("wb", suffix=".pdf", delete=False) as fh:
+        fh.write(pdf)
+        path = fh.name
+
+    failures = []
+    try:
+        text, stats = extract(path)
+        if "Hello World" not in text:
+            failures.append(f"抽出に失敗: {text!r}")
+        if stats["decoded"] != 1:
+            failures.append(f"展開した stream 数が想定外: {stats}")
+        # 空白の差を吸収できるか（両側正規化の検証）
+        if norm("Hello  World") not in norm(text):
+            failures.append("空白差を吸収できていない")
+        if norm("spaced out text") not in norm(text):
+            failures.append("複数空白を正規化できていない")
+        # 存在しない語句を検出しないこと
+        if norm("this phrase is absent") in norm(text):
+            failures.append("存在しない語句を誤検出した")
+    finally:
+        os.unlink(path)
+
+    # 極端に短い入力で警告経路が落ちないこと
+    with tempfile.NamedTemporaryFile("wb", suffix=".pdf", delete=False) as fh:
+        fh.write(b"%PDF-1.4\n%%EOF\n")
+        empty = fh.name
+    try:
+        t, s = extract(empty)
+        if t != "" or s["decoded"] != 0:
+            failures.append(f"空 PDF の扱いが想定外: {t!r} {s}")
+    finally:
+        os.unlink(empty)
+
+    for f in failures:
+        print(f"FAIL {f}")
+    print(f"\nselftest: {5 - len(failures)}/5 通過")
+    return 1 if failures else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
