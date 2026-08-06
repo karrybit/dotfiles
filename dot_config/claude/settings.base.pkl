@@ -106,7 +106,7 @@ settings: Dynamic = new Dynamic {
         hooks = new Listing {
           new Dynamic {
             type = "command"
-            command = "\"$HOME\"/.local/share/agent-scripts/pii-publish-guard/bin/check-publish-surface"
+            command = "\"$HOME\"/.local/share/agents/scripts/pii-publish-guard/bin/check-publish-surface"
           }
         }
       }

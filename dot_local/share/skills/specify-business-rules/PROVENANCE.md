@@ -84,7 +84,7 @@
     木構造（DMN の `Priority` は出力値の平坦な順序で木ではない）と、例外が親を名指し
     するために命名が load-bearing になる点。
 
-    出典照合の実績（PDF は `agent-scripts/pdf-cite` で本文抽出。poppler 不要）:
+    出典照合の実績（PDF は `agents/scripts/pdf-cite` で本文抽出。poppler 不要）:
     ORM 白書の CSDP 7段は Table 1 と全項目一致し、「Step 1 is the most important
     stage of the CSDP」を原典で確認（従来は二次情報からの推定）。Catala 論文の
     prioritized default logic の主張は本文で確認。一方、旧 reference が逐語の
@@ -120,7 +120,7 @@
     - 「定義は一文で書く」は SBVR と逆（"It is not a sentence"）。
 
     **要約器による PDF 引用の捏造を3件確認**（Catala の conflict 文字列、EARS の
-    例文、SBVR の credit limit 例文）。逐語引用は `agent-scripts/pdf-cite` で実在を
+    例文、SBVR の credit limit 例文）。逐語引用は `agents/scripts/pdf-cite` で実在を
     検証する（語間空白の差の吸収と、未検出時の非ゼロ終了はスクリプト側で担保）。
     この教訓は AGENTS.md の External Knowledge and Practices に規則として入れた。
     要約器経由の出典は Sources で等級を落とし、逐語引用に使わないと明記した。

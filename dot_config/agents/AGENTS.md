@@ -63,7 +63,7 @@
   itself. Do not build a verbatim quote from a summarizing fetch, a search
   snippet, or recall: those have produced quotes, error strings, and example
   sentences that do not exist in the source. For PDFs, verify with
-  `$XDG_DATA_HOME/agent-scripts/pdf-cite/bin/pdf-cite <abs-path> --find "<quote>"`,
+  `$XDG_DATA_HOME/agents/scripts/pdf-cite/bin/pdf-cite <abs-path> --find "<quote>"`,
   which exits non-zero when the quote is absent.
 - When a claim rests on a summary rather than the source text, mark the
   confidence in the artifact and say which source was actually read.
@@ -289,20 +289,20 @@
 ### User-Scoped Agent Scripts
 
 - Reusable but project-specific or write-once-run-later agent scripts belong
-  under `$XDG_DATA_HOME/agent-scripts/`.
+  under `$XDG_DATA_HOME/agents/scripts/`.
 - The stable directory root is managed by chezmoi as
-  `dot_local/share/agent-scripts/`, but arbitrary files below that root are not
+  `dot_local/share/agents/scripts/`, but arbitrary files below that root are not
   managed by chezmoi unless explicitly requested.
 - Put directory-specific operating rules in
-  `$XDG_DATA_HOME/agent-scripts/AGENTS.md`.
+  `$XDG_DATA_HOME/agents/scripts/AGENTS.md`.
 - Do not add agent script directories to `PATH` by default. Invoke scripts by
   explicit file path.
 - Agent scripts must not depend on the caller's current working directory.
   Resolve paths from the script location, environment variables, or explicit
   arguments.
 - Runtime outputs, logs, scraped intermediates, and other disposable state
-  belong under `$XDG_STATE_HOME/agent-scripts/` or, if `XDG_STATE_HOME` is
-  unset, `$HOME/.local/state/agent-scripts/`.
+  belong under `$XDG_STATE_HOME/agents/scripts/` or, if `XDG_STATE_HOME` is
+  unset, `$HOME/.local/state/agents/scripts/`.
 
 ### External Agent Extensions
 
@@ -316,7 +316,7 @@
   third-party, but do not record private employer or organization names in
   public dotfiles or reusable guidance unless explicitly requested.
 - When a candidate extension is available on disk, run
-  `$XDG_DATA_HOME/agent-scripts/agent-extension-security/bin/vet-agent-extension`
+  `$XDG_DATA_HOME/agents/scripts/agent-extension-security/bin/vet-agent-extension`
   against the candidate directory before installing it.
 - Review `SKILL.md`, Claude subagent frontmatter, plugin manifests, hooks,
   MCP server declarations, executable scripts, install commands, update

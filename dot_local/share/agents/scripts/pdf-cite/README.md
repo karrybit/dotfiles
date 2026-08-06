@@ -10,7 +10,7 @@ PDF 出典から本文を抽出し、逐語引用が実在することを検証�
 ## 引用の実在を検証する
 
 ```sh
-$XDG_DATA_HOME/agent-scripts/pdf-cite/bin/pdf-cite /abs/path/paper.pdf \
+$XDG_DATA_HOME/agents/scripts/pdf-cite/bin/pdf-cite /abs/path/paper.pdf \
   --find "exact quote as you intend to cite it"
 ```
 
@@ -20,7 +20,7 @@ $XDG_DATA_HOME/agent-scripts/pdf-cite/bin/pdf-cite /abs/path/paper.pdf \
 ## 抽出できたかだけ確認する
 
 ```sh
-$XDG_DATA_HOME/agent-scripts/pdf-cite/bin/pdf-cite /abs/path/paper.pdf
+$XDG_DATA_HOME/agents/scripts/pdf-cite/bin/pdf-cite /abs/path/paper.pdf
 ```
 
 字数と冒頭 300 字を出す。`--dump` で全文。
@@ -61,7 +61,7 @@ $XDG_DATA_HOME/agent-scripts/pdf-cite/bin/pdf-cite /abs/path/paper.pdf
 ## 自己検証
 
 ```sh
-$XDG_DATA_HOME/agent-scripts/pdf-cite/bin/pdf-cite --selftest
+$XDG_DATA_HOME/agents/scripts/pdf-cite/bin/pdf-cite --selftest
 ```
 
 最小の PDF を組み立てて、抽出・空白差の吸収・存在しない語句の非検出・空 PDF の扱い・

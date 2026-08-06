@@ -56,7 +56,7 @@
   or setting is added to this repository.
 - Agent source summaries belong under `~/.local/share/agents/docs/`; only
   explicitly allowlisted summaries are chezmoi-managed.
-- Agent-operated scripts belong under `~/.local/share/agent-scripts/`; only
+- Agent-operated scripts belong under `~/.local/share/agents/scripts/`; only
   explicitly allowlisted script sets are chezmoi-managed.
 
 ## Nix Package Management Design
