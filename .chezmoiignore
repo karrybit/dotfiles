@@ -34,12 +34,9 @@ docs
 .local/share/agents/docs/*
 !.local/share/agents/docs/AGENTS.md
 !.local/share/agents/docs/agent-extension-security.md
-!.local/share/agents/docs/claude-md-maintenance-references.md
 !.local/share/agents/docs/document-review-evidence.md
 !.local/share/agents/docs/llm-as-reviewer-evidence.md
 !.local/share/agents/docs/medallion-information-design.md
-!.local/share/agents/docs/ecc-hackathon-review.md
-!.local/share/agents/docs/qsv-csv-wrangling.md
 
 # Claude Code generated/local settings
 .config/claude/settings.json
