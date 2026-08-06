@@ -16,23 +16,45 @@ from collections import defaultdict
 
 SECTIONS = ("語彙", "規則", "未決定")
 
-PATTERNS = {
-    "常時": (),
-    "状態": ("間、",),
-    "契機": ("とき、",),
-    "構成": ("構成では",),
-    "逸脱": ("ならば、",),
-    "複合": ("間、", "とき、"),
+KEYWORDS = {"間、": "状態", "とき、": "契機", "構成では": "構成", "ならば、": "逸脱"}
+ALL_KEYWORDS = tuple(KEYWORDS)
+
+# パターンは宣言させず規則文のキーワードから導出する。宣言欄を置くと同じ情報を
+# 2箇所に書かせ、検査は照合しかできない（欄そのものが情報を持たない）。
+#
+# 組合せをエラーにしてはいけない。EARS 原典 §4.7 は「combinations of the keywords
+# When, While and Where may be required」とし、さらに「The keywords When, While and
+# Where can also be used within If-Then statements」と明示している。原典自身の例
+# 「While the aircraft is in-flight, if reverse thrust is commanded, then ...」は
+# 状態＋逸脱であり、以前ここで実装していた「複合は While+When のみ」は誤りだった。
+# したがって導出は分類であって検査ではない。組合せは報告するだけにする。
+CANONICAL = {
+    frozenset(): "常時",
+    frozenset({"間、"}): "状態",
+    frozenset({"とき、"}): "契機",
+    frozenset({"構成では"}): "構成",
+    frozenset({"ならば、"}): "逸脱",
+    frozenset({"間、", "とき、"}): "複合",
 }
-ALL_KEYWORDS = ("間、", "とき、", "構成では", "ならば、")
 
-# パターンは宣言させず、規則文のキーワードから導出する。宣言欄を置くと同じ情報を
-# 2箇所に書かせ、照合しかしていない（欄そのものが情報を持たない）。導出できない
-# キーワードの組合せは EARS のどのパターンにも対応しないため、それをエラーにする
-# ほうが、宣言との不一致を見るより強い検査になる。
-DERIVE = {frozenset(kws): name for name, kws in PATTERNS.items()}
+# SBVR の様相は Behavioral（行動的）と Definitional（定義的）の2系列×3。
+# 系列をまたぐ取り違えが意味を変える（義務は破れる／必然は破れない）。
+# 系列内（義務↔禁止↔制限付き許可）は否定の出し入れで書き換え等価。
+MODALITY_SERIES = {
+    "しなければならない": ("行動的", "義務"),
+    "してはならない": ("行動的", "禁止"),
+    "してよい": ("行動的", "許可"),
+    "である": ("定義的", "必然"),
+    "ことはない": ("定義的", "不可能"),
+    "しうる": ("定義的", "可能"),
+}
+MODALITIES = tuple(MODALITY_SERIES)
 
-MODALITIES = ("しなければならない", "してはならない", "してよい", "である")
+# 無制限の許可・可能は SBVR では規則ではなく advice（"No business rule is an
+# advice."）。規則になるのは restricted permission / possibility statement、すなわち
+# 条件付きの形だけ。条件は EARS のキーワードで表れるので、キーワードが1つもない
+# （＝常時）許可・可能は規則になっていない。
+NEEDS_CONDITION = {"許可", "可能"}
 
 CLASSES = ("未決定", "書き忘れ", "意図的自由")
 
@@ -251,26 +273,33 @@ def check_rules(rules, vocab, report):
             if term not in vocab:
                 report.error(e, "E208", f"{rid} が参照する用語 [{term}] が語彙にない", "規則")
 
+        # 導出は分類であって検査ではない（組合せは EARS が認めている）
         present = frozenset(kw for kw in ALL_KEYWORDS if kw in text)
-        e.pattern = DERIVE.get(present)
-        if e.pattern is None:
-            combo = " + ".join(f"「{k}」" for k in sorted(present))
-            report.error(
-                e,
-                "E209",
-                f"{rid} のキーワードの組合せ {combo} は EARS のどのパターンにも対応しない。"
-                f"1文に1パターンにするか、規則を分ける（複合は「間、」と「とき、」のみ）",
-                "規則",
-            )
+        e.pattern = CANONICAL.get(
+            present, "複合(" + "+".join(KEYWORDS[k] for k in ALL_KEYWORDS if k in present) + ")"
+        )
 
         stripped = text.rstrip("。 ")
-        if not stripped.endswith(MODALITIES):
+        modality = next((m for m in MODALITIES if stripped.endswith(m)), None)
+        if modality is None:
             report.error(
                 e,
                 "E211",
                 f"{rid} の規則文が様相で終わっていない。{' / '.join(MODALITIES)} のいずれかで終える",
                 "規則",
             )
+        else:
+            series, name = MODALITY_SERIES[modality]
+            e.modality = f"{series}:{name}"
+            if name in NEEDS_CONDITION and not present:
+                report.error(
+                    e,
+                    "E218",
+                    f"{rid} は条件のない{name}なので、SBVR では規則ではなく advice にあたる。"
+                    f"「〜の場合にのみ」に相当する条件（状態・契機・構成・逸脱のいずれか）を付ける"
+                    f"か、規則から外す",
+                    "規則",
+                )
 
         for regex, msg in BANNED:
             if regex.search(text):
@@ -389,9 +418,15 @@ SELFTEST_CASES = [
     ("なし", "[申請] が 有効 である間、出されたとき、保存 しなければならない", [], []),
     ("なし", "[申請] を 保存 してはならない", [], []),
     ("なし", "[申請] は 1件 である", [], []),
-    # 導出できないキーワードの組合せ
-    ("なし", "[申請] が 出されたとき、壊れたならば、破棄 しなければならない", [], ["E209"]),
-    ("なし", "[申請] を備える構成では、有効 である間、保存 しなければならない", [], ["E209"]),
+    ("なし", "[申請] が 二重に登録される ことはない", [], []),
+    # EARS §4.7 が認める組合せ。エラーにしてはいけない（旧 E209 の誤りの回帰テスト）
+    ("なし", "[申請] が 出されたとき、壊れたならば、破棄 しなければならない", [], []),
+    ("なし", "[申請] を備える構成では、有効 である間、保存 しなければならない", [], []),
+    ("なし", "[申請] が 有効 である間、壊れたならば、破棄 しなければならない", [], []),
+    # 無制限の許可・可能は規則ではない（advice）
+    ("なし", "[申請] を 承認 してよい", [], ["E218"]),
+    ("なし", "[申請] が 却下 しうる", [], ["E218"]),
+    ("なし", "[申請] が 有効 である間、[申請] を 承認 してよい", [], []),
     # 個別の検査
     ("なし", "[申請] が出された場合、保存 しなければならない", [], ["E212"]),
     ("なし", "[申請] を 保存する", [], ["E211"]),
@@ -476,11 +511,12 @@ def main():
 
     ne, nw = len(report.errors), len(report.warnings)
     if rules:
-        counts = defaultdict(int)
-        for e in rules.values():
-            counts[getattr(e, "pattern", None) or "判別不能"] += 1
-        dist = " / ".join(f"{k} {v}" for k, v in sorted(counts.items()))
-        print(f"\n導出したパターン: {dist}")
+        for label, attr in (("導出したパターン", "pattern"), ("様相", "modality")):
+            counts = defaultdict(int)
+            for e in rules.values():
+                counts[getattr(e, attr, None) or "判別不能"] += 1
+            dist = " / ".join(f"{k} {v}" for k, v in sorted(counts.items()))
+            print(f"\n{label}: {dist}" if attr == "pattern" else f"{label}: {dist}")
     print(f"規則 {len(rules)}件 / エラー {ne}件 / 警告 {nw}件")
     if ne or (args.strict and nw):
         return 1

@@ -21,7 +21,9 @@ ORM は業務領域の情報要件を、**役割を演じるオブジェクト�
 
 ### CSDP（概念スキーマ設計手順）
 
-7段階。仕様を書くうえで効くのは step 1 で、残りは制約の追加。
+7段階（白書 Table 1 を原典から直接確認）。仕様を書くうえで効くのは step 1 で、残りは制約の追加。
+
+Halpin 自身が **「Step 1 is the most important stage of the CSDP.」** と明言している。
 
 1. 情報の実例を elementary fact に変換し、品質を検査する
 2. 事実型を描き、母集団で検査する
@@ -105,7 +107,7 @@ ORM は業務領域の情報要件を、**役割を演じるオブジェクト�
 
 ## Sources
 
-- Terry Halpin "Object-Role Modeling: an overview"（ORM 白書）https://www.orm.net/pdf/ORMwhitePaper.pdf
+- ★ Terry Halpin "Object-Role Modeling: an overview"（ORM 白書、Microsoft Corporation）https://www.orm.net/pdf/ORMwhitePaper.pdf — 本文を直接抽出して確認。CSDP 7段は Table 1 と全項目一致
 - Terry Halpin *Object-Role Modeling Fundamentals: A Practical Guide to Data Modeling with ORM*, Technics Publications, 2015
 - Object–role modeling（Wikipedia、CSDP と制約一覧の確認用）https://en.wikipedia.org/wiki/Object-role_modeling
 - Halpin & Nijssen *Conceptual Schema and Relational Database Design*, 1989（ORM の最初の形式化）

@@ -22,7 +22,7 @@ Last checked: 2026-08-06
 
 これが手順の中心。正規化は前処理ではなく**レビューそのもの**である。
 
-原文の各文を次のどれかに割り当てる。
+原文の各文を次のどれかに割り当てる。**この6種がこのskill全体で唯一の権威ある種別集合である。** 他の箇所はここを参照するだけにし、部分集合を書き直さない。
 
 | 種別 | 見分け方 | 行き先 |
 | --- | --- | --- |
@@ -62,9 +62,15 @@ US-1355 受入基準: 原則として上長承認が必要
 
 3枚のチケットに散った3行が、1つの承認規則である。この状態では、8,000円の出張申請でどうなるかを**どのチケットも答えない**。誰も間違っていないのに仕様が決まっていない。
 
-これは Business Rules Manifesto の立場と一致する。「Rules are not process and not procedure. They should not be contained in either of these.」——業務規則はユースケースなどの要件文書に埋め込まれた状態から、独立に記述されるべきである。規則を横断して1つの体系にすることが目的。
+**この問題意識は既存文献に明記されている。** Business Rules Manifesto（Business Rules Group, 2003）から、逐語で3項目。
 
-**規則レコードを ID で束ねる作業が、この散在を可視化する。** 集約した結果を正本にするかは別の判断（`references/spec-format.md`）。
+> **2.2** Rules are not process and not procedure. They should not be contained in either of these.
+> **2.3** Rules apply across processes and procedures. There should be **one cohesive body of rules**, enforced consistently across all relevant areas of business activity.
+> **5.2** Business rules should be expressed in such a way that they can be **verified against each other for consistency**.
+
+Manifesto 2.2 の対象は **process と procedure** である。「ユースケースなどの要件文書に埋め込まれている」ことを述べているのは別の出典（enfocus: "embedded in ... requirement documents, such as use cases and business requirements documents"）で、**Manifesto に帰属させてはいけない。**
+
+**規則レコードを ID で束ねる作業が、この散在を可視化する。** 集約した結果を正本にするかは別の判断（`references/spec-format.md`）。ただし出典側は分離をより強く要求している（Manifesto 2.3 の「one cohesive body of rules」、enfocus の「maintained separately from the requirements. Requirements should reference the rules」）。
 
 ## 既存の型との読み替え
 
@@ -73,17 +79,20 @@ US-1355 受入基準: 原則として上長承認が必要
 | 本skillの層 | アジャイル | ICONIX | RDRA |
 | --- | --- | --- | --- |
 | 語彙（ORM/SBVR） | 用語集があれば | ドメインモデル | 概念モデル（システム外部環境層） |
-| 規則文（EARS） | 受入基準 | ユースケース本文の一部 | バリエーション・条件、プロトコルモデル |
+| 規則文（EARS） | 受入基準 | ユースケース本文の一部 | バリエーション・条件・状態モデル、プロトコルモデル |
 | 命名 | ストーリーID（規則自体にはない） | — | — |
-| **例外構造（Catala）** | **対応物なし** | **対応物なし** | **対応物なし** |
-| 未決定の3分類 | 暗黙（3C の Conversation 未実施） | — | — |
-| フロー | — | ユースケース本文（基本／代替） | ユースケースモデル（システム境界層） |
+| 例外構造（DMN / Catala） | 不明（下記） | 不明（下記） | 不明（下記） |
+| 未決定の3分類 | — | — | — |
+| フロー | — | ユースケース本文（基本／代替） | 業務モデル（システム外部環境層） |
 
-2つの示唆がある。
+**語彙層は既存資産がある。** ICONIX のロバストネス分析は「付随するドメインモデルの文脈で書かれていることを保証することで、ユースケース記述の曖昧さを減らす」手法である。ドメインモデルがすでにあるなら、それを語彙レコードの出発点にする。RDRA の概念モデルも同じ位置。（**プローブBと同じことを図で行っている、というのはこちらの解釈であって出典の言明ではない。**）
 
-**語彙層は既存資産がある。** ICONIX のロバストネス分析は「付随するドメインモデルの文脈で書かれていることを保証することで、ユースケース記述の曖昧さを減らす」手法であり、プローブB と同じことを図で手作業で行っている。ドメインモデルがすでにあるなら、それを語彙レコードの出発点にする。RDRA の概念モデルも同じ位置。
+**本skillが足すのは機構であって、問題意識ではない。** 以前ここには「例外構造には ICONIX・RDRA・アジャイルのいずれも対応物を持たない。ここが本skillが既存の型に足す部分である」と書いていたが、2点で過剰だった。
 
-**例外構造には対応物がない。** 調べた範囲では、ICONIX・RDRA・アジャイルのいずれも「規則Aが原則、規則Bはその例外」という**優先関係を書く場所を持たない**。RDRA のバリエーション・条件は「何が変わるか」を表すが、「2つが同時に成立したときどちらが勝つか」は表さない。**ここが本skillが既存の型に足す部分である。**（RDRA の層構成は二次情報で確認。一次資料は未確認。）
+1. **問題は Manifesto が明記している。** 4.7「Exceptions to rules are expressed by other rules.」が例外の表し方を規定し、5.2 が規則間の一貫性検証を要求している。本skillの設計は 4.7 を満たし（各例外が独立した規則レコード）、5.2 を機械化する（決定表と `例外元`）。**新しいのは、要求されながら機構が与えられていなかった部分を埋めたことである。**
+2. **「対応物なし」の根拠が薄い。** ICONIX・アジャイルについては反証も得られていないが、積極的な根拠もない（挙げている Rosenberg の URL は前付と第1章の抜粋のみ）。RDRA についても、バリエーション・条件の意味を述べた記述は挙げている出典2件に存在しない。**したがって表は「不明」とし、否定的主張はしない。**
+
+アジャイルについては、そもそも要素集合が定まらない（手法の出典を1件も挙げていない）ため、肯定も否定もできない。
 
 ## Practical Use
 
@@ -94,12 +103,15 @@ US-1355 受入基準: 原則として上長承認が必要
 
 ## Sources
 
-- Information Design 規則と根拠: `~/.config/agents/AGENTS.md`、`~/.local/share/agents/docs/medallion-information-design.md`
-- Business Rules Manifesto（Business Rules Group、Ross による解説）http://www.policy-workshop.org/2003/web/policy2003/common/RonaldPresentation.pdf
-- 業務規則が要件文書に埋め込まれる問題 https://enfocussolutions.com/business-rules/
-- ICONIX のロバストネス分析 https://sparxsystems.com/enterprise_architect_user_guide/17.1/modeling_domains/iconix_process.html
-- Rosenberg & Stephens *Use Case Driven Object Modeling with UML* https://content.e-bookshelf.de/media/reading/L-5521-ca80696330.pdf
-- RDRA（二次情報）https://qiita.com/tatane616/items/f7f4e5ad818fe8b125d6 、公式 http://masuda220.jugem.jp/?eid=363
-- Given-When-Then がシナリオ指向であること https://www.ranorex.com/blog/given-when-then-tests/
+証拠の等級: **★** 一次資料を確認 / **▲** 実装者・専門家の解説 / **○** 二次情報
 
-Revalidation trigger: RDRA の一次資料（書籍）で層構成と、規則の優先関係を扱う構成要素の有無を確認したとき。実案件で正規化を1回行い、割り当て表の種別が足りたかを確認したとき。
+- Information Design 規則と根拠: `~/.config/agents/AGENTS.md`、`~/.local/share/agents/docs/medallion-information-design.md`
+- ★ Business Rules Manifesto（Business Rules Group, 2003）**一次** https://www.businessrulesgroup.org/brmanifesto.htm — 引用した 2.2 / 2.3 / 4.7 / 5.2 は本文で確認。**項番は版で異なる**（Ross 2003 版では 2.2→1.4、4.7→3.5、5.2→3.6）ので、項番を引くときは版を明示する
+- ▲ Ross による Manifesto 解説 http://www.policy-workshop.org/2003/web/policy2003/common/RonaldPresentation.pdf — **現在 HTTP 522 で到達不能。** archive.org 経由でのみ取得可
+- ▲ 業務規則が要件文書に埋め込まれる問題 https://enfocussolutions.com/business-rules/ — **ドメイン失効で 404。** archive.org（2012-08-13, John Parker）経由でのみ取得可
+- ▲ ICONIX のロバストネス分析 https://sparxsystems.com/enterprise_architect_user_guide/17.1/modeling_domains/iconix_process.html
+- ○ Rosenberg & Stephens *Use Case Driven Object Modeling with UML* https://content.e-bookshelf.de/media/reading/L-5521-ca80696330.pdf — **URL の実体は前付と第1章の抜粋のみ。** 全体の主張の根拠には使えない
+- ○ RDRA（二次情報のみ）https://qiita.com/tatane616/items/f7f4e5ad818fe8b125d6 、公式 http://masuda220.jugem.jp/?eid=363 — 層構成もバリエーション・条件・状態モデルの意味も、一次資料（書籍）未確認
+- ▲ Given-When-Then がシナリオ指向であること https://www.ranorex.com/blog/given-when-then-tests/
+
+Revalidation trigger: RDRA の一次資料（書籍）で層構成と、バリエーション・条件・状態モデルの意味、規則の優先関係を扱う構成要素の有無を確認したとき（読み替え表の「不明」を埋める）。ICONIX を Rosenberg の書籍全体で確認したとき。到達不能な出典2件（Ross PDF / enfocus）を archive.org のスナップショット URL に置き換えるか、代替の一次資料を見つけたとき。実案件で正規化を1回行い、割り当て表の6種が足りたかを確認したとき。

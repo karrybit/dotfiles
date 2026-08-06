@@ -9,7 +9,7 @@
 - migration_target: future personal plugin
 - notes: |
     業務規則仕様を4つの直交する規約（ORM=事実の粒度 / SBVR=語彙表記と様相 /
-    EARS=前提と契機 / Catala=規則間の優先）でレビューし、作成する手順。
+    EARS=前提と契機 / DMN+Catala=規則間の優先）でレビューし、作成する手順。
     `disable-model-invocation: true` で明示呼び出しのみ。
 
     主用途は**進行中案件の既存記述のレビュー**。ユーザーストーリー・ユースケース
@@ -72,5 +72,60 @@
     0件のときは未参照警告（W101）を出さない。事実型の読み下しも語彙を参照するため
     検査し（E106）、参照済みとして数える。
 
-    未着手: プローブ体数・上限件数・スキャンの語彙一覧・決定数の閾値（10件）は
+    規則間の優先の軸は **DMN を主、Catala を従**にした（旧 catala-default-logic.md →
+    rule-priority.md）。初期に description へ「規程の落とし込み」と法令寄りの枠組みを
+    書き、法令向け言語である Catala がそれと互いを補強していた。用途を訂正した後も
+    出典を再検討していなかった。DMN は OMG 標準で対象領域が業務上の意思決定であり、
+    プローブAが作る決定表の標準そのもので、欠陥を gap / overlap / subsumption として
+    名前付きで定義する。subsumption は DMN から得た第3の欠陥クラス。DMN の `First`
+    hit policy が「順序に依存しない宣言性」を理由に semi-deprecated であることは、
+    本形式が記述順ではなく `例外元` の親参照で優先を表す根拠になる。Catala が残すのは
+    木構造（DMN の `Priority` は出力値の平坦な順序で木ではない）と、例外が親を名指し
+    するために命名が load-bearing になる点。
+
+    出典照合の実績（PDF は poppler を使わず標準ライブラリの zlib で抽出）:
+    ORM 白書の CSDP 7段は Table 1 と全項目一致し、「Step 1 is the most important
+    stage of the CSDP」を原典で確認（従来は二次情報からの推定）。Catala 論文の
+    prioritized default logic の主張は本文で確認。一方、旧 reference が逐語の
+    エラー文字列として載せていた `conflict between multiple valid consequences...`
+    は**論文本文に該当語が存在せず**（"conflict" の出現 0 件）、要約器経由の記述
+    だった。欠陥名は DMN の標準用語に置き換え、Catala は意味論の根拠に限定した。
+
+    review-doc-fresh-eyes による第1段（SKILL.md）＋第2段（出典照合3本）を実施し、
+    **採用45件・却下4件**を反映済み（却下理由は読者の明示・正式名称の展開・並列起動の
+    手段・スキャン検出カテゴリで、いずれも progressive disclosure か媒体が決めるもの）。
+    第2段は却下ゼロ。主な修正:
+
+    - **EARS の組合せ制限が誤りだった。** 原典 §4.7 は When/While/Where の組合せと、
+      それらの If-Then 内使用を認め、原典自身の例が状態＋逸脱である。「複合は
+      While+When のみ」を check-spec.py の E209 と selftest 2ケースに機械化して
+      いた（誤った規則＋テストによる固定）。E209 を撤去し導出を分類に変え、原典形の
+      回帰テストを追加。
+    - **SBVR の様相は2系列×3。** 不可能（never）と可能（sometimes）が欠落し、
+      Behavioral / Definitional の2系列を1列に潰していた。MODALITY_SERIES で6種に。
+      無制限の許可・可能は SBVR では規則ではなく advice（"No business rule is an
+      advice."）なので、条件なしの許可・可能を E218 で検出する。
+    - **同義語の方針が逆だった。** SBVR は Synonym / Synonymous Form / See を備える。
+      「同義語を作らない」ではなく「代表語を1つ決め残りを登録する」。進行中案件の
+      レビューでは原文を改名させずに統制できるので、実務上もこちらが正しい。
+    - **帰属誤り2件。** 「Rules build on facts...」は SBVR 本文になく Business Rules
+      Manifesto。「ユースケースなどの要件文書に埋め込まれる」は Manifesto でなく
+      enfocus。有名な出典に別出典の主張を帰属させる誤りを2回した。
+    - **位置づけが過剰。** Manifesto 4.7（例外は別の規則で表す）と 5.2（規則間の
+      一貫性を検証可能に）が問題を明記している。本skillが足すのは機構であって問題
+      意識ではない。ICONIX/アジャイルの「対応物なし」も根拠が薄いので「不明」に。
+    - 種別集合が SKILL.md 3箇所で食い違い、権威表（6種）とも全部不一致だった。
+    - プローブBが用語一覧を返す指示を持たず、語彙リストの生成が構造的に不可能だった。
+    - 「定義は一文で書く」は SBVR と逆（"It is not a sentence"）。
+
+    **要約器による PDF 引用の捏造を3件確認**（Catala の conflict 文字列、EARS の
+    例文、SBVR の credit limit 例文）。PDF は標準ライブラリの zlib で本文抽出して
+    逐語確認する。PDF によって語間空白が残る場合と落ちる場合があるため、検索は
+    両側の空白を正規化する。要約器経由の出典は Sources で等級を落とし、逐語引用に
+    使わないと明記した。
+
+    未着手: OMG DMN の一次仕様本文（現在は仕様ページの記述のみ確認）で hit policy と
+    gap の定義を逐語確認する。RDRA の一次資料（書籍）で読み替え表の「不明」を埋める。
+    到達不能な出典2件（Ross PDF は HTTP 522、enfocus はドメイン失効）を archive.org
+    へ差し替える。プローブ体数・上限件数・スキャンの語彙一覧・決定数の閾値（10件）は
     3回使うまで暫定。
