@@ -32,8 +32,19 @@ STREAM = re.compile(rb"stream\r?\n(.*?)endstream", re.S)
 LITERAL = re.compile(rb"\((?:[^()\\]|\\.)*\)")
 HEXSTR = re.compile(rb"<[0-9A-Fa-f\s]{4,}>")
 UNESCAPE = re.compile(rb"\\([()\\])")
+PAGE = re.compile(rb"/Type\s*/Page[^s]")
 
 THIN = 500  # これ未満なら抽出に失敗している疑い
+
+# 抜粋・見本であることを名乗る文句。出版社の断り書きは巻頭に出るので冒頭だけを見る。
+# 本文中に出る単語（"excerpt" 単体など）は拾わない——完全な論文を誤って抜粋と報告
+# すると警告そのものが無視されるようになる（実測で29ページの完全な論文が誤検出した）。
+EXCERPT_MARKERS = (
+    "sample chapter", "sample pages", "free sample", "this excerpt",
+    "excerpt from", "for evaluation only", "not for resale",
+    "look inside", "preview edition", "評価用", "見本",
+)
+EXCERPT_HEAD = 4000  # 冒頭何字を巻頭とみなすか
 
 
 def extract(path):
@@ -57,7 +68,15 @@ def extract(path):
             hexonly += 1
         for lit in lits:
             out.append(UNESCAPE.sub(rb"\1", lit[1:-1]).decode("latin-1", "replace"))
-    return "".join(out), {"streams": streams, "decoded": decoded, "hexonly": hexonly}
+    text = "".join(out)
+    head = text[:EXCERPT_HEAD].lower()
+    return text, {
+        "streams": streams,
+        "decoded": decoded,
+        "hexonly": hexonly,
+        "pages": len(PAGE.findall(data)),
+        "excerpt_markers": [w for w in EXCERPT_MARKERS if w in head],
+    }
 
 
 def norm(s):
@@ -126,7 +145,7 @@ def main():
         print(f"\n===== 「{phrase}」: {hits and len(hits) or 0}件 =====")
         if not hits:
             missing.append(phrase)
-            print("  本文に存在しない。要約器由来の引用でないか確認する")
+            print("  読んだ範囲に存在しない")
             continue
         for p in hits[:2]:
             lo = max(0, p - args.context // 4)
@@ -134,9 +153,31 @@ def main():
 
     if missing:
         print(f"\n未検出 {len(missing)}件: " + " / ".join(f"「{m}」" for m in missing))
+        absence_caveat(text, stats)
         return 1
     print(f"\n{len(args.find)}件すべて本文で確認")
     return 0
+
+
+def absence_caveat(text, stats):
+    """0件から言えることと言えないことを、証拠を出した側が明示する。
+
+    同じ「0件」が2つの推論に使われる。「自分の引用が誤っていた」は常に妥当だが、
+    「出典がこの話題を扱っていない」は**全文が視野に入っていたときだけ**妥当。
+    抜粋に対する検索の0件を出典全体の不在として書いた失敗があるため、証拠を生む
+    ここで境界を出す。判定はしない（自動分類は当たらない）。材料だけ渡す。
+    """
+    print("\n--- この0件から言えること ---")
+    print("  ○ 指定した語句が、抽出できた範囲に無い")
+    print("    → 自分の引用が誤っている可能性の根拠になる")
+    print("  ✕ 出典がその話題を扱っていない")
+    print("    → **全文を読んでいなければ根拠にならない。** 抜粋・部分取得での不在は")
+    print("       不在の証拠ではない。全文を得るか、主張を「不明」として書く")
+    print(f"\n  読んだ範囲: {len(text):,} 字 / ページ数 {stats['pages']}")
+    if stats["excerpt_markers"]:
+        print(f"  **抜粋の可能性**: 本文に {', '.join(stats['excerpt_markers'])} を含む")
+    if stats["hexonly"]:
+        print(f"  取得漏れ: 16進文字列のみの stream が {stats['hexonly']} 件（本文が欠けている）")
 
 
 def selftest():
@@ -166,8 +207,30 @@ def selftest():
         # 存在しない語句を検出しないこと
         if norm("this phrase is absent") in norm(text):
             failures.append("存在しない語句を誤検出した")
+        # 抜粋マーカーは巻頭だけを見る（本文中の語で誤検出しない）
+        if stats["excerpt_markers"]:
+            failures.append(f"抜粋マーカーを誤検出: {stats['excerpt_markers']}")
     finally:
         os.unlink(path)
+
+    # 巻頭の断り書きは拾い、本文の後方に同じ語があっても拾わないこと
+    for label, filler, expect in (
+        ("巻頭マーカーを拾う", b"(Sample chapter - not for resale) Tj ", True),
+        # フィラーは抽出後の字数で数える（`(x)` は1字になる）。EXCERPT_HEAD を超えさせる
+        ("後方の同語は拾わない", b"(x) Tj " * (EXCERPT_HEAD + 500) + b"(sample chapter) Tj ", False),
+    ):
+        body2 = b"BT " + filler + b"ET"
+        pdf2 = b"%PDF-1.4\nstream\n" + zlib.compress(body2) + b"\nendstream\n%%EOF\n"
+        with tempfile.NamedTemporaryFile("wb", suffix=".pdf", delete=False) as fh:
+            fh.write(pdf2)
+            p2 = fh.name
+        try:
+            _, s2 = extract(p2)
+            got = bool(s2["excerpt_markers"])
+            if got != expect:
+                failures.append(f"{label}: 期待 {expect} / 実際 {got}")
+        finally:
+            os.unlink(p2)
 
     # 極端に短い入力で警告経路が落ちないこと
     with tempfile.NamedTemporaryFile("wb", suffix=".pdf", delete=False) as fh:
@@ -182,7 +245,7 @@ def selftest():
 
     for f in failures:
         print(f"FAIL {f}")
-    print(f"\nselftest: {5 - len(failures)}/5 通過")
+    print(f"\nselftest: {7 - len(failures)}/7 通過")
     return 1 if failures else 0
 
 

@@ -66,9 +66,13 @@
   `$XDG_DATA_HOME/agent-scripts/pdf-cite/bin/pdf-cite <abs-path> --find "<quote>"`,
   which exits non-zero when the quote is absent.
 - When a claim rests on a summary rather than the source text, mark the
-  confidence in the artifact and say which source was actually read. Keep
-  negative claims ("the source does not cover X") to sources whose full text was
-  read; an absence in an excerpt is not evidence.
+  confidence in the artifact and say which source was actually read.
+- Do not turn "not found" into "not there". An absence is evidence only about
+  the region actually examined, so a partial view never supports a claim about
+  the whole: an excerpt or sample of a document, a filtered or globbed search, a
+  truncated file read, and a delegated excerpt-level search all fail this test.
+  Before writing that something is absent, unsupported, or unaddressed, either
+  bring the whole source into view or record the claim as unknown.
 - Cache reusable source summaries under `$XDG_DATA_HOME/agents/docs/`, or
   `$HOME/.local/share/agents/docs/` when `XDG_DATA_HOME` is unset.
 
