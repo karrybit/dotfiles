@@ -2,19 +2,13 @@
 
 Checked: 2026-06-06
 
-Revalidate when Codex or Claude Code changes skill, plugin, subagent,
-permission, sandbox, or marketplace behavior.
+Revalidate when Claude Code changes skill, plugin, subagent, permission,
+sandbox, or marketplace behavior.
 
-## OpenAI Codex Skills
+## Skill Directories Are Executable Packages
 
-Source: https://github.com/openai/skills
-
-OpenAI's public skills catalog describes Agent Skills as folders of
-instructions, scripts, and resources that Codex can discover for repeatable
-tasks. The catalog distinguishes system, curated, and experimental skills.
-System skills are shipped with Codex; curated and experimental skills are
-installed through `$skill-installer` and require a Codex restart after
-installation. Individual skill licenses live inside each skill directory.
+A skill is a folder of instructions, scripts, and resources, and individual
+skill licenses live inside each skill directory.
 
 Security implication: review the whole skill directory, not only `SKILL.md`,
 because scripts and resources are part of the executable package.

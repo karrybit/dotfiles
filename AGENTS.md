@@ -41,20 +41,19 @@
 
 ## Agent Skills and Extensions
 
-- Shared user-level agent instructions are in `dot_config/agents/AGENTS.md`.
-  Codex reads them via the generated `~/.codex/AGENTS.md`; Claude Code via
-  `~/.config/claude/CLAUDE.md`.
-- Shared skills live under `dot_local/share/skills/`. `run_onchange_04_sync-skills.sh.tmpl`
-  symlinks each into `~/.config/claude/skills/` and `~/.agents/skills/` on apply.
-  Adding a skill requires only one directory under `dot_local/share/skills/`;
-  no per-agent symlink entries are needed.
-- Repository-specific skills live under `.agents/skills/` and are source-only
-  (listed in `.chezmoiignore`).
+- Claude Code is the only agent this repository configures. User-level
+  instructions are in `dot_config/agents/AGENTS.md`, imported by
+  `dot_config/claude/CLAUDE.md.tmpl`; the path is kept because `nix/checks.nix`
+  and several skill references point at it.
+- Skills live under `dot_local/share/skills/`. `run_onchange_04_sync-skills.sh.tmpl`
+  symlinks each into `~/.config/claude/skills/` on apply, and removes deployed
+  skills whose source entry is gone. Adding a skill requires only one directory
+  under `dot_local/share/skills/`.
 - Claude Code subagents are under `dot_config/claude/agents/` and deploy to
   `~/.config/claude/agents/`.
-- Managed skills must include `PROVENANCE.md`. Installing via a Codex or Claude
-  Code command does not make an extension chezmoi-managed unless its source
-  artifact or setting is added to this repository.
+- Managed skills must include `PROVENANCE.md`. Installing via a Claude Code
+  command does not make an extension chezmoi-managed unless its source artifact
+  or setting is added to this repository.
 - Agent source summaries belong under `~/.local/share/agents/docs/`; only
   explicitly allowlisted summaries are chezmoi-managed.
 - Agent-operated scripts belong under `~/.local/share/agent-scripts/`; only

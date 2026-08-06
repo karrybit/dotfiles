@@ -1,5 +1,5 @@
 #!/bin/bash
-# Sync chezmoi-managed skills to agent skill directories.
+# Sync chezmoi-managed skills to the Claude Code skill directory.
 # SOURCE_SKILLS is the authoritative set from the chezmoi source. It is also what
 # makes this script re-run: the line changes whenever a skill is added or removed.
 SOURCE_SKILLS="{{ range (glob (joinPath .chezmoi.sourceDir "dot_local/share/skills/*/SKILL.md")) }}{{ base (dir .) }} {{ end }}"
@@ -17,15 +17,12 @@ in_source() {
 
 CANONICAL="${XDG_DATA_HOME:-$HOME/.local/share}/skills"
 CLAUDE_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/claude/skills"
-AGENTS_DIR="${HOME}/.agents/skills"
 
-# Restore real directories (replacing any directory-level symlinks if present)
-for dir in "$CLAUDE_DIR" "$AGENTS_DIR"; do
-    if [ -L "$dir" ]; then
-        rm "$dir"
-    fi
-    mkdir -p "$dir"
-done
+# Restore a real directory (replacing a directory-level symlink if present)
+if [ -L "$CLAUDE_DIR" ]; then
+    rm "$CLAUDE_DIR"
+fi
+mkdir -p "$CLAUDE_DIR"
 
 # Remove canonical skills whose source entry is gone. chezmoi does not delete a
 # target when its source entry is removed, so the deployed copy survives, keeps
@@ -49,17 +46,15 @@ for skill_dir in "$CANONICAL"/*/; do
     [ -f "${skill_dir}SKILL.md" ] || continue
     name=$(basename "$skill_dir")
     ln -sfn "$CANONICAL/$name" "$CLAUDE_DIR/$name"
-    ln -sfn "$CANONICAL/$name" "$AGENTS_DIR/$name"
 done
 
-# Remove stale managed symlinks (canonical skill was deleted)
-for target_dir in "$CLAUDE_DIR" "$AGENTS_DIR"; do
-    while IFS= read -r link; do
-        name=$(basename "$link")
-        link_target=$(readlink "$link")
-        if [[ "$link_target" == *".local/share/skills/$name" ]] && \
-           [ ! -f "$CANONICAL/$name/SKILL.md" ]; then
-            rm "$link"
-        fi
-    done < <(find "$target_dir" -maxdepth 1 -type l 2>/dev/null)
-done
+# Remove stale managed symlinks (canonical skill was deleted). Third-party skills
+# installed into this directory by other tools are left untouched.
+while IFS= read -r link; do
+    name=$(basename "$link")
+    link_target=$(readlink "$link")
+    if [[ "$link_target" == *".local/share/skills/$name" ]] && \
+       [ ! -f "$CANONICAL/$name/SKILL.md" ]; then
+        rm "$link"
+    fi
+done < <(find "$CLAUDE_DIR" -maxdepth 1 -type l 2>/dev/null)

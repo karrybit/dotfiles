@@ -1,1 +1,2 @@
 export CLAUDE_CONFIG_DIR=$XDG_CONFIG_HOME/claude
+export ENABLE_TOOL_SEARCH=true

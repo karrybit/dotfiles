@@ -1,7 +1,7 @@
 # Agent Extension Security
 
-Utilities for reviewing public Codex skills, Claude Code skills, Claude Code
-subagents, and plugin-provided agent extensions before installation.
+Utilities for reviewing public Claude Code skills, subagents, and
+plugin-provided agent extensions before installation.
 
 Run the vetting script against a candidate directory:
 
