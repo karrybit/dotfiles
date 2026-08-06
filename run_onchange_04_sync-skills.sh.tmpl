@@ -1,11 +1,19 @@
 #!/bin/bash
 # Sync chezmoi-managed skills to agent skill directories.
-# Re-runs when the set of skills in dot_local/share/skills/ changes.
-{{ range (glob (joinPath .chezmoi.sourceDir "dot_local/share/skills/*/SKILL.md")) -}}
-# {{ . }}
-{{ end -}}
+# SOURCE_SKILLS is the authoritative set from the chezmoi source. It is also what
+# makes this script re-run: the line changes whenever a skill is added or removed.
+SOURCE_SKILLS="{{ range (glob (joinPath .chezmoi.sourceDir "dot_local/share/skills/*/SKILL.md")) }}{{ base (dir .) }} {{ end }}"
 
 set -eu
+
+in_source() {
+    for s in $SOURCE_SKILLS; do
+        if [ "$s" = "$1" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
 
 CANONICAL="${XDG_DATA_HOME:-$HOME/.local/share}/skills"
 CLAUDE_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/claude/skills"
@@ -17,6 +25,22 @@ for dir in "$CLAUDE_DIR" "$AGENTS_DIR"; do
         rm "$dir"
     fi
     mkdir -p "$dir"
+done
+
+# Remove canonical skills whose source entry is gone. chezmoi does not delete a
+# target when its source entry is removed, so the deployed copy survives, keeps
+# its SKILL.md, and the stale-symlink cleanup below can never fire for it. Only
+# skill-shaped real directories are considered, so unrelated files and anything
+# symlinked in from elsewhere survive.
+for skill_dir in "$CANONICAL"/*/; do
+    name=$(basename "$skill_dir")
+    if [ -L "${skill_dir%/}" ] || [ ! -f "${skill_dir}SKILL.md" ]; then
+        continue
+    fi
+    if ! in_source "$name"; then
+        printf 'sync-skills: removing orphaned canonical skill %s\n' "$name"
+        rm -rf "${skill_dir%/}"
+    fi
 done
 
 # Create/update symlinks for each canonical skill (a skill must have SKILL.md;
