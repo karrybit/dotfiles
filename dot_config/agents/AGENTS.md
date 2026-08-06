@@ -252,10 +252,13 @@
 - When searching file contents or file paths from the shell, use `rg` instead of
   `grep` and `fd` instead of `find`. Fall back to `grep` or `find` only when a
   required capability has no `rg` or `fd` equivalent, and state that reason.
-- For structured data, use structure-aware tools before text tools: `jq` for
-  JSON, `yq` for YAML, `qsv` for CSV/TSV. Reach for `sed`/`awk`/`cut` only for
-  genuinely plain text. Load the matching wrangling skill for non-trivial
-  transformations.
+- For structured data, reach for the structure-aware tool first: `jq` for JSON,
+  `yq` for YAML, `qsv` for CSV/TSV. This covers data from command output as well
+  as from files. Fall back to a general-purpose language (Python, Perl, Ruby,
+  Node) or a text tool (`sed`/`awk`/`cut`) only when the structure-aware tool
+  cannot express the transformation, and say which capability was missing.
+  Finding the tool's syntax awkward is not such a reason. Load
+  `csv-wrangling-with-qsv` for non-trivial CSV work.
 - When a preferred tool does not resolve in the current environment, do not
   silently fall back to the tool it replaces. Recommend installing it, naming
   the package and where to declare it, and say which fallback is being used in
