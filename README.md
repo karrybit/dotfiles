@@ -18,16 +18,14 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/) and [Nix](http
 ~/.config/claude/CLAUDE.md    ← user-level agent instructions
 ~/.local/share/agents/docs/   ← reusable local agent source summaries
 ~/.local/share/agents/scripts/ ← reusable agent-operated scripts
-~/.local/share/skills/        ← user-level agent skills (canonical)
-~/.config/claude/skills/      ← Claude Code skill entrypoints (per-skill symlinks → ~/.local/share/skills/*)
+~/.config/claude/skills/      ← user-level agent skills
 ```
 
 `chezmoi apply` deploys source → live. The `dot_` prefix is converted to `.` (e.g. `dot_config/` → `~/.config/`).
 
-Agent instructions, skills, and subagents are managed under
-`dot_config/claude/CLAUDE.md`, `dot_local/share/skills/`, and
-`dot_config/claude/agents/`. See [AGENTS.md](AGENTS.md) for how agents interact
-with this repository.
+Agent instructions, skills, and subagents are all managed under
+`dot_config/claude/`. See [AGENTS.md](AGENTS.md) for how agents interact with
+this repository.
 
 ---
 
@@ -143,7 +141,7 @@ These run automatically during `chezmoi apply` when their tracked content change
 | `run_onchange_01_rustup_components.sh.tmpl` | `rust/component` changed | `rustup component add` for clippy, rustfmt |
 | `run_onchange_02_cargo_packages.sh.tmpl` | `rust/package` changed | `cargo install` for packages not in nixpkgs |
 | `run_onchange_03_claude_settings.sh.tmpl` | Claude settings pkl files changed | Regenerate `~/.config/claude/settings.json` |
-| `run_onchange_04_sync-skills.sh.tmpl` | Skills under `dot_local/share/skills/` changed | Symlink each skill into `~/.config/claude/skills/`, and remove deployed skills whose source entry is gone |
+| `run_onchange_04_prune-skills.sh.tmpl` | Skills under `dot_config/claude/skills/` changed | Remove deployed skills whose source entry is gone (chezmoi leaves such targets in place) |
 
 ---
 

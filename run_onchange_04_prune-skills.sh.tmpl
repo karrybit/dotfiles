@@ -1,0 +1,41 @@
+#!/bin/bash
+# Remove skills that were deployed from this repository and whose source entry is
+# now gone. chezmoi leaves a target in place when its source entry is removed, so
+# without this a deleted skill stays live in ~/.config/claude/skills.
+#
+# SOURCE_SKILLS is the authoritative set from the chezmoi source. It is also what
+# makes this script re-run: the line changes whenever a skill is added or removed.
+SOURCE_SKILLS="{{ range (glob (joinPath .chezmoi.sourceDir "dot_config/claude/skills/*/SKILL.md")) }}{{ base (dir .) }} {{ end }}"
+
+set -eu
+
+SKILLS_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/claude/skills"
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/agents/scripts/prune-skills"
+MANIFEST="$STATE_DIR/managed-skills"
+
+in_source() {
+    for s in $SOURCE_SKILLS; do
+        if [ "$s" = "$1" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+mkdir -p "$SKILLS_DIR" "$STATE_DIR"
+
+# Only skills this script recorded as deployed are removal candidates, so a skill
+# installed into the same directory by any other route survives. Without the
+# manifest the deployed directories are indistinguishable from third-party ones:
+# the symlink layer that used to mark ownership is gone.
+if [ -f "$MANIFEST" ]; then
+    while IFS= read -r name; do
+        [ -n "$name" ] || continue
+        if ! in_source "$name" && [ -d "$SKILLS_DIR/$name" ]; then
+            printf 'prune-skills: removing %s (no longer in the chezmoi source)\n' "$name"
+            rm -rf "$SKILLS_DIR/$name"
+        fi
+    done < "$MANIFEST"
+fi
+
+printf '%s\n' $SOURCE_SKILLS > "$MANIFEST"

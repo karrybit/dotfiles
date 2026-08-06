@@ -44,10 +44,11 @@
 - Claude Code is the only agent this repository configures. User-level
   instructions are a single file, `dot_config/claude/CLAUDE.md`, deployed to
   `~/.config/claude/CLAUDE.md`. There is no separate AGENTS.md to import.
-- Skills live under `dot_local/share/skills/`. `run_onchange_04_sync-skills.sh.tmpl`
-  symlinks each into `~/.config/claude/skills/` on apply, and removes deployed
-  skills whose source entry is gone. Adding a skill requires only one directory
-  under `dot_local/share/skills/`.
+- Skills live under `dot_config/claude/skills/` and deploy straight to
+  `~/.config/claude/skills/`; there is no intermediate canonical copy.
+  `run_onchange_04_prune-skills.sh.tmpl` removes deployed skills whose source
+  entry is gone, which chezmoi does not do on its own. It only removes skills
+  recorded in its own manifest, so skills installed by other routes survive.
 - Claude Code subagents are under `dot_config/claude/agents/` and deploy to
   `~/.config/claude/agents/`.
 - Managed skills must include `PROVENANCE.md`. Installing via a Claude Code
