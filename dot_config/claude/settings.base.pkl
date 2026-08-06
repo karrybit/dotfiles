@@ -17,6 +17,15 @@ settings: Dynamic = new Dynamic {
       "Read(~/.local/share/go/*)"
       "Read(~/work/*)"
       "Read(~/.config/claude/plans/**)"
+      // Ported from the retired Codex default.rules. Deliberately absent:
+      // git push (publishing stays a per-call decision), git commit and
+      // git rebase (both can rewrite history).
+      "Bash(chezmoi update *)"
+      "Bash(chezmoi apply *)"
+      "Bash(chezmoi add *)"
+      "Bash(git add *)"
+      "Bash(git fetch *)"
+      "Bash(uv run *)"
     }
     deny {
       "Read(./.env)"
