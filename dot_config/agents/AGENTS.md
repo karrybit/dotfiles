@@ -192,10 +192,8 @@
 - When a conversation reveals reusable friction or agent behavior violates user
   intent, propose the smallest concrete instruction improvement before ending
   the task.
-- Classify each proposed improvement before suggesting it: agent-neutral user
-  guidance belongs in `$XDG_CONFIG_HOME/agents/AGENTS.md`; Codex-specific
-  guidance belongs in Codex user instructions; Claude Code-specific guidance
-  belongs in Claude Code user instructions; repository-specific guidance
+- Classify each proposed improvement before suggesting it: user-level guidance
+  belongs in `$XDG_CONFIG_HOME/agents/AGENTS.md`; repository-specific guidance
   belongs in the narrowest applicable repository `AGENTS.md`.
 - For each proposed instruction change, provide the target file, proposed
   wording, reason, and overlap or conflict with existing rules.
@@ -228,10 +226,6 @@
   deletes it.
 - Do not add a skill that repeats general engineering practice, an existing
   skill, or a capability the harness already provides.
-- When a skill must serve more than one agent, normalize around the shared
-  workflow and put agent-specific runners or metadata behind availability checks
-  or adapter files. Do not leave single-agent assumptions in the main
-  instructions unless the description scopes the skill to that agent.
 
 ### Claude-Related Instruction Files
 
@@ -290,8 +284,8 @@
 
 ### User-Scoped Agent Scripts
 
-- Reusable but project-specific or write-once-run-later scripts for Codex,
-  Claude, or other agents belong under `$XDG_DATA_HOME/agent-scripts/`.
+- Reusable but project-specific or write-once-run-later agent scripts belong
+  under `$XDG_DATA_HOME/agent-scripts/`.
 - The stable directory root is managed by chezmoi as
   `dot_local/share/agent-scripts/`, but arbitrary files below that root are not
   managed by chezmoi unless explicitly requested.
@@ -308,9 +302,9 @@
 
 ### External Agent Extensions
 
-- Before installing or enabling a public Codex skill, Claude Code skill,
-  Claude Code subagent, Claude Code plugin, or MCP-backed agent extension,
-  inspect it in a temporary or quarantined directory first.
+- Before installing or enabling a public Claude Code skill, subagent, plugin, or
+  MCP-backed agent extension, inspect it in a temporary or quarantined directory
+  first.
 - Prefer official, canonical, or maintainer-owned sources. Pin the exact source
   repository and ref when installing from Git, and review the license for each
   imported extension.
@@ -323,8 +317,8 @@
 - Review `SKILL.md`, Claude subagent frontmatter, plugin manifests, hooks,
   MCP server declarations, executable scripts, install commands, update
   commands, network access, and secret-handling behavior before installation.
-- Treat skills, plugins, MCP servers, hooks, and subagents installed by Codex or
-  Claude Code commands as runtime state, not chezmoi-managed source, unless the
+- Treat skills, plugins, MCP servers, hooks, and subagents installed by Claude
+  Code commands as runtime state, not chezmoi-managed source, unless the
   corresponding source artifact or setting is explicitly added to this
   repository.
 - Managed user-global skills must include `PROVENANCE.md` recording origin,
@@ -341,8 +335,6 @@
 - For Claude Code subagents, prefer read-only tools and no `mcpServers`,
   `hooks`, or elevated `permissionMode` unless the task requires those
   capabilities.
-- For Codex skills, prefer instruction-only skills or deterministic helper
-  scripts with explicit inputs and no ambient credential access.
 - Cache reusable official or expert source summaries under
   `$XDG_DATA_HOME/agents/docs/` with source URL, date checked, version context,
   and revalidation trigger.

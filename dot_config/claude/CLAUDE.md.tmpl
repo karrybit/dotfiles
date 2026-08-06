@@ -4,8 +4,10 @@
 
 ## Memory Files
 
-- Keep this file as the user-scope Claude Code entrypoint.
-- Put reusable cross-agent guidance in
-  `{{ .chezmoi.homeDir }}/.config/agents/AGENTS.md` and reference it from this
-  file instead of duplicating it.
-- Put Claude Code-specific guidance in this file.
+- Keep this file as the user-scope Claude Code entrypoint. It imports the
+  user-level instructions above rather than duplicating them.
+- Put user-level guidance in
+  `{{ .chezmoi.homeDir }}/.config/agents/AGENTS.md`. Reserve this file for
+  guidance that only makes sense at the entrypoint, such as the import itself.
+  `nix/checks.nix` and several skill references point at the AGENTS.md path, so
+  it stays where it is.
