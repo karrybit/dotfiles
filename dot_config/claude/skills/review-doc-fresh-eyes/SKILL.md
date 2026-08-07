@@ -131,4 +131,4 @@ argument-hint: [file-path]
 
 根拠があって動かさないのは「成果物を作らせる」「文脈を渡さない」「反復しない」「指摘を強要しない」の4点である。ここと上を混同しないこと。
 
-設定を変えるとき、または指摘の採否に迷うときは [references/evidence-basis.md](references/evidence-basis.md) を読む。各制約の根拠と、その根拠がどれだけ強いかが書いてある。
+迷ったときは [references/evidence-basis.md](references/evidence-basis.md) を読む。各制約の根拠と、その根拠がどれだけ強いかが書いてある。
