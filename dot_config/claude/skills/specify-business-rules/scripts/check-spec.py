@@ -58,6 +58,11 @@ NEEDS_CONDITION = {"許可", "可能"}
 
 CLASSES = ("未決定", "書き忘れ", "意図的自由")
 
+# 役割を先頭に置く。語彙の中でも役割を先に確定する層順序に対応する
+# （IPA 要件定義ガイド第2版 7.2 がステークホルダの記述を要求・データ・
+# プロセスの記述より前に置いている）。
+KINDS = ("役割", "実体", "値", "事実型")
+
 RULE_ID = re.compile(r"^BR-[A-Z][A-Z-]*-\d{3,}$")
 UNDECIDED_ID = re.compile(r"^UD-\d{3,}$")
 TERM_REF = re.compile(r"\[([^\[\]]+)\]")
@@ -213,21 +218,37 @@ def check(entries, report):
 
 def check_vocab(vocab, report):
     referenced = set()
+    seen_non_role = False
     for term, e in vocab.items():
         kind = e.fields.get("種別")
         if kind is None:
             report.error(e, "E102", f"{term} に「種別」がない")
-        elif kind not in ("実体", "値", "事実型"):
-            report.error(e, "E103", f"{term} の種別 '{kind}' は 実体|値|事実型 のいずれかでない", "種別")
+        elif kind not in KINDS:
+            report.error(e, "E103", f"{term} の種別 '{kind}' は {'|'.join(KINDS)} のいずれかでない", "種別")
         if not e.fields.get("定義"):
             report.error(e, "E104", f"{term} に「定義」がない")
         if kind == "事実型" and not e.fields.get("事実型"):
             report.error(e, "E105", f"{term} は種別が事実型だが「事実型」行がない")
 
+        # 役割は語彙の先頭にまとめる。誰が関与するかを他の用語より先に確定させる。
+        if kind == "役割" and seen_non_role:
+            report.warn(e, "W105", f"{term} は種別が役割だが、役割でない用語より後ろにある", "種別")
+        elif kind is not None and kind != "役割":
+            seen_non_role = True
+
         # 事実型の読み下しも語彙を参照する。未定義の語を含みうるので検査し、
         # 参照済みとして数える（規則からしか参照を数えないと役割語が未参照に見える）。
         verbal = e.fields.get("事実型")
         if verbal:
+            # 主語を角括弧で囲ませる。囲まなければ語彙に立てる必要がなく、
+            # 誰の行為か決まっていないことを曖昧な主語で埋められてしまう。
+            if not verbal.lstrip().startswith("["):
+                report.error(
+                    e,
+                    "E107",
+                    f"{term} の事実型が角括弧の用語で始まっていない。主語を語彙に立てて [用語] で書く",
+                    "事実型",
+                )
             for ref in TERM_REF.findall(verbal):
                 referenced.add(ref)
                 if ref not in vocab:
@@ -448,6 +469,23 @@ SELFTEST_CASES = [
     ("なし", "[申請] を 保存 しなければならない", ["- 許容: E212 もう解消済み"], ["W104"]),
 ]
 
+ROLE = "### 顧客\n\n- 種別: 役割\n- 定義: x\n\n"
+ENTITY = "### 申請\n\n- 種別: 実体\n- 定義: x\n\n"
+
+SELFTEST_VOCAB_CASES = [
+    # (語彙節の本文, 期待コード)
+    (ROLE + ENTITY, []),
+    # 役割は正当な種別（追加の回帰）
+    ("### 担当\n\n- 種別: 担当者\n- 定義: x\n", ["E103"]),
+    # 事実型の主語が角括弧の用語であること。曖昧な主語で埋める穴を塞ぐ
+    (ROLE + ENTITY + "### 提出\n\n- 種別: 事実型\n- 定義: x\n- 事実型: [顧客] は [申請] を 提出する\n", []),
+    (ENTITY + "### 提出\n\n- 種別: 事実型\n- 定義: x\n- 事実型: 利用者が [申請] を 提出する\n", ["E107"]),
+    # 主語が角括弧でも語彙になければ従来どおり E106
+    (ENTITY + "### 提出\n\n- 種別: 事実型\n- 定義: x\n- 事実型: [利用者] は [申請] を 提出する\n", ["E106"]),
+    # 役割は語彙の先頭にまとめる
+    (ENTITY + ROLE, ["W105"]),
+]
+
 
 def selftest():
     import tempfile
@@ -476,7 +514,25 @@ def selftest():
             failures += 1
             print(f"FAIL case {i} ({pattern}): 期待 {want} / 実際 {got}")
             print(f"     規則: {text}")
-    total = len(SELFTEST_CASES)
+    for i, (body, expected) in enumerate(SELFTEST_VOCAB_CASES):
+        doc = f"# t\n\n## 語彙\n\n{body}"
+        with tempfile.NamedTemporaryFile(
+            "w", suffix=".md", delete=False, encoding="utf-8"
+        ) as fh:
+            fh.write(doc)
+            path = fh.name
+        try:
+            report = Report()
+            check(parse([path]), report)
+            got = sorted({c for _, _, c, _ in report.errors + report.warnings} - {"W101"})
+        finally:
+            os.unlink(path)
+        want = sorted(set(expected))
+        if got != want:
+            failures += 1
+            print(f"FAIL vocab case {i}: 期待 {want} / 実際 {got}")
+
+    total = len(SELFTEST_CASES) + len(SELFTEST_VOCAB_CASES)
     print(f"\nselftest: {total - failures}/{total} 通過")
     return 1 if failures else 0
 
