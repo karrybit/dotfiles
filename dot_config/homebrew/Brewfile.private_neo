@@ -1,5 +1,4 @@
 tap "aquaproj/aqua"
-tap "microsoft/apm"
 tap "olets/tap"
 # Declarative CLI Version manager
 brew "aqua"
@@ -9,8 +8,6 @@ brew "chezmoi"
 cask "1password"
 # Screen capturing tool
 cask "cleanshot"
-# OpenAI's coding agent that runs in your terminal
-cask "codex"
 # Terminal emulator that uses platform-native UI and GPU acceleration
 cask "ghostty"
 # Web browser
