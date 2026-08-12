@@ -15,10 +15,6 @@ tasks:
       - nix run nixpkgs#statix -- check {{.FLAKE}}
       - nix run nixpkgs#deadnix -- --fail {{.FLAKE}}
 
-  nix:rebuild:
-    desc: "Rebuild and activate current profile (requires interactive shell for nixr)"
-    cmd: zsh -i -c nixr
-
   test:
     desc: "Render chezmoi templates (3 profiles) and zsh -n lint"
     cmd: test/render-and-lint.sh

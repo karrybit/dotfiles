@@ -163,8 +163,10 @@ nix/
 task check       # all checks: nix:check + test
 task nix:check   # nix flake check + statix (antipatterns) + deadnix (unused bindings)
 task test        # render chezmoi templates (3 profiles) + zsh -n lint
-task nix:rebuild # rebuild and activate current profile
 ```
+
+Rebuild manually with `home-manager switch --flake ~/.local/share/chezmoi/nix#<profile>`
+(see README) — there is no task wrapper for this.
 
 `nix flake check` runs only the current system's checks and silently omits the
 other platform's. Checks that must cover every profile therefore cannot be split
