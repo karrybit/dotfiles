@@ -113,11 +113,13 @@ settings: Dynamic = new Dynamic {
     }
     ["PostToolUse"] = new Listing {
       new Dynamic {
-        matcher = "Edit|Write|MultiEdit"
+        // Bash is matched too because shell-driven edits (python, sed -i,
+        // perl -pi) reach files without going through Edit or Write.
+        matcher = "Edit|Write|MultiEdit|Bash"
         hooks = new Listing {
           new Dynamic {
             type = "command"
-            command = "git diff --check"
+            command = "git rev-parse --git-dir >/dev/null 2>&1 || exit 0; git diff --check"
           }
         }
       }
