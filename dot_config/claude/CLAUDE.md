@@ -144,6 +144,23 @@
 - When committing, group unrelated changes into separate logical commits
   instead of one mixed commit, unless the user requests a single commit.
 
+### File Edits
+
+- Change file contents with the file-editing tools, not by piping a file through
+  a shell command. A script or stream editor is warranted only when the edit
+  cannot be expressed as a set of string replacements: replacement text computed
+  per occurrence, or one transformation applied across more sites than can be
+  enumerated. Several occurrences of the same string do not qualify; `Edit`
+  replaces all of them in one call.
+- When a script or stream editor does write to files, count each target
+  pattern's occurrences first, compare the count against the expected number,
+  and exit without writing when they differ. Do not use in-place editing that
+  cannot report what it matched, and start from a state the change can be undone
+  from: a clean working tree for tracked files, an explicit backup otherwise.
+- Verify a shell-driven edit by its result, not its exit status: the old pattern
+  survives only where intended, the diff touches only the intended files and
+  lines, and `git diff --check` passes.
+
 ### Code Style
 
 - Write no comments unless the reason is non-obvious to a reader unfamiliar
