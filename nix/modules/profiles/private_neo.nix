@@ -59,6 +59,5 @@
     wget
   ];
 
-  home.file.".local/share/antidote/antidote.zsh".source =
-    "${pkgs.antidote}/share/antidote/antidote.zsh";
+  home.file.".local/share/antidote".source = "${pkgs.antidote}/share/antidote";
 }

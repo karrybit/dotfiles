@@ -111,15 +111,25 @@ Some nixpkgs packages install only into `share/` with no `bin/` entry
 listing them in `home.packages` is not enough — the `share/` directory is
 **not** merged into the user environment.
 
-Use `home.file` to create a stable symlink directly to the Nix store path:
+Use `home.file` to create a stable symlink to the package's whole `share/<pkg>`
+directory, not to a single file inside it:
 
 ```nix
-home.file.".local/share/antidote/antidote.zsh".source =
-  "${pkgs.antidote}/share/antidote/antidote.zsh";
+home.file.".local/share/antidote".source = "${pkgs.antidote}/share/antidote";
 ```
 
 The path `~/.local/share/antidote/antidote.zsh` is then stable across rebuilds
 and can be sourced directly from shell config.
+
+Link the directory, not just the entry-point file. Some of these scripts
+locate sibling files (e.g. antidote's `antidote.zsh` autoloads
+`functions/antidote-setup` from a path derived from its own location) using a
+symlink-preserving resolution — it deliberately does not follow a trailing
+symlink to the real store path, so it expects those sibling files to sit next
+to wherever it was sourced from. A file-only symlink leaves that sibling
+directory missing and breaks at runtime (`function definition file not
+found`); linking the whole directory keeps the sibling files alongside the
+entry point.
 
 ---
 
