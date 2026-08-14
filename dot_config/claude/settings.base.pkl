@@ -29,8 +29,14 @@ settings: Dynamic = new Dynamic {
       "Bash(uv run *)"
     }
     deny {
+      // Enumerated on purpose: deny rules can't carry allowlist exceptions
+      // (a broader pattern like Read(./.env.*) would also block
+      // .env.example), so only filenames that actually hold secrets are
+      // listed here. Add new secret-bearing env filenames as they appear.
       "Read(./.env)"
-      "Read(./.env.*)"
+      "Read(./.env.local)"
+      "Read(./.env.*.local)"
+      "Read(./.env.production)"
       "Read(./secrets/**)"
       "Read(./config/credentials.json)"
       "Read(~/.ssh/**)"
