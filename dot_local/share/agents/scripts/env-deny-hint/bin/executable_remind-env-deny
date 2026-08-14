@@ -1,0 +1,19 @@
+#!/bin/bash
+# Claude Code PostToolUse hook (matcher: Bash).
+# .env* reads are always blocked by permissions.deny (Read(./.env),
+# Read(./.env.*) in settings.base.pkl), and the sandbox may omit a denied
+# path from `ls`/`find`/`stat` output entirely instead of surfacing a
+# permission error. Remind the model that an absent .env* entry means
+# "blocked by policy," not "deleted," before it draws that conclusion from
+# Bash output alone.
+set -u
+
+command -v jq >/dev/null 2>&1 || exit 0
+
+input=$(cat)
+cmd=$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)
+[ -n "$cmd" ] || exit 0
+
+printf '%s' "$cmd" | grep -qE '\.env(\.[A-Za-z0-9_.*-]+)?\b' || exit 0
+
+jq -n '{hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: "Reminder: .env* files are blocked from sandboxed Bash reads by permissions.deny for security. If a .env* file appears missing, unreadable, or absent from this output, that reflects the policy block, not deletion. Verify actual existence via git history (e.g. git log --all -- <path>) or ask the user before concluding a .env file was deleted."}}'
