@@ -292,6 +292,13 @@
   lock config file .git/config: Operation not permitted` when the sandbox
   denies writes there; the push itself still succeeds, but the error is
   avoidable noise.
+- `.env.example` (and similar template files) can be subject to the sandbox's
+  filesystem read-deny for `.env*` paths. When that happens, `git status`/`git
+  diff` can report the file as deleted even though it still exists on disk and
+  in git history; this is a known false positive caused by the read block, not
+  an actual deletion. Do not restore it, stage a deletion, or commit in
+  response to this signal. Confirm real state with `git show HEAD:<path>` or
+  ask the user before acting on an apparent `.env*` deletion.
 
 ### User-Scoped Agent Scripts
 
