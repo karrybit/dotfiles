@@ -15,6 +15,7 @@ settings: Dynamic = new Dynamic {
     defaultMode = "default"
     allow {
       "Read(~/.local/share/go/*)"
+      "Read(~/.cache/go/*)"
       "Read(~/work/*)"
       "Read(~/.config/claude/plans/**)"
       // Ported from the retired Codex default.rules. Deliberately absent:
@@ -56,6 +57,11 @@ settings: Dynamic = new Dynamic {
       // not grant, and Claude Code's own config paths are protected separately.
       allowWrite {
         "~/.local/share/chezmoi"
+        // Go toolchain caches/config (exported in zshenv.d/20_tool_go.zsh).
+        // `go build` / `go mod download` / `go env -w` write here directly.
+        "~/.cache/go/mod"
+        "~/.cache/go-build"
+        "~/.config/go/env"
       }
     }
     network {
