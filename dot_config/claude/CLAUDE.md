@@ -285,6 +285,13 @@
 - Do not request persistent broad auto-approval for commands that can rewrite
   history, delete refs, run arbitrary scripts, or exfiltrate secrets. In
   particular, do not ask to persist broad approval for force-push commands.
+- When pushing a new branch, do not add `-u`/`--set-upstream`. `push.default =
+  current` is already configured, so a plain `git push` succeeds without
+  upstream tracking. `-u` writes the tracking branch to `.git/config`
+  regardless of `push.autoSetupRemote`, and that write fails with `could not
+  lock config file .git/config: Operation not permitted` when the sandbox
+  denies writes there; the push itself still succeeds, but the error is
+  avoidable noise.
 
 ### User-Scoped Agent Scripts
 
