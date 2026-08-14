@@ -22,6 +22,8 @@ docs
 !.local/share/agents/scripts/pii-publish-guard/**
 !.local/share/agents/scripts/pdf-cite
 !.local/share/agents/scripts/pdf-cite/**
+!.local/share/agents/scripts/env-deny-hint
+!.local/share/agents/scripts/env-deny-hint/**
 .local/share/agents/docs/*
 !.local/share/agents/docs/agent-extension-security.md
 !.local/share/agents/docs/document-review-evidence.md
