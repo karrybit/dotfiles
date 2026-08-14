@@ -34,6 +34,7 @@ cask "microsoft-teams"
 # Knowledge base that works on top of a local folder of plain text Markdown files
 cask "obsidian"
 vscode "christian-kohler.path-intellisense"
+vscode "dongyuzhao.alloy-vscode"
 vscode "eamodio.gitlens"
 vscode "github.vscode-github-actions"
 vscode "github.vscode-pull-request-github"
