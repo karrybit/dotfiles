@@ -178,6 +178,40 @@
   as one system: consistent terminology, correct placement and ownership,
   valid cross-references, and documented behavior matching the actual files.
 
+### GitHub Issue Granularity (Default — Only Absent a Repo Policy)
+
+Apply this section only when the current repository has no explicit issue-authoring
+policy of its own (no repo `CLAUDE.md` rule, issue template, or CONTRIBUTING guidance
+on issue scope/splitting). A repo-specific policy always takes precedence over this
+default.
+
+- Size each issue to an independently mergeable PR-sized unit of work — not by
+  mirroring a source document's headings, and not by tool/component name alone.
+  Default to more, smaller issues over fewer, larger ones whenever the sub-parts are
+  independently actionable.
+- A cross-cutting policy question spanning multiple concrete artifacts should not
+  become its own issue with no code deliverable — resolve it locally inside each
+  concretely affected issue instead, so every issue ships a decision + implementation
+  together.
+- Two changes to the same tool/component but of a different kind (e.g. version bump
+  vs. config-content review) belong in separate issues when independent — don't
+  bundle by component name alone.
+- A core mechanism change and its optional/deferrable follow-ons belong in separate
+  issues even when the follow-on depends on the core change landing first. Note the
+  dependency in the follow-on's body rather than folding it into the core issue.
+- Express cross-issue ordering dependencies as a short note in the dependent issue's
+  body, not as a separate coordination/blocking issue.
+- Don't pre-create speculative issues for follow-on scope that isn't concretely
+  actionable yet. File the pilot/first-instance issue, validate the approach, and
+  note in a parent/tracking issue that further issues will follow once it lands.
+- A decision with no code deliverable right now is not an issue — record it as a
+  caveat inside the nearest concrete issue's body.
+- When new issues originate from an investigation/audit issue, keep that original
+  issue open as a parent/tracking issue with a checklist linking to the new issues,
+  rather than closing it — closing it loses the evidence that justified the split.
+- Before creating any issue(s), confirm the proposed titles/boundaries with the user —
+  issue creation is a visible, external action.
+
 ## Verification & Completion
 
 - After editing files, run `git diff --check`.
