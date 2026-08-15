@@ -84,7 +84,12 @@ settings: Dynamic = new Dynamic {
   }
   plansDir = "~/.config/claude/plans"
   worktree {
-    baseRef = "head"
+    // "head" carried unpushed commits and feature-branch state into every new
+    // worktree, including subagent worktrees, so a unit was no longer
+    // independently reviewable or revertable. "fresh" branches from
+    // origin/<default>. Dependent units are created by hand with
+    // `git worktree add <path> -b <branch> <parent>` instead.
+    baseRef = "fresh"
   }
   statusLine {
     type = "command"
