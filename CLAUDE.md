@@ -8,6 +8,11 @@
 - Use `chezmoi source-path`, `chezmoi target-path`, and `chezmoi managed` when
   the source-to-target mapping is unclear.
 - Preserve unrelated live differences and user-authored uncommitted changes.
+- Editing source in a git worktree does not change what `chezmoi apply` reads:
+  its source directory is `~/.local/share/chezmoi`, the main checkout, so an
+  apply from a worktree deploys the main checkout's older content. Push as
+  usual, then run `chezmoi update && chezmoi apply` from the main checkout once
+  the change has merged.
 
 ## Source-Only Files
 
