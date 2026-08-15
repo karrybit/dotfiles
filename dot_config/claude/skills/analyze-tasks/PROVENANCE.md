@@ -32,13 +32,22 @@
     の gitignore 確認が安全境界であることを明文化。ディレクトリを層で3分割する案は
     規範の "Do not overbuild" に従って採らなかった。
 
-    出力は `<repo>/analyze-tasks/backlog.md` に固定した。固定名でないと、既存ファイルを
+    出力は `<repo>/.analyze-tasks/backlog.md` に固定した。固定名でないと、既存ファイルを
     見つけられず再実行が更新でなく新規作成になり、`parallel-work` もパスを教えられないと
-    タスク一覧に到達できない。無視は global の `~/.config/git/ignore`（`core.excludesFile`
-    未設定でも git が XDG 既定で読む）で行うので、リポジトリごとの `.gitignore` 編集も、
-    編集し忘れて commit する事故も起きない。パターンは先頭スラッシュ必須で、`analyze-tasks/`
-    と書くと任意の深さに一致してこの skill 自身のソースまで無視した（新規ファイルが staging
-    されず、ripgrep もディレクトリを飛ばす）。書き込み前の `git check-ignore -v` は、この
-    安全境界を仮定せず毎回検証するための手順。
+    タスク一覧に到達できない。UUID 等の衝突しない名前は、この決定性を失う代わりに固定名の
+    ポインタファイルを要求し、同じ衝突リスクが1階層移動するだけなので採らなかった。
+
+    ドット接頭辞は必須。非ドットのルートディレクトリは chezmoi のソースツリーでソース
+    エントリとして扱われ、`chezmoi status` が ` A analyze-tasks` を出して apply で `$HOME`
+    に配備される（実測）。chezmoi が `.chezmoiignore` にルート直下の非ドット項目だけを
+    列挙している理由もこれ。ドット接頭辞はツール所有状態の慣習（`.git` / `.claude` /
+    `.venv`）でもあるので、名前衝突の回避も同時に得られる。`.claude/analyze-tasks/` は
+    ネームスペースとしてより強いが、ハーネスが能動的に掃除するディレクトリなので、
+    セッションをまたいで残す成果物の置き場としては避けた。
+
+    無視は global の `~/.config/git/ignore`（`core.excludesFile` 未設定でも git が XDG 既定で
+    読む）で行うので、リポジトリごとの `.gitignore` 編集も、編集し忘れて commit する事故も
+    起きない。先頭スラッシュでルート直下に限定する。書き込み前の `git check-ignore -v` は、
+    この安全境界を仮定せず毎回検証するための手順。
 
     並行数の上限の既定値 3 は根拠のない仮値。

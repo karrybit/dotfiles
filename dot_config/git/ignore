@@ -42,7 +42,10 @@ Temporary Items
 
 # analyze-tasks の出力。どのリポジトリでも同じ場所に置けるよう global で無視する。
 # リポジトリごとに .gitignore を編集する手間と、編集し忘れて commit する事故を
-# どちらも避けるため。先頭のスラッシュは必須: 付けないと任意の深さの同名
-# ディレクトリに一致し、skill 自身のソース dot_config/claude/skills/analyze-tasks/
-# まで無視してしまう。
-/analyze-tasks/
+# どちらも避けるため。
+#
+# ドット接頭辞は必須。非ドットのルートディレクトリは chezmoi のソースツリーで
+# ソースエントリとして扱われ、apply で $HOME に配備されてしまう
+# (`chezmoi status` が ` A analyze-tasks` を出す)。ドット付きは対象外になる。
+# 先頭スラッシュはルート直下に限定するため。
+/.analyze-tasks/

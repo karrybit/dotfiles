@@ -82,18 +82,22 @@ argument-hint: [source-file|issue-number...]
 
 ## 4. 出力
 
-置き場は作業中リポジトリのルート直下 `analyze-tasks/backlog.md`。**固定**で、リポジトリごとに
+置き場は作業中リポジトリのルート直下 `.analyze-tasks/backlog.md`。**固定**で、リポジトリごとに
 名前を変えない。固定にすることで、次のセッションが探索なしで見つけられ、再実行が新規作成では
 なく更新になる。
+
+**ドットを外さない。** 非ドットのルートディレクトリは chezmoi のソースツリーでソースエントリ
+として扱われ、`chezmoi apply` で `$HOME` に配備されてしまう。ドット接頭辞はツール所有の状態を
+表す慣習（`.git` / `.claude` / `.venv`）でもあり、リポジトリの内容と衝突しない。
 
 **書き込む前に、無視されていることを機械的に確認する。**
 
 ```sh
-git check-ignore -v analyze-tasks/backlog.md
+git check-ignore -v .analyze-tasks/backlog.md
 ```
 
 一致した無視規則を表示して終了コード 0 なら書いてよい。1 が返ったら**書き込まない**。
-既定では global の `~/.config/git/ignore` の `analyze-tasks/` が一致するので、リポジトリ側の
+既定では global の `~/.config/git/ignore` の `/.analyze-tasks/` が一致するので、リポジトリ側の
 `.gitignore` に手を入れる必要はない。一致しない環境（global ignore が未配備など）では
 `${XDG_STATE_HOME:-$HOME/.local/state}/agents/analyze-tasks/<repo>/backlog.md` に退避する。
 
