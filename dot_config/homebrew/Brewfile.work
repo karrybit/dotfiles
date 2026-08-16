@@ -5,6 +5,8 @@ tap "olets/tap"
 brew "aqua"
 # Manage your dotfiles across multiple diverse machines, securely
 brew "chezmoi"
+# Graphical front-end for GCC's coverage testing tool (gcov)
+brew "lcov"
 # Password manager that keeps all passwords secure behind one password
 cask "1password"
 # Screen capturing tool
