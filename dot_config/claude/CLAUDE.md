@@ -65,6 +65,11 @@
   sentences that do not exist in the source. For PDFs verify with
   `$XDG_DATA_HOME/agents/scripts/pdf-cite/bin/pdf-cite <abs-path> --find "<quote>"`,
   which exits non-zero when the quote is absent.
+- A citation to a file, prior decision, or document inside the repository
+  (e.g. "as documented in CLAUDE.md") is a claim about its contents, not just
+  its existence. Open the cited location and confirm the claimed content is
+  actually there before citing it; if it is not, name where the behavior
+  actually comes from instead.
 - Do not turn "not found" into "not there". An absence is evidence only about
   the region actually examined, so a partial view never supports a claim about
   the whole: an excerpt or sample of a document, a filtered or globbed search, a
@@ -225,10 +230,28 @@ default.
   mock vs real provider, feature flag on vs off).
 - Before any publish action such as `git push`, PR creation, sharing a diff,
   or making a repository public, inspect the exact outgoing content for
-  secrets, personal data, real home paths, machine names, and private
-  organization names. Treat findings as blockers and prefer placeholders or
-  template variables over real local values. An automated hook may block
+  secrets, personal data, real home paths, machine names, private
+  organization names, and context that exists only inside this working
+  session. Treat findings as blockers and prefer placeholders or template
+  variables over real local values. An automated hook may block
   high-confidence secret patterns; it does not replace this inspection.
+- Session-only context is anything a reader outside this session could not
+  resolve: labels invented to organize this session's own work (e.g.
+  "Tier2", "wave 3"), progress framing relative to a private artifact
+  (filing-time vs. measured counts, "as of the earlier PR"), and names of the
+  agent harness's own mechanisms rather than the project's (a sandbox-bypass
+  flag, a background-execution mode, a subagent role name). State the
+  underlying fact instead of the mechanism that produced it, e.g. "this test
+  cannot run in this environment, for reasons unrelated to the change" rather
+  than naming the flag that worked around it. This applies to code comments,
+  commit messages, PR and issue bodies and comments, and any document
+  committed to the repository.
+- When delegating comment-, PR-, or document-writing to a subagent, give it
+  only facts traceable to the repository itself, not this session's own
+  labels or framing, since background context in a delegation prompt tends to
+  be echoed verbatim into its output. Read that output against the rule above
+  before it is published; only the delegating session knows which parts of it
+  are session-only, so this check cannot itself be delegated.
 - Report checks that could not be run.
 
 ## Maintaining Instructions
