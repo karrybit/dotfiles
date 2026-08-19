@@ -1,7 +1,13 @@
 #!/bin/zsh
-# Guard against double-sourcing when sourced explicitly from ~/.zshenv
+# Guard against double-sourcing when sourced explicitly from ~/.zshenv.
+# Deliberately not exported: this only needs to survive within the current
+# process (e.g. VS Code's shell integration re-sourcing this file). Exporting
+# it would leak into every child process (tmux panes, Claude Code's per-call
+# Bash-tool shells, nested shells), so a long-lived ancestor's guard would
+# freeze zshenv.d's exports for all descendants forever, even after this
+# directory's contents change on disk.
 [[ -n "$_ZSHENV_SOURCED" ]] && return 0
-export _ZSHENV_SOURCED=1
+_ZSHENV_SOURCED=1
 : "${ZDOTDIR:=$HOME/.config/zsh}"
 
 for f in "$ZDOTDIR/zshenv.d/"*.zsh(N); do
