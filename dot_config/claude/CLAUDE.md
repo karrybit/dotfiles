@@ -333,6 +333,15 @@ default.
   an actual deletion. Do not restore it, stage a deletion, or commit in
   response to this signal. Confirm real state with `git show HEAD:<path>` or
   ask the user before acting on an apparent `.env*` deletion.
+- A running Claude Code session's Bash tool spawns a fresh shell per call, but
+  that shell inherits environment variables frozen from whenever the parent
+  `claude` process itself started, not from re-sourcing the current dotfiles.
+  When a `zshenv.d` file starts exporting a new variable, an already-running
+  session keeps the old (often unset) value until the session or its host
+  terminal is restarted. Before treating a var/sandbox-allowlist mismatch as a
+  dotfiles or allowlist defect, check whether the variable's export was added
+  after the current session started; if so, the fix is restarting the
+  session, not editing the allowlist.
 
 ### User-Scoped Agent Scripts
 
