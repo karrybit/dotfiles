@@ -62,6 +62,12 @@ settings: Dynamic = new Dynamic {
         "~/.cache/go/mod"
         "~/.cache/go-build"
         "~/.config/go/env"
+        // aqua's usage-tracking metadata (per-repo aqua.yaml runs write here).
+        // Default per aqua docs: $XDG_DATA_HOME/aquaproj-aqua/metadata.
+        // Deliberately excludes the sibling bin/ and pkgs/ dirs, which hold
+        // executables reached via PATH lookups — write access there would be
+        // a code-execution-on-next-run risk, unlike this pure bookkeeping data.
+        "~/.local/share/aquaproj-aqua/metadata"
       }
     }
     network {
