@@ -334,14 +334,23 @@ default.
   response to this signal. Confirm real state with `git show HEAD:<path>` or
   ask the user before acting on an apparent `.env*` deletion.
 - A running Claude Code session's Bash tool spawns a fresh shell per call, but
-  that shell inherits environment variables frozen from whenever the parent
-  `claude` process itself started, not from re-sourcing the current dotfiles.
-  When a `zshenv.d` file starts exporting a new variable, an already-running
-  session keeps the old (often unset) value until the session or its host
-  terminal is restarted. Before treating a var/sandbox-allowlist mismatch as a
-  dotfiles or allowlist defect, check whether the variable's export was added
-  after the current session started; if so, the fix is restarting the
-  session, not editing the allowlist.
+  that shell inherits environment variables frozen from whenever its actual
+  long-lived ancestor process started (often a tmux server, which freezes the
+  environment at server-start and hands it to every pane/window for the
+  server's whole lifetime), not from re-sourcing the current dotfiles. When a
+  `zshenv.d` file starts exporting a new variable, an already-running ancestor
+  keeps the old (often unset) value until that ancestor itself restarts —
+  restarting the terminal window or Claude Code client is not enough if both
+  still attach to the same tmux server underneath. Before treating a
+  var/sandbox-allowlist mismatch as a dotfiles or allowlist defect, check
+  whether the variable's export was added after the current session started
+  (compare `ps -o lstart -p $PPID` against the dotfile's last-applied mtime);
+  if so, the fix is restarting the actual long-lived ancestor (e.g. `tmux
+  kill-server`, or launching from a shell outside tmux), not editing the
+  allowlist. `~/.config/zsh/dot_zshenv`'s double-sourcing guard
+  (`_ZSHENV_SOURCED`) is deliberately unexported so this self-heals for any
+  brand-new process tree without a restart — only process trees that already
+  existed before that fix was deployed need the one-time restart.
 
 ### User-Scoped Agent Scripts
 
