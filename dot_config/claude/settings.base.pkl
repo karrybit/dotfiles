@@ -68,6 +68,14 @@ settings: Dynamic = new Dynamic {
         // executables reached via PATH lookups — write access there would be
         // a code-execution-on-next-run risk, unlike this pure bookkeeping data.
         "~/.local/share/aquaproj-aqua/metadata"
+        // uv's package/wheel cache (default per uv docs: $XDG_CACHE_HOME/uv,
+        // no UV_CACHE_DIR override set here). `uv run`/`uv sync`/`uv pip`
+        // write downloaded distributions here.
+        "~/.cache/uv"
+        // gh CLI's HTTP response cache (observed on disk; not covered by
+        // `gh help environment` — config lives in ~/.config/gh and version-check
+        // state in ~/.local/state/gh, which stay out of this allowlist).
+        "~/.cache/gh"
       }
     }
     network {
