@@ -349,6 +349,14 @@ default.
   lock config file .git/config: Operation not permitted` when the sandbox
   denies writes there; the push itself still succeeds, but the error is
   avoidable noise.
+- `git switch -c <new> <remote-ref>` or `git checkout -b <new> <remote-ref>`
+  hits the same `.git/config` write restriction, because branching from a
+  remote-tracking ref implicitly sets up upstream tracking too
+  (`branch.autoSetupMerge`). Unlike a plain push, this failure can leave the
+  repository in a half-switched state: HEAD/the branch ref stays on the old
+  branch while the index and working tree are already updated to the new
+  ref's content. Use `git branch --no-track <new> <remote-ref> && git
+  checkout <new>` instead to avoid triggering the tracking-setup write.
 - `.env.example` (and similar template files) can be subject to the sandbox's
   filesystem read-deny for `.env*` paths. When that happens, `git status`/`git
   diff` can report the file as deleted even though it still exists on disk and
