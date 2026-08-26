@@ -123,14 +123,16 @@ PR 番号はタスクファイルに書かない。ブランチ名から `gh pr 
 
 環境を clean に戻すまでが1作業。
 
+まず `/clean_gone` を実行する（`[gone]` になったブランチとその worktree を削除する）。
+リポジトリのブランチ自動削除設定が無効で `[gone]` にならない場合は、次の手動コマンドで行う。
+
 ```sh
 git fetch --prune                       # リモート側の削除を反映する
 git worktree remove .claude/worktrees/<id>
 git branch -D <branch>
 ```
 
-`/clean_gone` でも同じことができる（`[gone]` になったブランチとその worktree を削除する）。
-どちらを使っても、最後に残骸がないことを確認する。
+最後に残骸がないことを確認する。
 
 ```sh
 git worktree list                       # 想定外の worktree が残っていないか
