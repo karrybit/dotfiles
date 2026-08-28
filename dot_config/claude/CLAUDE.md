@@ -349,6 +349,12 @@ default.
   lock config file .git/config: Operation not permitted` when the sandbox
   denies writes there; the push itself still succeeds, but the error is
   avoidable noise.
+- A branch pushed without `-u` has no upstream ref configured, so its
+  `[gone]` marker in `git branch -v` never appears even after the remote
+  branch is deleted — `%(upstream:track)` has no effect without tracking
+  information. Cleanup that keys off `[gone]` (e.g. `clean_gone`) cannot
+  detect these; use `git branch --merged <base-branch>` (e.g. `main`) to
+  inventory merged local branches instead.
 - `git switch -c <new> <remote-ref>` or `git checkout -b <new> <remote-ref>`
   hits the same `.git/config` write restriction, because branching from a
   remote-tracking ref implicitly sets up upstream tracking too
