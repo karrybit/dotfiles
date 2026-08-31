@@ -76,6 +76,12 @@ settings: Dynamic = new Dynamic {
         // `gh help environment` — config lives in ~/.config/gh and version-check
         // state in ~/.local/state/gh, which stay out of this allowlist).
         "~/.cache/gh"
+        // npm's content-addressable package cache (default per `npm config
+        // get cache`: ~/.npm). `npm install`/`npm ci` write here directly.
+        // Deliberately excludes sibling _npx/_prebuilds, which hold
+        // executables — write access there would be a code-execution-on-
+        // next-run risk, unlike this cache data.
+        "~/.npm/_cacache"
       }
     }
     network {
