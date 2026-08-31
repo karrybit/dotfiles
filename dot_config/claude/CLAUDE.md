@@ -77,7 +77,8 @@
   Before writing that something is absent, unsupported, or unaddressed, either
   bring the whole source into view or record the claim as unknown.
 - Cache reusable source summaries under `$XDG_DATA_HOME/agents/docs/`, or
-  `$HOME/.local/share/agents/docs/` when `XDG_DATA_HOME` is unset. Cache only
+  `$HOME/.local/share/agents/docs/` when `XDG_DATA_HOME` is unset. Record the
+  source URL, date checked, version context, and revalidation trigger. Cache only
   what is likely to be reused, not one-off investigation notes; quote sparingly
   and keep source attribution rather than copying long passages; and treat the
   directory as a working set, marking stale, superseded, duplicated, or low-value
@@ -225,8 +226,6 @@ default.
 ## Verification & Completion
 
 - After editing files, run `git diff --check`.
-- After changing chezmoi-managed paths or `.chezmoiignore`, verify that the
-  intended files are managed or ignored as expected.
 - A documentation-affecting configuration change is complete only after the
   relevant README has been reviewed.
 - When fixing a bug that AI-assisted work introduced or a review missed, add
@@ -447,6 +446,3 @@ default.
 - For Claude Code subagents, prefer read-only tools and no `mcpServers`,
   `hooks`, or elevated `permissionMode` unless the task requires those
   capabilities.
-- Cache reusable official or expert source summaries under
-  `$XDG_DATA_HOME/agents/docs/` with source URL, date checked, version context,
-  and revalidation trigger.

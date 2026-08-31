@@ -26,6 +26,11 @@
 - For `chezmoi apply` in this environment, request the required approval on the
   first attempt instead of first producing the known
   `chezmoistate.boltdb: operation not permitted` failure.
+- `pkl eval` fails under the command sandbox: JNA cannot write to the system temp
+  directory and the command emits a Java stack trace instead of JSON, so a
+  downstream `jq` reports a parse error rather than the real cause. Run it with
+  `_JAVA_OPTIONS="-Djava.io.tmpdir=$TMPDIR -Djava.util.prefs.userRoot=$TMPDIR"`
+  instead of disabling the sandbox.
 
 ## Verification
 
@@ -55,9 +60,6 @@
   recorded in its own manifest, so skills installed by other routes survive.
 - Claude Code subagents are under `dot_config/claude/agents/` and deploy to
   `~/.config/claude/agents/`.
-- Managed skills must include `PROVENANCE.md`. Installing via a Claude Code
-  command does not make an extension chezmoi-managed unless its source artifact
-  or setting is added to this repository.
 - Agent source summaries belong under `~/.local/share/agents/docs/`; only
   explicitly allowlisted summaries are chezmoi-managed.
 - Agent-operated scripts belong under `~/.local/share/agents/scripts/`; only

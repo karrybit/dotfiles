@@ -12,7 +12,7 @@ settings: Dynamic = new Dynamic {
     ["CLAUDE_CODE_ENABLE_AUTO_MODE"] = "1"
   }
   permissions {
-    defaultMode = "default"
+    defaultMode = "auto"
     allow {
       "Read(~/.local/share/go/*)"
       "Read(~/.cache/go/*)"
@@ -112,10 +112,7 @@ settings: Dynamic = new Dynamic {
   }
   enabledPlugins {
     ["usage-collector@awesome-claude-marketplace"] = true
-    ["claude-md-management@claude-plugins-official"] = true
-    ["code-review@claude-plugins-official"] = true
     ["commit-commands@claude-plugins-official"] = true
-    ["frontend-design@claude-plugins-official"] = true
     ["mattpocock-skills@claude-plugins-official"] = true
     ["skill-creator@claude-plugins-official"] = true
     ["security-guidance@claude-plugins-official"] = true
