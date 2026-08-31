@@ -29,6 +29,7 @@ docs
 !.local/share/agents/docs/document-review-evidence.md
 !.local/share/agents/docs/llm-as-reviewer-evidence.md
 !.local/share/agents/docs/medallion-information-design.md
+!.local/share/agents/docs/sandbox-and-environment-gotchas.md
 
 # Claude Code generated/local settings
 .config/claude/settings.json
