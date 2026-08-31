@@ -172,6 +172,11 @@
   with the context.
 - Do not add error handling for scenarios that cannot happen in practice.
 - Prefer editing existing files over creating new ones.
+- Write documents and comments to describe the current design as if it were
+  the original design, not the sequence of revisions or conversations that
+  produced it. Rationale and historical context worth keeping belongs in the
+  commit message, PR description, or a decision log — information tied to
+  the decision to commit now, not to the artifact's ongoing self-description.
 
 ### Artifact Reconciliation
 
@@ -282,8 +287,6 @@ default.
   too-specific, or ineffective rules and propose removing or consolidating them.
 - Prefer replacing several narrow rules with one clearer general rule when it
   preserves the intended behavior.
-- Move rationale, historical context, and superseded discussion out of
-  instruction files into commit messages, PR notes, or a dedicated decision log.
 
 ### Choosing a Reusable Mechanism
 
