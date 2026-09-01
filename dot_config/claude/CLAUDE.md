@@ -114,6 +114,10 @@
   of one mixed commit, unless the user requests a single commit.
 - Before creating any GitHub issue, confirm the proposed titles and boundaries
   with the user — issue creation is a visible, external action.
+- A pull request turning CI-green is a status to report, not authorization to
+  merge. Report it and wait; merge only after the user explicitly confirms.
+  Restate this in any delegation prompt whose task could end in a mergeable
+  state — a subagent acts on its prompt, not on this file.
 - Size each issue to an independently mergeable PR-sized unit of work. Load
   `size-github-issues` before splitting a document, investigation, or audit into
   issues.
