@@ -267,13 +267,17 @@
   by looking for `[gone]` markers.
 - Branch from a remote ref with `git branch --no-track <new> <remote-ref> && git
   checkout <new>`, never with `git switch -c` or `git checkout -b`.
+- A successful `clean_gone` run does not guarantee `.git/config` came out
+  clean: deleting a tracked branch can leave its `[branch "..."]` section
+  behind under the same write restriction. Check `.git/config` directly and
+  remove stale sections by hand.
 - An apparent `.env*` deletion in `git status`/`git diff` is a sandbox read-deny
   artifact, not a real deletion. Confirm with `git show HEAD:<path>`; never
   restore, stage, or commit in response to it.
 - When an environment variable does not match what the dotfiles export, suspect
   the session's long-lived ancestor process before the dotfiles or the sandbox
   allowlist.
-- Why the five rules above hold, and how to diagnose each failure:
+- Why the six rules above hold, and how to diagnose each failure:
   `~/.local/share/agents/docs/sandbox-and-environment-gotchas.md`.
 
 ### User-Scoped Agent Scripts

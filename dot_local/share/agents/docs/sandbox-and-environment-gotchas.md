@@ -1,6 +1,6 @@
 # Sandbox And Environment Gotchas
 
-Checked: 2026-08-31
+Checked: 2026-09-01
 
 Revalidate when the command sandbox's filesystem restrictions change, when git's
 tracking-setup defaults change, or when the shell startup files change which
@@ -28,6 +28,21 @@ marker in `git branch -v` never appears even after the remote branch is deleted:
 keys off `[gone]`, such as `clean_gone`, therefore cannot detect these branches,
 which is why merged local branches are inventoried with
 `git branch --merged <base-branch>` instead.
+
+## Deleting A Tracked Branch Leaves `.git/config` Debris
+
+`git branch -d <branch>` removes the ref itself even when the sandbox denies
+writes to `.git/config`, but a branch with tracking config (`remote`, `merge`,
+or keys other tools wrote — VS Code's `vscode-merge-base`, `gh`'s
+`github-pr-base-branch`) also needs its `[branch "<name>"]` section deleted
+from `.git/config`, and that write hits the same `could not lock config file
+.git/config: Operation not permitted` as the push case. Because `[gone]` only
+appears on a branch with tracking config, every branch `clean_gone` actually
+deletes is a candidate for this: the branch disappears from `git branch -a`
+but its `[branch "..."]` section survives in `.git/config`, accumulating
+across repeated cleanups. A successful `clean_gone` run does not guarantee
+`.git/config` came out clean — check it directly and remove stale sections by
+hand.
 
 ## Branching From A Remote Ref
 
