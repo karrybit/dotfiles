@@ -44,6 +44,26 @@ across repeated cleanups. A successful `clean_gone` run does not guarantee
 `.git/config` came out clean — check it directly and remove stale sections by
 hand.
 
+## `clean_gone` Cannot Delete The Branch You Are On
+
+`git branch -D <branch>` refuses to delete the currently checked-out branch.
+`clean_gone`'s cleanup loop does not check for this before calling
+`git branch -D`, and the loop has no `set -e`, so that refusal prints to
+stderr and the loop continues past it instead of stopping the run — the
+branch survives, unreported as a failure. Confirmed by reading the plugin
+source
+(`~/.config/claude/plugins/marketplaces/claude-plugins-official/plugins/commit-commands/commands/clean_gone.md`):
+the command only ever runs `git branch -v`, `git worktree list`, and the
+delete loop. It contains no `git switch`/`git checkout` step, so nothing in
+`clean_gone` itself ever moves you off a branch before trying to delete it.
+
+This is not a rare edge case: the branch you are on right after a PR merges
+is exactly the branch most likely to have gone `[gone]`, so running
+`clean_gone` from the branch you just finished is the common case that hits
+this. Switch to the repository's default branch and pull first (the
+`sync-default-branch` skill) so the branch you are on when the delete loop
+runs is never one of its own targets.
+
 ## Branching From A Remote Ref
 
 `git switch -c <new> <remote-ref>` and `git checkout -b <new> <remote-ref>` hit
