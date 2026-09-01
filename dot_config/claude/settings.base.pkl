@@ -8,7 +8,6 @@ settings: Dynamic = new Dynamic {
     ["ANTHROPIC_DEFAULT_OPUS_MODEL"] = "claude-opus-5"
     ["ANTHROPIC_DEFAULT_SONNET_MODEL"] = "claude-sonnet-5"
     ["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = "claude-haiku-4-5"
-    ["CLAUDE_CODE_SESSIONEND_HOOKS_TIMEOUT_MS"] = "60000"
     ["CLAUDE_CODE_ENABLE_AUTO_MODE"] = "1"
   }
   permissions {
@@ -117,7 +116,6 @@ settings: Dynamic = new Dynamic {
     refreshInterval = 5
   }
   enabledPlugins {
-    ["usage-collector@awesome-claude-marketplace"] = true
     ["commit-commands@claude-plugins-official"] = true
     ["mattpocock-skills@claude-plugins-official"] = true
     ["skill-creator@claude-plugins-official"] = true
