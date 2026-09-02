@@ -169,6 +169,10 @@
   smallest deterministic regression test that fails on the old behavior, and
   cover the parallel paths the change touches (sandbox vs production, mock vs
   real provider, feature flag on vs off).
+- Before reporting a measured number, confirm the harness can tell outcomes
+  apart: run one input whose result is already known and one that must differ,
+  and check that it separates them. Until then its output describes the harness,
+  not the thing measured.
 - Before any publish action — `git push`, PR creation, sharing a diff, making a
   repository public — inspect the exact outgoing content for secrets, personal
   data, real home paths, machine names, private organization names, and
