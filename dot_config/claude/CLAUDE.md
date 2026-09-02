@@ -271,28 +271,23 @@
   all.
 - Do not add `-u`/`--set-upstream` when pushing a new branch; `push.default =
   current` already covers it.
-- Inventory merged local branches with `git branch --merged <base-branch>`, not
-  by looking for `[gone]` markers.
 - Branch from a remote ref with `git branch --no-track <new> <remote-ref> && git
   checkout <new>`, never with `git switch -c` or `git checkout -b`.
-- A successful `clean_gone` run does not guarantee `.git/config` came out
-  clean: deleting a tracked branch can leave its `[branch "..."]` section
-  behind under the same write restriction. Check `.git/config` directly and
-  remove stale sections by hand.
-- `clean_gone` never switches branches; it only inspects `[gone]` markers and
-  deletes. Staying on a branch that has itself gone `[gone]` makes its own
-  deletion fail, since git refuses to delete the branch you are on, so that
-  branch survives repeated cleanups. Switch to the repository's default
-  branch and pull first (`sync-default-branch` skill) so the branch you are on
-  is never one of `clean_gone`'s own deletion targets.
+- Clean up merged local branches with the `sync-default-branch` skill: it returns
+  to the default branch first, then deletes only on evidence — an ancestor of the
+  base branch, or a `MERGED` pull request when the merge was a squash. `[gone]`
+  markers never appear on branches pushed without `-u`, so cleanup keyed off them
+  finds nothing here. Deleting a branch another tool gave tracking config leaves
+  its `[branch "..."]` section behind, since removing it needs the denied
+  `.git/config` write; report the leftover rather than working around the denial.
 - An apparent `.env*` deletion in `git status`/`git diff` is a sandbox read-deny
   artifact, not a real deletion. Confirm with `git show HEAD:<path>`; never
   restore, stage, or commit in response to it.
 - When an environment variable does not match what the dotfiles export, suspect
   the session's long-lived ancestor process before the dotfiles or the sandbox
   allowlist.
-- Why the seven rules above hold, and how to diagnose each failure:
-  `~/.local/share/agents/docs/sandbox-and-environment-gotchas.md`.
+- Why these sandbox and environment rules hold, and how to diagnose each
+  failure: `~/.local/share/agents/docs/sandbox-and-environment-gotchas.md`.
 
 ### User-Scoped Agent Scripts
 

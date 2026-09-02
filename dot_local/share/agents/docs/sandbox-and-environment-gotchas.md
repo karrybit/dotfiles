@@ -20,49 +20,66 @@ upstream tracking. `-u`/`--set-upstream` writes the tracking branch to
 sandbox denies writes there. The push itself still succeeds, so the result is
 avoidable error noise rather than a failed push.
 
-## Merged Branches Never Show `[gone]`
+## `[gone]` And `--merged` Each Miss A Class Of Merged Branch
 
 A branch pushed without `-u` has no upstream ref configured, so its `[gone]`
 marker in `git branch -v` never appears even after the remote branch is deleted:
 `%(upstream:track)` has no effect without tracking information. Cleanup that
-keys off `[gone]`, such as `clean_gone`, therefore cannot detect these branches,
-which is why merged local branches are inventoried with
-`git branch --merged <base-branch>` instead.
+keys off `[gone]` therefore finds nothing here.
 
-## Deleting A Tracked Branch Leaves `.git/config` Debris
+`git branch --merged <base-branch>` covers what `[gone]` misses, but only
+branches whose tip is an ancestor of the base branch. A squash-merged branch is
+not an ancestor — its own commits never entered the base branch — so it appears
+in neither list, and `git branch -d` refuses it with `error: the branch
+'<name>' is not fully merged`.
+
+`git cherry <base-branch> <branch>` does not close the gap. It compares
+patch-ids, so it matches a squash of a single commit but reports every commit of
+a multi-commit squash as unmerged.
+
+The authoritative signal is the forge:
+
+    gh pr list --head <branch> --state all --json number,state,mergedAt
+
+It answers after the remote branch is deleted, and returns an empty list rather
+than an error for a branch it does not know. A `MERGED` result is the evidence
+that justifies `git branch -D`.
+
+## Deleting A Branch Another Tool Configured Leaves `.git/config` Debris
 
 `git branch -d <branch>` removes the ref itself even when the sandbox denies
-writes to `.git/config`, but a branch with tracking config (`remote`, `merge`,
-or keys other tools wrote — VS Code's `vscode-merge-base`, `gh`'s
-`github-pr-base-branch`) also needs its `[branch "<name>"]` section deleted
-from `.git/config`, and that write hits the same `could not lock config file
-.git/config: Operation not permitted` as the push case. Because `[gone]` only
-appears on a branch with tracking config, every branch `clean_gone` actually
-deletes is a candidate for this: the branch disappears from `git branch -a`
-but its `[branch "..."]` section survives in `.git/config`, accumulating
-across repeated cleanups. A successful `clean_gone` run does not guarantee
-`.git/config` came out clean — check it directly and remove stale sections by
-hand.
+writes to `.git/config`, but a branch carrying a `[branch "<name>"]` section
+also needs that section deleted, and that write hits the same `could not lock
+config file .git/config: Operation not permitted` as the push case.
 
-## `clean_gone` Cannot Delete The Branch You Are On
+Nothing done under the sandbox creates such a section: writing tracking config
+is the operation the denial blocks, so branches created here are untracked and
+delete cleanly. The sections that do exist were written by tools running outside
+the sandbox — VS Code's `vscode-merge-base`, `gh`'s `github-pr-base-branch`, or
+a `-u` push from an ordinary shell. Deleting one of those branches leaves its
+section behind; report the leftover, because removing it needs the write that is
+denied.
 
-`git branch -D <branch>` refuses to delete the currently checked-out branch.
-`clean_gone`'s cleanup loop does not check for this before calling
-`git branch -D`, and the loop has no `set -e`, so that refusal prints to
-stderr and the loop continues past it instead of stopping the run — the
-branch survives, unreported as a failure. Confirmed by reading the plugin
-source
-(`~/.config/claude/plugins/marketplaces/claude-plugins-official/plugins/commit-commands/commands/clean_gone.md`):
-the command only ever runs `git branch -v`, `git worktree list`, and the
-delete loop. It contains no `git switch`/`git checkout` step, so nothing in
-`clean_gone` itself ever moves you off a branch before trying to delete it.
+## Why Cleanup Does Not Use `clean_gone`
 
-This is not a rare edge case: the branch you are on right after a PR merges
-is exactly the branch most likely to have gone `[gone]`, so running
-`clean_gone` from the branch you just finished is the common case that hits
-this. Switch to the repository's default branch and pull first (the
-`sync-default-branch` skill) so the branch you are on when the delete loop
-runs is never one of its own targets.
+Three properties of the command, confirmed by reading the plugin source
+(`~/.config/claude/plugins/marketplaces/claude-plugins-official/plugins/commit-commands/commands/clean_gone.md`),
+which only ever runs `git branch -v`, `git worktree list`, and a delete loop:
+
+- It selects targets by `[gone]`, which never appears on the branches this
+  environment produces.
+- It deletes with `git branch -D`, discarding unmerged work without asking.
+- It contains no `git switch`/`git checkout` step, so it can be run from a
+  branch that is itself a target. `git branch -D` refuses to delete the
+  currently checked-out branch, and the loop has no `set -e`, so that refusal
+  prints to stderr and the loop continues — the branch survives, unreported as a
+  failure. The branch you are on right after a PR merges is exactly the one most
+  likely to be a target, so this is the common case rather than an edge.
+
+The `sync-default-branch` skill covers the same intent without those
+properties: it moves to the default branch before deleting anything, selects on
+positive evidence, and reserves `-D` for a branch a `MERGED` pull request
+accounts for.
 
 ## Branching From A Remote Ref
 
