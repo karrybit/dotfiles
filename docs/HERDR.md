@@ -227,6 +227,21 @@ streams one terminal into the current window instead of the full UI. Its detach
 key is `ctrl+b q` regardless of `keys.prefix`, and `ctrl+b ctrl+b` sends a
 literal `ctrl+b`.
 
+chezmoi owns `config.toml`, and herdr writes to it as well: choices made in its
+Settings surface (theme, status indicators, sound, toast delivery, agent panel
+ordering) and the `onboarding` flag are upserted into the file, leaving comments
+and unrelated keys intact. Editing the chezmoi source stays the way to change a
+setting durably. When a setting is changed in the app instead, `chezmoi apply`
+refuses the file because the target moved — that refusal is the signal — and the
+change is adopted with:
+
+```sh
+chezmoi re-add ~/.config/herdr/config.toml
+```
+
+Then commit the source. Discarding the in-app change instead is
+`chezmoi apply --force`.
+
 ---
 
 ## Claude Code Integration
@@ -237,11 +252,16 @@ literal `ctrl+b`.
 generated from `dot_config/claude/settings.base.pkl`, which declares the entry,
 so it survives regeneration.
 
-herdr recognizes its own entry by exact command string. After a herdr release
-that bumps the Claude integration, check `herdr integration status`: if it
-reports the hook as missing, the canonical command changed and the string in
-`settings.base.pkl` needs the same update. Leaving it stale makes install add a
-second entry that the next settings regeneration drops.
+herdr recognizes its own entry by exact command string, so the declared string
+has to track what herdr writes. `generate_claude_settings` installs the
+integration over the file it just generated: that is a no-op while the two
+agree, and when a herdr release changes the canonical command, herdr rewrites
+the entry and the script prints the new string to update `settings.base.pkl`
+with. Leaving it stale makes every regeneration drop herdr's entry again.
+
+`herdr integration status` cannot stand in for that check — it reports the
+version of the installed hook script and says `current` even when the settings
+entry is missing.
 
 The hook reports only the session id, which is what lets a Claude pane resume
 its conversation after a server restart. Working/blocked detection does not

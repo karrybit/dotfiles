@@ -26,3 +26,21 @@ tmp_json="$tmp_dir/settings.json"
 
 pkl eval -f json -p claudeConfigDir="$claude_config_dir" "$source_pkl" > "$tmp_json"
 mv "$tmp_json" "$settings_json"
+
+# herdr owns its SessionStart entry and matches it by exact command string, so
+# it is the authority on what that string is. Installing over the generated
+# file is a no-op while the declaration in the pkl sources still matches; when
+# it stops matching, herdr rewrites the entry and the declaration needs the
+# same update. `herdr integration status` reports the hook script's version
+# only, so it cannot stand in for this check.
+if command -v herdr >/dev/null 2>&1; then
+  hook_commands='[.hooks.SessionStart[]?.hooks[]?.command | select(test("herdr-agent-state"))]'
+  declared="$(jq -c "$hook_commands" "$settings_json")"
+  herdr integration install claude >/dev/null 2>&1 || true
+  added="$(jq -r --argjson declared "$declared" "$hook_commands - \$declared | .[]" "$settings_json")"
+
+  if [ -n "$added" ]; then
+    echo "herdr rewrote its SessionStart hook entry; update settings.base.pkl to:" >&2
+    printf '%s\n' "$added" >&2
+  fi
+fi
