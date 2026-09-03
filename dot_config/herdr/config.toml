@@ -1,0 +1,23 @@
+onboarding = false
+
+[theme]
+name = "nord"
+
+[keys]
+prefix = "ctrl+t"
+split_vertical = ["prefix+v", "prefix+|"]
+split_horizontal = ["prefix+minus", "prefix+_"]
+
+[ui]
+agent_panel_sort = "spaces"
+
+[ui.toast]
+delivery = "herdr"
+
+# macOS only; ignored on other platforms. An active Japanese input source
+# swallows prefix chords, and macOS anchors the IME candidate window to the
+# hardware cursor that agent TUIs hide.
+[experimental]
+switch_ascii_input_source_in_prefix = true
+reveal_hidden_cursor_for_cjk_ime = true
+cjk_ime_agents = ["claude"]
