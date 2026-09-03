@@ -12,6 +12,7 @@
     fzf
     ghq
     gping
+    herdr
     hyperfine
     jq
     lazygit
