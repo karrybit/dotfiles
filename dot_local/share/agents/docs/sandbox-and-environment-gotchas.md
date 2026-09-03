@@ -108,20 +108,20 @@ and confirms the real state.
 
 A running Claude Code session's Bash tool spawns a fresh shell per call, but that
 shell inherits environment variables frozen from whenever its actual long-lived
-ancestor process started, not from re-sourcing the current dotfiles. A tmux
-server is the usual ancestor: it captures the environment at server-start and
-hands that copy to every pane and window for the server's whole lifetime.
+ancestor process started, not from re-sourcing the current dotfiles. The
+multiplexer server is the usual ancestor: it captures the environment at
+server-start and hands that copy to every pane for the server's whole lifetime.
 
 So when a `zshenv.d` file starts exporting a new variable, an already-running
 ancestor keeps the old — often unset — value until the ancestor itself restarts.
 Restarting the terminal window or the Claude Code client changes nothing if both
-still attach to the same tmux server underneath.
+reattach to the same multiplexer server underneath.
 
 To tell this apart from a genuine dotfiles or allowlist defect, compare
 `ps -o lstart -p $PPID` against the dotfile's last-applied mtime. When the
 variable's export was added after the current session started, the fix is
-restarting the long-lived ancestor — `tmux kill-server`, or launching from a
-shell outside tmux — not editing the sandbox allowlist.
+restarting that ancestor — `herdr server stop`, or launching from a shell outside
+the multiplexer — not editing the sandbox allowlist.
 
 `~/.config/zsh/dot_zshenv`'s double-sourcing guard (`_ZSHENV_SOURCED`) is
 deliberately unexported, so a brand-new process tree picks up current exports
