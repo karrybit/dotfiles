@@ -1,0 +1,32 @@
+__lib_require_commands herdr jq || return 1
+local rows active
+
+if ! __lib_herdr_server_running; then
+    __lib_echo_warning "herdr server is not running\n"
+    return 0
+fi
+
+rows=$(herdr agent list | jq -r \
+    '.result.agents[]? | "\(.agent_status)\t\(.name // .pane_id)\t\(.agent)"') || return 1
+
+# `unknown` does not prove an agent finished, so it counts as active here.
+active=(${(M)${(f)rows}:#(working|blocked|unknown)*})
+if (( $#active )); then
+    print -rl -- ${active/#/  }
+    __lib_echo_failure "$#active agent(s) still active; detach with ctrl+t q instead\n"
+    return 1
+fi
+
+herdr workspace list | jq -r '.result.workspaces
+    | "stopping herdr: \(length) workspace(s), \([.[].pane_count] | add // 0) pane(s)"'
+[[ -n "$rows" ]] && print -rl -- ${${(f)rows}/#/  }
+
+read -q "?stop the server and every pane process? [y/N] "
+local answered=$?
+print
+if (( answered )); then
+    __lib_echo_failure "canceled\n"
+    return 1
+fi
+
+herdr server stop

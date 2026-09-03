@@ -1,0 +1,26 @@
+__lib_require_commands ghq fzf herdr jq || return 1
+local dir workspace
+dir=$(__lib_fzf_pick_ghq_dir) || return 1
+
+# A server started by `herdr` restores its saved session and then ignores its
+# launch directory, which therefore only seeds a session that has no workspaces
+# at all. The workspace is picked explicitly against a running server instead.
+if ! __lib_herdr_server_running && ! __lib_herdr_start_server; then
+    __lib_echo_failure "herdr server did not start\n"
+    return 1
+fi
+
+# `cwd` is the workspace identity directory, so it keeps matching after the
+# shell inside the pane changes directory; `foreground_cwd` tracks that instead.
+# Matching on it keeps this idempotent: same repo, same workspace.
+workspace=$(herdr pane list | jq -r --arg dir "$dir" \
+    'first(.result.panes[] | select(.cwd == $dir) | .workspace_id)')
+
+if [[ -n "$workspace" ]]; then
+    herdr workspace focus "$workspace" >/dev/null
+else
+    herdr workspace create --cwd "$dir" --focus >/dev/null
+fi
+
+[[ -n "$HERDR_ENV" ]] && return 0
+herdr

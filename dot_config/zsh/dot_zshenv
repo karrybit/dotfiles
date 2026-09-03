@@ -2,7 +2,7 @@
 # Guard against double-sourcing when sourced explicitly from ~/.zshenv.
 # Deliberately not exported: this only needs to survive within the current
 # process (e.g. VS Code's shell integration re-sourcing this file). Exporting
-# it would leak into every child process (tmux panes, Claude Code's per-call
+# it would leak into every child process (multiplexer panes, Claude Code's per-call
 # Bash-tool shells, nested shells), so a long-lived ancestor's guard would
 # freeze zshenv.d's exports for all descendants forever, even after this
 # directory's contents change on disk.
