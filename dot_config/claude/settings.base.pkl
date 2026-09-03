@@ -2,6 +2,10 @@
 // Keep company-specific providers, plugin marketplaces, and credentials in
 // $XDG_CONFIG_HOME/claude/settings.work.pkl instead.
 
+// The Claude config directory is resolved by generate_claude_settings and
+// passed in, so this file and the generated settings.json agree on one rule.
+local herdrClaudeConfigDir = read("prop:claudeConfigDir")
+
 settings: Dynamic = new Dynamic {
   env {
     ["ANTHROPIC_MODEL"] = "claude-sonnet-5"
@@ -126,6 +130,22 @@ settings: Dynamic = new Dynamic {
   effortLevel = "xhigh"
   autoUpdatesChannel = "stable"
   hooks {
+    // Reports the session id to the herdr pane, so herdr can resume this
+    // conversation after its server restarts. herdr owns the hook script and
+    // matches this entry by exact command string; docs/HERDR.md records how to
+    // check and refresh it after a herdr release.
+    ["SessionStart"] = new Listing {
+      new Dynamic {
+        matcher = "*"
+        hooks = new Listing {
+          new Dynamic {
+            type = "command"
+            command = "bash '\(herdrClaudeConfigDir)/hooks/herdr-agent-state.sh' session"
+            timeout = 10
+          }
+        }
+      }
+    }
     ["PreToolUse"] = new Listing {
       new Dynamic {
         matcher = "Bash"
