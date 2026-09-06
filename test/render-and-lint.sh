@@ -64,6 +64,46 @@ for profile in work private_neo private_minipc; do
     done
 done
 
+# ── Codex partial config ──────────────────────────────────────────────────────
+printf "\n\e[1mCodex partial config\e[0m\n"
+
+codex_fixture='model = "old-model"
+future_setting = "preserve-me"
+
+[projects."/example/project"]
+trust_level = "trusted"
+
+[tui.model_availability_nux]
+old-model = 7'
+
+codex_rendered="$(
+    print -r -- "$codex_fixture" |
+        chezmoi execute-template --with-stdin \
+            --file "$source_dir/dot_codex/modify_private_config.toml"
+)"
+codex_json="$(
+    print -r -- "$codex_rendered" |
+        chezmoi execute-template --with-stdin \
+            '{{ .chezmoi.stdin | fromToml | toJson }}'
+)"
+
+if print -r -- "$codex_json" | jq -e '
+    .model == "gpt-5.6-sol" and
+    .model_reasoning_effort == "medium" and
+    .approvals_reviewer == "auto_review" and
+    .future_setting == "preserve-me" and
+    .projects["/example/project"].trust_level == "trusted" and
+    .tui.model_availability_nux["old-model"] == 7 and
+    .tui.status_line == ["model", "current-dir", "five-hour-limit", "context-used", "used-tokens"] and
+    .plugins["github@openai-curated"].enabled == true and
+    .plugins["google-drive@openai-curated"].enabled == true and
+    .features.memories == true
+' >/dev/null; then
+    ok "dot_codex/modify_private_config.toml passes through local Codex state"
+else
+    fail "dot_codex/modify_private_config.toml passes through local Codex state"
+fi
+
 # ── Summary ───────────────────────────────────────────────────────────────────
 printf "\n%d passed, %d failed\n" "$pass" "$fail"
 (( fail == 0 ))

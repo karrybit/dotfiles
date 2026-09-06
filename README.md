@@ -11,6 +11,7 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/) and [Nix](http
 ~/.local/share/chezmoi/       ← source (this repository)
   nix/                        ← Nix flake (packages, Homebrew casks, system config)
     modules/profiles/         ← per-machine profiles (work, private_neo, private_minipc)
+  dot_codex/                  ← partial Codex configuration → ~/.codex/
   dot_config/                 ← configuration files → ~/.config/
   dot_local/                  ← local data/bin → ~/.local/
 
@@ -26,6 +27,13 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/) and [Nix](http
 Agent instructions, skills, and subagents are all managed under
 `dot_config/claude/`. See [CLAUDE.md](CLAUDE.md) for how agents interact with
 this repository.
+
+Codex's `~/.codex/config.toml` is partially managed by
+`dot_codex/modify_private_config.toml`. Chezmoi enforces the public user
+preferences declared there while passing machine-local state such as
+`[projects]` through unchanged. Its absolute paths and values therefore never
+enter this repository. The `private_` source attribute keeps the live file at
+mode `0600`.
 
 ---
 

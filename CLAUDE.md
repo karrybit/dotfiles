@@ -46,11 +46,16 @@
 - Nix design decisions (profile-per-package principle, chezmoi vs Nix boundary,
   package policy) are documented in `docs/NIX.md`.
 
-## Agent Skills and Extensions
+## Agent Configuration, Skills, and Extensions
 
-- Claude Code is the only agent this repository configures, and it reads
-  `CLAUDE.md`, never `AGENTS.md`. Every instruction file here is a `CLAUDE.md`:
-  this one for the repository, `dot_config/nvim/CLAUDE.md` for that directory, and
+- Codex's `~/.codex/config.toml` is partially managed by
+  `dot_codex/modify_private_config.toml`. Keep public preferences in that
+  modifier, pass machine-local `[projects]` through without recording its
+  values in source, and never copy the live file into the repository. Keep the
+  `private_` attribute so the target remains mode `0600`.
+- Claude Code reads `CLAUDE.md`, never `AGENTS.md`. Every instruction file here
+  is a `CLAUDE.md`: this one for the repository,
+  `dot_config/nvim/CLAUDE.md` for that directory, and
   `dot_config/claude/CLAUDE.md` for user scope, deployed to
   `~/.config/claude/CLAUDE.md`. No file imports another.
 - Skills live under `dot_config/claude/skills/` and deploy straight to

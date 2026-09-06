@@ -1,0 +1,14 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- $config := dict -}}
+{{- if ne (.chezmoi.stdin | trim) "" -}}
+{{- $config = .chezmoi.stdin | fromToml -}}
+{{- end -}}
+{{- $config = $config | setValueAtPath "model" "gpt-5.6-sol" -}}
+{{- $config = $config | setValueAtPath "model_reasoning_effort" "medium" -}}
+{{- $config = $config | setValueAtPath "approvals_reviewer" "auto_review" -}}
+{{- $config = $config | setValueAtPath "tui.status_line" (list "model" "current-dir" "five-hour-limit" "context-used" "used-tokens") -}}
+{{- $config = $config | setValueAtPath "tui.status_line_use_colors" true -}}
+{{- $config = $config | setValueAtPath "plugins.github@openai-curated.enabled" true -}}
+{{- $config = $config | setValueAtPath "plugins.google-drive@openai-curated.enabled" true -}}
+{{- $config = $config | setValueAtPath "features.memories" true -}}
+{{- $config | toToml -}}
