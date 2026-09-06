@@ -60,7 +60,7 @@ they do not declare falls through to Nix. Do not reintroduce a global
 
 | Managed by | Examples |
 |---|---|
-| chezmoi | `~/.config/zsh/`, `~/.config/nvim/`, `~/.config/git/`, `~/.config/starship.toml` |
+| chezmoi | `~/.config/zsh/`, `~/.config/nvim/`, `~/.config/git/`, `~/.config/starship.toml`, `~/.config/herdr/config.toml` |
 | Nix — profile | CLI packages, Homebrew casks |
 | Nix — `home/programs.nix` | `programs.tmux` (plugins), `programs.direnv` (nix-direnv) |
 

@@ -2,7 +2,7 @@
 name: specify-business-rules
 description: 業務規則の仕様をレビューする、インタビューで引き出す、または書く。既存のユーザーストーリー・ユースケース・チケットなど書き方が統一されていない機能仕様の記述に対し、同じ語が別のものを指す箇所・条件が重なって帰結が決まらない箇所・空欄が未決定か意図的自由か判別できない箇所を洗い出す。ORM/SBVR で語彙、EARS で前提と契機、DMN の決定表と Catala 式の例外木で原則と例外を規定する。進行中案件の仕様レビュー、記述からの語彙リスト作成、ふんわりしたストーリーの聞き取り、散在した業務規則の集約が対象。扱うのは要求・要件・仕様の記述だけで、実装・コード・API契約・DBスキーマは対象にも照合先にもしない。
 disable-model-invocation: true
-argument-hint: [review|interview|consolidate] [file-path...]
+argument-hint: "[review|interview|consolidate] [file-path...]"
 ---
 
 # 業務規則仕様のレビューと作成

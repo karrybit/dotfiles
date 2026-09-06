@@ -2,17 +2,20 @@
 // Keep company-specific providers, plugin marketplaces, and credentials in
 // $XDG_CONFIG_HOME/claude/settings.work.pkl instead.
 
+// The Claude config directory is resolved by generate_claude_settings and
+// passed in, so this file and the generated settings.json agree on one rule.
+local herdrClaudeConfigDir = read("prop:claudeConfigDir")
+
 settings: Dynamic = new Dynamic {
   env {
     ["ANTHROPIC_MODEL"] = "claude-sonnet-5"
     ["ANTHROPIC_DEFAULT_OPUS_MODEL"] = "claude-opus-5"
     ["ANTHROPIC_DEFAULT_SONNET_MODEL"] = "claude-sonnet-5"
     ["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = "claude-haiku-4-5"
-    ["CLAUDE_CODE_SESSIONEND_HOOKS_TIMEOUT_MS"] = "60000"
     ["CLAUDE_CODE_ENABLE_AUTO_MODE"] = "1"
   }
   permissions {
-    defaultMode = "default"
+    defaultMode = "auto"
     allow {
       "Read(~/.local/share/go/*)"
       "Read(~/.cache/go/*)"
@@ -76,6 +79,12 @@ settings: Dynamic = new Dynamic {
         // `gh help environment` — config lives in ~/.config/gh and version-check
         // state in ~/.local/state/gh, which stay out of this allowlist).
         "~/.cache/gh"
+        // npm's content-addressable package cache (default per `npm config
+        // get cache`: ~/.npm). `npm install`/`npm ci` write here directly.
+        // Deliberately excludes sibling _npx/_prebuilds, which hold
+        // executables — write access there would be a code-execution-on-
+        // next-run risk, unlike this cache data.
+        "~/.npm/_cacache"
       }
     }
     network {
@@ -111,11 +120,7 @@ settings: Dynamic = new Dynamic {
     refreshInterval = 5
   }
   enabledPlugins {
-    ["usage-collector@awesome-claude-marketplace"] = true
-    ["claude-md-management@claude-plugins-official"] = true
-    ["code-review@claude-plugins-official"] = true
     ["commit-commands@claude-plugins-official"] = true
-    ["frontend-design@claude-plugins-official"] = true
     ["mattpocock-skills@claude-plugins-official"] = true
     ["skill-creator@claude-plugins-official"] = true
     ["security-guidance@claude-plugins-official"] = true
@@ -125,6 +130,22 @@ settings: Dynamic = new Dynamic {
   effortLevel = "xhigh"
   autoUpdatesChannel = "stable"
   hooks {
+    // Reports the session id to the herdr pane, so herdr can resume this
+    // conversation after its server restarts. herdr owns the hook script and
+    // matches this entry by exact command string; docs/HERDR.md records how to
+    // check and refresh it after a herdr release.
+    ["SessionStart"] = new Listing {
+      new Dynamic {
+        matcher = "*"
+        hooks = new Listing {
+          new Dynamic {
+            type = "command"
+            command = "bash '\(herdrClaudeConfigDir)/hooks/herdr-agent-state.sh' session"
+            timeout = 10
+          }
+        }
+      }
+    }
     ["PreToolUse"] = new Listing {
       new Dynamic {
         matcher = "Bash"

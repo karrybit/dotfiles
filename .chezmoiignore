@@ -24,11 +24,15 @@ docs
 !.local/share/agents/scripts/pdf-cite/**
 !.local/share/agents/scripts/env-deny-hint
 !.local/share/agents/scripts/env-deny-hint/**
+.config/herdr/*
+!.config/herdr/config.toml
+.config/claude/hooks/*
 .local/share/agents/docs/*
 !.local/share/agents/docs/agent-extension-security.md
 !.local/share/agents/docs/document-review-evidence.md
 !.local/share/agents/docs/llm-as-reviewer-evidence.md
 !.local/share/agents/docs/medallion-information-design.md
+!.local/share/agents/docs/sandbox-and-environment-gotchas.md
 
 # Claude Code generated/local settings
 .config/claude/settings.json
