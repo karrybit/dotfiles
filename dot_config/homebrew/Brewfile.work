@@ -7,6 +7,8 @@ brew "aqua"
 brew "chezmoi"
 # Graphical front-end for GCC's coverage testing tool (gcov)
 brew "lcov"
+# PDF rendering library (based on the xpdf-3.0 code base)
+brew "poppler"
 # Password manager that keeps all passwords secure behind one password
 cask "1password"
 # Screen capturing tool
