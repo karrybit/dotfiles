@@ -151,6 +151,19 @@ settings: Dynamic = new Dynamic {
           }
         }
       }
+      // Allows the repository's aqua/aqua-policy.yaml. aqua keys the allowance
+      // by absolute path, so every new git worktree starts un-allowed and warns
+      // on every command aqua wraps. A repository may register the same thing
+      // for its team; the allow is idempotent, so both firing is a no-op.
+      new Dynamic {
+        matcher = "startup|resume|clear"
+        hooks = new Listing {
+          new Dynamic {
+            type = "command"
+            command = "\"$HOME\"/.local/share/agents/scripts/aqua-policy-allow/bin/allow-project-policy"
+          }
+        }
+      }
     }
     ["PreToolUse"] = new Listing {
       new Dynamic {

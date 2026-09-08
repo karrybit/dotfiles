@@ -1,0 +1,40 @@
+#!/bin/bash
+# Claude Code SessionStart hook.
+# aqua ignores a repository's aqua/aqua-policy.yaml until that file's absolute
+# path has been allowed, and it records the allowance per absolute path under
+# AQUA_ROOT_DIR/policies. Every git worktree is a different path, so a fresh
+# worktree makes aqua print a policy warning on every command it wraps until
+# `aqua policy allow` is run by hand. Run it for the directory the session
+# opened in, whichever repository that is.
+#
+# A repository may register an equivalent hook of its own so its whole team gets
+# this. The two cannot share one file: a teammate has none of this directory.
+# The allow is idempotent and silent on success, so both firing costs one
+# wasted no-op.
+#
+# Registered in settings.base.pkl. Silent with exit 0 in a repository that has
+# no policy file, and where aqua is not installed.
+set -u
+
+project_dir="${CLAUDE_PROJECT_DIR:-$PWD}"
+policy="$project_dir/aqua/aqua-policy.yaml"
+
+[ -f "$policy" ] || exit 0
+command -v aqua >/dev/null 2>&1 || exit 0
+
+if out=$(aqua policy allow "$policy" 2>&1); then
+  exit 0
+fi
+
+# aqua logs in color. Escapes left in place make the message unreadable exactly
+# where someone needs to read it.
+out=$(printf '%s' "$out" | sed $'s/\033\\[[0-9;]*m//g')
+msg="aqua policy allow failed for $policy. aqua will keep warning on every command it wraps; run it by hand to see why. Output: $out"
+
+if command -v jq >/dev/null 2>&1; then
+  jq -n --arg msg "$msg" \
+    '{hookSpecificOutput: {hookEventName: "SessionStart", systemMessage: $msg}}'
+else
+  printf '%s\n' "$msg" >&2
+fi
+exit 0

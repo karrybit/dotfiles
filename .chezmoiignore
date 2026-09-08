@@ -24,6 +24,8 @@ docs
 !.local/share/agents/scripts/pdf-cite/**
 !.local/share/agents/scripts/env-deny-hint
 !.local/share/agents/scripts/env-deny-hint/**
+!.local/share/agents/scripts/aqua-policy-allow
+!.local/share/agents/scripts/aqua-policy-allow/**
 .config/herdr/*
 !.config/herdr/config.toml
 .config/claude/hooks/*
