@@ -28,6 +28,7 @@
     awscli2
     gh
     go
+    gopls
     go-task
     nickel
     pkl
