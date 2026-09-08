@@ -61,6 +61,10 @@ argument-hint: [source-file|issue-number...]
 
 作業量 L のまま残っているタスクは、この手順の失敗を意味する。子タスクへ割ってから次へ進む。
 
+**件数で S/M/L が変わるなら、内訳を実測してから判定する。** Issue 本文の「N 箇所」は grep の
+生の数で、実際に手を入れる箇所とは桁が違うことがある。生の数で L と判定すると、不要なローカル
+分割を作る。
+
 ## 3. 依存とファイル衝突
 
 3種を区別する。混ぜると直列化しすぎて並行の余地が消える。
@@ -82,9 +86,12 @@ argument-hint: [source-file|issue-number...]
 
 ## 4. 出力
 
-置き場は作業中リポジトリのルート直下 `.analyze-tasks/backlog.md`。**固定**で、リポジトリごとに
-名前を変えない。固定にすることで、次のセッションが探索なしで見つけられ、再実行が新規作成では
-なく更新になる。
+置き場はメインの作業ツリー（`git worktree list` の先頭）のルート直下 `.analyze-tasks/backlog.md`。
+**固定**で、リポジトリごとに名前を変えない。固定にすることで、次のセッションが探索なしで
+見つけられ、再実行が新規作成ではなく更新になる。
+
+worktree から実行しているときも置き場は変わらない。worktree 側に書くと、その worktree が
+消えたときに失われ、メインとの二重の真実の源になる。
 
 **ドットを外さない。** 非ドットのルートディレクトリは chezmoi のソースツリーでソースエントリ
 として扱われ、`chezmoi apply` で `$HOME` に配備されてしまう。ドット接頭辞はツール所有の状態を
@@ -100,6 +107,10 @@ git check-ignore -v .analyze-tasks/backlog.md
 既定では global の `~/.config/git/ignore` の `/.analyze-tasks/` が一致するので、リポジトリ側の
 `.gitignore` に手を入れる必要はない。一致しない環境（global ignore が未配備など）では
 `${XDG_STATE_HOME:-$HOME/.local/state}/agents/analyze-tasks/<repo>/backlog.md` に退避する。
+
+メインの作業ツリーのルートは sandbox の書き込み許可外のことがある（許可されるのは作業中
+worktree の `.` だけ）。`git check-ignore` が通ったら、書き込みだけサンドボックス外実行の承認を
+取る。
 
 この確認は整理のためではなく安全境界のため。このファイルには Issue から写した内部の名前や
 URL が入るので、commit される場所には絶対に置かない。
