@@ -65,6 +65,12 @@ settings: Dynamic = new Dynamic {
         "~/.cache/go/mod"
         "~/.cache/go-build"
         "~/.config/go/env"
+        // gopls's own persistent cache (internal/filecache), separate from
+        // GOCACHE/GOMODCACHE above. gopls checks GOPLSCACHE first and only
+        // falls back to os.UserCacheDir() (~/Library/Caches on macOS,
+        // ignoring XDG_CACHE_HOME) when it's unset; GOPLSCACHE is exported
+        // here to match, in zshenv.d/20_tool_go.zsh.
+        "~/.cache/gopls"
         // aqua's usage-tracking metadata (per-repo aqua.yaml runs write here).
         // Default per aqua docs: $XDG_DATA_HOME/aquaproj-aqua/metadata.
         // Deliberately excludes the sibling bin/ and pkgs/ dirs, which hold
