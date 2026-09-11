@@ -163,6 +163,10 @@
 ## Verification & Completion
 
 - After editing files, run `git diff --check`.
+- After editing comments or documentation, re-check the diff against the Code
+  Style rule on revisions or conversations that produced the design, and report
+  the result. A long, context-heavy session is the likeliest place for a
+  violation to slip through unstated.
 - A documentation-affecting configuration change is complete only after the
   relevant README has been reviewed.
 - When fixing a bug that AI-assisted work introduced or a review missed, add the
