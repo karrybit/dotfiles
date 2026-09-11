@@ -291,10 +291,15 @@
 
 ### User-Scoped Agent Scripts
 
-- Keep a script needed only during the current session in a temp directory. One
-  expected to run again across sessions, be handed to another agent, or kept as
-  an executable procedure belongs under `$XDG_DATA_HOME/agents/scripts/`, in a
-  named subdirectory holding `README.md` and `bin/`.
+- Keep a script needed only during the current session in the session
+  scratchpad directory named in the environment preamble, not `$TMPDIR` — the
+  sandboxed `$TMPDIR` is shared by every concurrent session for this user, so a
+  common subdirectory name silently overwrites another session's files. Name
+  that absolute path in delegation prompts too.
+- A script expected to run again across sessions, be handed to another agent,
+  or kept as an executable procedure belongs under
+  `$XDG_DATA_HOME/agents/scripts/`, in a named subdirectory holding
+  `README.md` and `bin/`.
 - That root is chezmoi-managed, but files below it are not unless explicitly
   requested. Promote a script set to explicit management only when the user asks
   to sync it across machines.
