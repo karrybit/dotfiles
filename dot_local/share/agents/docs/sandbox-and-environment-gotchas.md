@@ -127,3 +127,11 @@ the multiplexer — not editing the sandbox allowlist.
 deliberately unexported, so a brand-new process tree picks up current exports
 without any restart. Only process trees that predate that guard need the
 one-time restart.
+
+## `cyber.go.jp` Returns 404 To curl's Default User-Agent
+
+Every URL on `cyber.go.jp` (the former NISC site) answers 404 when fetched with
+curl's default User-Agent, and 200 with the PDF body when a browser User-Agent
+is sent. Reading that 404 as "the document does not exist" is the failure mode;
+retry with a browser User-Agent before concluding a government document is
+missing.
