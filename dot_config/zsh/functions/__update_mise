@@ -1,0 +1,23 @@
+if ! command -v mise >/dev/null 2>&1; then
+    printf "\033[33mmise not found; skipping mise update\033[0m\n" >&2
+    return 0
+fi
+
+__lib_require_commands chezmoi git jq || return 1
+
+(
+    set -eo pipefail
+
+    local _profile
+    local _misefile
+
+    _profile=$(chezmoi data --format json | jq -r '.profile // "work"')
+    _misefile="${XDG_CONFIG_HOME:-$HOME/.config}/mise/config.${_profile}.toml"
+
+    mise upgrade
+
+    __lib_chezmoi_commit_file \
+        "${_misefile}" \
+        "dot_config/mise/config.${_profile}.toml" \
+        "chore: update mise config"
+)

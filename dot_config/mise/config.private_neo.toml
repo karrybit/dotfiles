@@ -1,0 +1,6 @@
+[tools]
+go = "latest"
+node = "22"
+python = "3.13"
+deno = "latest"
+uv = "latest"
