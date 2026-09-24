@@ -1,0 +1,19 @@
+#!/bin/bash
+# run_onchange_: dot_config/tmux/tmux.conf が変わった時だけ再実行される
+# hash: {{ include "dot_config/tmux/tmux.conf" | sha256sum }}
+set -e
+
+if ! command -v tmux >/dev/null 2>&1; then
+  exit 0
+fi
+
+TPM_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/tmux/plugins/tpm"
+
+if [ ! -d "$TPM_DIR" ]; then
+  git clone --depth=1 https://github.com/tmux-plugins/tpm "$TPM_DIR"
+fi
+
+tmux start-server
+tmux new-session -d -s __tpm_bootstrap 2>/dev/null || true
+"$TPM_DIR/bin/install_plugins"
+tmux kill-session -t __tpm_bootstrap 2>/dev/null || true

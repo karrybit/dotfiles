@@ -1,7 +1,9 @@
 # tmux Usage
 
-> Configuration is managed by `programs.tmux` in `nix/modules/profiles/<profile>.nix`.
-> Plugins are installed by home-manager at rebuild time — no manual plugin installation required.
+> Configuration is managed by `dot_config/tmux/tmux.conf`, plugins by
+> [TPM](https://github.com/tmux-plugins/tpm). `run_onchange_05_tmux_tpm.sh.tmpl` clones TPM
+> and installs plugins headlessly whenever `tmux.conf` changes; to install a newly added
+> plugin manually, press `<prefix> I` inside a running tmux session.
 
 ## Prefix Key
 
