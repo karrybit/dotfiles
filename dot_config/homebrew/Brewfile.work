@@ -1,14 +1,136 @@
 tap "aquaproj/aqua"
 tap "microsoft/apm"
 tap "olets/tap"
+# Run your GitHub Actions locally
+brew "act"
+# Static analysis and lint tool, for (ba)sh scripts
+brew "shellcheck"
+# Static checker for GitHub Actions workflow files
+brew "actionlint"
+# Fast and opinionated formatter for R code
+brew "air"
+# Development kit for the Java programming language
+brew "openjdk"
+# Open-source language and analyzer for software modeling
+brew "alloy-analyzer"
 # Declarative CLI Version manager
 brew "aqua"
+# Automatic configure script builder
+brew "autoconf"
+# Official Amazon AWS command-line interface
+brew "awscli"
+# Clone of cat(1) with syntax highlighting and Git integration
+brew "bat"
+# New way of working with Protocol Buffers
+brew "buf"
+# Rust task runner and build tool
+brew "cargo-make"
 # Manage your dotfiles across multiple diverse machines, securely
 brew "chezmoi"
+# Cross-platform make
+brew "cmake"
+# Power of curl, ease of use of httpie
+brew "curlie"
+# Lightweight, framework-agnostic database migration tool
+brew "dbmate"
+# Debugger for the Go programming language
+brew "delve"
+# Load/unload environment variables based on $PWD
+brew "direnv"
+# More intuitive version of du in rust
+brew "dust"
+# Modern, maintained replacement for ls
+brew "eza"
+# Simple, fast and user-friendly alternative to find
+brew "fd"
+# Command-line fuzzy finder written in Go
+brew "fzf"
+# GitHub command-line tool
+brew "gh"
+# Remote repository management made easy
+brew "ghq"
+# Distributed revision control system
+brew "git"
+# Syntax-highlighting pager for git and diff output
+brew "git-delta"
+# GNU implementation of the famous stream editor
+brew "gnu-sed"
+# Task is a task runner/build tool that aims to be simpler and easier to use
+brew "go-task"
+# Stricter gofmt
+brew "gofumpt"
+# Database migrations CLI tool
+brew "golang-migrate"
+# Language server for the Go language
+brew "gopls"
+# Ping, but with a graph
+brew "gping"
+# Open-source build automation tool based on the Groovy and Kotlin DSL
+brew "gradle"
+# Kubernetes package manager
+brew "helm"
+# Agent multiplexer that lives in your terminal
+brew "herdr"
+# Command-line benchmarking tool
+brew "hyperfine"
+# Lightweight and flexible command-line JSON processor
+brew "jq"
+# Super fast CLI tool to decode and encode JWTs built in Rust
+brew "jwt-cli"
+# Modern load testing tool, using Go and JavaScript
+brew "k6"
+# Run local Kubernetes cluster in Docker
+brew "kind"
+# Tool that can switch between kubectl contexts easily and create aliases
+brew "kubectx"
+# Kubernetes command-line interface
+brew "kubernetes-cli"
+# Template-free customization of Kubernetes YAML manifests
+brew "kustomize"
+# Simple terminal UI for git commands
+brew "lazygit"
 # Graphical front-end for GCC's coverage testing tool (gcov)
 brew "lcov"
+# Postgres C API library
+brew "libpq"
+# Polyglot runtime manager (asdf rust clone)
+brew "mise"
+# Incremental parsing library
+brew "tree-sitter"
+# Ambitious Vim-fork focused on extensibility and agility
+brew "neovim"
+# Better configuration for less
+brew "nickel"
+# CLI for the Pkl programming language
+brew "pkl"
 # PDF rendering library (based on the xpdf-3.0 code base)
 brew "poppler"
+# Protocol buffers (Google's data interchange format)
+brew "protobuf"
+# Ultra-fast CSV data-wrangling toolkit
+brew "qsv"
+# Search tool like grep and The Silver Searcher
+brew "ripgrep"
+# Used as a compiler wrapper and avoids compilation when possible
+brew "sccache"
+# Easy and Repeatable Kubernetes Development
+brew "skaffold"
+# Cross-shell prompt for astronauts
+brew "starship"
+# CI-Friendly tool to document a database
+brew "tbls"
+# Static analysis security scanner for your terraform code
+brew "tfsec"
+# Display directories as trees (with optional color/HTML output)
+brew "tree"
+# Your favorite rust -> wasm workflow tool!
+brew "wasm-pack"
+# Internet file retriever
+brew "wget"
+# Process YAML, JSON, XML, CSV and properties documents from the CLI
+brew "yq"
+# Auto-expanding abbreviations manager for zsh, inspired by fish
+brew "olets/tap/zsh-abbr", trusted: true
 # Password manager that keeps all passwords secure behind one password
 cask "1password"
 # Screen capturing tool
@@ -17,6 +139,8 @@ cask "cleanshot"
 cask "dbeaver-community"
 # App to build and share containerised applications and microservices
 cask "docker-desktop"
+# Set of tools to manage resources and applications hosted on Google Cloud
+cask "gcloud-cli"
 # Terminal emulator that uses platform-native UI and GPU acceleration
 cask "ghostty"
 # Japanese input software
@@ -51,6 +175,7 @@ vscode "panicbit.cargo"
 vscode "roscop.activefileinstatusbar"
 vscode "rust-lang.rust-analyzer"
 vscode "zainchen.json"
+cargo "cargo-binstall"
 cargo "cargo-cache"
 cargo "cargo-deps"
 cargo "cargo-edit"
