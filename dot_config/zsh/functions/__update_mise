@@ -3,7 +3,7 @@ if ! command -v mise >/dev/null 2>&1; then
     return 0
 fi
 
-__lib_require_commands chezmoi git jq || return 1
+__lib_require_commands chezmoi git jq __lib_chezmoi_profile || return 1
 
 (
     set -eo pipefail
@@ -11,7 +11,7 @@ __lib_require_commands chezmoi git jq || return 1
     local _profile
     local _misefile
 
-    _profile=$(chezmoi data --format json | jq -r '.profile // "work"')
+    _profile=$(__lib_chezmoi_profile "work")
     _misefile="${XDG_CONFIG_HOME:-$HOME/.config}/mise/config.${_profile}.toml"
 
     mise upgrade
