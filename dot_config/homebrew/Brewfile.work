@@ -1,5 +1,5 @@
-tap "aquaproj/aqua"
-tap "microsoft/apm"
+tap "aquaproj/aqua", trusted: true
+tap "microsoft/apm", trusted: true
 tap "olets/tap"
 # Run your GitHub Actions locally
 brew "act"
