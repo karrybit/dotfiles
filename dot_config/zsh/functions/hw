@@ -1,6 +1,12 @@
-__lib_require_commands ghq fzf herdr jq || return 1
+__lib_require_commands herdr jq || return 1
 local dir workspace
-dir=$(__lib_fzf_pick_ghq_dir) || return 1
+
+if [[ -n "$1" ]]; then
+    dir=$(cd "$1" 2>/dev/null && pwd) || { __lib_echo_failure "no such directory: $1\n"; return 1; }
+else
+    __lib_require_commands ghq fzf || return 1
+    dir=$(__lib_fzf_pick_ghq_dir) || return 1
+fi
 
 # A server started by `herdr` restores its saved session and then ignores its
 # launch directory, which therefore only seeds a session that has no workspaces
