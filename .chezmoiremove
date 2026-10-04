@@ -10,3 +10,6 @@
 # source deletion and kept prepending aqua's bin to PATH, shadowing nix.
 .config/zsh/zshenv.d/20_tool_aqua.zsh
 .config/aquaproj-aqua
+
+# Nix package management was retired after private_minipc moved to mise.
+.config/zsh/functions/__update_nix

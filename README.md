@@ -3,14 +3,13 @@
 Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/).
 
 - **chezmoi** manages configuration files (what goes in `~/.config/`, `~/.local/`, etc.)
-- **Homebrew + mise** manage packages and tools on macOS
-- **Nix + home-manager** manage packages and tools on `private_minipc`
+- **Homebrew** manages packages and applications on macOS
+- **mise** manages development tools on every profile
 
 ## Directory Structure
 
 ```
 ~/.local/share/chezmoi/       ← source (this repository)
-  nix/                        ← private_minipc Nix flake
   dot_codex/                  ← partial Codex configuration → ~/.codex/
   dot_config/                 ← configuration files → ~/.config/
   dot_local/                  ← local data/bin → ~/.local/
@@ -79,40 +78,19 @@ chezmoi init --apply karrybit/dotfiles
 ```
 
 ```sh
-# 2. Install Determinate Nix
-curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+# 2. Install mise
+curl https://mise.run | sh
 ```
 
 ```sh
-# 3. Apply Nix configuration
-# home-manager is not yet on PATH, so run it via nix on first apply:
-nix run home-manager -- switch --flake ~/.local/share/chezmoi/nix#private_minipc
+# 3. Install mise-managed tools
+MISE_CONFIG_FILE="$HOME/.config/mise/config.private_minipc.toml" ~/.local/bin/mise install
 ```
-
-After the first switch, `home-manager` becomes available on PATH for subsequent rebuilds.
 
 On first launch, Neovim will automatically install plugins via lazy.nvim.
 
----
-
-### Rebuild Nix configuration (`private_minipc` only)
-
-Use the following command whenever `nix/` changes (packages added/removed, etc.).
-
-```sh
-home-manager switch --flake ~/.local/share/chezmoi/nix#private_minipc
-```
-
-| Profile | Flake attribute | Manager |
-|---|---|---|
-| `private_minipc` | `homeConfigurations.private_minipc` | home-manager |
-
-On Linux, `upup` calls `__uppkg`, which runs `nix flake update`, commits the
-updated `flake.lock`, then switches. macOS updates Homebrew and mise without
-invoking Nix.
-
-Linux package changes go in `nix/modules/profiles/private_minipc.nix`. See [docs/NIX.md](docs/NIX.md)
-for the package management policy, flake structure, and design decisions.
+Nix was previously used on this profile. See [docs/NIX.md](docs/NIX.md) for the
+one-time removal procedure after confirming the mise-managed tools work.
 
 ---
 
@@ -147,6 +125,6 @@ These run automatically during `chezmoi apply` when their tracked content change
 ## Reference
 
 - [docs/CHEZMOI.md](docs/CHEZMOI.md) — chezmoi 操作、status シンボル
-- [docs/NIX.md](docs/NIX.md) — `private_minipc` の Nix パッケージ管理と flake 構造
+- [docs/NIX.md](docs/NIX.md) — `private_minipc` から Nix を削除する手順
 - [docs/HERDR.md](docs/HERDR.md) — herdr キーバインド一覧、agent state、Claude Code 連携
 - [docs/TMUX.md](docs/TMUX.md) — tmux キーバインド一覧（herdr 移行期間中の参照用）

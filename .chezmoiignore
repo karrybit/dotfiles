@@ -1,5 +1,4 @@
-# Nix configuration (git-managed, not deployed by chezmoi)
-nix
+# Repository-only tasks and tests
 Taskfile.yaml
 test
 

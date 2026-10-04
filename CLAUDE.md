@@ -43,8 +43,8 @@
 
 - Review the relevant README when a change affects documented behavior,
   configuration layout, package management, or common operations.
-- Nix design decisions (profile-per-package principle, chezmoi vs Nix boundary,
-  package policy) are documented in `docs/NIX.md`.
+- The retired Nix setup and its one-time removal procedure are documented in
+  `docs/NIX.md`.
 
 ## Agent Configuration, Skills, and Extensions
 
@@ -69,16 +69,3 @@
   explicitly allowlisted summaries are chezmoi-managed.
 - Agent-operated scripts belong under `~/.local/share/agents/scripts/`; only
   explicitly allowlisted script sets are chezmoi-managed.
-
-## Nix Package Management Design
-
-### Profile-per-package principle
-
-Each profile (`nix/modules/profiles/*.nix`) declares its own complete package
-list independently. Do **not** move packages into `home/common.nix` to avoid
-duplication across profiles. Two profiles sharing a tool is coincidence, not a
-contract. See `docs/NIX.md` for rationale and consequences.
-
-`home/common.nix` exists only for home-manager framework settings
-(`home.stateVersion`, `programs.home-manager.enable`). It must not contain
-packages.

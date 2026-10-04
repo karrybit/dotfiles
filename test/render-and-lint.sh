@@ -108,30 +108,25 @@ else
     fail "private_neo contains the shared macOS formula baseline"
 fi
 
-# ── Platform package routing ──────────────────────────────────────────────────
-printf "\n\e[1mPlatform package routing\e[0m\n"
+# ── Package update routing ───────────────────────────────────────────────────
+printf "\n\e[1mPackage update routing\e[0m\n"
 
 test_uppkg_dispatch() {
     local -a calls=()
     __update_homebrew() { calls+=(homebrew) }
-    __update_nix() { calls+=(nix) }
     __update_mise() { calls+=(mise) }
     __update_rust_tools() { calls+=(rust) }
     __update_ghq_repositories() { calls+=(ghq) }
 
     source "$source_dir/dot_config/zsh/functions/__uppkg"
 
-    if [[ "$OSTYPE" == linux* ]]; then
-        [[ "${(j: :)calls}" == "homebrew nix mise rust ghq" ]]
-    else
-        [[ "${(j: :)calls}" == "homebrew mise rust ghq" ]]
-    fi
+    [[ "${(j: :)calls}" == "homebrew mise rust ghq" ]]
 }
 
 if test_uppkg_dispatch; then
-    ok "__uppkg invokes Nix only on Linux"
+    ok "__uppkg invokes each package updater in order"
 else
-    fail "__uppkg invokes Nix only on Linux"
+    fail "__uppkg invokes each package updater in order"
 fi
 
 # ── Codex partial config ──────────────────────────────────────────────────────

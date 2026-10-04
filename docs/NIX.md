@@ -1,56 +1,38 @@
-# Nix Configuration Reference
+# Removing Nix from private_minipc
 
-Nix and Home Manager are used only by the Linux `private_minipc` profile.
-The macOS `work` and `private_neo` profiles use Homebrew for system tools and
-mise for language runtimes and versioned development tools.
+Nix and Home Manager are no longer used by this repository. The Linux
+`private_minipc` profile now installs its development tools from
+`dot_config/mise/config.private_minipc.toml`.
 
-## Adding or removing Linux packages
+## Before uninstalling
 
-Edit `nix/modules/profiles/private_minipc.nix`, then rebuild:
-
-```sh
-home-manager switch --flake ~/.local/share/chezmoi/nix#private_minipc
-```
-
-Find package names with `nix search nixpkgs <keyword>` or
-[search.nixos.org](https://search.nixos.org/packages).
-
-## Package management policy
-
-| Target | Category | Manager |
-|---|---|---|
-| macOS | CLI tools and GUI apps | Homebrew (`Brewfile.work`, `Brewfile.private_neo`) |
-| macOS | Language runtimes and versioned development tools | mise (`config.work.toml`, `config.private_neo.toml`) |
-| Linux | CLI tools and development packages | Nix (`private_minipc.nix`) |
-| All | Configuration files | chezmoi |
-| All | Cargo packages not managed elsewhere | `cargo install` via `run_onchange_02` |
-
-Each target profile declares its complete package set. Do not infer that a tool
-installed on one machine is available on another.
-
-## Flake structure
-
-```text
-nix/
-  flake.nix
-  flake.lock
-  checks.nix
-  lib/default.nix
-  modules/
-    home/
-      common.nix
-      linux.nix
-    profiles/
-      private_minipc.nix
-```
-
-## Development and testing
+Apply the current dotfiles and confirm that mise can install the replacement
+tools on `private_minipc`:
 
 ```sh
-task check       # platform checks; Nix checks run only on Linux
-task nix:check   # Linux only: flake check, statix, deadnix
-task test        # render chezmoi templates and lint zsh
+chezmoi update
+MISE_CONFIG_FILE="$HOME/.config/mise/config.private_minipc.toml" ~/.local/bin/mise install
 ```
 
-New files imported by the flake must be staged before `nix flake check` can see
-them.
+Open a new shell and verify the commands you use before removing Nix. The
+uninstall removes the Nix store and packages installed through Home Manager.
+
+## Uninstall
+
+The machine was bootstrapped with Determinate Nix Installer. Its built-in
+uninstaller is:
+
+```sh
+/nix/nix-installer uninstall
+```
+
+The command is documented by
+[Determinate Systems](https://docs.determinate.systems/guides/migrating-from-upstream-nix/#uninstall-nix-if-needed).
+If `/nix/nix-installer` or `/nix/receipt.json` does not exist, identify the
+installation method and follow the
+[upstream Nix removal instructions](https://nix.dev/manual/nix/stable/installation/uninstall.html)
+instead.
+
+After the uninstall, start a new shell and confirm that `nix` and
+`home-manager` are no longer available while the mise-managed commands remain
+available.
