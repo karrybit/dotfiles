@@ -1,8 +1,10 @@
-tap "aquaproj/aqua"
-tap "microsoft/apm"
+tap "aquaproj/aqua", trusted: true
+tap "microsoft/apm", trusted: true
 tap "olets/tap", trusted: true
 # Run your GitHub Actions locally
 brew "act"
+# Static analysis and lint tool, for (ba)sh scripts
+brew "shellcheck"
 # Static checker for GitHub Actions workflow files
 brew "actionlint"
 # Development kit for the Java programming language
@@ -25,7 +27,7 @@ brew "cmake"
 brew "curlie"
 # Debugger for the Go programming language
 brew "delve"
-# Load and unload environment variables based on the current directory
+# Load/unload environment variables based on $PWD
 brew "direnv"
 # More intuitive version of du in rust
 brew "dust"
@@ -45,9 +47,9 @@ brew "git"
 brew "git-delta"
 # GNU implementation of the famous stream editor
 brew "gnu-sed"
-# Rust task runner and build tool that aims to be simpler and easier to use
+# Task is a task runner/build tool that aims to be simpler and easier to use
 brew "go-task"
-# Go language server
+# Language server for the Go language
 brew "gopls"
 # Ping, but with a graph
 brew "gping"
@@ -67,36 +69,40 @@ brew "lazygit"
 brew "libpq"
 # Polyglot runtime manager (asdf rust clone)
 brew "mise"
-# Parser generator tool
-brew "tree-sitter-cli"
+# Incremental parsing library
+brew "tree-sitter"
 # Ambitious Vim-fork focused on extensibility and agility
 brew "neovim"
 # Better configuration for less
 brew "nickel"
-# Configuration-as-code language
+# CLI for the Pkl programming language
 brew "pkl"
 # Ultra-fast CSV data-wrangling toolkit
 brew "qsv"
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
-# Static analysis and lint tool for shell scripts
-brew "shellcheck"
-# Cross-shell prompt
+# Cross-shell prompt for astronauts
 brew "starship"
-# Static analysis security scanner for Terraform code
+# Static analysis security scanner for your terraform code
 brew "tfsec"
-# Display directories as trees
+# Display directories as trees (with optional color/HTML output)
 brew "tree"
+# Parser generator tool
+brew "tree-sitter-cli"
 # Internet file retriever
 brew "wget"
 # Process YAML, JSON, XML, CSV and properties documents from the CLI
 brew "yq"
+# Agent Package Manager (APM): The NPM for AI-Native Development
+brew "microsoft/apm/apm"
 # Auto-expanding abbreviations manager for zsh, inspired by fish
 brew "olets/tap/zsh-abbr", trusted: true
 # Password manager that keeps all passwords secure behind one password
 cask "1password"
 # Screen capturing tool
 cask "cleanshot"
+# OpenAI's coding agent that runs in your terminal
+cask "codex"
 # Terminal emulator that uses platform-native UI and GPU acceleration
 cask "ghostty"
 # Web browser
