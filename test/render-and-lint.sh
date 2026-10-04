@@ -64,6 +64,20 @@ for profile in work private_neo private_minipc; do
     done
 done
 
+# ── macOS shell dependencies ──────────────────────────────────────────────────
+printf "\n\e[1mmacOS shell dependencies\e[0m\n"
+
+for profile in work private_neo; do
+    brewfile="$source_dir/dot_config/homebrew/Brewfile.$profile"
+    for tool in direnv starship; do
+        if rg -Fqx "brew \"$tool\"" "$brewfile"; then
+            ok "Brewfile.$profile installs $tool used by dot_zshrc"
+        else
+            fail "Brewfile.$profile installs $tool used by dot_zshrc"
+        fi
+    done
+done
+
 # ── Codex partial config ──────────────────────────────────────────────────────
 printf "\n\e[1mCodex partial config\e[0m\n"
 
