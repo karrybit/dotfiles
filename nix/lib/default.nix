@@ -10,7 +10,6 @@
       extraSpecialArgs = { inherit username; };
       modules = [
         ../modules/home/common.nix
-        ../modules/home/programs.nix
       ] ++ extraModules;
     };
 }

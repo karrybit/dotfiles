@@ -14,17 +14,6 @@
     let
       myLib = import ./lib inputs;
 
-      macosHosts = {
-        work = {
-          system = "aarch64-darwin";
-          username = "takumikaribe";
-        };
-        private_neo = {
-          system = "aarch64-darwin";
-          username = "takumikaribe";
-        };
-      };
-
       linuxHosts = {
         private_minipc = {
           system = "x86_64-linux";
@@ -32,24 +21,14 @@
         };
       };
 
-      homeConfigurations =
-        (nixpkgs.lib.mapAttrs (name: cfg:
-          myLib.mkHome (cfg // {
-            extraModules = [
-              ./modules/home/darwin.nix
-              ./modules/profiles/${name}.nix
-            ];
-          })
-        ) macosHosts)
-        //
-        (nixpkgs.lib.mapAttrs (name: cfg:
+      homeConfigurations = nixpkgs.lib.mapAttrs (name: cfg:
           myLib.mkHome (cfg // {
             extraModules = [
               ./modules/home/linux.nix
               ./modules/profiles/${name}.nix
             ];
           })
-        ) linuxHosts);
+        ) linuxHosts;
 
       checks = import ./checks.nix {
         inherit nixpkgs self;

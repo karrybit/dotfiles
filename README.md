@@ -1,16 +1,16 @@
 # dotfiles
 
-Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/) and [Nix](https://nixos.org/).
+Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/).
 
 - **chezmoi** manages configuration files (what goes in `~/.config/`, `~/.local/`, etc.)
-- **Nix** (nix-darwin + home-manager) manages packages and tools
+- **Homebrew + mise** manage packages and tools on macOS
+- **Nix + home-manager** manage packages and tools on `private_minipc`
 
 ## Directory Structure
 
 ```
 ~/.local/share/chezmoi/       ← source (this repository)
-  nix/                        ← Nix flake (packages, Homebrew casks, system config)
-    modules/profiles/         ← per-machine profiles (work, private_neo, private_minipc)
+  nix/                        ← private_minipc Nix flake
   dot_codex/                  ← partial Codex configuration → ~/.codex/
   dot_config/                 ← configuration files → ~/.config/
   dot_local/                  ← local data/bin → ~/.local/
@@ -60,20 +60,12 @@ chezmoi init --apply karrybit/dotfiles
 4. Executes `run_onchange_` scripts (Rust components, Claude settings, skills sync)
 
 ```sh
-# 3. Install Determinate Nix
-curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
-
-# 4. Apply Nix configuration (first time: home-manager is not yet on PATH)
-nix run home-manager -- switch --flake ~/.local/share/chezmoi/nix#<profile>
-
-# 5. Install Homebrew packages
+# 3. Install Homebrew and mise-managed packages
 brew bundle install --file ~/.config/homebrew/Brewfile.<profile>
+MISE_CONFIG_FILE="$HOME/.config/mise/config.<profile>.toml" mise install
 ```
 
 On first launch, Neovim will automatically install plugins via lazy.nvim.
-
-> **private_neo note:** verify the hostname with `scutil --get LocalHostName`
-> before running `home-manager switch` if any hostname-dependent config is present.
 
 #### Linux (`private_minipc`)
 
@@ -103,24 +95,23 @@ On first launch, Neovim will automatically install plugins via lazy.nvim.
 
 ---
 
-### Rebuild Nix configuration
+### Rebuild Nix configuration (`private_minipc` only)
 
 Use the following command whenever `nix/` changes (packages added/removed, etc.).
 
 ```sh
-home-manager switch --flake ~/.local/share/chezmoi/nix#<profile>
+home-manager switch --flake ~/.local/share/chezmoi/nix#private_minipc
 ```
 
 | Profile | Flake attribute | Manager |
 |---|---|---|
-| `work` | `homeConfigurations.work` | home-manager |
-| `private_neo` | `homeConfigurations.private_neo` | home-manager |
 | `private_minipc` | `homeConfigurations.private_minipc` | home-manager |
 
-`upup` calls `__uppkg` internally, which runs `nix flake update`, commits
-the updated `flake.lock`, then switches.
+On Linux, `upup` calls `__uppkg`, which runs `nix flake update`, commits the
+updated `flake.lock`, then switches. macOS updates Homebrew and mise without
+invoking Nix.
 
-Package changes go in `nix/modules/profiles/<profile>.nix`. See [docs/NIX.md](docs/NIX.md)
+Linux package changes go in `nix/modules/profiles/private_minipc.nix`. See [docs/NIX.md](docs/NIX.md)
 for the package management policy, flake structure, and design decisions.
 
 ---
@@ -147,7 +138,7 @@ These run automatically during `chezmoi apply` when their tracked content change
 | Script | Trigger | Action |
 |--------|---------|--------|
 | `run_onchange_01_rustup_components.sh.tmpl` | `rust/component` changed | `rustup component add` for clippy, rustfmt |
-| `run_onchange_02_cargo_packages.sh.tmpl` | `rust/package` changed | `cargo install` for packages not in nixpkgs |
+| `run_onchange_02_cargo_packages.sh.tmpl` | `rust/package` changed | `cargo install` for packages not managed elsewhere |
 | `run_onchange_03_claude_settings.sh.tmpl` | Claude settings pkl files changed | Regenerate `~/.config/claude/settings.json` |
 | `run_onchange_04_prune-skills.sh.tmpl` | Skills under `dot_config/claude/skills/` changed | Remove deployed skills whose source entry is gone (chezmoi leaves such targets in place) |
 
@@ -156,6 +147,6 @@ These run automatically during `chezmoi apply` when their tracked content change
 ## Reference
 
 - [docs/CHEZMOI.md](docs/CHEZMOI.md) — chezmoi 操作、status シンボル
-- [docs/NIX.md](docs/NIX.md) — パッケージ管理ポリシー、chezmoi vs Nix 境界、flake 構造、設計原則
+- [docs/NIX.md](docs/NIX.md) — `private_minipc` の Nix パッケージ管理と flake 構造
 - [docs/HERDR.md](docs/HERDR.md) — herdr キーバインド一覧、agent state、Claude Code 連携
 - [docs/TMUX.md](docs/TMUX.md) — tmux キーバインド一覧（herdr 移行期間中の参照用）

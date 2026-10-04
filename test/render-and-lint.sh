@@ -78,6 +78,36 @@ for profile in work private_neo; do
     done
 done
 
+work_only_actual="$(
+    comm -23 \
+        <(rg -o '^brew "[^"]+"' "$source_dir/dot_config/homebrew/Brewfile.work" | LC_ALL=C sort) \
+        <(rg -o '^brew "[^"]+"' "$source_dir/dot_config/homebrew/Brewfile.private_neo" | LC_ALL=C sort)
+)"
+work_only_expected='brew "air"
+brew "buf"
+brew "cargo-make"
+brew "dbmate"
+brew "gofumpt"
+brew "golang-migrate"
+brew "helm"
+brew "k6"
+brew "kind"
+brew "kubectx"
+brew "kubernetes-cli"
+brew "kustomize"
+brew "lcov"
+brew "poppler"
+brew "protobuf"
+brew "sccache"
+brew "skaffold"
+brew "tbls"
+brew "wasm-pack"'
+if [[ "$work_only_actual" == "$work_only_expected" ]]; then
+    ok "private_neo contains the shared macOS formula baseline"
+else
+    fail "private_neo contains the shared macOS formula baseline"
+fi
+
 # ── Codex partial config ──────────────────────────────────────────────────────
 printf "\n\e[1mCodex partial config\e[0m\n"
 

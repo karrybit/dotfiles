@@ -1,6 +1,7 @@
 # herdr Usage
 
-> The package is declared in `home.packages` in `nix/modules/profiles/<profile>.nix`.
+> The package is declared in the macOS Brewfiles and in
+> `nix/modules/profiles/private_minipc.nix` for Linux.
 > Configuration is `~/.config/herdr/config.toml`, chezmoi-managed from
 > `dot_config/herdr/config.toml`. Everything else under `~/.config/herdr/`
 > (`session.json`, `sessions/`, `plugins/`, logs, sockets) is runtime state.

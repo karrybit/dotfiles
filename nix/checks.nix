@@ -9,43 +9,24 @@ let
       printf '%s\n' ${pkgs.lib.escapeShellArg (toString value)} > $out
     '';
 
-  darwinPkgs = nixpkgs.legacyPackages."aarch64-darwin";
-  linuxPkgs  = nixpkgs.legacyPackages."x86_64-linux";
+  linuxPkgs = nixpkgs.legacyPackages."x86_64-linux";
 in
 {
-  "aarch64-darwin" = {
-    statix = darwinPkgs.runCommand "statix" {
-      nativeBuildInputs = [ darwinPkgs.statix ];
+  "x86_64-linux" = {
+    statix = linuxPkgs.runCommand "statix" {
+      nativeBuildInputs = [ linuxPkgs.statix ];
     } ''
       statix check ${self}
       touch $out
     '';
 
-    deadnix = darwinPkgs.runCommand "deadnix" {
-      nativeBuildInputs = [ darwinPkgs.deadnix ];
+    deadnix = linuxPkgs.runCommand "deadnix" {
+      nativeBuildInputs = [ linuxPkgs.deadnix ];
     } ''
       deadnix --fail ${self}
       touch $out
     '';
 
-    work-state-version =
-      mkCheck darwinPkgs "work-state-version"
-        homeConfigs.work.config.home.stateVersion;
-
-    work-username =
-      mkCheck darwinPkgs "work-username"
-        homeConfigs.work.config.home.username;
-
-    personal-neo-state-version =
-      mkCheck darwinPkgs "personal-neo-state-version"
-        homeConfigs.private_neo.config.home.stateVersion;
-
-    personal-neo-username =
-      mkCheck darwinPkgs "personal-neo-username"
-        homeConfigs.private_neo.config.home.username;
-  };
-
-  "x86_64-linux" = {
     personal-minipc-state-version =
       mkCheck linuxPkgs "personal-minipc-state-version"
         homeConfigs.private_minipc.config.home.stateVersion;

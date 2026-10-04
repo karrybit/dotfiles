@@ -10,6 +10,7 @@ tasks:
 
   nix:check:
     desc: "nix flake check"
+    platforms: [linux]
     cmds:
       - nix flake check {{.FLAKE}}
       - nix run nixpkgs#statix -- check {{.FLAKE}}
@@ -20,7 +21,8 @@ tasks:
     cmd: test/render-and-lint.sh
 
   check:
-    desc: "Run all checks: nix:check + nix:lint + test"
+    desc: "Run checks available on the current platform"
     cmds:
-      - task: nix:check
       - task: test
+      - task: nix:check
+        platforms: [linux]
