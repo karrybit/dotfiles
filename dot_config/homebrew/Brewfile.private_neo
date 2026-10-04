@@ -67,8 +67,8 @@ brew "lazygit"
 brew "libpq"
 # Polyglot runtime manager (asdf rust clone)
 brew "mise"
-# Incremental parsing library
-brew "tree-sitter"
+# Parser generator tool
+brew "tree-sitter-cli"
 # Ambitious Vim-fork focused on extensibility and agility
 brew "neovim"
 # Better configuration for less
