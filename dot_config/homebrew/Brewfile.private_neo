@@ -5,6 +5,10 @@ tap "olets/tap"
 brew "aqua"
 # Manage your dotfiles across multiple diverse machines, securely
 brew "chezmoi"
+# Load and unload environment variables based on the current directory
+brew "direnv"
+# Cross-shell prompt
+brew "starship"
 # Password manager that keeps all passwords secure behind one password
 cask "1password"
 # Screen capturing tool
