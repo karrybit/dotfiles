@@ -95,8 +95,8 @@ brew "lcov"
 brew "libpq"
 # Polyglot runtime manager (asdf rust clone)
 brew "mise"
-# Parser generator tool
-brew "tree-sitter-cli"
+# Incremental parsing library
+brew "tree-sitter"
 # Ambitious Vim-fork focused on extensibility and agility
 brew "neovim"
 # Better configuration for less
