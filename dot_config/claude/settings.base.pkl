@@ -91,6 +91,10 @@ settings: Dynamic = new Dynamic {
         // executables — write access there would be a code-execution-on-
         // next-run risk, unlike this cache data.
         "~/.npm/_cacache"
+        // pre-commit's hook environments and repo clones (default per
+        // pre-commit docs: $XDG_CACHE_HOME/pre-commit, no PRE_COMMIT_HOME
+        // override set here). `git commit` with hooks installed writes here.
+        "~/.cache/pre-commit"
       }
     }
     network {
