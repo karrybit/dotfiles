@@ -107,6 +107,8 @@ brew "pkl"
 brew "poppler"
 # Protocol buffers (Google's data interchange format)
 brew "protobuf"
+# Interpreted, interactive, object-oriented programming language
+brew "python@3.14"
 # Ultra-fast CSV data-wrangling toolkit
 brew "qsv"
 # Search tool like grep and The Silver Searcher
