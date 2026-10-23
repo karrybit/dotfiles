@@ -102,9 +102,6 @@ chezmoi init --apply karrybit/dotfiles
 
 On first launch, Neovim will automatically install plugins via lazy.nvim.
 
-Nix was previously used on this profile. See [docs/NIX.md](docs/NIX.md) for the
-one-time removal procedure after confirming the aqua-managed tools work.
-
 ---
 
 ### Daily operations
@@ -141,6 +138,6 @@ These run automatically during `chezmoi apply` when their tracked content change
 ## Reference
 
 - [docs/CHEZMOI.md](docs/CHEZMOI.md) — chezmoi 操作、status シンボル
-- [docs/NIX.md](docs/NIX.md) — `private_minipc` から Nix を削除する手順
+- [docs/NIX.md](docs/NIX.md) — Mac に残った Nix / nix-darwin をアンインストールする手順
 - [docs/HERDR.md](docs/HERDR.md) — herdr キーバインド一覧、agent state、Claude Code 連携
 - [docs/TMUX.md](docs/TMUX.md) — tmux キーバインド一覧（herdr 移行期間中の参照用）

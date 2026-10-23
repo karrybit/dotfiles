@@ -45,8 +45,8 @@
 
 - Review the relevant README when a change affects documented behavior,
   configuration layout, package management, or common operations.
-- The retired Nix setup and its one-time removal procedure are documented in
-  `docs/NIX.md`.
+- This repository does not use Nix. `docs/NIX.md` is the one-time procedure
+  for uninstalling Nix and nix-darwin from a Mac that still has them.
 
 ## Agent Configuration, Skills, and Extensions
 

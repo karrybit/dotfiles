@@ -1,6 +1,2 @@
-# Nix build result symlinks
-result
-result-*
-
 # Claude Code local permission settings
 .claude/settings.local.json
