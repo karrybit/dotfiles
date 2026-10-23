@@ -109,7 +109,8 @@
 
 - Check whether a requested file already exists, and read it, before creating it.
 - Preserve unrelated and user-authored uncommitted changes.
-- Place instructions in the narrowest applicable `CLAUDE.md`.
+- Place instructions in the narrowest applicable repository `CLAUDE.md` or
+  `AGENTS.md`.
 - When committing, group unrelated changes into separate logical commits instead
   of one mixed commit, unless the user requests a single commit.
 - Before creating any GitHub issue, confirm the proposed titles and boundaries
@@ -202,13 +203,14 @@
 
 ### Instruction Maintenance
 
-- Load `writing-for-agents` before editing any `CLAUDE.md`, rule, or skill file.
+- Load `writing-for-agents` before editing any `CLAUDE.md`, `AGENTS.md`, rule,
+  or skill file.
 - When a conversation reveals reusable friction, or agent behavior violates user
   intent, propose the smallest concrete instruction improvement before ending the
   task.
 - Classify each proposed improvement: user-level guidance belongs in
   `$XDG_CONFIG_HOME/claude/CLAUDE.md`, repository-specific guidance in the
-  narrowest applicable repository `CLAUDE.md`.
+  narrowest applicable repository `CLAUDE.md` or `AGENTS.md`.
 - For each proposed change, give the target file, proposed wording, reason, and
   overlap or conflict with existing rules.
 - Apply instruction changes only after user approval.
