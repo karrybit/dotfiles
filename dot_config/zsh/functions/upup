@@ -28,6 +28,9 @@ __lib_require_commands chezmoi git __uppkg || return 1
     local _ahead
     _ahead=$(git -C "${_source_path}" rev-list --count @{upstream}..HEAD 2>/dev/null || printf "0")
     if (( _ahead > 0 )); then
+        # Another machine may have pushed while __uppkg ran. Each profile
+        # commits only its own files, so this rebase applies cleanly.
+        git -C "${_source_path}" pull --rebase
         git -C "${_source_path}" push
     fi
 
