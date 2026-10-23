@@ -56,8 +56,8 @@ To retire a path, delete the source file *and* list the target in
 
 ```sh
 # .chezmoiremove — target paths, relative to $HOME
-.config/zsh/zshenv.d/20_tool_aqua.zsh
-.config/aquaproj-aqua
+.config/zsh/zshenv.d/20_tool_mise.zsh
+.config/mise
 
 # Confirm the blast radius before applying
 chezmoi apply --dry-run --verbose

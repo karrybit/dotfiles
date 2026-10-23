@@ -3,8 +3,15 @@
 Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/).
 
 - **chezmoi** manages configuration files (what goes in `~/.config/`, `~/.local/`, etc.)
-- **Homebrew** manages packages and applications on macOS
-- **mise** manages development tools on every profile
+- **Homebrew** manages applications (casks) on macOS, plus the formulae aqua
+  cannot provide: aqua itself, chezmoi, libraries and Homebrew-path
+  dependencies (openjdk, libpq, zsh-abbr), and tools missing from or built
+  from source in the aqua registry
+- **aqua** manages CLI and development tools on every profile
+  (`dot_config/aquaproj-aqua/literal_<profile>/aqua.yaml`, checksum-verified;
+  `literal_` keeps chezmoi from reading `private_neo` as the `private_` attribute)
+- **uv** manages Python (`dot_config/uv/dot_python-version`) and **rustup**
+  manages the Rust toolchain, since aqua does not handle those runtimes
 
 ## Directory Structure
 
@@ -56,41 +63,47 @@ chezmoi init --apply karrybit/dotfiles
 1. Clones this repository to `~/.local/share/chezmoi/`
 2. Prompts for machine profile: enter `work` or `private_neo`
 3. Runs `chezmoi apply` to deploy live files
-4. Executes `run_onchange_` scripts (Rust components, Claude settings, skills sync)
+4. Executes `run_onchange_` scripts (rustup, Rust components, Claude settings, skills sync)
+
+aqua comes from Homebrew, so the aqua and Python `run_onchange_` scripts skip
+on the first apply. Install it, then run what those scripts would have:
 
 ```sh
-# 3. Install Homebrew and mise-managed packages
+# 3. Install Homebrew, aqua-managed packages, and Python
 brew bundle install --file ~/.config/homebrew/Brewfile.<profile>
-MISE_CONFIG_FILE="$HOME/.config/mise/config.<profile>.toml" mise install
+exec zsh -l
+aqua install --all
+uv python install --default --preview-features python-install-default
 ```
 
 On first launch, Neovim will automatically install plugins via lazy.nvim.
 
 #### Linux (`private_minipc`)
 
-No Homebrew. Install chezmoi directly, then follow the same flow.
+No Homebrew. Install aqua with
+[aqua-installer](https://aquaproj.github.io/docs/products/aqua-installer)
+first, so the `run_onchange_` scripts can install the aqua-managed tools and
+Python during the first apply.
 
 ```sh
-# 1. Install chezmoi and apply dotfiles
+# 1. Install aqua (check the installer's current version and checksum in its docs)
+curl -sSfL -O https://raw.githubusercontent.com/aquaproj/aqua-installer/v4.0.5/aqua-installer
+echo "451028d56959cc738564885b1dbebc2691ea038ffde04e2472e4d486a3591146  aqua-installer" | sha256sum -c -
+chmod +x aqua-installer
+./aqua-installer
+```
+
+```sh
+# 2. Install chezmoi and apply dotfiles
 sh -c "$(curl -fsLS get.chezmoi.io)"
 chezmoi init --apply karrybit/dotfiles
 # When prompted, enter: private_minipc
 ```
 
-```sh
-# 2. Install mise
-curl https://mise.run | sh
-```
-
-```sh
-# 3. Install mise-managed tools
-MISE_CONFIG_FILE="$HOME/.config/mise/config.private_minipc.toml" ~/.local/bin/mise install
-```
-
 On first launch, Neovim will automatically install plugins via lazy.nvim.
 
 Nix was previously used on this profile. See [docs/NIX.md](docs/NIX.md) for the
-one-time removal procedure after confirming the mise-managed tools work.
+one-time removal procedure after confirming the aqua-managed tools work.
 
 ---
 
@@ -115,10 +128,13 @@ These run automatically during `chezmoi apply` when their tracked content change
 
 | Script | Trigger | Action |
 |--------|---------|--------|
+| `run_onchange_00_aqua.sh.tmpl` | The profile's `aquaproj-aqua/<profile>/` changed | `aqua install` for the profile's global config |
+| `run_onchange_00_rustup.sh` | First apply | Install rustup into `$CARGO_HOME` and set the stable toolchain as default |
 | `run_onchange_01_rustup_components.sh.tmpl` | `rust/component` changed | `rustup component add` for clippy, rustfmt |
 | `run_onchange_02_cargo_packages.sh.tmpl` | `rust/package` changed | `cargo install` for packages not managed elsewhere |
 | `run_onchange_03_claude_settings.sh.tmpl` | Claude settings pkl files changed | Regenerate `~/.config/claude/settings.json` |
 | `run_onchange_04_prune-skills.sh.tmpl` | Skills under `dot_config/claude/skills/` changed | Remove deployed skills whose source entry is gone (chezmoi leaves such targets in place) |
+| `run_onchange_07_uv_python.sh.tmpl` | `uv/.python-version` changed | `uv python install` for the pinned version, linking `python`/`python3` |
 
 ---
 

@@ -2,16 +2,16 @@
 
 Nix and Home Manager are no longer used by this repository. The Linux
 `private_minipc` profile now installs its development tools from
-`dot_config/mise/config.private_minipc.toml`.
+`dot_config/aquaproj-aqua/literal_private_minipc/aqua.yaml`.
 
 ## Before uninstalling
 
-Apply the current dotfiles and confirm that mise can install the replacement
+Apply the current dotfiles and confirm that aqua can install the replacement
 tools on `private_minipc`:
 
 ```sh
 chezmoi update
-MISE_CONFIG_FILE="$HOME/.config/mise/config.private_minipc.toml" ~/.local/bin/mise install
+aqua install --all
 ```
 
 Open a new shell and verify the commands you use before removing Nix. The
@@ -34,5 +34,5 @@ installation method and follow the
 instead.
 
 After the uninstall, start a new shell and confirm that `nix` and
-`home-manager` are no longer available while the mise-managed commands remain
+`home-manager` are no longer available while the aqua-managed commands remain
 available.

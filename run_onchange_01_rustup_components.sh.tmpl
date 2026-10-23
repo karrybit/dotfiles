@@ -3,6 +3,10 @@
 # hash: {{ include "dot_config/rust/component" | sha256sum }}
 set -e
 
+export CARGO_HOME="${CARGO_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/cargo}"
+export RUSTUP_HOME="${RUSTUP_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/rustup}"
+PATH="$CARGO_HOME/bin:$PATH"
+
 if ! command -v rustup >/dev/null 2>&1; then
   exit 0
 fi

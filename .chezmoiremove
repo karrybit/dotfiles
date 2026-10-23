@@ -4,12 +4,11 @@
 # retired tool leaves its live files behind on every machine. List them here
 # instead of cleaning each machine by hand.
 
-# Global aqua package management was abolished in 0ed0e36 (2026-06-15); 080bcf5
-# kept only the aqua binary, for work repositories that carry their own
-# aqua.yaml. These configs and the shell hook that pointed at them survived the
-# source deletion and kept prepending aqua's bin to PATH, shadowing nix.
-.config/zsh/zshenv.d/20_tool_aqua.zsh
-.config/aquaproj-aqua
+# mise was replaced by aqua. Its shell hook would keep pointing
+# MISE_CONFIG_FILE at a config that no longer exists.
+.config/mise
+.config/zsh/zshenv.d/20_tool_mise.zsh
+.config/zsh/functions/__update_mise
 
-# Nix package management was retired after private_minipc moved to mise.
+# Nix package management was retired.
 .config/zsh/functions/__update_nix

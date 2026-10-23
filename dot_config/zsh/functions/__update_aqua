@@ -1,0 +1,39 @@
+if ! command -v aqua >/dev/null 2>&1; then
+    printf "\033[33maqua not found; skipping aqua update\033[0m\n" >&2
+    return 0
+fi
+
+__lib_require_commands chezmoi git jq __lib_chezmoi_profile || return 1
+
+(
+    set -eo pipefail
+
+    local _profile
+    local _aqua_dir
+    local _aqua_config
+    local _token
+
+    _profile=$(__lib_chezmoi_profile "work")
+    _aqua_dir="${XDG_CONFIG_HOME:-$HOME/.config}/aquaproj-aqua/${_profile}"
+    _aqua_config="${_aqua_dir}/aqua.yaml"
+
+    if command -v gh >/dev/null 2>&1; then
+        _token=$(gh auth token 2>/dev/null || true)
+        if [[ -n "${_token}" ]]; then
+            export GITHUB_TOKEN="${_token}"
+        fi
+    fi
+
+    # Homebrew owns the aqua binary on macOS.
+    if [[ "${OSTYPE}" != darwin* ]]; then
+        aqua update-aqua
+    fi
+    aqua -c "${_aqua_config}" update
+    aqua -c "${_aqua_config}" update-checksum -prune
+    aqua -c "${_aqua_config}" install
+
+    __lib_chezmoi_commit_file \
+        "${_aqua_dir}" \
+        "dot_config/aquaproj-aqua/literal_${_profile}" \
+        "chore: update aqua ${_profile}"
+)

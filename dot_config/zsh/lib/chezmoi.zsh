@@ -1,11 +1,9 @@
 __lib_chezmoi_profile() {
     __lib_require_commands chezmoi jq mktemp || return 1
 
-    # `jq` can hang forever waiting on stdin if a stray mise shim shadows it
-    # (mise's shims/installs dirs are global, not scoped per profile config,
-    # so testing a different profile's config on this machine can leave one
-    # behind). Bound the wait so that surfaces as a visible warning instead
-    # of silently blocking whatever called this.
+    # `jq` can hang forever waiting on stdin if a stray version-manager shim
+    # shadows it. Bound the wait so that surfaces as a visible warning
+    # instead of silently blocking whatever called this.
     local _default=$1
     local _timeout=10
     local _outfile

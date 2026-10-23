@@ -1,0 +1,184 @@
+{
+  "checksums": [
+    {
+      "id": "github_release/github.com/BurntSushi/ripgrep/15.2.0/ripgrep-15.2.0-x86_64-unknown-linux-musl.tar.gz",
+      "checksum": "33E15BCF1624B25CDD2A55813A47A2F95DBE126268203E76AA6A585D1E7B149C",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/apple/pkl/0.32.2/pkl-linux-amd64",
+      "checksum": "874C75484C79ADD77FB2346EA4AB2E8875EEA35FB707894BF5457A2DF5D03DEF",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/aquasecurity/tfsec/v1.28.14/tfsec_1.28.14_linux_amd64.tar.gz",
+      "checksum": "329AE7F67F2F1813EBE08DE498719EA7003C75D3CA24BB0B038369062508008E",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/astral-sh/uv/0.13.5/uv-x86_64-unknown-linux-musl.tar.gz",
+      "checksum": "57EF9D9CCB01FB1BD998DF995B0DD221B52F7D7841FBEA93F2D4463BF61FB7A9",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/bootandy/dust/v1.2.6/dust-v1.2.6-x86_64-unknown-linux-musl.tar.gz",
+      "checksum": "CBF2CB5C9D6227E46FC4B29C03DC43B8632020DFC5CF269D263D6E29C399E044",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/cli/cli/v2.103.0/gh_2.103.0_linux_amd64.tar.gz",
+      "checksum": "FDD768EB70F6409F80FCFA9F3A1C0ADF0FC98D827AB3CE0BED2AC22762C5D786",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/dandavison/delta/0.20.1/delta-0.20.1-x86_64-unknown-linux-musl.tar.gz",
+      "checksum": "69DCB4043F55C29118F408C6EFD30115E0A4E0A6709253343B8C8FA814AB4A31",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/dathere/qsv/26.0.0/qsv-26.0.0-x86_64-unknown-linux-musl.zip",
+      "checksum": "1C8ECCB4AAE47A046FF350A6A3D31C92D188793FFD6583486676746698708336",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/eza-community/eza/v0.23.5/eza_x86_64-unknown-linux-musl.tar.gz",
+      "checksum": "E06EEBAB74B73D6B7D51A796A353824B001BEA82DF077706382E100815D28904",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/go-delve/delve/v1.27.2/dlv_1.27.2_linux_amd64.tar.gz",
+      "checksum": "30783EB68DC1598D965491CC97762270CD63CE13F09D0CAC22FAA7E3EAFC1B9C",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/go-task/task/v3.54.0/task_linux_amd64.tar.gz",
+      "checksum": "680859DBB4D881A9C72D4D9A8F510825450849AF8567DEACD7302C01124416FB",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/gradle/gradle-distributions/v9.8.2/gradle-9.8.2-bin.zip",
+      "checksum": "21BD5DA2DE49B642904077F38C0EFDC7778E92B3ED0889392DCA61B97E389607",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/herdrdev/herdr/v0.9.5/herdr-linux-x86_64",
+      "checksum": "14D9E8BC8B4A9E0118D77C32266F76D461F09B40342EB23752960BD89F59929D",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/jesseduffield/lazygit/v0.66.2/lazygit_0.66.2_linux_x86_64.tar.gz",
+      "checksum": "158EFC9DDFA1241FAB5FB3526BB442C8DC6C4B1904D73213B9E4E93E03C52034",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/jqlang/jq/jq-1.8.2/jq-linux-amd64",
+      "checksum": "B1C22172DD303F3BE49E935AA56AA48A8B7A46E0BC838B4997D3BB451495870F",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/junegunn/fzf/v0.74.5/fzf-0.74.5-linux_amd64.tar.gz",
+      "checksum": "D47D7F882972C7D674DBBBA998FFA4116E68379616FFAC7695D0671E9A722C5F",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/koalaman/shellcheck/v0.11.0/shellcheck-v0.11.0.linux.x86_64.tar.xz",
+      "checksum": "8C3BE12B05D5C177A04C29E3C78CE89AC86F1595681CAB149B65B97C4E227198",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/mike-engel/jwt-cli/6.2.0/jwt-linux-musl.tar.gz",
+      "checksum": "BF5CB1F120842CBC4DF003D6694E0951E93F47BE78C03F8E747629BDFD0796DF",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/mikefarah/yq/v4.54.1/yq_linux_amd64",
+      "checksum": "57A5E74AFD5AAFB63C373BE84C37FB778957051AF3F2D1F563AE77DF27B16F0E221CD64A6B7D7729F087FCCBFE7D5B4AA1B42E9004D6C2DF478F160B17392EAD",
+      "algorithm": "sha512"
+    },
+    {
+      "id": "github_release/github.com/neovim/neovim/v0.12.6/nvim-linux-x86_64.tar.gz",
+      "checksum": "474430D53E6264F6D6DD18DB42D6DC9DF3A1B56CA9E88A325BBF860E1A811D87",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/orf/gping/gping-v1.21.0/gping-Linux-gnu-x86_64.tar.gz",
+      "checksum": "965D4246CDC6907957199B3F2732E52E36E37A4162A6D15A86F3D26C223A01EF",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/rhysd/actionlint/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz",
+      "checksum": "8ACA8DB96F1B94770F1B0D72B6DDDCB1EBB8123CB3712530B08CC387B349A3D8",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/rs/curlie/v1.8.2/curlie_1.8.2_linux_amd64.tar.gz",
+      "checksum": "033D39A06D7A4320F923C49B488B89EC415C1901413AE85D26B9F7A09B38F1A1",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/sharkdp/bat/v0.26.1/bat-v0.26.1-x86_64-unknown-linux-musl.tar.gz",
+      "checksum": "0DCD8AC79732C0D5B136F11F4EE00E581440E16A44EAB5B3105B611BBF2CF191",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/sharkdp/fd/v10.5.0/fd-v10.5.0-x86_64-unknown-linux-musl.tar.gz",
+      "checksum": "761C72DC8E120D85B22292063BE8A796E2EEB20EB3E4F38B8FA2343CCF3514A7",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/sharkdp/hyperfine/v2.0.0/hyperfine-v2.0.0-x86_64-unknown-linux-musl.tar.gz",
+      "checksum": "38E59087BD65520930A13CF513D8A493B7043741E8AD62349A8A9929EB61BC5C",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/starship/starship/v1.27.0/starship-x86_64-unknown-linux-musl.tar.gz",
+      "checksum": "10C8EB4CB3B761D9BF59EA828444C2DAB36C900B7D69A69E08814B286969DF89",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/terraform-linters/tflint/v0.64.0/tflint_linux_amd64.zip",
+      "checksum": "CCA9D13E2E1D7A2C627AF60FF899A3C9B74212899416AEB96EC764D2EF954537",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/tree-sitter/tree-sitter/v0.27.1/tree-sitter-linux-x64.gz",
+      "checksum": "D01042F94BA3D6827DDC9788E235F75D8366431BE42BDF90ADE534D960C98B7D",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/x-motemen/ghq/v1.11.2/ghq_linux_amd64.zip",
+      "checksum": "EFA5C1DE4E763565B71649229449D8123CEB7131A8D0ED25755AAEE73969CDF1",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/awscli.amazonaws.com/awscli-exe-linux-x86_64-2.38.4.zip",
+      "checksum": "10AB32A95B27138D7CC1C1AC4EBB4D3ACAB60CD0A0DF2FC37C4E2C440ED40BCE",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/golang.org/dl/go1.27.3.linux-amd64.tar.gz",
+      "checksum": "65EFBC80FDC1FA2CD2631CAD5B481777A68E8725F34E89F50FC6AC714E379B40",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/nodejs.org/dist/v26.12.1/node-v26.12.1-linux-x64.tar.gz",
+      "checksum": "0FD1EB7770598F52A21995EDF6ED35FC690400FA437C2386AF329519E9143132",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/releases.hashicorp.com/terraform/1.17.0/terraform_1.17.0_linux_amd64.zip",
+      "checksum": "C168CAB7C637A8769FDB90089DDD19DE701BC6FF8ACA64DC2E2185FE46F59F67",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/unofficial-builds.nodejs.org/download/release/v26.12.1/node-v26.12.1-linux-x64-musl.tar.gz",
+      "checksum": "8BF9CC0E7F8E3C7EC5368DCA19242CAD651B6B09D35BCDCF290AC3F80925E8DD",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.575.0/registry.yaml",
+      "checksum": "340BC6F1FA7124077830D090576F9DC538212FDD7869F8DE973E81B0124EFFA1",
+      "algorithm": "sha256"
+    }
+  ]
+}

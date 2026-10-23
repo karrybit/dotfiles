@@ -1,0 +1,14 @@
+#!/bin/bash
+# run_onchange_: uv/.python-version が変わった時だけ再実行される
+# hash: {{ include "dot_config/uv/dot_python-version" | sha256sum }}
+set -e
+
+export AQUA_GLOBAL_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/aquaproj-aqua/{{ .profile }}/aqua.yaml"
+export UV_PYTHON_BIN_DIR="${UV_PYTHON_BIN_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/uv/bin}"
+PATH="${AQUA_ROOT_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua}/bin:$PATH"
+
+if ! command -v uv >/dev/null 2>&1; then
+  exit 0
+fi
+
+uv python install --default --preview-features python-install-default

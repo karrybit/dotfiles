@@ -1,0 +1,184 @@
+{
+  "checksums": [
+    {
+      "id": "github_release/github.com/BurntSushi/ripgrep/15.2.0/ripgrep-15.2.0-aarch64-apple-darwin.tar.gz",
+      "checksum": "3750B2E93F37E0C692657DA574D7019A101C0084DA05A790C83FD335BAD973E4",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/Kitware/CMake/v4.4.4/cmake-4.4.4-macos-universal.tar.gz",
+      "checksum": "4B7B73704B1DB9B374E5C9AB8E17AC6148B817B6396EE75CD94A852CBAC9D305",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/apple/pkl/0.32.2/pkl-macos-aarch64",
+      "checksum": "466952F0B30C93DFA36393A5B3695159917CE4291E3C936A18A0A240CFBE98E9",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/aquasecurity/tfsec/v1.28.14/tfsec_1.28.14_darwin_arm64.tar.gz",
+      "checksum": "F39D59A3F9BE4EEB3D965657653AD62243103A3D921CE52CA8F907CFF45896F5",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/astral-sh/uv/0.13.5/uv-aarch64-apple-darwin.tar.gz",
+      "checksum": "743F85035A1996ECB350659E01CD9FAEA9709829BE09B1B4B03C73EAF3C9CD73",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/bootandy/dust/v1.2.6/dust-v1.2.6-aarch64-apple-darwin.tar.gz",
+      "checksum": "5C37EE0D353165C73AEDD6B21B9133182221EFE08F9A5E76C082D9D6D5A0935D",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/cli/cli/v2.103.0/gh_2.103.0_macOS_arm64.zip",
+      "checksum": "54BE566E9F614BEA5DE8021E95B9AD33DFEE3B9D2EA120C9C294C00DEFAA5014",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/dandavison/delta/0.20.1/delta-0.20.1-aarch64-apple-darwin.tar.gz",
+      "checksum": "BC1839CEA69288D4673A24FAFFBB825D408CA907E0F7D33B1678C9E6CDD5E58E",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/dathere/qsv/26.0.0/qsv-26.0.0-aarch64-apple-darwin.zip",
+      "checksum": "FEB85AD07A84564E947813B3B847C7628BC7FA56F145C2509BCA719541FB9B06",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/direnv/direnv/v2.38.2/direnv.darwin-arm64",
+      "checksum": "30443C413E74614A53DEB90234E9C97661B1041A0F4ACA601CEB482A578AE8B6",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/go-delve/delve/v1.27.2/dlv_1.27.2_darwin_arm64.tar.gz",
+      "checksum": "C32FC68E11FF3820BA267AB12C96FA68E3804319F807FC5DB4FBA3B9D868DF26",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/go-task/task/v3.54.0/task_darwin_arm64.tar.gz",
+      "checksum": "12A69FCF37BB8D5BC9150C44F9A936775B73E59FF044C2C245232F198C135637",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/gradle/gradle-distributions/v9.8.2/gradle-9.8.2-bin.zip",
+      "checksum": "21BD5DA2DE49B642904077F38C0EFDC7778E92B3ED0889392DCA61B97E389607",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/herdrdev/herdr/v0.9.5/herdr-macos-aarch64",
+      "checksum": "FB77C2232A05A8035421382C894392F4174E4E38A18E48AF3DD0290157C3A7E2",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/jesseduffield/lazygit/v0.66.2/lazygit_0.66.2_darwin_arm64.tar.gz",
+      "checksum": "FADDA59AE7665BA556FCBAA704C7EADE6E40D016D3F3B25D6327DD1F3F906A0C",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/jqlang/jq/jq-1.8.2/jq-macos-arm64",
+      "checksum": "2D75340BA57A4B4B4C8708A21C2DC8E958A48AAA8BBA13B27F77F6E4C0ECA07E",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/junegunn/fzf/v0.74.5/fzf-0.74.5-darwin_arm64.tar.gz",
+      "checksum": "ADA808C7401B9949CE8842274AC16A6B6193FD32DCADA396884A6A9A89E5985A",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/koalaman/shellcheck/v0.11.0/shellcheck-v0.11.0.darwin.aarch64.tar.xz",
+      "checksum": "56AFFDD8DE5527894DCA6DC3D7E0A99A873B0F004D7AABC30AE407D3F48B0A79",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/mike-engel/jwt-cli/6.2.0/jwt-macOS.tar.gz",
+      "checksum": "C277A113E2FC89D44E70CF38786E7DA8B0CBFE59E77E23B37033CC4E2BD8AAD6",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/mikefarah/yq/v4.54.1/yq_darwin_arm64",
+      "checksum": "1AF826B55EE90064B9B9B0E3C02B46EC763ABC2F0FE0EDBB05A7868181ED619E8650218F9F42EF7B96FD0D6F9F5730D10B6F1B89CD183764B79E6B152A2F42C1",
+      "algorithm": "sha512"
+    },
+    {
+      "id": "github_release/github.com/neovim/neovim/v0.12.6/nvim-macos-arm64.tar.gz",
+      "checksum": "1DBD148222B051BA6C307C4D17A318ED083DF018A4F6A5A0CE46955FFC9AB87B",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/orf/gping/gping-v1.21.0/gping-macOS-arm64.tar.gz",
+      "checksum": "9061A06D93490F97B3A956E149D8EC4C9030625F764E8DBFAC9B737C00BD9EA0",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/rhysd/actionlint/v1.7.12/actionlint_1.7.12_darwin_arm64.tar.gz",
+      "checksum": "ABA9CED2DEE8D27FECCA3DC7FEB1A7F9A52CAEFA1EB46F3271EA66B6E0E6953F",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/rs/curlie/v1.8.2/curlie_1.8.2_darwin_arm64.tar.gz",
+      "checksum": "6501B25208C0EDAD5B3E1DBFAAA4CC963CCCD1245D4C7D36B30B61607D0AE260",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/sharkdp/bat/v0.26.1/bat-v0.26.1-aarch64-apple-darwin.tar.gz",
+      "checksum": "E30BEFF26779C9BF60BB541E1D79046250CB74378F2757F8EB250AFDDB19E114",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/sharkdp/fd/v10.5.0/fd-v10.5.0-aarch64-apple-darwin.tar.gz",
+      "checksum": "B67E1836C468E42E411984B56E52FA7ABEC08C2BD22C867398E7CC134AAC5E12",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/sharkdp/hyperfine/v2.0.0/hyperfine-v2.0.0-aarch64-apple-darwin.tar.gz",
+      "checksum": "590B839CFEA386B384CE0B42D16DAF2910277CF30950656194BB3A5F20DEA81E",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/starship/starship/v1.27.0/starship-aarch64-apple-darwin.tar.gz",
+      "checksum": "5362DA8CB2928F98F3CE0FFDA697CF0F8DE70081DB000DAE316D6D3A404F6CF0",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/terraform-linters/tflint/v0.65.0/tflint_darwin_arm64.zip",
+      "checksum": "5A71C63481BA56760864298011FDB7317A9AE80A0BBAECEEFA35883C7F62AC71",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/tree-sitter/tree-sitter/v0.27.1/tree-sitter-macos-arm64.gz",
+      "checksum": "46CB97D9A2C52C94E22D9A76C2F1116156B8B61F98360E2A9CCE05FCB197CD4D",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/x-motemen/ghq/v1.11.2/ghq_darwin_arm64.zip",
+      "checksum": "8317F8EA5671BCCB31E7747EB0A892A77A472DBC7C988F9D47CDFC969A59E242",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/awscli.amazonaws.com/AWSCLIV2-2.38.5.pkg",
+      "checksum": "4CB957D1F79C7264EF5A0F3A509CE477BBFD23C91EEE888493A9DFFF445A8D7C",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/golang.org/dl/go1.27.3.darwin-arm64.tar.gz",
+      "checksum": "DD3908CF20959D798C1E06EBE5B72213F0505CE01373B40CE3110975A6CD99C2",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/nodejs.org/dist/v26.12.1/node-v26.12.1-darwin-arm64.tar.gz",
+      "checksum": "1901D539912C02AFA10D1CC126943A8855A7EEDEBE830119463470DB5E6C59E8",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/releases.hashicorp.com/terraform/1.17.0/terraform_1.17.0_darwin_arm64.zip",
+      "checksum": "7472A54CCA911D46C0E399A5EBBCE44444912D0D4DAD7495F37F1FA51E7CA6B7",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.575.0/registry.yaml",
+      "checksum": "340BC6F1FA7124077830D090576F9DC538212FDD7869F8DE973E81B0124EFFA1",
+      "algorithm": "sha256"
+    }
+  ]
+}
