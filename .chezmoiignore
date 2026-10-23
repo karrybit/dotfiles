@@ -1,7 +1,3 @@
-# Repository-only tasks and tests
-Taskfile.yaml
-test
-
 # Source-only docs and instructions
 CLAUDE.md
 MIGRATION.md
