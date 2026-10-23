@@ -5,6 +5,9 @@
 # judgment (home paths, org names, personal data) is an agent rule in
 # CLAUDE.md, not this hook: those need context this scan cannot have.
 # Escape hatch: PII_GUARD_SKIP=1 in the hook environment skips the check.
+# A line carrying gitleaks' `gitleaks:allow` or detect-secrets'
+# `pragma: allowlist secret` marker is skipped, so a suppression written for
+# either established scanner also silences this one.
 set -u
 
 [ "${PII_GUARD_SKIP:-}" = "1" ] && exit 0
@@ -40,11 +43,13 @@ cased="$cased|xox[baprs]-[A-Za-z0-9-]{10,}"
 cased="$cased|sk-ant-[A-Za-z0-9_-]{20,}|AIza[0-9A-Za-z_-]{35}"
 
 # Only the keyword-assignment shape has to ignore case: the key name is
-# whatever the author typed.
-loose="(api[_-]?key|secret|token|password)['\"]?[[:space:]]*[:=][[:space:]]*['\"][^'\"]{8,}"
+# whatever the author typed. A value starting with `$` is a shell expansion
+# such as "${token}" or "$(gh auth token)", not a literal secret.
+loose="(api[_-]?key|secret|token|password)['\"]?[[:space:]]*[:=][[:space:]]*['\"][^'\"\$][^'\"]{7,}"
 
 # shellcheck disable=SC2086
-added=$(git log -p --no-color $range 2>/dev/null | grep -E "^\+")
+added=$(git log -p --no-color $range 2>/dev/null | grep -E "^\+" |
+    grep -vE 'gitleaks:allow|pragma: allowlist secret')
 findings=$(($(printf '%s\n' "$added" | grep -cE "$cased") +
     $(printf '%s\n' "$added" | grep -ciE "$loose")))
 
