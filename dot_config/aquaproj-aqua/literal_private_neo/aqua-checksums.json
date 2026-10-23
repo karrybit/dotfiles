@@ -146,6 +146,11 @@
       "algorithm": "sha256"
     },
     {
+      "id": "github_release/github.com/tmux/tmux-builds/v3.7c/tmux-3.7c-macos-arm64.tar.gz",
+      "checksum": "0A763DD0380AA980D239509654DA1BC7455843706A3C050F6709C8CD2E13D12D",
+      "algorithm": "sha256"
+    },
+    {
       "id": "github_release/github.com/tree-sitter/tree-sitter/v0.27.1/tree-sitter-macos-arm64.gz",
       "checksum": "46CB97D9A2C52C94E22D9A76C2F1116156B8B61F98360E2A9CCE05FCB197CD4D",
       "algorithm": "sha256"

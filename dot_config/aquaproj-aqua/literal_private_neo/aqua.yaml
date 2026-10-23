@@ -43,5 +43,6 @@ packages:
   - name: sharkdp/hyperfine@v2.0.0
   - name: starship/starship@v1.27.0
   - name: terraform-linters/tflint@v0.65.0
+  - name: tmux/tmux-builds@v3.7c
   - name: tree-sitter/tree-sitter@v0.27.1
   - name: x-motemen/ghq@v1.11.2

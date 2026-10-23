@@ -141,6 +141,11 @@
       "algorithm": "sha256"
     },
     {
+      "id": "github_release/github.com/tmux/tmux-builds/v3.7c/tmux-3.7c-linux-x86_64.tar.gz",
+      "checksum": "CC56BD1CC873EB6089C615F0496B072385BDA8A6D944069F38564A5D49C128AA",
+      "algorithm": "sha256"
+    },
+    {
       "id": "github_release/github.com/tree-sitter/tree-sitter/v0.27.1/tree-sitter-linux-x64.gz",
       "checksum": "D01042F94BA3D6827DDC9788E235F75D8366431BE42BDF90ADE534D960C98B7D",
       "algorithm": "sha256"
