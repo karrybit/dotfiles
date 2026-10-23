@@ -8,5 +8,5 @@
 - Keep `dot_config/nvim/README.md` concise and written in English.
 - Document custom behavior and representative plugin operations. Do not
   document standard Vim commands that are not customized by this repository.
-- Keep `CLAUDE.md` and `README.md` in this directory source-only by preserving
+- Keep `AGENTS.md` and `README.md` in this directory source-only by preserving
   their entries in `.chezmoiignore`.

@@ -31,7 +31,7 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/).
 `chezmoi apply` deploys source → live. The `dot_` prefix is converted to `.` (e.g. `dot_config/` → `~/.config/`).
 
 Agent instructions, skills, and subagents are all managed under
-`dot_config/claude/`. See [CLAUDE.md](CLAUDE.md) for how agents interact with
+`dot_config/claude/`. See [AGENTS.md](AGENTS.md) for how agents interact with
 this repository.
 
 Codex's `~/.codex/config.toml` is partially managed by

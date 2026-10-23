@@ -18,7 +18,7 @@
 
 - Keep repository-only instructions and documentation listed in `.chezmoiignore`.
 - Place directory-specific operating rules in the narrowest applicable
-  `CLAUDE.md`.
+  `AGENTS.md`.
 - Do not place directory-specific instructions in the repository root.
 
 ## Known Permission-Gated Operations
@@ -34,6 +34,8 @@
 
 ## Verification
 
+- Verify changes with `chezmoi apply --dry-run --verbose` and a fresh login
+  shell. This repository deliberately has no test suite.
 - After changing chezmoi-managed paths or `.chezmoiignore`, verify that the
   intended files are managed or ignored as expected.
 - Interpret unrelated existing live differences separately and report them
@@ -53,11 +55,13 @@
   modifier, pass machine-local `[projects]` through without recording its
   values in source, and never copy the live file into the repository. Keep the
   `private_` attribute so the target remains mode `0600`.
-- Claude Code reads `CLAUDE.md`, never `AGENTS.md`. Every instruction file here
-  is a `CLAUDE.md`: this one for the repository,
-  `dot_config/nvim/CLAUDE.md` for that directory, and
-  `dot_config/claude/CLAUDE.md` for user scope, deployed to
-  `~/.config/claude/CLAUDE.md`. No file imports another.
+- Repository instructions are `AGENTS.md` files: this one for the repository
+  and `dot_config/nvim/AGENTS.md` for that directory. Claude Code reads them
+  only while no `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md` exists
+  in the working directory or above it, so keep those names out of this tree.
+- User-scope instructions stay `dot_config/claude/CLAUDE.md`, deployed to
+  `~/.config/claude/CLAUDE.md`: Claude Code has no user-scope `AGENTS.md`.
+  No instruction file imports another.
 - Skills live under `dot_config/claude/skills/` and deploy straight to
   `~/.config/claude/skills/`; there is no intermediate canonical copy.
   `run_onchange_04_prune-skills.sh.tmpl` removes deployed skills whose source

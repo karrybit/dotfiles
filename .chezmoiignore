@@ -1,9 +1,9 @@
 # Source-only docs and instructions
-CLAUDE.md
+AGENTS.md
 MIGRATION.md
 README.md
 docs
-.config/nvim/CLAUDE.md
+.config/nvim/AGENTS.md
 .config/nvim/README.md
 
 # Runtime artifacts
