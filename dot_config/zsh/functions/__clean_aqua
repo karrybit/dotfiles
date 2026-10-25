@@ -10,17 +10,65 @@ local _root="${AQUA_ROOT_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua
 aqua vacuum --init
 aqua vacuum
 
-# Registry versions the global config no longer pins are re-downloaded on demand.
-# Without a readable ref there is nothing to keep, so leave the directory alone.
-local _registry_dir="${_root}/registries/github_content/github.com/aquaproj/aqua-registry"
-if [[ -d "${_registry_dir}" ]] && command -v yq >/dev/null 2>&1; then
-    local -a _keep
-    local _config
-    local _dir
-    for _config in "${(@s.:.)AQUA_GLOBAL_CONFIG}"; do
-        [[ -f "${_config}" ]] || continue
-        _keep+=("${(@f)$(yq -r '.registries[] | select(.type == "standard") | .ref' "${_config}")}")
+# Shims and registry versions are kept when the global config or any aqua.yaml
+# under the ghq root still uses them. When the project configs cannot be
+# listed, nothing below is removed.
+local -a _globals
+local -a _projects
+local _projects_known=1
+local _config
+
+_globals=("${(@s.:.)AQUA_GLOBAL_CONFIG}")
+_globals=("${(@)_globals:#}")
+
+if command -v ghq >/dev/null 2>&1; then
+    if command -v fd >/dev/null 2>&1; then
+        _projects=("${(@f)$(fd -H -t f -g '*aqua.y*ml' -d 6 --exclude node_modules "$(ghq root)")}")
+        _projects=("${(@)_projects:#}")
+    else
+        _projects_known=0
+    fi
+fi
+
+# aqua install never removes the shim of a package dropped from a config.
+if (( _projects_known && ${#_globals} > 0 )); then
+    local _shim
+    local _command
+    local _used
+
+    for _shim in "${_root}"/bin/*(N@); do
+        [[ "$(readlink "${_shim}")" == "../aqua-proxy" ]] || continue
+        _command=${_shim:t}
+        [[ "${_command}" == aqua ]] && continue
+        (cd "${_root}" && aqua which "${_command}") >/dev/null 2>&1 && continue
+
+        _used=0
+        for _config in "${_projects[@]}"; do
+            if (cd "${_root}" && aqua -c "${_config}" which "${_command}") >/dev/null 2>&1; then
+                _used=1
+                break
+            fi
+        done
+
+        if (( ! _used )); then
+            printf "removing unused shim: %s\n" "${_command}"
+            rm -f -- "${_shim}"
+        fi
     done
+fi
+
+# Registry versions nothing pins any more are re-downloaded on demand.
+local _registry_dir="${_root}/registries/github_content/github.com/aquaproj/aqua-registry"
+if (( _projects_known )) && [[ -d "${_registry_dir}" ]] && command -v yq >/dev/null 2>&1; then
+    local -a _keep
+    local _dir
+
+    for _config in "${_globals[@]}"; do
+        [[ -f "${_config}" ]] && _keep+=("${(@f)$(yq -r '.registries[] | select(.type == "standard") | .ref' "${_config}")}")
+    done
+    if (( ${#_projects} > 0 )); then
+        _keep+=("${(@f)$(yq -r '.registries[]? | select(.type == "standard") | .ref' "${_projects[@]}" 2>/dev/null)}")
+    fi
     _keep=("${(@)_keep:#}")
 
     if (( ${#_keep} > 0 )); then

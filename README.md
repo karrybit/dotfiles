@@ -140,7 +140,7 @@ failing step. It removes:
 | Tool | Removed |
 |------|---------|
 | Homebrew (macOS) | unused dependencies, all cached downloads and old versions |
-| aqua | packages unused for `AQUA_VACUUM_DAYS` days (default 60), registry versions the global config no longer pins, the registry cache |
+| aqua | packages unused for `AQUA_VACUUM_DAYS` days (default 60), shims and registry versions that neither the global config nor any `aqua.yaml` under the ghq root uses, the registry cache |
 | Go | build, module, test, and fuzz caches, and the gopls cache |
 | Cargo | `$CARGO_HOME/registry` and `$CARGO_HOME/git` |
 | uv | the whole cache |
