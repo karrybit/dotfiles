@@ -90,6 +90,8 @@ vim-fugitive and vim-rhubarb are also installed without custom key mappings.
   Examples: `ysiw"`, `ds"`, and `cs"'`.
 - **Treesitter**: Provides syntax highlighting and indentation for supported
   languages.
+  It loads only when the `tree-sitter` CLI is on `PATH`, since parsers are
+  compiled locally.
 - **which-key**: Displays available mappings after pressing `<leader>`.
 - **lualine**: Displays the statusline and buffer/tab lists.
 - **gruvbox.nvim**: Provides the dark color scheme.

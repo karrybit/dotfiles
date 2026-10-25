@@ -29,7 +29,11 @@ local languages = {
 return {
   "nvim-treesitter/nvim-treesitter",
   lazy = false,
+  cond = vim.fn.executable("tree-sitter") == 1,
   build = function()
+    if vim.fn.executable("tree-sitter") == 0 then
+      return
+    end
     require("nvim-treesitter").install(languages):wait(300000)
   end,
   config = function()

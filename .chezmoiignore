@@ -34,3 +34,11 @@ docs
 # Claude Code generated/local settings
 .config/claude/settings.json
 .config/claude/settings.work.pkl
+
+# private_neo is a thin client: no Rust toolchain, no source builds
+{{ if eq .profile "private_neo" -}}
+00_rustup.sh
+01_rustup_components.sh
+02_cargo_packages.sh
+.config/rust
+{{ end -}}

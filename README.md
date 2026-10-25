@@ -7,11 +7,17 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/).
   cannot provide: aqua itself, chezmoi, libraries and Homebrew-path
   dependencies (openjdk, libpq, zsh-abbr), and tools missing from or built
   from source in the aqua registry
+- **Profiles**: `work` and `private_minipc` are development machines.
+  `private_neo` is a thin client for terminal work (shell, git/GitHub, editing,
+  Codex), so it gets no language toolchains, JDK, or IDE, and its Rust
+  scripts and `.config/rust` are excluded in `.chezmoiignore` so nothing
+  compiles there
 - **aqua** manages CLI and development tools on every profile
   (`dot_config/aquaproj-aqua/literal_<profile>/aqua.yaml`, checksum-verified;
   `literal_` keeps chezmoi from reading `private_neo` as the `private_` attribute)
 - **uv** manages Python (`dot_config/uv/dot_python-version`) and **rustup**
-  manages the Rust toolchain, since aqua does not handle those runtimes
+  manages the Rust toolchain (not on `private_neo`), since aqua does not
+  handle those runtimes
 
 ## Directory Structure
 
@@ -63,7 +69,7 @@ chezmoi init --apply karrybit/dotfiles
 1. Clones this repository to `~/.local/share/chezmoi/`
 2. Prompts for machine profile: enter `work` or `private_neo`
 3. Runs `chezmoi apply` to deploy live files
-4. Executes `run_onchange_` scripts (rustup, Rust components, Claude settings, skills sync)
+4. Executes `run_onchange_` scripts (rustup and Rust components except on `private_neo`, Claude settings, skills sync)
 
 aqua comes from Homebrew, so the aqua and Python `run_onchange_` scripts skip
 on the first apply. Install it, then run what those scripts would have:

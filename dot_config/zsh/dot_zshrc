@@ -30,7 +30,7 @@ autoload -Uz compinit && compinit -u
     source "$XDG_CONFIG_HOME/zsh/port_forward.zsh"
 
 # direnv
-eval "$(direnv hook zsh)"
+(( $+commands[direnv] )) && eval "$(direnv hook zsh)"
 
 # kube
 [[ -d ~/.kube ]] && source <(kubectl completion zsh)
