@@ -76,7 +76,7 @@ chezmoi init --apply karrybit/dotfiles
 1. Clones this repository to `~/.local/share/chezmoi/`
 2. Prompts for machine profile: enter `work` or `private_neo`
 3. Runs `chezmoi apply` to deploy live files
-4. Executes `run_onchange_` scripts (rustup and Rust components except on `private_neo`, Claude settings, skills sync)
+4. Executes `run_onchange_` scripts (rustup and cargo packages except on `private_neo`, Claude settings, skills sync)
 
 aqua comes from Homebrew, so the aqua and Python `run_onchange_` scripts skip
 on the first apply. Install it, then run what those scripts would have:
@@ -139,8 +139,7 @@ These run automatically during `chezmoi apply` when their tracked content change
 | Script | Trigger | Action |
 |--------|---------|--------|
 | `run_onchange_00_aqua.sh.tmpl` | The profile's `aquaproj-aqua/<profile>/` changed | `aqua install` for the profile's global config |
-| `run_onchange_00_rustup.sh` | First apply | Install rustup into `$CARGO_HOME` and set the stable toolchain as default |
-| `run_onchange_01_rustup_components.sh.tmpl` | `rust/component` changed | `rustup component add` for clippy, rustfmt |
+| `run_onchange_00_rustup.sh` | First apply | Install rustup into `$CARGO_HOME` and set the stable toolchain as default (its default profile includes clippy and rustfmt) |
 | `run_onchange_02_cargo_packages.sh.tmpl` | `rust/package` changed | `cargo install` for packages not managed elsewhere |
 | `run_onchange_03_claude_settings.sh.tmpl` | Claude settings pkl files changed | Regenerate `~/.config/claude/settings.json` |
 | `run_onchange_04_prune-skills.sh.tmpl` | Skills under `dot_config/claude/skills/` changed | Remove deployed skills whose source entry is gone (chezmoi leaves such targets in place) |

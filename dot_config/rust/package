@@ -1,10 +1,4 @@
-cargo-upgrades
-cargo-cache
-cargo-deps
 cargo-edit
 cargo-expand
 cargo-modules
 cargo-sort
-cargo-update
-cargo-workspaces
-sea-orm-cli

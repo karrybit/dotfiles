@@ -26,11 +26,6 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/cargo-bins/cargo-binstall/v1.26.1/cargo-binstall-x86_64-unknown-linux-musl.tgz",
-      "checksum": "43D379FEF8CB450961A14FF113E7BCE7B5E1E52DB709C776D186F928D8A20A40",
-      "algorithm": "sha256"
-    },
-    {
       "id": "github_release/github.com/cli/cli/v2.103.0/gh_2.103.0_linux_amd64.tar.gz",
       "checksum": "FDD768EB70F6409F80FCFA9F3A1C0ADF0FC98D827AB3CE0BED2AC22762C5D786",
       "algorithm": "sha256"
