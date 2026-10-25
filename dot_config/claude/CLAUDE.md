@@ -251,8 +251,7 @@
   `yq` for YAML, `qsv` for CSV/TSV — for command output as well as files. Fall
   back to a general-purpose language or a text tool (`sed`/`awk`/`cut`) only when
   the structure-aware tool cannot express the transformation, and say which
-  capability was missing; awkward syntax is not such a reason. Load
-  `csv-wrangling-with-qsv` for non-trivial CSV work.
+  capability was missing; awkward syntax is not such a reason.
 - When a preferred tool does not resolve here, say which fallback you are using
   and recommend installing the preferred one, naming the package and where to
   declare it.
