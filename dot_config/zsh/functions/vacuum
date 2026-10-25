@@ -1,0 +1,16 @@
+local _step
+local _failed=0
+
+for _step in homebrew aqua go cargo uv npm; do
+    printf "\033[1m==> clean %s\033[0m\n" "${_step}"
+    "__clean_${_step}" || {
+        __lib_echo_warning "clean ${_step} failed; continuing\n"
+        _failed=1
+    }
+done
+
+if (( _failed != 0 )); then
+    __lib_echo_warning "one or more clean steps failed; see above\n"
+fi
+
+return $_failed

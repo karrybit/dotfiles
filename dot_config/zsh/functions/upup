@@ -1,4 +1,17 @@
+local _vacuum=0
+while (( $# > 0 )); do
+    case $1 in
+        --vacuum) _vacuum=1 ;;
+        *)
+            __lib_echo_failure "usage: upup [--vacuum]\n"
+            return 2
+            ;;
+    esac
+    shift
+done
+
 __lib_require_commands chezmoi git __uppkg || return 1
+(( _vacuum )) && { __lib_require_commands vacuum || return 1; }
 
 # Use a subshell to keep strict mode and locals scoped to this command.
 (
@@ -36,3 +49,11 @@ __lib_require_commands chezmoi git __uppkg || return 1
 
     chezmoi apply
 )
+local _status=$?
+if (( _status != 0 )); then
+    return $_status
+fi
+
+if (( _vacuum )); then
+    vacuum
+fi

@@ -1,0 +1,33 @@
+if ! command -v aqua >/dev/null 2>&1; then
+    printf "\033[33maqua not found; skipping aqua clean\033[0m\n" >&2
+    return 0
+fi
+
+local _root="${AQUA_ROOT_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua}"
+
+# vacuum only removes packages with a recorded last-used time; --init records
+# the ones that predate that bookkeeping. Expiry is AQUA_VACUUM_DAYS (default 60).
+aqua vacuum --init
+aqua vacuum
+
+# Registry versions the global config no longer pins are re-downloaded on demand.
+# Without a readable ref there is nothing to keep, so leave the directory alone.
+local _registry_dir="${_root}/registries/github_content/github.com/aquaproj/aqua-registry"
+if [[ -d "${_registry_dir}" ]] && command -v yq >/dev/null 2>&1; then
+    local -a _keep
+    local _config
+    local _dir
+    for _config in "${(@s.:.)AQUA_GLOBAL_CONFIG}"; do
+        [[ -f "${_config}" ]] || continue
+        _keep+=("${(@f)$(yq -r '.registries[] | select(.type == "standard") | .ref' "${_config}")}")
+    done
+    _keep=("${(@)_keep:#}")
+
+    if (( ${#_keep} > 0 )); then
+        for _dir in "${_registry_dir}"/*(N/); do
+            (( ${_keep[(Ie)${_dir:t}]} )) || rm -rf -- "${_dir}"
+        done
+    fi
+fi
+
+rm -rf -- "${_root:?}/registry-cache"

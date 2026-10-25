@@ -129,8 +129,25 @@ See [docs/CHEZMOI.md](docs/CHEZMOI.md) for the full chezmoi workflow and status 
 ### Sync and update
 
 ```sh
-upup    # pull + apply dotfiles, update all packages, push generated commits
+upup            # pull + apply dotfiles, update all packages, push generated commits
+upup --vacuum   # the same, then run vacuum if it succeeded
+vacuum          # delete tool caches and unreferenced old versions
 ```
+
+`vacuum` runs one `__clean_<tool>` function per tool and continues past a
+failing step. It removes:
+
+| Tool | Removed |
+|------|---------|
+| Homebrew (macOS) | unused dependencies, all cached downloads and old versions |
+| aqua | packages unused for `AQUA_VACUUM_DAYS` days (default 60), registry versions the global config no longer pins, the registry cache |
+| Go | build, module, test, and fuzz caches, and the gopls cache |
+| Cargo | `$CARGO_HOME/registry` and `$CARGO_HOME/git` |
+| uv | the whole cache |
+| npm | the npm cache and the node-gyp cache |
+
+Removed caches are downloaded again on next use, so the first build after a
+vacuum is slower and needs network access.
 
 ### run_onchange scripts
 

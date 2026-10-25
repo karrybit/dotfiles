@@ -1,0 +1,12 @@
+if [[ "${OSTYPE}" != darwin* ]]; then
+    return 0
+fi
+
+if ! command -v brew >/dev/null 2>&1; then
+    printf "\033[33mbrew not found; skipping Homebrew clean\033[0m\n" >&2
+    return 0
+fi
+
+brew autoremove
+# --prune=all drops every cached download; -s scrubs even the latest ones.
+brew cleanup --prune=all -s

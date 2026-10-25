@@ -1,3 +1,0 @@
-[[ -z "$CARGO_HOME" ]] && return 1
-rm -rf "$CARGO_HOME/git"
-rm -rf "$CARGO_HOME/registry"

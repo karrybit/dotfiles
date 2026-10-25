@@ -1,0 +1,10 @@
+if ! command -v go >/dev/null 2>&1; then
+    printf "\033[33mgo not found; skipping Go clean\033[0m\n" >&2
+    return 0
+fi
+
+go clean -cache -modcache -testcache -fuzzcache
+
+if [[ -n "${GOPLSCACHE}" ]]; then
+    rm -rf -- "${GOPLSCACHE:?}"
+fi

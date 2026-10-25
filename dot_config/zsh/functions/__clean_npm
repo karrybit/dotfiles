@@ -1,0 +1,7 @@
+if command -v npm >/dev/null 2>&1; then
+    npm cache clean --force
+fi
+
+if [[ -n "${NODE_GYP_CACHE}" ]]; then
+    rm -rf -- "${NODE_GYP_CACHE:?}"
+fi

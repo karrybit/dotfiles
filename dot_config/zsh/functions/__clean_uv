@@ -1,0 +1,6 @@
+if ! command -v uv >/dev/null 2>&1; then
+    printf "\033[33muv not found; skipping uv clean\033[0m\n" >&2
+    return 0
+fi
+
+uv cache clean

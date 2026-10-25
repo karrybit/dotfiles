@@ -1,0 +1,3 @@
+[[ -n "${CARGO_HOME}" ]] || return 0
+
+rm -rf -- "${CARGO_HOME:?}/git" "${CARGO_HOME:?}/registry"
