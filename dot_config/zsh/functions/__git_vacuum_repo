@@ -1,0 +1,257 @@
+# Plan, and with apply=1 carry out, the cleanup of one repository for git-vacuum.
+# Usage: __git_vacuum_repo <repo> <apply 0|1> <verbose 0|1> <log-file>
+# Leaves (branches worktrees attention) in the caller's __git_vacuum_counts.
+local _repo=$1
+local _apply=$2
+local _verbose=$3
+local _log=$4
+__git_vacuum_counts=(0 0 0)
+
+local _top
+_top=$(git -C "${_repo}" rev-parse --show-toplevel 2>/dev/null) || {
+    __lib_echo_warning "skip ${_repo}: not a git work tree\n"
+    return 0
+}
+
+# Ancestry is judged against the remote default branch, so "contained" means
+# the commits are already on the remote, not merely in the local checkout.
+local _base _candidate
+_base=$(git -C "${_top}" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null)
+if [[ -z "${_base}" ]]; then
+    for _candidate in main master; do
+        if git -C "${_top}" show-ref --verify --quiet "refs/remotes/origin/${_candidate}"; then
+            _base="origin/${_candidate}"
+            break
+        fi
+    done
+fi
+if [[ -z "${_base}" ]]; then
+    __lib_echo_warning "skip ${_top}: no origin default branch to compare against\n"
+    return 0
+fi
+local _default=${_base#origin/}
+
+# Squash and rebase merges leave the branch outside the base's history, so the
+# forge is the only witness for them. A failed lookup removes evidence only:
+# nothing is deleted for lack of a PR.
+local -A _prs
+local _url _slug _json _name _state _number _oid
+_url=$(git -C "${_top}" remote get-url origin 2>/dev/null)
+case "${_url}" in
+https://github.com/* | git@github.com:* | ssh://git@github.com/*)
+    _slug=${${${${_url#https://github.com/}#git@github.com:}#ssh://git@github.com/}%.git}
+    if command -v gh >/dev/null 2>&1 && _json=$(gh pr list --repo "${_slug}" --state all --limit 1000 \
+        --json number,headRefName,headRefOid,state 2>/dev/null); then
+        while IFS=$'\t' read -r _name _state _number _oid; do
+            [[ -n "${_name}" ]] && _prs[${_name}]+="${_state}:${_number}:${_oid} "
+        done < <(print -r -- "${_json}" | jq -r '.[] | [.headRefName, .state, (.number | tostring), .headRefOid] | @tsv')
+    else
+        __lib_echo_warning "${_top}: PR lookup failed; only branches already on ${_base} qualify\n"
+    fi
+    ;;
+esac
+
+local -a _protect
+_protect=("${_default}" main master develop trunk 'release/*' 'hotfix/*' ${=GIT_VACUUM_PROTECT})
+
+local _header_shown=0
+local _n_branches=0 _n_worktrees=0 _attention=0
+local _verdict _why
+
+__git_vacuum_say() {
+    if (( ! _header_shown )); then
+        printf '\033[1m==> %s\033[0m\n' "${_top}"
+        _header_shown=1
+    fi
+    print -r -- "  $1"
+}
+
+__git_vacuum_protected() {
+    local _pattern
+    for _pattern in "${_protect[@]}"; do
+        [[ "$1" == ${~_pattern} ]] && return 0
+    done
+    return 1
+}
+
+# Sets _verdict to "delete" or "keep" and _why to the evidence or the reason.
+__git_vacuum_judge() {
+    local _branch=$1 _tip=$2 _entry _open="" _merged="" _merged_moved="" _closed="" _ahead
+    for _entry in ${=_prs[${_branch}]}; do
+        case "${_entry}" in
+        OPEN:*) _open=${${_entry#OPEN:}%%:*} ;;
+        MERGED:*)
+            if [[ "${_entry##*:}" == "${_tip}" ]]; then
+                _merged=${${_entry#MERGED:}%%:*}
+            else
+                _merged_moved=${${_entry#MERGED:}%%:*}
+            fi
+            ;;
+        CLOSED:*) _closed=${${_entry#CLOSED:}%%:*} ;;
+        esac
+    done
+
+    if [[ -n "${_open}" ]]; then
+        _verdict=keep _why="open PR #${_open}"
+    elif git -C "${_top}" merge-base --is-ancestor "${_tip}" "${_base}" 2>/dev/null; then
+        _verdict=delete _why="contained in ${_base}"
+    elif [[ -n "${_merged}" ]]; then
+        _verdict=delete _why="PR #${_merged} merged at this commit"
+    elif [[ -n "${_merged_moved}" ]]; then
+        _verdict=keep _why="PR #${_merged_moved} merged, but the local tip differs from the merged head"
+    elif [[ -n "${_closed}" ]]; then
+        _verdict=keep _why="PR #${_closed} closed without merging"
+    else
+        _ahead=$(git -C "${_top}" rev-list --count "${_base}..${_tip}" 2>/dev/null)
+        _verdict=keep _why="no PR; ${_ahead:-?} commit(s) not on ${_base}"
+    fi
+}
+
+__git_vacuum_keep() {
+    __git_vacuum_say "keep $1: ${_why}"
+    [[ "${_why}" == "open PR"* ]] || (( _attention++ ))
+}
+
+__git_vacuum_delete_branch() {
+    local _branch=$1 _tip=$2
+    if (( ! _apply )); then
+        __git_vacuum_say "would delete branch ${_branch} (${_why})"
+    elif git -C "${_top}" branch -D "${_branch}" >/dev/null 2>&1; then
+        printf '%s\t%s\t%s\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${_top}" "${_branch}" "${_tip}" "${_why}" >>"${_log}" \
+            || __lib_echo_warning "could not log ${_branch} ${_tip}\n"
+        __git_vacuum_say "deleted branch ${_branch} at ${_tip[1,12]} (${_why})"
+    else
+        __git_vacuum_say "FAILED to delete branch ${_branch}"
+        (( _attention++ ))
+        return 1
+    fi
+    (( _n_branches++ ))
+}
+
+# Worktrees first: a branch checked out in a worktree cannot be deleted.
+local -A _registered _in_worktree
+local -a _blocks
+local _block _line _path _head _branch _label _dirty _gitdir
+local -a _recent
+local _min_age_hours=${GIT_VACUUM_MIN_AGE_HOURS:-24}
+local _locked _prunable _first=1 _any_prunable=0 _main_branch=""
+_blocks=("${(@ps:\n\n:)$(git -C "${_top}" worktree list --porcelain)}")
+for _block in "${_blocks[@]}"; do
+    _path="" _head="" _branch="" _locked=0 _prunable=0
+    for _line in "${(@f)_block}"; do
+        case "${_line}" in
+        "worktree "*) _path=${_line#worktree } ;;
+        "HEAD "*) _head=${_line#HEAD } ;;
+        "branch "*) _branch=${_line#branch refs/heads/} ;;
+        locked*) _locked=1 ;;
+        prunable*) _prunable=1 ;;
+        esac
+    done
+    [[ -z "${_path}" ]] && continue
+    _registered[${_path}]=1
+
+    if (( _first )); then
+        _first=0
+        _main_branch=${_branch}
+        continue
+    fi
+    _label="worktree ${_path#${_top}/}${_branch:+ [${_branch}]}"
+
+    # The stale entry is pruned before the branch pass below, which then judges
+    # its branch like any other.
+    if (( _prunable )); then
+        _any_prunable=1
+        (( _n_worktrees++ ))
+        if (( _apply )); then
+            __git_vacuum_say "pruned stale entry for ${_label} (directory is gone)"
+        else
+            __git_vacuum_say "would prune stale entry for ${_label} (directory is gone)"
+        fi
+        continue
+    fi
+    [[ -n "${_branch}" ]] && _in_worktree[${_branch}]=1
+    if (( _locked )); then
+        (( _verbose )) && __git_vacuum_say "keep ${_label}: locked"
+        continue
+    fi
+    if [[ -n "${_branch}" ]] && __git_vacuum_protected "${_branch}"; then
+        (( _verbose )) && __git_vacuum_say "keep ${_label}: protected branch name"
+        continue
+    fi
+
+    # A session that has just started has a clean worktree with nothing of its
+    # own, which reads as "contained"; recent HEAD or index activity marks it in use.
+    _gitdir=$(git -C "${_path}" rev-parse --absolute-git-dir 2>/dev/null)
+    _recent=("${_gitdir}"/{HEAD,index,logs/HEAD}(Nmh-${_min_age_hours}))
+    if (( ${#_recent} > 0 )); then
+        (( _verbose )) && __git_vacuum_say "keep ${_label}: used within the last ${_min_age_hours}h"
+        continue
+    fi
+
+    _dirty=$(git -C "${_path}" status --porcelain --ignore-submodules=none 2>/dev/null | wc -l | tr -d ' ')
+    if (( _dirty > 0 )); then
+        _why="${_dirty} uncommitted or untracked path(s)"
+        __git_vacuum_keep "${_label}"
+        continue
+    fi
+
+    if [[ -n "${_branch}" ]]; then
+        __git_vacuum_judge "${_branch}" "${_head}"
+    elif git -C "${_top}" merge-base --is-ancestor "${_head}" "${_base}" 2>/dev/null; then
+        _verdict=delete _why="detached at a commit contained in ${_base}"
+    else
+        _verdict=keep _why="detached at a commit not on ${_base}"
+    fi
+    if [[ "${_verdict}" == keep ]]; then
+        __git_vacuum_keep "${_label}"
+        continue
+    fi
+
+    if (( ! _apply )); then
+        __git_vacuum_say "would remove ${_label} (${_why})"
+    elif git -C "${_top}" worktree remove "${_path}" 2>/dev/null; then
+        __git_vacuum_say "removed ${_label} (${_why})"
+    else
+        __git_vacuum_say "FAILED to remove ${_label}"
+        (( _attention++ ))
+        continue
+    fi
+    (( _n_worktrees++ ))
+    [[ -n "${_branch}" ]] && __git_vacuum_delete_branch "${_branch}" "${_head}"
+done
+
+if (( _apply && _any_prunable )); then
+    git -C "${_top}" worktree prune
+fi
+
+# Directories under .claude/worktrees that git no longer tracks may still hold
+# work, so they are reported and never removed.
+local _dir
+for _dir in "${_top}"/.claude/worktrees/*(N/); do
+    if (( ! ${+_registered[${_dir}]} )); then
+        _why="not a registered worktree; inspect by hand"
+        __git_vacuum_keep "directory ${_dir#${_top}/}"
+    fi
+done
+
+local _tip
+while IFS=$'\t' read -r _branch _tip; do
+    [[ -z "${_branch}" || "${_branch}" == "${_main_branch}" ]] && continue
+    (( ${+_in_worktree[${_branch}]} )) && continue
+    if __git_vacuum_protected "${_branch}"; then
+        (( _verbose )) && __git_vacuum_say "keep branch ${_branch}: protected name"
+        continue
+    fi
+
+    __git_vacuum_judge "${_branch}" "${_tip}"
+    if [[ "${_verdict}" == delete ]]; then
+        __git_vacuum_delete_branch "${_branch}" "${_tip}"
+    elif [[ "${_why}" == "open PR"* ]]; then
+        (( _verbose )) && __git_vacuum_say "keep branch ${_branch}: ${_why}"
+    else
+        __git_vacuum_keep "branch ${_branch}"
+    fi
+done < <(git -C "${_top}" for-each-ref --format='%(refname:short)%09%(objectname)' refs/heads)
+
+unfunction __git_vacuum_say __git_vacuum_protected __git_vacuum_judge __git_vacuum_keep __git_vacuum_delete_branch
+__git_vacuum_counts=(${_n_branches} ${_n_worktrees} ${_attention})

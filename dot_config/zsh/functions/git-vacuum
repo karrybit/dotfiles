@@ -1,0 +1,63 @@
+local _apply=0
+local _verbose=0
+local -a _repos
+
+while (( $# > 0 )); do
+    case "$1" in
+    --apply) _apply=1 ;;
+    -v | --verbose) _verbose=1 ;;
+    -h | --help)
+        print -r -- "usage: git-vacuum [--apply] [-v] [repo...]"
+        print -r -- "Plan (default) or carry out deleting local branches and worktrees whose"
+        print -r -- "work is already on the remote: contained in the origin default branch, or"
+        print -r -- "a merged PR whose head is the local tip. Without repos: every ghq"
+        print -r -- "repository plus the chezmoi source. Deletions are logged with their SHA."
+        return 0
+        ;;
+    -*)
+        __lib_echo_failure "usage: git-vacuum [--apply] [-v] [repo...]\n"
+        return 2
+        ;;
+    *) _repos+=("$1") ;;
+    esac
+    shift
+done
+
+__lib_require_commands git jq || return 1
+
+if (( ${#_repos} == 0 )); then
+    if command -v ghq >/dev/null 2>&1; then
+        _repos=("${(@f)$(ghq list -p)}")
+    fi
+    if command -v chezmoi >/dev/null 2>&1; then
+        _repos+=("$(chezmoi source-path)")
+    fi
+fi
+_repos=("${(@u)_repos:#}")
+
+local _log="${XDG_STATE_HOME:-$HOME/.local/state}/git-vacuum/deleted.tsv"
+# The log is the restore path for deleted branches, so nothing is deleted
+# unless it can be written.
+if (( _apply )) && ! { mkdir -p "${_log:h}" && : >>"${_log}"; } 2>/dev/null; then
+    __lib_echo_failure "cannot write ${_log}; nothing deleted\n"
+    return 1
+fi
+
+local -a __git_vacuum_counts
+local _repo _branches=0 _worktrees=0 _attention=0
+for _repo in "${_repos[@]}"; do
+    __git_vacuum_repo "${_repo}" "${_apply}" "${_verbose}" "${_log}"
+    (( _branches += __git_vacuum_counts[1] ))
+    (( _worktrees += __git_vacuum_counts[2] ))
+    (( _attention += __git_vacuum_counts[3] ))
+done
+
+print
+if (( _apply )); then
+    __lib_echo_success "deleted ${_branches} branch(es), removed ${_worktrees} worktree(s)\n"
+    (( _branches > 0 )) && print -r -- "restore a branch with: git branch <name> <sha>  (see ${_log})"
+else
+    print -r -- "would delete ${_branches} branch(es) and remove ${_worktrees} worktree(s); re-run with --apply"
+fi
+(( _attention > 0 )) && __lib_echo_warning "${_attention} item(s) kept that may hold work; see the keep lines above\n"
+return 0

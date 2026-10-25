@@ -149,6 +149,39 @@ failing step. It removes:
 Removed caches are downloaded again on next use, so the first build after a
 vacuum is slower and needs network access.
 
+### Branch and worktree cleanup
+
+```sh
+git-vacuum             # plan only: list what would go and what is kept, and why
+git-vacuum --apply     # delete the planned branches and worktrees
+git-vacuum -v <repo>   # one repository, also listing protected and in-use items
+```
+
+Without arguments it covers every ghq repository and the chezmoi source.
+Branches are not caches: a deleted branch cannot be downloaded again, so
+`git-vacuum` is separate from `vacuum` and only plans unless given `--apply`.
+
+A local branch goes only when its work is already on the remote:
+
+- its tip is contained in the origin default branch, or
+- a GitHub PR from it was merged and that PR's head is the local tip. A tip
+  that moved after the merge is kept, since the later commits exist nowhere else.
+
+Everything else stays and is reported: open or closed PRs, branches without a
+PR, the default branch, `main`, `master`, `develop`, `trunk`, `release/*`,
+`hotfix/*`, and any glob in `GIT_VACUUM_PROTECT`.
+
+A linked worktree is removed, together with its branch, only when it is clean,
+not locked, its branch qualifies as above, and its HEAD and index have not
+changed for `GIT_VACUUM_MIN_AGE_HOURS` hours (default 24), so a session that
+has just started keeps its checkout. `git worktree lock` keeps any worktree.
+Entries whose directory is already gone are pruned. Directories under
+`.claude/worktrees` that git does not track are reported and left alone.
+
+Every deletion is appended with its SHA to
+`$XDG_STATE_HOME/git-vacuum/deleted.tsv`; restore one with
+`git branch <name> <sha>`.
+
 ### run_onchange scripts
 
 These run automatically during `chezmoi apply` when their tracked content changes.
