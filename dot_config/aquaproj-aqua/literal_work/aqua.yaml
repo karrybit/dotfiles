@@ -7,7 +7,7 @@ checksum:
     - darwin/arm64
 registries:
   - type: standard
-    ref: v4.576.0
+    ref: v4.577.0
 packages:
   - name: ahmetb/kubectx@v0.11.0
   - name: ahmetb/kubectx/kubens@v0.11.0
