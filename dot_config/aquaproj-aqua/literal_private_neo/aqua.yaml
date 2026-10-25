@@ -7,7 +7,7 @@ checksum:
     - darwin/arm64
 registries:
   - type: standard
-    ref: v4.576.0
+    ref: v4.577.0
 packages:
   - name: apple/pkl@0.32.2
   - name: astral-sh/uv@0.13.5
