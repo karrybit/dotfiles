@@ -6,7 +6,8 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/).
 - **Homebrew** manages applications (casks) on macOS, plus the formulae aqua
   cannot provide: aqua itself, chezmoi, libraries and Homebrew-path
   dependencies (openjdk, libpq, zsh-abbr), and tools missing from or built
-  from source in the aqua registry
+  from source in the aqua registry (eza on macOS, where aqua builds it with
+  cargo)
 - **Profiles**: `work` and `private_minipc` are development machines.
   `private_neo` is a thin client for terminal work (shell, git/GitHub, editing,
   Codex), so it gets no language toolchains, JDK, or IDE, and its Rust
