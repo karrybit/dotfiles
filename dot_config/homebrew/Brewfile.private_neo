@@ -1,98 +1,20 @@
 tap "aquaproj/aqua", trusted: true
 tap "microsoft/apm", trusted: true
 tap "olets/tap", trusted: true
-# Run your GitHub Actions locally
-brew "act"
-# Static analysis and lint tool, for (ba)sh scripts
-brew "shellcheck"
-# Static checker for GitHub Actions workflow files
-brew "actionlint"
-# Development kit for the Java programming language
-brew "openjdk"
-# Open-source language and analyzer for software modeling
-brew "alloy-analyzer"
 # Declarative CLI Version manager
 brew "aqua"
-# Automatic configure script builder
-brew "autoconf"
-# Official Amazon AWS command-line interface
-brew "awscli"
-# Clone of cat(1) with syntax highlighting and Git integration
-brew "bat"
 # Manage your dotfiles across multiple diverse machines, securely
 brew "chezmoi"
-# Cross-platform make
-brew "cmake"
-# Power of curl, ease of use of httpie
-brew "curlie"
-# Debugger for the Go programming language
-brew "delve"
-# Load/unload environment variables based on $PWD
-brew "direnv"
-# More intuitive version of du in rust
-brew "dust"
 # Modern, maintained replacement for ls
 brew "eza"
-# Simple, fast and user-friendly alternative to find
-brew "fd"
-# Command-line fuzzy finder written in Go
-brew "fzf"
-# GitHub command-line tool
-brew "gh"
-# Remote repository management made easy
-brew "ghq"
 # Distributed revision control system
 brew "git"
-# Syntax-highlighting pager for git and diff output
-brew "git-delta"
 # GNU implementation of the famous stream editor
 brew "gnu-sed"
-# Task is a task runner/build tool that aims to be simpler and easier to use
-brew "go-task"
-# Language server for the Go language
-brew "gopls"
-# Ping, but with a graph
-brew "gping"
-# Open-source build automation tool based on the Groovy and Kotlin DSL
-brew "gradle"
-# Agent multiplexer that lives in your terminal
-brew "herdr"
-# Command-line benchmarking tool
-brew "hyperfine"
-# Lightweight and flexible command-line JSON processor
-brew "jq"
-# Super fast CLI tool to decode and encode JWTs built in Rust
-brew "jwt-cli"
-# Simple terminal UI for git commands
-brew "lazygit"
-# Postgres C API library
-brew "libpq"
-# Polyglot runtime manager (asdf rust clone)
-brew "mise"
-# Incremental parsing library
-brew "tree-sitter"
-# Ambitious Vim-fork focused on extensibility and agility
-brew "neovim"
-# Better configuration for less
-brew "nickel"
-# CLI for the Pkl programming language
-brew "pkl"
-# Ultra-fast CSV data-wrangling toolkit
-brew "qsv"
-# Search tool like grep and The Silver Searcher
-brew "ripgrep"
-# Cross-shell prompt for astronauts
-brew "starship"
-# Static analysis security scanner for your terraform code
-brew "tfsec"
 # Display directories as trees (with optional color/HTML output)
 brew "tree"
-# Parser generator tool
-brew "tree-sitter-cli"
 # Internet file retriever
 brew "wget"
-# Process YAML, JSON, XML, CSV and properties documents from the CLI
-brew "yq"
 # Agent Package Manager (APM): The NPM for AI-Native Development
 brew "microsoft/apm/apm"
 # Auto-expanding abbreviations manager for zsh, inspired by fish
