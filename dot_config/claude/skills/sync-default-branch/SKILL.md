@@ -94,13 +94,17 @@ squash マージされたブランチはデフォルトブランチの祖先に�
 全コミットを未反映と判定する)。判定は forge に問う:
 
 ```bash
-gh pr list --head <branch> --state all --json number,state,mergedAt \
-  --jq '.[] | select(.state == "MERGED")'
+gh pr list --head <branch> --state all --json number,state,headRefOid |
+  jq --arg tip "$(git rev-parse <branch>)" \
+    '.[] | select(.state == "MERGED" and .headRefOid == $tip)'
 ```
 
 リモートブランチが削除済みでも PR は引ける。未知のブランチ名にはエラーではなく空を返す。
-`MERGED` が返ったものは PR 番号を根拠として `git branch -D` で削除する (`-d` は
-`not fully merged` で拒否する)。空が返ったブランチは未マージか PR 未作成なので、残して報告する。
+返ったものは PR 番号を根拠として `git branch -D` で削除する (`-d` は `not fully merged` で
+拒否する)。`headRefOid` の一致を条件にするのは、PR がマージされた後に同じブランチへ足した
+コミットが PR に含まれていないため。状態だけで判定すると、そのコミットを `-D` で捨てる。
+`MERGED` だが先頭が一致しないブランチ、空が返ったブランチ (未マージか PR 未作成) は、残して
+報告する。
 
 ### 5c. worktree に出ているブランチ
 
