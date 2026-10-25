@@ -13,6 +13,12 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/).
   Codex), so it gets no language toolchains, JDK, or IDE, and its Rust
   scripts and `.config/rust` are excluded in `.chezmoiignore` so nothing
   compiles there
+  Profiles differ only in which tools they include; a given tool is installed
+  the same way on every profile that has it. The one platform exception is
+  eza, which aqua can only build from source on macOS, so macOS profiles use
+  Homebrew and Linux uses aqua. Rust-built tools aqua has no binary for
+  (`dot_config/rust/package`) are installed with `cargo install`, never via
+  the Brewfile
 - **aqua** manages CLI and development tools on every profile
   (`dot_config/aquaproj-aqua/literal_<profile>/aqua.yaml`, checksum-verified;
   `literal_` keeps chezmoi from reading `private_neo` as the `private_` attribute)

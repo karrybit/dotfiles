@@ -22,8 +22,8 @@ __lib_require_commands chezmoi git jq __lib_chezmoi_profile || return 1
     brew autoremove
     brew cleanup
 
-    # --no-go --no-uv: go and uv install their own tools; keep them out of the Brewfile
-    brew bundle dump -f --no-go --no-uv --file "${_brewfile}"
+    # --no-go --no-uv --no-cargo: go, uv, and cargo install their own tools; keep them out of the Brewfile
+    brew bundle dump -f --no-go --no-uv --no-cargo --file "${_brewfile}"
 
     __lib_chezmoi_commit_file \
         "${_brewfile}" \

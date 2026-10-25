@@ -46,6 +46,11 @@
       "algorithm": "sha256"
     },
     {
+      "id": "github_release/github.com/cargo-bins/cargo-binstall/v1.26.1/cargo-binstall-aarch64-apple-darwin.zip",
+      "checksum": "F98F9E19BA97B483D4058D8388A8EC9EE8FFDBA487F4C07AA4516F0EDD44B152",
+      "algorithm": "sha256"
+    },
+    {
       "id": "github_release/github.com/cli/cli/v2.103.2/gh_2.103.2_macOS_arm64.zip",
       "checksum": "5416000F5D17580A187339E0C4068A01CA5C87F7D4FE6CA64933696F967BC418",
       "algorithm": "sha256"

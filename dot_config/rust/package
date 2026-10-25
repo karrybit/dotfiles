@@ -1,8 +1,9 @@
 cargo-upgrades
-cargo-binstall
 cargo-cache
+cargo-deps
 cargo-edit
 cargo-expand
+cargo-modules
 cargo-sort
 cargo-update
 cargo-workspaces
