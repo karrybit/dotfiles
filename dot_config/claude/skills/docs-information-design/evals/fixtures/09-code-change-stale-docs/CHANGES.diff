@@ -1,0 +1,13 @@
+--- a/src/shipit/config.py
++++ b/src/shipit/config.py
+@@ -4,10 +4,10 @@
+ def load():
+     p = argparse.ArgumentParser(prog="shipit")
+-    p.add_argument("--region", default="us-east-1")
++    p.add_argument("--region", required=True, help="deployment region, e.g. ap-northeast-1")
+     p.add_argument("--dry-run", action="store_true")
+-    p.add_argument("--legacy-mode", action="store_true", help="use v1 manifest format")
+     args = p.parse_args()
+-    db_url = os.environ["SHIPIT_DB_URL"]
++    db_url = os.environ["DATABASE_URL"]
+     return args, db_url

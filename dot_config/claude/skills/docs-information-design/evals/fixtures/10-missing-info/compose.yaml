@@ -1,0 +1,8 @@
+services:
+  postgres:
+    image: postgres:16
+    environment: {POSTGRES_DB: tasks_dev, POSTGRES_HOST_AUTH_METHOD: trust}
+    ports: ["5432:5432"]
+  redis:
+    image: redis:7
+    ports: ["6379:6379"]

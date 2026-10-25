@@ -1,0 +1,20 @@
+[
+  {"query": "docs/ 配下に 40 ファイルくらいあるんだけど、どれが最新かわからないし同じこと書いてるページも多い。整理方針を考えて、まず何を消して何をまとめるか提案して", "should_trigger": true},
+  {"query": "READMEが500行超えてて誰も読んでない。インストールと使い方だけ残して他はどうにかしたい。どうするのがいいと思う？", "should_trigger": true},
+  {"query": "I just renamed the `--output-dir` flag to `--out` in cmd/export.go and dropped the `--verbose` flag. can you update whatever docs mention them", "should_trigger": true},
+  {"query": "新しく rate limit 機能を入れたので docs に書いておいて。設定は config/ratelimit.go を見て", "should_trigger": true},
+  {"query": "ARCHITECTURE.md と docs/design/*.md の内容がかなり被ってる気がする。統合すべきか、そのままでいいか判断してほしい", "should_trigger": true},
+  {"query": "このOSSを公開するので、ドキュメント一式を用意して。今はコードしかない", "should_trigger": true},
+  {"query": "our runbook for kafka rebalancing is one giant page with setup, troubleshooting, and a postmortem all mixed together. should we break it up?", "should_trigger": true},
+  {"query": "四半期ごとのドキュメント棚卸し、今回もお願い。古くなってるところがあれば報告だけでいい", "should_trigger": true},
+  {"query": "CONTRIBUTING.md は新人向けに書いてたけど、これからは外部コントリビュータも読む想定。内容を見直して", "should_trigger": true},
+  {"query": "この段落の日本語、読点が多すぎて読みにくいので文体だけ整えて：「本ツールは、設定ファイルを、読み込み、検証し、その結果を、標準出力に、出力します。」", "should_trigger": false},
+  {"query": "README.md の 12 行目の typo 'recieve' を直して", "should_trigger": false},
+  {"query": "internal/server/handler.go が 2000 行あるので、ルーティングと認証とレスポンス生成を別ファイルに分割してリファクタリングして", "should_trigger": false},
+  {"query": "~/.config/claude/CLAUDE.md に「PR を作る前に必ず lint を通す」というルールを足したい。書き方を相談させて", "should_trigger": false},
+  {"query": "今日の調査ログ（Slackのスレッドと3つのURL）を、あとで再利用できるようにノートにまとめておいて", "should_trigger": false},
+  {"query": "write a commit message for the staged changes, they update docs/configuration.md for the new timeout keys", "should_trigger": false},
+  {"query": "README を英語に翻訳して README.en.md を作って。内容は変えなくていい", "should_trigger": false},
+  {"query": "このPRのコードレビューをして。テストが足りてるかも見てほしい", "should_trigger": false},
+  {"query": "openapi.yaml の /users エンドポイントに pagination パラメータを追加して", "should_trigger": false}
+]

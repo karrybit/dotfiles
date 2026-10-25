@@ -1,0 +1,177 @@
+{
+  "skill_name": "docs-information-design",
+  "evals": [
+    {
+      "id": 1,
+      "name": "bloated-readme",
+      "prompt": "README.md が冗長で読みにくいと言われています。利用者向けのREADMEとして整理してください。",
+      "files": ["fixtures/01-bloated-readme"],
+      "expected_output": "Generic history, 'why use', best-practices and summary sections are removed; duplicated feature prose collapses. Install, usage, every flag (matching src/csvcheck/cli.py), exit codes 0/1/2, and the --strict rationale survive. No new files.",
+      "assertions": [
+        {"id": "flags-kept", "type": "script", "text": "README still documents --schema, --delimiter, --strict, --max-errors, --format"},
+        {"id": "exit-codes-kept", "type": "script", "text": "README still documents exit codes 0, 1 and 2"},
+        {"id": "strict-rationale-kept", "type": "judge", "text": "README still explains why --strict is off by default (spreadsheet exports end with an empty line)"},
+        {"id": "history-removed", "type": "script", "text": "The CSV history paragraph (Fortran / 1972) is gone"},
+        {"id": "best-practices-removed", "type": "script", "text": "The generic data-quality best practices list is gone"},
+        {"id": "no-new-files", "type": "script", "text": "No files were created or deleted"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "over-split-docs",
+      "prompt": "docs/getting-started の構成がわかりにくいと新メンバーから言われました。改善してください。",
+      "files": ["fixtures/02-over-split-docs"],
+      "expected_output": "The five tiny sequential pages plus index are consolidated into one getting-started page (or close to it). Every command, the Docker version, port, the host.docker.internal caveat and the status=502 hint survive. README and configuration.md links resolve.",
+      "assertions": [
+        {"id": "pages-consolidated", "type": "script", "text": "docs/getting-started holds at most 2 Markdown files, or one getting-started file replaces the directory"},
+        {"id": "commands-kept", "type": "script", "text": "docker pull, docker run, and curl commands are all still present in docs"},
+        {"id": "caveats-kept", "type": "script", "text": "The localhost/host.docker.internal caveat and the status=502 hint are still present"},
+        {"id": "links-resolve", "type": "script", "text": "Every relative Markdown link in the repo resolves to an existing file"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "mixed-responsibility",
+      "prompt": "README を読んだ利用者から「開発者向けの話が多くて、自分に必要なところがどこかわからない」と言われました。整理してください。",
+      "files": ["fixtures/03-mixed-responsibility"],
+      "expected_output": "User material (install, usage, flags, --delete warning, credential lookup) stays in README. Development setup, internal design and release steps move to contributor/maintainer documents linked from README. The scanner sort-order invariant and the HOMEBREW_TAP_TOKEN hint survive.",
+      "assertions": [
+        {"id": "user-info-in-readme", "type": "script", "text": "README keeps install, --dry-run, --checksum, --delete and its irreversibility warning"},
+        {"id": "release-moved-out", "type": "script", "text": "Release procedure steps (git tag, goreleaser) are no longer in README but exist in another file"},
+        {"id": "invariant-kept", "type": "script", "text": "The rule that scanner must emit paths in lexical order survives somewhere"},
+        {"id": "tap-token-hint-kept", "type": "script", "text": "HOMEBREW_TAP_TOKEN hint survives somewhere"},
+        {"id": "readme-links-moved", "type": "script", "text": "README links to the file(s) that received moved content, and all links resolve"}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "splittable-but-cohesive",
+      "prompt": "docs/configuration.md が長くなってきたので、分割すべきか判断してください。必要なら分割まで進めてください。",
+      "files": ["fixtures/04-splittable-but-cohesive"],
+      "expected_output": "Judges that the single reference read by one reader (operators looking up keys), with cross-references between sections and an existing table of contents, should stay one file. Does not split. May mention small optional improvements. docs/runbook.md names session.secret / session.previous_secrets while the reference defines secret_file / previous_secret_files; a good run reports this mismatch without fixing it unasked.",
+      "assertions": [
+        {"id": "not-split", "type": "script", "text": "No new Markdown files; configuration.md still contains all six sections"},
+        {"id": "reasoned-no-split", "type": "judge", "text": "The response explains the decision not to split in terms of readers, lookup use, or cross-section dependencies rather than length"}
+      ]
+    },
+    {
+      "id": 5,
+      "name": "good-docs-audit",
+      "prompt": "定期的なドキュメントの棚卸しをお願いします。README・CONTRIBUTING・ADR とコードを見比べて、問題があれば報告してください。",
+      "files": ["fixtures/05-good-docs-audit"],
+      "expected_output": "Reads docs and code, finds them consistent and fit for their readers, and reports that no change is needed. Edits nothing. Any reported issue must be real and verified.",
+      "assertions": [
+        {"id": "no-edits", "type": "script", "text": "No file was modified, created or deleted"},
+        {"id": "no-fabricated-issues", "type": "judge", "text": "Reports no change needed, or only issues that are real and verifiable in the fixture; no invented problems presented as defects"}
+      ]
+    },
+    {
+      "id": 6,
+      "name": "architecture-compress",
+      "prompt": "ARCHITECTURE.md を半分くらいの長さに圧縮してください。",
+      "files": ["fixtures/06-architecture-compress"],
+      "expected_output": "Filler (intro, generic DB-selection talk, backup is important, summary) goes. Kept: single binary, SQLite with WAL and the benchmark pointer, rejected PostgreSQL and bbolt with their reasons, single-process constraint with replicas: 1 / Recreate and why RollingUpdate breaks it, Litestream, why cp is unsafe and the .backup command, store package as migration seam.",
+      "assertions": [
+        {"id": "shorter", "type": "script", "text": "ARCHITECTURE.md is at most 70% of its original character count"},
+        {"id": "rejected-alternatives-kept", "type": "script", "text": "PostgreSQL and bbolt/BoltDB are both still named as rejected alternatives"},
+        {"id": "single-process-constraint-kept", "type": "script", "text": "The single-process constraint and replicas: 1 / Recreate survive"},
+        {"id": "backup-guidance-kept", "type": "script", "text": "Litestream and the sqlite3 .backup command survive"},
+        {"id": "reasons-kept", "type": "judge", "text": "The reasons for rejecting PostgreSQL (ops burden for small self-hosters) and bbolt (no SQL for search/aggregation), and why RollingUpdate is unsafe, survive"}
+      ]
+    },
+    {
+      "id": 7,
+      "name": "local-paragraph-edit",
+      "prompt": "README.md の Authentication 節にある OAuth のトークン更新についての段落（「For long-running processes」で始まる段落）だけを、わかりやすく書き直してください。",
+      "files": ["fixtures/07-local-paragraph-edit"],
+      "expected_output": "Only that paragraph changes; all its facts survive (one-hour token, refresh 60 s before expiry, auto_refresh=False requires client.refresh(), AuthError raised on the next request). The duplicated Pagination section is not touched, though it may be mentioned.",
+      "assertions": [
+        {"id": "diff-bounded", "type": "script", "text": "Every changed line lies inside the Authentication section"},
+        {"id": "duplicate-pagination-untouched", "type": "script", "text": "Both Pagination sections are still present unchanged"},
+        {"id": "facts-kept", "type": "script", "text": "The rewritten section still mentions one hour, 60 seconds, auto_refresh=False, client.refresh(), AuthError"}
+      ]
+    },
+    {
+      "id": 8,
+      "name": "audience-change",
+      "prompt": "QUICKSTART.md はこれまで Kubernetes に慣れた SRE 向けでしたが、今後は Kubernetes をほとんど触ったことのない新卒のアプリケーションエンジニアもこれでステージングにデプロイします。SRE が使い続けられることも保ちつつ、対応してください。",
+      "files": ["fixtures/08-audience-change"],
+      "expected_output": "Adds what a newcomer needs to succeed (what context/namespace/secret mean in one line each, how to check them, what success looks like, what to do when not ready, when to roll back), keeps every command, and keeps a fast path for SREs. Does not pad with generic Kubernetes tutorials.",
+      "assertions": [
+        {"id": "commands-kept", "type": "script", "text": "All original kubectl/curl commands are still present"},
+        {"id": "newcomer-support", "type": "judge", "text": "A newcomer is told what success looks like and what to do if the pod is not ready, and the abbreviated prerequisites are made understandable"},
+        {"id": "expert-path-kept", "type": "judge", "text": "An SRE can still find and run the commands quickly without wading through tutorial prose"},
+        {"id": "no-generic-padding", "type": "judge", "text": "No generic Kubernetes background that the deploy task does not need"}
+      ]
+    },
+    {
+      "id": 9,
+      "name": "code-change-stale-docs",
+      "prompt": "src/shipit/config.py を変更しました（差分は CHANGES.diff）。この変更に合わせてドキュメントを更新してください。",
+      "files": ["fixtures/09-code-change-stale-docs"],
+      "expected_output": "README and docs/operations.md switch to DATABASE_URL, --region becomes required with no us-east-1 default, --legacy-mode is removed, and the troubleshooting entries are updated or removed. docs/faq.md is untouched. ADR 0003 keeps its original decision; at most its status is marked superseded, and the conflict is flagged to the user. No new files.",
+      "assertions": [
+        {"id": "env-var-updated", "type": "script", "text": "README.md and docs/operations.md no longer mention SHIPIT_DB_URL and do mention DATABASE_URL"},
+        {"id": "legacy-mode-removed", "type": "script", "text": "No document still offers --legacy-mode"},
+        {"id": "region-default-removed", "type": "script", "text": "README and operations.md no longer claim a us-east-1 default"},
+        {"id": "faq-untouched", "type": "script", "text": "docs/faq.md is unchanged"},
+        {"id": "adr-history-preserved", "type": "script", "text": "ADR 0003 still records SHIPIT_DB_URL as its decision (not rewritten to DATABASE_URL)"},
+        {"id": "adr-conflict-flagged", "type": "judge", "text": "The response or the ADR status flags that ADR 0003 has been superseded by the change"},
+        {"id": "no-new-files", "type": "script", "text": "No new files besides possibly a superseding ADR"}
+      ]
+    },
+    {
+      "id": 10,
+      "name": "missing-info",
+      "prompt": "新メンバーが README どおりに手順を進めても API が起動しないと言っています。README を直してください。",
+      "files": ["fixtures/10-missing-info"],
+      "expected_output": "Adds the missing, code-verified prerequisites in order: start Postgres and Redis (compose.yaml), set REDIS_URL (required, no default), run make migrate before make run. Does not rewrite unrelated parts or invent steps.",
+      "assertions": [
+        {"id": "redis-url-added", "type": "script", "text": "README mentions REDIS_URL"},
+        {"id": "migrate-before-run", "type": "script", "text": "README mentions make migrate, and it appears before make run"},
+        {"id": "services-started", "type": "script", "text": "README tells the reader to start the compose services (docker compose up or equivalent)"},
+        {"id": "no-invented-steps", "type": "judge", "text": "Every added command or variable exists in the repository"}
+      ]
+    },
+    {
+      "id": 11,
+      "name": "useful-repetition",
+      "prompt": "docs/runbook-failover.md の重複を減らして、すっきりさせてください。",
+      "files": ["fixtures/11-useful-repetition"],
+      "expected_output": "Removes the self-describing intro and the Summary section. Keeps the fencing warning at both points of danger (before promote in step 3 and before a retry in step 7), with their distinct reasons (split brain; auto-recovery restarts PostgreSQL). All commands survive.",
+      "assertions": [
+        {"id": "intro-or-summary-removed", "type": "script", "text": "The 'About this runbook' intro or the Summary section is gone"},
+        {"id": "warning-at-both-steps", "type": "judge", "text": "A fencing warning still sits at the promote step and at the retry step"},
+        {"id": "auto-recovery-reason-kept", "type": "script", "text": "The auto-recovery restart reason survives"},
+        {"id": "commands-kept", "type": "script", "text": "pg_ctl promote, set-db-host.sh, restart-apps.sh, healthz/write and rebuild-replica.sh all survive"}
+      ]
+    },
+    {
+      "id": 12,
+      "name": "new-project-docs",
+      "prompt": "このリポジトリにはまだドキュメントがありません。必要なドキュメントを整備してください。",
+      "files": ["fixtures/12-new-project-docs"],
+      "expected_output": "Creates a minimal set, typically a single README covering what logsweep does, install/build, flags with defaults, and the non-obvious behavior (non-recursive, .gz skipped so reruns are idempotent, age by mtime, exit codes). Does not create CONCEPT/ARCHITECTURE/ADR/CONTRIBUTING by default or invent features.",
+      "assertions": [
+        {"id": "minimal-set", "type": "script", "text": "At most two new Markdown files were created"},
+        {"id": "flags-documented", "type": "script", "text": "-dir, -pattern, -max-age, -compress, -dry-run are all documented"},
+        {"id": "behavior-documented", "type": "judge", "text": "Non-recursive sweep, .gz skipping, and mtime-based age are documented"},
+        {"id": "no-invented-features", "type": "judge", "text": "No feature, flag or install channel that the code does not support is claimed"}
+      ]
+    },
+    {
+      "id": 13,
+      "name": "add-feature-docs",
+      "prompt": "Webhook の HMAC 署名検証を実装しました（relayd/verify.py）。ドキュメントに反映してください。",
+      "files": ["fixtures/13-add-feature-docs"],
+      "expected_output": "Adds verify.* keys (secret_env, previous_secret_env, header default X-Hub-Signature-256) to the configuration reference, adds secret rotation to operations, removes the README claim that relayd does not authenticate requests, and notes that failed verification returns 401 without forwarding or retrying. Prefers existing documents over a new page.",
+      "assertions": [
+        {"id": "stale-claim-removed", "type": "script", "text": "README no longer says relayd does not authenticate incoming requests"},
+        {"id": "config-keys-documented", "type": "script", "text": "docs/configuration.md documents secret_env, previous_secret_env and the header default"},
+        {"id": "rotation-documented", "type": "judge", "text": "Secret rotation using previous_secret_env is explained where operators look"},
+        {"id": "failure-behavior-documented", "type": "script", "text": "401 on failed verification is documented"},
+        {"id": "existing-docs-preferred", "type": "script", "text": "No new Markdown file, or the response justifies one"}
+      ]
+    }
+  ]
+}

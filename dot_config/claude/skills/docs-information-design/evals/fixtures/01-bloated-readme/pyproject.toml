@@ -1,0 +1,8 @@
+[project]
+name = "csvcheck"
+version = "0.4.1"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+csvcheck = "csvcheck.cli:main"
