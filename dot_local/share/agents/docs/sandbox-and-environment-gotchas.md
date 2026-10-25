@@ -76,10 +76,13 @@ which only ever runs `git branch -v`, `git worktree list`, and a delete loop:
   failure. The branch you are on right after a PR merges is exactly the one most
   likely to be a target, so this is the common case rather than an edge.
 
-The `sync-default-branch` skill covers the same intent without those
-properties: it moves to the default branch before deleting anything, selects on
-positive evidence, and reserves `-D` for a branch a `MERGED` pull request
-accounts for.
+`git-vacuum` (`dot_config/zsh/functions/git-vacuum` in the chezmoi source)
+covers the same intent without the first two properties: it selects on positive
+evidence — the tip is contained in the origin default branch, or a `MERGED`
+pull request's head is the local tip — and only plans until given `--apply`,
+logging each deleted branch with its SHA. It skips the branch the main checkout
+is on and does not report the skip, so the checkout moves to the default branch
+first.
 
 ## Branching From A Remote Ref
 

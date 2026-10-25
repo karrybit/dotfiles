@@ -278,11 +278,16 @@
   current` already covers it.
 - Branch from a remote ref with `git branch --no-track <new> <remote-ref> && git
   checkout <new>`, never with `git switch -c` or `git checkout -b`.
-- Clean up merged local branches with the `sync-default-branch` skill: it returns
-  to the default branch first, then deletes only on evidence — an ancestor of the
-  base branch, or a `MERGED` pull request when the merge was a squash. `[gone]`
-  markers never appear on branches pushed without `-u`, so cleanup keyed off them
-  finds nothing here. Deleting a branch another tool gave tracking config leaves
+- Clean up merged branches and worktrees with `git-vacuum`, an autoloaded zsh
+  function reachable from the Bash tool as `zsh -ic 'git-vacuum "$@"' _ <repo>`.
+  Always name the repository; without one it covers every ghq repository. It
+  keeps the branch the main checkout is on, so switch that checkout to the
+  default branch and `git pull --ff-only` first. Show its plan to the user and
+  add `--apply` only after they approve, since it also removes idle worktrees;
+  `--apply` writes its restore log under `$XDG_STATE_HOME`, so request approval
+  to run it outside the sandbox on the first attempt. It selects on evidence of
+  merge, not on `[gone]` markers, which never appear on branches pushed without
+  `-u`. Deleting a branch another tool gave tracking config leaves
   its `[branch "..."]` section behind, since removing it needs the denied
   `.git/config` write; report the leftover rather than working around the denial.
 - An apparent `.env*` deletion in `git status`/`git diff` is a sandbox read-deny

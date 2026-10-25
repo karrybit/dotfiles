@@ -130,9 +130,8 @@ PR 番号はタスクファイルに書かない。ブランチ名から `gh pr 
 git worktree remove .claude/worktrees/<id>
 ```
 
-ブランチの削除は `/sync-default-branch` に任せる。デフォルトブランチへ戻して最新化し、マージ
-済みである根拠を確かめてから削除する。`[gone]` マーカーはこの環境では現れないため判定に使わない
-（`~/.local/share/agents/docs/sandbox-and-environment-gotchas.md`）。
+ブランチの削除は `git-vacuum` に任せる。呼び出し方と承認の手順はユーザースコープの
+`CLAUDE.md` の rule に従う。
 
 最後に残骸がないことを確認する。
 
