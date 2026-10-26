@@ -18,7 +18,6 @@ packages:
   - name: bootandy/dust@v1.2.6
   - name: bufbuild/buf@v1.75.0
   - name: BurntSushi/ripgrep@15.2.0
-  - name: cli/cli@v2.103.2
   - name: dandavison/delta@0.20.1
   - name: dathere/qsv@26.0.0
   - name: direnv/direnv@v2.38.2

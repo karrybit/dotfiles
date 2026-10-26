@@ -5,18 +5,20 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/).
 - **chezmoi** manages configuration files (what goes in `~/.config/`, `~/.local/`, etc.)
 - **Homebrew** manages applications (casks) on macOS, plus the formulae aqua
   cannot provide: aqua itself, chezmoi, libraries and Homebrew-path
-  dependencies (openjdk, libpq, zsh-abbr), and tools missing from or built
+  dependencies (openjdk, libpq, zsh-abbr), tools missing from or built
   from source in the aqua registry (eza on macOS, where aqua builds it with
-  cargo)
+  cargo), and gh on macOS, which the Claude desktop app runs from the home
+  directory without `AQUA_GLOBAL_CONFIG`
 - **Profiles**: `work` and `private_minipc` are development machines.
   `private_neo` is a thin client for terminal work (shell, git/GitHub, editing,
   Codex), so it gets no language toolchains, JDK, or IDE, and its Rust
   scripts and `.config/rust` are excluded in `.chezmoiignore` so nothing
   compiles there
   Profiles differ only in which tools they include; a given tool is installed
-  the same way on every profile that has it. The one platform exception is
-  eza, which aqua can only build from source on macOS, so macOS profiles use
-  Homebrew and Linux uses aqua. Rust-built tools aqua has no binary for
+  the same way on every profile that has it. The platform exceptions are
+  eza, which aqua can only build from source on macOS, and gh, which the
+  Claude desktop app on macOS cannot reach through aqua, so macOS profiles
+  use Homebrew for both and Linux uses aqua. Rust-built tools aqua has no binary for
   (`dot_config/rust/package`) are installed with `cargo install`, never via
   the Brewfile
 - **aqua** manages CLI and development tools on every profile
