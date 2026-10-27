@@ -7,8 +7,6 @@ brew "aqua"
 brew "chezmoi"
 # Modern, maintained replacement for ls
 brew "eza"
-# GitHub command-line tool
-brew "gh"
 # Distributed revision control system
 brew "git"
 # GNU implementation of the famous stream editor
@@ -35,5 +33,7 @@ cask "google-japanese-ime"
 cask "itsycal"
 # Keyboard customiser
 cask "karabiner-elements"
+# Software for Logitech devices
+cask "logi-options+"
 # Knowledge base that works on top of a local folder of plain text Markdown files
 cask "obsidian"
