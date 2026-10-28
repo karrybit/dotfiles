@@ -13,6 +13,7 @@ packages:
   - name: astral-sh/uv@0.13.6
   - name: bootandy/dust@v1.2.6
   - name: BurntSushi/ripgrep@15.2.0
+  - name: charmbracelet/glow@v3.0.0
   - name: dandavison/delta@0.20.1
   - name: dathere/qsv@27.0.1
   - name: direnv/direnv@v2.38.2

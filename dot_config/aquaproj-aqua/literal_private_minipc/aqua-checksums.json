@@ -26,6 +26,11 @@
       "algorithm": "sha256"
     },
     {
+      "id": "github_release/github.com/charmbracelet/glow/v3.0.0/glow_3.0.0_Linux_x86_64.tar.gz",
+      "checksum": "13E05E4B2ACC18D2AEE44291AEFE6325B077EC321B631A0CFA780E8E3BC33F78",
+      "algorithm": "sha256"
+    },
+    {
       "id": "github_release/github.com/cli/cli/v2.103.0/gh_2.103.0_linux_amd64.tar.gz",
       "checksum": "FDD768EB70F6409F80FCFA9F3A1C0ADF0FC98D827AB3CE0BED2AC22762C5D786",
       "algorithm": "sha256"
