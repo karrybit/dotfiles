@@ -26,8 +26,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/dathere/qsv/26.0.0/qsv-26.0.0-aarch64-apple-darwin.zip",
-      "checksum": "FEB85AD07A84564E947813B3B847C7628BC7FA56F145C2509BCA719541FB9B06",
+      "id": "github_release/github.com/dathere/qsv/27.0.1/qsv-27.0.1-aarch64-apple-darwin.zip",
+      "checksum": "14A3E2EDEDA8734FA8ECD7DD14DDCF6E9D8B7D19EB1B4088CE6F63E1C9ADDC2A",
       "algorithm": "sha256"
     },
     {
@@ -76,8 +76,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/openai/codex/rust-v0.164.0/codex-package-aarch64-apple-darwin.tar.gz",
-      "checksum": "DD99E9092270691A67BDDE7BE04AC283DEA9DA8E86CBDE356C2CC851A79205FA",
+      "id": "github_release/github.com/openai/codex/rust-v0.165.0/codex-package-aarch64-apple-darwin.tar.gz",
+      "checksum": "34D12384D90F8E09B0B9ABAABF2A0AC02A52093B131504AEAF282107F54A44B2",
       "algorithm": "sha256"
     },
     {
@@ -121,8 +121,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.578.0/registry.yaml",
-      "checksum": "EA4C2D5E969C4DA4C261F87B2B090A2BC137E6DC6406884E380AA465E25EA68D",
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.579.0/registry.yaml",
+      "checksum": "5BC609335C3E930F66B52E4EF44824852868C88898137557B078570C3CE9DF94",
       "algorithm": "sha256"
     }
   ]
