@@ -6,8 +6,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/Kitware/CMake/v4.4.4/cmake-4.4.4-macos-universal.tar.gz",
-      "checksum": "4B7B73704B1DB9B374E5C9AB8E17AC6148B817B6396EE75CD94A852CBAC9D305",
+      "id": "github_release/github.com/Kitware/CMake/v4.4.5/cmake-4.4.5-macos-universal.tar.gz",
+      "checksum": "679E77A96B9EF9484CC6C1445255FC4F84206B48A65420EFBEDF16BDAB55FBFF",
       "algorithm": "sha256"
     },
     {
@@ -51,8 +51,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/dathere/qsv/26.0.0/qsv-26.0.0-aarch64-apple-darwin.zip",
-      "checksum": "FEB85AD07A84564E947813B3B847C7628BC7FA56F145C2509BCA719541FB9B06",
+      "id": "github_release/github.com/dathere/qsv/27.0.1/qsv-27.0.1-aarch64-apple-darwin.zip",
+      "checksum": "14A3E2EDEDA8734FA8ECD7DD14DDCF6E9D8B7D19EB1B4088CE6F63E1C9ADDC2A",
       "algorithm": "sha256"
     },
     {
@@ -196,8 +196,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "http/awscli.amazonaws.com/AWSCLIV2-2.38.6.pkg",
-      "checksum": "0C67CCC431FAC778898283FDA62A9B0D6FA7FA4184A0E990CB6A7B7EC2CDE333",
+      "id": "http/awscli.amazonaws.com/AWSCLIV2-2.39.0.pkg",
+      "checksum": "79808BAE5C61422ADC1FBD14182ABACCA4E6DF11263753033FA69441D0745073",
       "algorithm": "sha256"
     },
     {
@@ -231,8 +231,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.578.0/registry.yaml",
-      "checksum": "EA4C2D5E969C4DA4C261F87B2B090A2BC137E6DC6406884E380AA465E25EA68D",
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.579.0/registry.yaml",
+      "checksum": "5BC609335C3E930F66B52E4EF44824852868C88898137557B078570C3CE9DF94",
       "algorithm": "sha256"
     }
   ]
