@@ -201,13 +201,13 @@
       "algorithm": "sha256"
     },
     {
-      "id": "http/awscli.amazonaws.com/AWSCLIV2-2.39.0.pkg",
-      "checksum": "79808BAE5C61422ADC1FBD14182ABACCA4E6DF11263753033FA69441D0745073",
+      "id": "http/awscli.amazonaws.com/AWSCLIV2-2.39.1.pkg",
+      "checksum": "2A0E523FC3F58EFE7D35914B3CF6A35ADC5820002489B7A4A65E006B2F4073DE",
       "algorithm": "sha256"
     },
     {
-      "id": "http/dl.k8s.io/v1.37.1/bin/darwin/arm64/kubectl",
-      "checksum": "FD65982C97DDAD3106754B69FFA196D0E543AA591930AE52AED1ADFB92F8C77F",
+      "id": "http/dl.k8s.io/v1.37.2/bin/darwin/arm64/kubectl",
+      "checksum": "55701AF0D51815EE335F240E48ACF0959C3C23017ED3FA816E880C4A92BAE581",
       "algorithm": "sha256"
     },
     {
@@ -221,13 +221,13 @@
       "algorithm": "sha256"
     },
     {
-      "id": "http/nodejs.org/dist/v26.12.1/node-v26.12.1-darwin-arm64.tar.gz",
-      "checksum": "1901D539912C02AFA10D1CC126943A8855A7EEDEBE830119463470DB5E6C59E8",
+      "id": "http/nodejs.org/dist/v26.13.0/node-v26.13.0-darwin-arm64.tar.gz",
+      "checksum": "D38BD5E5A2DDCE6BBB5CE45E46E208337DA4D51FFFE611E567FD32073D6439F6",
       "algorithm": "sha256"
     },
     {
-      "id": "http/releases.hashicorp.com/terraform/1.17.0/terraform_1.17.0_darwin_arm64.zip",
-      "checksum": "7472A54CCA911D46C0E399A5EBBCE44444912D0D4DAD7495F37F1FA51E7CA6B7",
+      "id": "http/releases.hashicorp.com/terraform/1.17.1/terraform_1.17.1_darwin_arm64.zip",
+      "checksum": "B1ECB3FE0D0A0290C1AB6F83D967D43F25DA05D0B671EE0FB355252268DCE95A",
       "algorithm": "sha256"
     },
     {
