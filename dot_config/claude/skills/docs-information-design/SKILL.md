@@ -14,6 +14,7 @@ Establish these from the request, the documents, and the repository; ask only fo
 - **Reader and task** for each document in play: who opens it, to do what (act, look something up, understand, decide), and what they already know.
 - **Mode and boundary**: audit (report only), plan (propose changes), or apply (edit). A request to fix one paragraph bounds the edit to that paragraph.
 - **Existing conventions**: the doc set's layout, project instructions, and style guide.
+- **Problem, expected result, evidence, proposed means, decisions made**: keep these five apart when reading the request and the source material. A proposed means (a structure, a split, a template) is a signal to evaluate, not the requirement. When the means is clear but the problem it solves is not, ask what problem it addresses before proceeding; a problem you infer yourself is a guess, and the document would be built around it.
 
 Scale the investigation to the request. For a local edit, read the surrounding section and whatever it links to or is linked from. For work across a doc set, first inventory it: for each file, its reader, its job, what it owns, and what links to it.
 
