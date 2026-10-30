@@ -201,8 +201,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "http/awscli.amazonaws.com/AWSCLIV2-2.39.1.pkg",
-      "checksum": "2A0E523FC3F58EFE7D35914B3CF6A35ADC5820002489B7A4A65E006B2F4073DE",
+      "id": "http/awscli.amazonaws.com/AWSCLIV2-2.39.2.pkg",
+      "checksum": "74153A9818DD70EFE0503253F6E9C994CA93205D87FDA06BDE491AEE9B91DF5B",
       "algorithm": "sha256"
     },
     {
