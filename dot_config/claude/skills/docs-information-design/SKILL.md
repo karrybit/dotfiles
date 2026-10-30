@@ -1,6 +1,6 @@
 ---
 name: docs-information-design
-description: Decide what a technical document or documentation set should contain, where each piece of information belongs, and whether anything should change at all. Use when creating, restructuring, auditing, trimming, splitting, merging, or retargeting project documentation (README, guides, references, design docs, ADRs, runbooks, docs/ trees), when documenting a new feature, and when updating docs after a code change. Not for proofreading or style-only edits.
+description: Decide what a technical document or documentation set should contain, where each piece of information belongs, and whether anything should change at all. Use when a document's content, structure, audience, or placement is undecided or in question: drafting a document whose content or structure is not yet settled, restructuring, auditing, trimming, splitting, merging, moving, retiring, or retargeting documentation (README, design docs, ADRs, specs, runbooks, docs/ trees), checking consistency across documents, documenting a new feature, and finding docs made stale by a code change. Not for writing whose content and structure are already settled, local wording or typo fixes, or proofreading.
 ---
 
 # Documentation information design
@@ -59,6 +59,8 @@ Records of past decisions (ADRs, changelogs, dated reports) describe what was de
 - **Audit**: report problems with evidence, ordered by impact on readers. If the docs serve their readers, say that no change is needed. Leave files untouched.
 - **Plan**: list the operations (what is deleted and why, what moves where, which boundaries change) before editing.
 - **Apply**: make the smallest change set that reaches the goal. For a large restructure the user has not yet seen, present the plan first. Mention problems outside the boundary instead of fixing them.
+
+Sentence-level wording is out of scope; for Japanese prose, apply `japanese-tech-writing`.
 
 When goals conflict, prefer them in this order: factual accuracy and safety; the information readers need; the requested scope and existing work; the placement and structure of the doc set; concision.
 
