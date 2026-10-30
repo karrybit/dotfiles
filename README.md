@@ -204,3 +204,4 @@ These run automatically during `chezmoi apply` when their tracked content change
 - [docs/CHEZMOI.md](docs/CHEZMOI.md) — chezmoi 操作、status シンボル
 - [docs/HERDR.md](docs/HERDR.md) — herdr キーバインド一覧、agent state、Claude Code 連携
 - [docs/TMUX.md](docs/TMUX.md) — tmux キーバインド一覧（herdr 移行期間中の参照用）
+- [docs/WRITING.md](docs/WRITING.md) — 文書作成の Skill 運用（場面ごとの Skill の使い分けと動作確認）

@@ -65,6 +65,9 @@
   `run_onchange_04_prune-skills.sh.tmpl` removes deployed skills whose source
   entry is gone, which chezmoi does not do on its own. It only removes skills
   recorded in its own manifest, so skills installed by other routes survive.
+- When changing the `description` of a document-writing skill
+  (`docs-information-design`, `japanese-tech-writing`) or adding one, update
+  the routing table and test cases in `docs/WRITING.md` in the same change.
 - Claude Code subagents are under `dot_config/claude/agents/` and deploy to
   `~/.config/claude/agents/`.
 - Agent source summaries belong under `~/.local/share/agents/docs/`; only
