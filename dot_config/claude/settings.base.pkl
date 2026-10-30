@@ -135,6 +135,22 @@ settings: Dynamic = new Dynamic {
     ["skill-creator@claude-plugins-official"] = true
     ["security-guidance@claude-plugins-official"] = true
     ["slack@claude-plugins-official"] = true
+    ["yomiyasu@yomiyasu"] = true
+    ["imozuru@imozuru"] = true
+  }
+  extraKnownMarketplaces {
+    ["yomiyasu"] {
+      source {
+        source = "github"
+        repo = "nanaism/yomiyasu"
+      }
+    }
+    ["imozuru"] {
+      source {
+        source = "github"
+        repo = "MaryCache/imozuru"
+      }
+    }
   }
   alwaysThinkingEnabled = true
   effortLevel = "xhigh"
