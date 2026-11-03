@@ -10,7 +10,7 @@ registries:
     ref: v4.581.1
 packages:
   - name: apple/pkl@0.32.2
-  - name: astral-sh/uv@0.13.6
+  - name: astral-sh/uv@0.13.7
   - name: bootandy/dust@v1.2.7
   - name: BurntSushi/ripgrep@15.2.0
   - name: charmbracelet/glow@v3.0.0
