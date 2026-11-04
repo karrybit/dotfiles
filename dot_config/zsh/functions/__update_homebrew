@@ -9,21 +9,21 @@ fi
 
 __lib_require_commands chezmoi git jq __lib_chezmoi_profile || return 1
 
+# zsh ignores errexit, even inside a subshell, while a caller tests the status
+# (`__update_homebrew || _failed=1` in __uppkg), so each step exits explicitly.
 (
-    set -eo pipefail
-
     local _profile
     local _brewfile
 
-    _profile=$(__lib_chezmoi_profile "work")
+    _profile=$(__lib_chezmoi_profile "work") || exit
     _brewfile="${XDG_CONFIG_HOME:-$HOME/.config}/homebrew/Brewfile.${_profile}"
 
-    brew upgrade
-    brew autoremove
-    brew cleanup
+    brew upgrade || exit
+    brew autoremove || exit
+    brew cleanup || exit
 
     # --no-go --no-uv --no-cargo: go, uv, and cargo install their own tools; keep them out of the Brewfile
-    brew bundle dump -f --no-go --no-uv --no-cargo --file "${_brewfile}"
+    brew bundle dump -f --no-go --no-uv --no-cargo --file "${_brewfile}" || exit
 
     __lib_chezmoi_commit_file \
         "${_brewfile}" \

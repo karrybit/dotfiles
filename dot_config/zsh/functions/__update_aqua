@@ -5,15 +5,15 @@ fi
 
 __lib_require_commands chezmoi git jq __lib_chezmoi_profile || return 1
 
+# zsh ignores errexit, even inside a subshell, while a caller tests the status
+# (`__update_aqua || _failed=1` in __uppkg), so each step exits explicitly.
 (
-    set -eo pipefail
-
     local _profile
     local _aqua_dir
     local _aqua_config
     local _token
 
-    _profile=$(__lib_chezmoi_profile "work")
+    _profile=$(__lib_chezmoi_profile "work") || exit
     _aqua_dir="${XDG_CONFIG_HOME:-$HOME/.config}/aquaproj-aqua/${_profile}"
     _aqua_config="${_aqua_dir}/aqua.yaml"
 
@@ -26,11 +26,11 @@ __lib_require_commands chezmoi git jq __lib_chezmoi_profile || return 1
 
     # Homebrew owns the aqua binary on macOS.
     if [[ "${OSTYPE}" != darwin* ]]; then
-        aqua update-aqua
+        aqua update-aqua || exit
     fi
-    aqua -c "${_aqua_config}" update
-    aqua -c "${_aqua_config}" update-checksum -prune
-    aqua -c "${_aqua_config}" install
+    aqua -c "${_aqua_config}" update || exit
+    aqua -c "${_aqua_config}" update-checksum -prune || exit
+    aqua -c "${_aqua_config}" install || exit
 
     __lib_chezmoi_commit_file \
         "${_aqua_dir}" \

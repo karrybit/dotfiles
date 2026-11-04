@@ -139,6 +139,10 @@ upup --vacuum   # the same, then run vacuum if it succeeded
 vacuum          # delete tool caches and unreferenced old versions
 ```
 
+When a package update fails, `upup` still runs the remaining updates, prints a
+warning, and exits non-zero without pushing or running `chezmoi apply`. Commits
+made by the updates that succeeded stay local until the next successful `upup`.
+
 `vacuum` runs one `__clean_<tool>` function per tool and continues past a
 failing step. It removes:
 
