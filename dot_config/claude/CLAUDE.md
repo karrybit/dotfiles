@@ -255,6 +255,14 @@
 - When a preferred tool does not resolve here, say which fallback you are using
   and recommend installing the preferred one, naming the package and where to
   declare it.
+- Send GitHub API requests one at a time, and fold many lookups into one GraphQL
+  query or one search with combined qualifiers. Pass `gh search` qualifiers as
+  flags (`--author=@me`), not inside the query string. On a secondary rate limit
+  (named in the error message; REST returns 403 or 429, GraphQL 200 or 403), wait
+  for `retry-after` when present, else until `x-ratelimit-reset` when
+  `x-ratelimit-remaining` is 0, else at least a minute; then back off
+  exponentially and stop after a fixed number of retries. Background:
+  `~/.local/share/agents/docs/github-api-rate-limits.md`.
 
 ### Chezmoi-Managed Files
 
