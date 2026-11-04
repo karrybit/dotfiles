@@ -36,6 +36,11 @@
       "algorithm": "sha256"
     },
     {
+      "id": "github_release/github.com/backnotprop/plannotator/v0.28.48/plannotator-darwin-arm64",
+      "checksum": "52DF533F6A88DC81FC80CD3E899858104F1036D71FC3A0A5EF6F0F7965FD3CA5",
+      "algorithm": "sha256"
+    },
+    {
       "id": "github_release/github.com/bootandy/dust/v1.2.6/dust-v1.2.6-aarch64-apple-darwin.tar.gz",
       "checksum": "5C37EE0D353165C73AEDD6B21B9133182221EFE08F9A5E76C082D9D6D5A0935D",
       "algorithm": "sha256"

@@ -1,1 +1,4 @@
 export AQUA_GLOBAL_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/aquaproj-aqua/{{ .profile }}/aqua.yaml"
+{{- if stat (joinPath .chezmoi.sourceDir (printf "dot_config/aquaproj-aqua/literal_%s/aqua-policy.yaml" .profile)) }}
+export AQUA_POLICY_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/aquaproj-aqua/{{ .profile }}/aqua-policy.yaml"
+{{- end }}
