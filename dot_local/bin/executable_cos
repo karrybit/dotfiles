@@ -1,0 +1,101 @@
+#!/bin/bash
+# Opens the Chief of Staff workspace (~/cos) in herdr, creating whatever is
+# missing: the herdr server, a workspace labelled "cos", and the CoS Claude
+# Code session. The session is tracked by a fixed ID stored in the CoS
+# directory, so resuming never depends on the display name being unique.
+set -euo pipefail
+
+cos_dir="${COS_DIR:-$HOME/cos}"
+claude_dir="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+id_file="$cos_dir/.cos-session-id"
+name=cos
+
+if [ ! -f "$cos_dir/AGENTS.md" ]; then
+  echo "cos: $cos_dir has no AGENTS.md; set up the CoS directory first" >&2
+  exit 1
+fi
+
+server_running() {
+  herdr status --json | jq -e '.server.running' >/dev/null
+}
+
+# Panes inherit the server's macOS launch context, so the server is started
+# here, from the user's terminal, to keep Keychain access in every pane.
+if ! server_running; then
+  nohup herdr server </dev/null >/dev/null 2>&1 &
+  for _ in $(seq 1 50); do
+    server_running && break
+    sleep 0.2
+  done
+  if ! server_running; then
+    echo "cos: the herdr server did not start" >&2
+    exit 1
+  fi
+fi
+
+workspace=$(herdr workspace list |
+  jq -r --arg l "$name" '[.result.workspaces[] | select(.label == $l)][0].workspace_id // empty')
+free_pane=
+if [ -z "$workspace" ]; then
+  created=$(herdr workspace create --cwd "$cos_dir" --label "$name" --no-focus)
+  workspace=$(jq -r .result.workspace.workspace_id <<<"$created")
+  free_pane=$(jq -r .result.root_pane.pane_id <<<"$created")
+fi
+
+# Starting Claude reports agent_not_ready while a dialog such as workspace
+# trust is open; that pane is still the CoS and the user answers it on attach.
+start_claude() {
+  local pane=$1 err
+  if err=$(herdr agent start "$name" --kind claude --pane "$pane" -- "${claude_args[@]}" 2>&1 >/dev/null); then
+    return 0
+  fi
+  jq -e '.error.code == "agent_not_ready"' <<<"$err" >/dev/null 2>&1
+}
+
+session_id=
+[ -f "$id_file" ] && session_id=$(<"$id_file")
+if [ -n "$session_id" ] && compgen -G "$claude_dir/projects/*/$session_id.jsonl" >/dev/null; then
+  claude_args=(--resume "$session_id")
+else
+  session_id=$(uuidgen | tr '[:upper:]' '[:lower:]')
+  printf '%s\n' "$session_id" >"$id_file"
+  claude_args=(--session-id "$session_id" -n "$name")
+fi
+
+agents=$(herdr agent list)
+if ! jq -e --arg n "$name" '.result.agents[] | select(.name == $n)' <<<"$agents" >/dev/null; then
+  # After a server restart herdr resumes Claude in the restored pane but the
+  # agent comes back without its name.
+  restored=$(jq -r --arg w "$workspace" \
+    '[.result.agents[] | select(.workspace_id == $w and .agent == "claude")][0].pane_id // empty' <<<"$agents")
+  if [ -n "$restored" ]; then
+    herdr agent rename "$restored" "$name" >/dev/null
+  else
+    started=
+    if [ -z "$free_pane" ]; then
+      busy=$(jq -c '[.result.agents[].pane_id]' <<<"$agents")
+      for pane in $(herdr pane list --workspace "$workspace" |
+        jq -r --argjson busy "$busy" '.result.panes[].pane_id | select(. as $p | $busy | index($p) | not)'); do
+        if start_claude "$pane"; then
+          started=1
+          break
+        fi
+      done
+      if [ -z "$started" ]; then
+        free_pane=$(herdr tab create --workspace "$workspace" --cwd "$cos_dir" --label "$name" --no-focus |
+          jq -r .result.root_pane.pane_id)
+      fi
+    fi
+    if [ -z "$started" ] && ! start_claude "$free_pane"; then
+      echo "cos: could not start Claude Code in herdr pane $free_pane" >&2
+      exit 1
+    fi
+  fi
+fi
+
+herdr workspace focus "$workspace" >/dev/null
+herdr agent focus "$name" >/dev/null 2>&1 || true
+
+if [ "${HERDR_ENV:-}" != 1 ]; then
+  exec herdr
+fi

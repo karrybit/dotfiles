@@ -210,6 +210,30 @@ not in herdr's scrollback. herdr pages it back through the agent's own scroll
 interface, but only for an idle agent: `agent read --lines N` returns
 `agent_not_idle` while the agent is working or blocked.
 
+### `cos`
+
+`cos` (`dot_local/bin/executable_cos`) opens a long-lived Claude Code session
+for a work directory, `~/cos` by default (`COS_DIR` overrides it), and creates
+whatever is missing. Running it again only brings the same session back:
+
+1. Starts the herdr server if none is running. It is started from the calling
+   terminal so that panes keep Keychain access.
+2. Finds the workspace labelled `cos`, or creates one rooted at the directory.
+3. Makes sure an agent named `cos` is running there:
+   - Restores the name on a Claude Code agent that a server restart brought
+     back unnamed.
+   - Otherwise starts Claude Code in a free shell pane, or in a new tab when
+     every pane is busy.
+4. Focuses the workspace and attaches. Inside herdr it focuses without
+   attaching.
+
+The session is tracked by a fixed ID in `<dir>/.cos-session-id`, not by its
+display name. `cos` resumes that ID while its transcript exists and starts a
+new session once the transcript is gone, for example after the
+`cleanupPeriodDays` sweep. The directory must already contain `AGENTS.md`:
+`cos` never creates its contents. `HERDR_SESSION` points every step at a named
+herdr session, which keeps experiments off the default server.
+
 ---
 
 ## Operational Notes
