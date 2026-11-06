@@ -6,12 +6,12 @@ dir=$root
 while true; do
     s=$(cd -- "$dir" && {
         [[ "$dir" != "$root" ]] && print '../'
-        command ls -p
+        command ls -pr
     } | fzf --cycle --layout=reverse --prompt="${dir:t}/ > " \
         --bind=right:accept \
         --bind="left:$([[ "$dir" != "$root" ]] && print 'become(echo ../)' || print ignore)" \
         --preview-window='down,60%' \
-        --preview='if [ -d {} ]; then ls -p {}; else case {} in
+        --preview='if [ -d {} ]; then ls -pr {}; else case {} in
             *.md|*.markdown) glow -s dark -w "$FZF_PREVIEW_COLUMNS" {} ;;
             *) bat --color=always --style=numbers --terminal-width="$FZF_PREVIEW_COLUMNS" {} ;;
             esac; fi')
