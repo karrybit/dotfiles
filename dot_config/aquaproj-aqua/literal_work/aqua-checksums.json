@@ -21,8 +21,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/apple/pkl/0.32.2/pkl-macos-aarch64",
-      "checksum": "466952F0B30C93DFA36393A5B3695159917CE4291E3C936A18A0A240CFBE98E9",
+      "id": "github_release/github.com/apple/pkl/0.33.0/pkl-macos-aarch64",
+      "checksum": "E39C157DF0F00A35D34B46270A768784EDCAF509AAFBF743849B27B4C83EF83B",
       "algorithm": "sha256"
     },
     {
@@ -36,8 +36,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/backnotprop/plannotator/v0.28.49/plannotator-darwin-arm64",
-      "checksum": "D6EA8566355BE18FC445178DF0D550B4A2B04A9FBD2B297B1ECE99BE1107446D",
+      "id": "github_release/github.com/backnotprop/plannotator/v0.28.51/plannotator-darwin-arm64",
+      "checksum": "0489448067D490D270DC782D754C3E80890AAC424D10059CEDABA404524D6AA0",
       "algorithm": "sha256"
     },
     {
@@ -86,8 +86,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/gradle/gradle-distributions/v9.8.2/gradle-9.8.2-bin.zip",
-      "checksum": "21BD5DA2DE49B642904077F38C0EFDC7778E92B3ED0889392DCA61B97E389607",
+      "id": "github_release/github.com/gradle/gradle-distributions/v9.9.0/gradle-9.9.0-bin.zip",
+      "checksum": "0B00B0FFE07C4D4789C12D4935A44A7057D55774B7540BD4A3F76F336DEB177A",
       "algorithm": "sha256"
     },
     {
@@ -141,8 +141,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/mikefarah/yq/v4.54.1/yq_darwin_arm64",
-      "checksum": "1AF826B55EE90064B9B9B0E3C02B46EC763ABC2F0FE0EDBB05A7868181ED619E8650218F9F42EF7B96FD0D6F9F5730D10B6F1B89CD183764B79E6B152A2F42C1",
+      "id": "github_release/github.com/mikefarah/yq/v4.54.2/yq_darwin_arm64",
+      "checksum": "D7CFC43FD81E3EB56E4A5E1649C20133DD1A7151C40B702E90B8F6E98BEF272BC81B535B89BBA2DE38CD9FAC114BE534DC76DF062FD2B7B72D28269191A10883",
       "algorithm": "sha512"
     },
     {
@@ -211,8 +211,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "http/awscli.amazonaws.com/AWSCLIV2-2.39.4.pkg",
-      "checksum": "CB586F22B8E884844F17679EE610851703D14AA9E1022BF70D42626B65BD939E",
+      "id": "http/awscli.amazonaws.com/AWSCLIV2-2.39.5.pkg",
+      "checksum": "F89C9288DBD9BD0579914EA3A72ACC14BCA1AE3D3112E92BCB29FF5A48B88131",
       "algorithm": "sha256"
     },
     {
@@ -246,8 +246,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.581.1/registry.yaml",
-      "checksum": "78C9BE2054AEE428D1844DBF87765A7FE0D313E7226ECEB88F958CB7FD98EED8",
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.582.0/registry.yaml",
+      "checksum": "F38A1C5EBC3726395835BFEDEA47512D71951450C97C1C940F0D9FB62CED10A1",
       "algorithm": "sha256"
     }
   ]
