@@ -1,0 +1,8 @@
+# aqua's settings file. It repeats AQUA_GLOBAL_CONFIG and AQUA_POLICY_CONFIG
+# from zshenv for processes that clear the environment before running an aqua
+# proxy, such as brew, whose `brew bundle dump` runs aqua's npm.
+global_config: {{ .chezmoi.homeDir }}/.config/aquaproj-aqua/{{ .profile }}/aqua.yaml
+{{- if stat (joinPath .chezmoi.sourceDir (printf "dot_config/aquaproj-aqua/literal_%s/aqua-policy.yaml" .profile)) }}
+policy:
+  config: {{ .chezmoi.homeDir }}/.config/aquaproj-aqua/{{ .profile }}/aqua-policy.yaml
+{{- end }}

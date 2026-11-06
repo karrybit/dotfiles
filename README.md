@@ -26,7 +26,11 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/).
   `literal_` keeps chezmoi from reading `private_neo` as the `private_` attribute).
   A tool missing from the standard registry goes in the profile's
   `registry.yaml` and is allowed by name in its `aqua-policy.yaml`, which
-  `AQUA_POLICY_CONFIG` loads
+  `AQUA_POLICY_CONFIG` loads. brew clears the environment before running
+  aqua's npm for `brew bundle dump`, so aqua's settings file
+  (`dot_config/aquaproj-aqua/config.yaml.tmpl`) and `dot_npmrc` repeat
+  these paths and `NPM_CONFIG_PREFIX`, keeping npm's global packages in the
+  Brewfile
 - **uv** manages Python (`dot_config/uv/dot_python-version`) and **rustup**
   manages the Rust toolchain (not on `private_neo`), since aqua does not
   handle those runtimes

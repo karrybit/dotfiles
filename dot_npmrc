@@ -1,0 +1,4 @@
+# npm reads this file only when NPM_CONFIG_USERCONFIG is unset, such as under
+# brew, which clears the environment before `brew bundle dump` runs npm. It
+# repeats NPM_CONFIG_PREFIX from zshenv so `npm list -g` sees the same packages.
+prefix=${HOME}/.local/share/npm
