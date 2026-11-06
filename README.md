@@ -200,13 +200,21 @@ Markdown previews with glow and other text with bat, and
 [toggle-pane](https://github.com/yazi-rs/plugins/tree/main/toggle-pane.yazi)
 binds `T` to maximize or restore the preview pane.
 
-Another process can point a running yazi at a file through
-[DDS](https://yazi-rs.github.io/docs/dds):
+`init.lua` opens two tabs, switched with `1`/`2` or a click on the tab bar:
+
+- Tab 1, `conversation`, shows only the preview, full width, of the latest
+  file another process publishes as a `topic` through
+  [DDS](https://yazi-rs.github.io/docs/dds).
+- Tab 2, `files`, is the usual file list and preview. Topics do not move it,
+  so switching back to tab 1 shows the latest topic.
 
 ```sh
-yazi --client-id 4242                  # in the pane that shows the files
-ya emit-to 4242 reveal path/to/file.md # from any other shell
+yazi --client-id 4242                                    # in the pane that shows the files
+ya pub-to 4242 topic --str "$(realpath path/to/file.md)" # from any other shell
 ```
+
+The topic body is an absolute path, since the sender's working directory is
+not yazi's.
 
 ### run_onchange scripts
 
