@@ -210,24 +210,6 @@ The preview shows the hovered file (glow for Markdown, bat otherwise) or the
 folder's contents. Mouse clicks and the wheel select entries; `Esc` or
 `Ctrl-C` quits.
 
-### File manager (yazi)
-
-yazi's configuration is `dot_config/yazi/`. It is laid out for a narrow pane:
-`[mgr] ratio` shows only the current directory's listing, without the parent
-and preview columns. Opening a folder (`Enter` or `l`) enters it, and `h` goes
-back to the parent. Opening a file shows it full-screen in a pager in the same
-pane instead of an editor — Markdown with `glow -p`, other text, JSON, and
-JavaScript with `bat --paging=always` — and quitting the pager (`q`) returns
-to the listing.
-
-`package.toml` pins the plugins, which `ya pkg install` deploys to
-`~/.config/yazi/plugins/` as runtime state:
-[toggle-pane](https://github.com/yazi-rs/plugins/tree/main/toggle-pane.yazi)
-binds `T` to show the hovered file's preview over the whole pane and to
-restore the listing, and
-[piper](https://github.com/yazi-rs/plugins/tree/main/piper.yazi) renders that
-preview with glow for Markdown and bat for other text, JSON, and JavaScript.
-
 ### run_onchange scripts
 
 These run automatically during `chezmoi apply` when their tracked content changes.
@@ -240,8 +222,6 @@ These run automatically during `chezmoi apply` when their tracked content change
 | `run_onchange_03_claude_settings.sh.tmpl` | Claude settings pkl files changed | Regenerate `~/.config/claude/settings.json` |
 | `run_onchange_04_prune-skills.sh.tmpl` | Skills under `dot_config/claude/skills/` changed | Remove deployed skills whose source entry is gone (chezmoi leaves such targets in place) |
 | `run_onchange_07_uv_python.sh.tmpl` | `uv/.python-version` changed | `uv python install` for the pinned version, linking `python`/`python3` |
-| `run_onchange_08_yazi_packages.sh.tmpl` | `yazi/package.toml` changed | `ya pkg install` for the pinned yazi plugins |
-
 ---
 
 ## Reference

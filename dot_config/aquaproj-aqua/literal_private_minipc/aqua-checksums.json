@@ -141,11 +141,6 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/sxyazi/yazi/v26.9.1/yazi-x86_64-unknown-linux-musl.zip",
-      "checksum": "9B9C39DECCCF8CB0FF53A7D637D38F8A79D93BBD0099F4EA9C619EF6BB392F5D",
-      "algorithm": "sha256"
-    },
-    {
       "id": "github_release/github.com/terraform-linters/tflint/v0.64.0/tflint_linux_amd64.zip",
       "checksum": "CCA9D13E2E1D7A2C627AF60FF899A3C9B74212899416AEB96EC764D2EF954537",
       "algorithm": "sha256"

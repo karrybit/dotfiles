@@ -111,11 +111,6 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/sxyazi/yazi/v26.9.1/yazi-aarch64-apple-darwin.zip",
-      "checksum": "3921182A21CCEB0A505E5DAC578E1487D48104CAA5F114E9F8ADF40B5A7289A9",
-      "algorithm": "sha256"
-    },
-    {
       "id": "github_release/github.com/tmux/tmux-builds/v3.7c/tmux-3.7c-macos-arm64.tar.gz",
       "checksum": "0A763DD0380AA980D239509654DA1BC7455843706A3C050F6709C8CD2E13D12D",
       "algorithm": "sha256"

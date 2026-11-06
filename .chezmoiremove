@@ -13,5 +13,6 @@
 # Nix package management was retired.
 .config/zsh/functions/__update_nix
 
-# yazi runs with its default single tab and pane ratio.
-.config/yazi/init.lua
+# yazi was replaced by the fb zsh function. Its plugins under
+# .config/yazi/plugins were installed outside chezmoi.
+.config/yazi
