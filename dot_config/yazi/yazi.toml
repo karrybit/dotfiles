@@ -7,3 +7,11 @@ mouse_events = [ "click", "scroll", "drag" ]
 [[plugin.prepend_previewers]]
 url = "*.md"
 run = 'piper -- CLICOLOR_FORCE=1 glow -w="$w" -s="$([ "$t" = light ] && echo light || echo dark)" "$1"'
+
+[[plugin.prepend_previewers]]
+mime = "text/*"
+run  = 'piper -- bat -p --color=always "$1"'
+
+[[plugin.prepend_previewers]]
+mime = "application/{json,ndjson,javascript}"
+run  = 'piper -- bat -p --color=always "$1"'

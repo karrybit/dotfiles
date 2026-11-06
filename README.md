@@ -196,7 +196,7 @@ Every deletion is appended with its SHA to
 yazi's configuration is `dot_config/yazi/`. `package.toml` pins the plugins,
 which `ya pkg install` deploys to `~/.config/yazi/plugins/` as runtime state:
 [piper](https://github.com/yazi-rs/plugins/tree/main/piper.yazi) renders
-Markdown previews with glow, and
+Markdown previews with glow and other text with bat, and
 [toggle-pane](https://github.com/yazi-rs/plugins/tree/main/toggle-pane.yazi)
 binds `T` to maximize or restore the preview pane.
 
