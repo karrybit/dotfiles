@@ -36,8 +36,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/backnotprop/plannotator/v0.28.48/plannotator-darwin-arm64",
-      "checksum": "52DF533F6A88DC81FC80CD3E899858104F1036D71FC3A0A5EF6F0F7965FD3CA5",
+      "id": "github_release/github.com/backnotprop/plannotator/v0.28.49/plannotator-darwin-arm64",
+      "checksum": "D6EA8566355BE18FC445178DF0D550B4A2B04A9FBD2B297B1ECE99BE1107446D",
       "algorithm": "sha256"
     },
     {
@@ -171,8 +171,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/sharkdp/fd/v10.5.0/fd-v10.5.0-aarch64-apple-darwin.tar.gz",
-      "checksum": "B67E1836C468E42E411984B56E52FA7ABEC08C2BD22C867398E7CC134AAC5E12",
+      "id": "github_release/github.com/sharkdp/fd/v10.5.1/fd-v10.5.1-aarch64-apple-darwin.tar.gz",
+      "checksum": "2D336895ED27B14C5CC9FC5EB22DF03B3EE842B5DCE80060E99D9CDC1B1B9FC7",
       "algorithm": "sha256"
     },
     {
@@ -211,8 +211,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "http/awscli.amazonaws.com/AWSCLIV2-2.39.3.pkg",
-      "checksum": "F9014F2EDC9D4F40CB1F6662F1EC6D0F2D89D60D9D452F830008D9D92CA49F22",
+      "id": "http/awscli.amazonaws.com/AWSCLIV2-2.39.4.pkg",
+      "checksum": "CB586F22B8E884844F17679EE610851703D14AA9E1022BF70D42626B65BD939E",
       "algorithm": "sha256"
     },
     {
