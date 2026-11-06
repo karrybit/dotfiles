@@ -1,0 +1,10 @@
+#!/bin/bash
+# run_onchange_: dot_config/yazi/package.toml が変わった時だけ再実行される
+# hash: {{ include "dot_config/yazi/package.toml" | sha256sum }}
+set -e
+
+if ! command -v ya >/dev/null 2>&1; then
+  exit 0
+fi
+
+ya pkg install

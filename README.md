@@ -191,6 +191,23 @@ Every deletion is appended with its SHA to
 `$XDG_STATE_HOME/git-vacuum/deleted.tsv`; restore one with
 `git branch <name> <sha>`.
 
+### File manager (yazi)
+
+yazi's configuration is `dot_config/yazi/`. `package.toml` pins the plugins,
+which `ya pkg install` deploys to `~/.config/yazi/plugins/` as runtime state:
+[piper](https://github.com/yazi-rs/plugins/tree/main/piper.yazi) renders
+Markdown previews with glow, and
+[toggle-pane](https://github.com/yazi-rs/plugins/tree/main/toggle-pane.yazi)
+binds `T` to maximize or restore the preview pane.
+
+Another process can point a running yazi at a file through
+[DDS](https://yazi-rs.github.io/docs/dds):
+
+```sh
+yazi --client-id 4242                  # in the pane that shows the files
+ya emit-to 4242 reveal path/to/file.md # from any other shell
+```
+
 ### run_onchange scripts
 
 These run automatically during `chezmoi apply` when their tracked content changes.
@@ -203,6 +220,7 @@ These run automatically during `chezmoi apply` when their tracked content change
 | `run_onchange_03_claude_settings.sh.tmpl` | Claude settings pkl files changed | Regenerate `~/.config/claude/settings.json` |
 | `run_onchange_04_prune-skills.sh.tmpl` | Skills under `dot_config/claude/skills/` changed | Remove deployed skills whose source entry is gone (chezmoi leaves such targets in place) |
 | `run_onchange_07_uv_python.sh.tmpl` | `uv/.python-version` changed | `uv python install` for the pinned version, linking `python`/`python3` |
+| `run_onchange_08_yazi_packages.sh.tmpl` | `yazi/package.toml` changed | `ya pkg install` for the pinned yazi plugins |
 
 ---
 
