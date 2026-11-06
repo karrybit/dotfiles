@@ -8,10 +8,12 @@ while true; do
         [[ "$dir" != "$root" ]] && print '../'
         command ls -p
     } | fzf --cycle --layout=reverse --prompt="${dir:t}/ > " \
-        --preview-window='right,50%,<50(down,50%)' \
+        --bind=right:accept \
+        --bind="left:$([[ "$dir" != "$root" ]] && print 'become(echo ../)' || print ignore)" \
+        --preview-window='down,60%' \
         --preview='if [ -d {} ]; then ls -p {}; else case {} in
             *.md|*.markdown) glow -s dark -w "$FZF_PREVIEW_COLUMNS" {} ;;
-            *) bat --color=always --style=numbers {} ;;
+            *) bat --color=always --style=numbers --terminal-width="$FZF_PREVIEW_COLUMNS" {} ;;
             esac; fi')
     [[ -z "$s" ]] && return 0
     if [[ "$s" == '../' ]]; then
@@ -23,7 +25,7 @@ while true; do
         dir=$target
     else
         case "$target" in
-            *.md|*.markdown) glow -p "$target" ;;
+            *.md|*.markdown) glow -p -w $(( COLUMNS - 4 )) "$target" ;;
             *) bat --paging=always "$target" ;;
         esac
     fi

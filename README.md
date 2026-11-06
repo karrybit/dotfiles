@@ -206,9 +206,11 @@ folder enters it and `../` goes back to the parent; `../` is not shown in the
 starting directory, so browsing stays inside it. Selecting a file opens it in a
 pager in the same terminal — Markdown with `glow -p`, everything else with
 `bat --paging=always` — and quitting the pager (`q`) returns to the listing.
-The preview shows the hovered file (glow for Markdown, bat otherwise) or the
-folder's contents. Mouse clicks and the wheel select entries; `Esc` or
-`Ctrl-C` quits.
+`Right` does the same as `Enter`, and `Left` goes to the parent (nothing in the
+starting directory), so the arrow keys do not move the cursor in the query.
+The preview, below the listing at the pane's full width, shows the hovered
+file (glow for Markdown, bat otherwise) or the folder's contents. Mouse clicks
+and the wheel select entries; `Esc` or `Ctrl-C` quits.
 
 ### run_onchange scripts
 
