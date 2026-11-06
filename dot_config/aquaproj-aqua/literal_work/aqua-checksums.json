@@ -186,6 +186,11 @@
       "algorithm": "sha256"
     },
     {
+      "id": "github_release/github.com/sxyazi/yazi/v26.9.1/yazi-aarch64-apple-darwin.zip",
+      "checksum": "3921182A21CCEB0A505E5DAC578E1487D48104CAA5F114E9F8ADF40B5A7289A9",
+      "algorithm": "sha256"
+    },
+    {
       "id": "github_release/github.com/terraform-linters/tflint/v0.65.0/tflint_darwin_arm64.zip",
       "checksum": "5A71C63481BA56760864298011FDB7317A9AE80A0BBAECEEFA35883C7F62AC71",
       "algorithm": "sha256"
