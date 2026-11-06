@@ -197,12 +197,21 @@ Every deletion is appended with its SHA to
 
 ### File manager (yazi)
 
-yazi's configuration is `dot_config/yazi/`. `package.toml` pins the plugins,
-which `ya pkg install` deploys to `~/.config/yazi/plugins/` as runtime state:
-[piper](https://github.com/yazi-rs/plugins/tree/main/piper.yazi) renders
-Markdown previews with glow and other text, JSON, and JavaScript with bat, and
+yazi's configuration is `dot_config/yazi/`. It is laid out for a narrow pane:
+`[mgr] ratio` shows only the current directory's listing, without the parent
+and preview columns. Opening a folder (`Enter` or `l`) enters it, and `h` goes
+back to the parent. Opening a file shows it full-screen in a pager in the same
+pane instead of an editor — Markdown with `glow -p`, other text, JSON, and
+JavaScript with `bat --paging=always` — and quitting the pager (`q`) returns
+to the listing.
+
+`package.toml` pins the plugins, which `ya pkg install` deploys to
+`~/.config/yazi/plugins/` as runtime state:
 [toggle-pane](https://github.com/yazi-rs/plugins/tree/main/toggle-pane.yazi)
-binds `T` to maximize or restore the preview pane.
+binds `T` to show the hovered file's preview over the whole pane and to
+restore the listing, and
+[piper](https://github.com/yazi-rs/plugins/tree/main/piper.yazi) renders that
+preview with glow for Markdown and bat for other text, JSON, and JavaScript.
 
 ### run_onchange scripts
 
