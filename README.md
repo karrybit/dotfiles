@@ -195,6 +195,21 @@ Every deletion is appended with its SHA to
 `$XDG_STATE_HOME/git-vacuum/deleted.tsv`; restore one with
 `git branch <name> <sha>`.
 
+### File browser (fb)
+
+```bash
+fb [dir]   # browse dir (default: the current directory) one level at a time
+```
+
+`fb` lists one directory at a time in fzf, without dotfiles. Selecting a
+folder enters it and `../` goes back to the parent; `../` is not shown in the
+starting directory, so browsing stays inside it. Selecting a file opens it in a
+pager in the same terminal — Markdown with `glow -p`, everything else with
+`bat --paging=always` — and quitting the pager (`q`) returns to the listing.
+The preview shows the hovered file (glow for Markdown, bat otherwise) or the
+folder's contents. Mouse clicks and the wheel select entries; `Esc` or
+`Ctrl-C` quits.
+
 ### File manager (yazi)
 
 yazi's configuration is `dot_config/yazi/`. It is laid out for a narrow pane:
