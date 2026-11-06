@@ -12,3 +12,6 @@
 
 # Nix package management was retired.
 .config/zsh/functions/__update_nix
+
+# yazi runs with its default single tab and pane ratio.
+.config/yazi/init.lua
