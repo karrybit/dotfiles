@@ -20,10 +20,21 @@ print -r -- "$root" >| "$state"
         else print "execute(eval \"\$FB_OPEN\")"; fi' \
     FB_LEFT='d=$(<"$FB_STATE"); [[ $d == "$FB_ROOT" ]] || { n=${d:h}; eval "$FB_GO"; }' \
     FB_OPEN='t=$(<"$FB_STATE")/$FZF_CURRENT_ITEM
+        # Restore only after a successful read, so a failed lookup never
+        # clears a label the pane already had.
+        if [[ -n $HERDR_PANE_ID ]] && (( $+commands[herdr] && $+commands[jq] )) &&
+            l=$(herdr pane get "$HERDR_PANE_ID" 2>/dev/null |
+                jq -er ".result.pane | select(.pane_id) | .label // \"\"" 2>/dev/null); then
+            herdr pane rename "$HERDR_PANE_ID" "${l:+$l - }${t#${FB_ROOT%/}/}" >/dev/null 2>&1
+        else unset l; fi
         case $t in
             *.md|*.markdown) glow -p -w $(( FZF_COLUMNS - 4 )) "$t" ;;
             *) bat --paging=always "$t" ;;
-        esac' \
+        esac
+        if (( $+l )); then
+            if [[ -n $l ]]; then herdr pane rename "$HERDR_PANE_ID" "$l"
+            else herdr pane rename "$HERDR_PANE_ID" --clear; fi >/dev/null 2>&1
+        fi' \
     fzf --with-shell='zsh -fc' --cycle --layout=reverse --prompt="${root:t}/ > " \
         --bind='start:reload(eval "$FB_LIST")' \
         --bind='enter,right:transform(s={}; eval "$FB_ENTER")' \
