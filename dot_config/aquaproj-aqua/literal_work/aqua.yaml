@@ -52,6 +52,7 @@ packages:
   - name: orf/gping@gping-v1.21.0
   - name: rhysd/actionlint@v1.7.12
   - name: rs/curlie@v1.8.2
+  - name: rvben/rumdl@v0.3.2
   - name: sharkdp/bat@v0.26.1
   - name: sharkdp/fd@v10.5.1
   - name: sharkdp/hyperfine@v2.0.0

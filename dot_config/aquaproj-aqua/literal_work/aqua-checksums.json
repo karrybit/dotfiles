@@ -161,6 +161,11 @@
       "algorithm": "sha256"
     },
     {
+      "id": "github_release/github.com/rvben/rumdl/v0.3.2/rumdl-v0.3.2-aarch64-apple-darwin.tar.gz",
+      "checksum": "A1EEFB1CD2E0CAFA42F0CA98D3F8713D7E73F9EBA77FC8EF0ED6836875197935",
+      "algorithm": "sha256"
+    },
+    {
       "id": "github_release/github.com/sharkdp/bat/v0.26.1/bat-v0.26.1-aarch64-apple-darwin.tar.gz",
       "checksum": "E30BEFF26779C9BF60BB541E1D79046250CB74378F2757F8EB250AFDDB19E114",
       "algorithm": "sha256"
