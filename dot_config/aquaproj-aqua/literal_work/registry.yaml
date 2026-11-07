@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/aquaproj/aqua/main/json-schema/registry.json
+# Packages missing from the aqua standard registry.
+packages:
+  - type: go_install
+    repo_owner: tomasz-tomczyk
+    repo_name: crit
+    path: github.com/tomasz-tomczyk/crit/cmd/crit
+    description: Review AI coding agents' plans, diffs and running apps in the browser
+    files:
+      - name: crit

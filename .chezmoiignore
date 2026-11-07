@@ -36,6 +36,10 @@ docs
 .config/claude/settings.json
 .config/claude/settings.work.pkl
 
+{{ if ne .profile "work" -}}
+.crit.config.json
+{{ end -}}
+
 # private_neo is a thin client: no Rust toolchain, no source builds
 {{ if eq .profile "private_neo" -}}
 00_rustup.sh

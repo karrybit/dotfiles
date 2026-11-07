@@ -8,6 +8,9 @@ checksum:
 registries:
   - type: standard
     ref: v4.582.0
+  - name: local
+    type: local
+    path: registry.yaml
 packages:
   - name: ahmetb/kubectx@v0.11.0
   - name: ahmetb/kubectx/kubens@v0.11.0
@@ -55,5 +58,7 @@ packages:
   - name: starship/starship@v1.27.0
   - name: terraform-linters/tflint@v0.65.0
   - name: tmux/tmux-builds@v3.7c
+  - name: tomasz-tomczyk/crit@v0.23.2
+    registry: local
   - name: tree-sitter/tree-sitter@v0.27.1
   - name: x-motemen/ghq@v1.12.0
