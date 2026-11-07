@@ -16,3 +16,9 @@
 # yazi was replaced by the fb zsh function. Its plugins under
 # .config/yazi/plugins were installed outside chezmoi.
 .config/yazi
+
+# Plannotator was retired. Its local registry and the policy allowing it
+# existed only for that package.
+.config/zsh/zshenv.d/20_tool_plannotator.zsh
+.config/aquaproj-aqua/work/registry.yaml
+.config/aquaproj-aqua/work/aqua-policy.yaml
