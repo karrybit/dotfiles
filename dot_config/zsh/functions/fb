@@ -12,7 +12,7 @@ print -r -- "$root" >| "$state"
     FB_LIST='d=$(<"$FB_STATE"); [[ $d != "$FB_ROOT" ]] && print ../
         cd -- "$d" && autoload -Uz -- "$FB_LS" && __fb_ls' \
     FB_GO='print -r -- "$n" >| "$FB_STATE"
-        print -r -- "clear-query+reload-sync(eval \"\$FB_LIST\")+first+change-prompt:${n:t}/ > "' \
+        print -r -- "clear-query+reload-sync(eval \"\$FB_LIST\")+first+change-prompt:${FB_ROOT:t}${n#${FB_ROOT%/}}/ > "' \
     FB_ENTER='d=$(<"$FB_STATE")
         if [[ -z $s ]]; then print abort
         elif [[ $s == ../ ]]; then n=${d:h}; eval "$FB_GO"
