@@ -1,35 +1,40 @@
 __lib_require_commands fzf bat glow || return 1
 zmodload zsh/parameter
-local root dir s target
-# fzf runs the preview in a fresh shell that has not autoloaded __fb_ls
-local lister=${functions_source[__fb_ls]}
+local root state
 root=${${1:-.}:A}
 [[ -d "$root" ]] || { __lib_echo_failure "not a directory: ${1}\n"; return 1; }
-dir=$root
-while true; do
-    s=$(cd -- "$dir" && {
-        [[ "$dir" != "$root" ]] && print '../'
-        __fb_ls
-    } | fzf --cycle --layout=reverse --prompt="${dir:t}/ > " \
-        --bind=right:accept \
-        --bind="left:$([[ "$dir" != "$root" ]] && print 'become(echo ../)' || print ignore)" \
+# fzf runs one process for the whole session and swaps the listing with
+# reload, so the folder being shown lives in a file its child shells share.
+state=$(mktemp) || return 1
+print -r -- "$root" >| "$state"
+{
+    FB_ROOT=$root FB_STATE=$state FB_LS=${functions_source[__fb_ls]} \
+    FB_LIST='d=$(<"$FB_STATE"); [[ $d != "$FB_ROOT" ]] && print ../
+        cd -- "$d" && autoload -Uz -- "$FB_LS" && __fb_ls' \
+    FB_GO='print -r -- "$n" >| "$FB_STATE"
+        print -r -- "clear-query+reload-sync(eval \"\$FB_LIST\")+first+change-prompt:${n:t}/ > "' \
+    FB_ENTER='d=$(<"$FB_STATE")
+        if [[ -z $s ]]; then print abort
+        elif [[ $s == ../ ]]; then n=${d:h}; eval "$FB_GO"
+        elif [[ -d $d/${s%/} ]]; then n=$d/${s%/}; eval "$FB_GO"
+        else print "execute(eval \"\$FB_OPEN\")"; fi' \
+    FB_LEFT='d=$(<"$FB_STATE"); [[ $d == "$FB_ROOT" ]] || { n=${d:h}; eval "$FB_GO"; }' \
+    FB_OPEN='t=$(<"$FB_STATE")/$FZF_CURRENT_ITEM
+        case $t in
+            *.md|*.markdown) glow -p -w $(( FZF_COLUMNS - 4 )) "$t" ;;
+            *) bat --paging=always "$t" ;;
+        esac' \
+    fzf --with-shell='zsh -fc' --cycle --layout=reverse --prompt="${root:t}/ > " \
+        --bind='start:reload(eval "$FB_LIST")' \
+        --bind='enter,right:transform(s={}; eval "$FB_ENTER")' \
+        --bind='left:transform(eval "$FB_LEFT")' \
         --preview-window='down,60%' \
-        --preview="if [ -d {} ]; then zsh -fc 'autoload -Uz -- \"\$1\" && __fb_ls \"\$2\"' zsh ${(q)lister} {}; else "'case {} in
+        --preview='cd -- "$(<"$FB_STATE")" || exit
+            if [ -d {} ]; then autoload -Uz -- "$FB_LS" && __fb_ls {}; else case {} in
             *.md|*.markdown) glow -s dark -w "$FZF_PREVIEW_COLUMNS" {} ;;
             *) bat --color=always --style=numbers --terminal-width="$FZF_PREVIEW_COLUMNS" {} ;;
-            esac; fi')
-    [[ -z "$s" ]] && return 0
-    if [[ "$s" == '../' ]]; then
-        dir=${dir:h}
-        continue
-    fi
-    target="${dir}/${s%/}"
-    if [[ -d "$target" ]]; then
-        dir=$target
-    else
-        case "$target" in
-            *.md|*.markdown) glow -p -w $(( COLUMNS - 4 )) "$target" ;;
-            *) bat --paging=always "$target" ;;
-        esac
-    fi
-done
+            esac; fi'
+} always {
+    rm -f -- "$state"
+}
+return 0
