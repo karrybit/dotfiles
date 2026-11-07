@@ -201,7 +201,10 @@ Every deletion is appended with its SHA to
 fb [dir]   # browse dir (default: the current directory) one level at a time
 ```
 
-`fb` lists one directory at a time in fzf, without dotfiles. Selecting a
+`fb` lists one directory at a time in fzf, including dotfiles but not `.git`.
+Folders come before files; within each, names starting with `YYYY-MM-DD` come
+first, newest creation time first (modification time where the filesystem does
+not record creation), and the rest follow in name order. Selecting a
 folder enters it and `../` goes back to the parent; `../` is not shown in the
 starting directory, so browsing stays inside it. Selecting a file opens it in a
 pager in the same terminal — Markdown with `glow -p`, everything else with

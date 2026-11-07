@@ -1,17 +1,20 @@
 __lib_require_commands fzf bat glow || return 1
+zmodload zsh/parameter
 local root dir s target
+# fzf runs the preview in a fresh shell that has not autoloaded __fb_ls
+local lister=${functions_source[__fb_ls]}
 root=${${1:-.}:A}
 [[ -d "$root" ]] || { __lib_echo_failure "not a directory: ${1}\n"; return 1; }
 dir=$root
 while true; do
     s=$(cd -- "$dir" && {
         [[ "$dir" != "$root" ]] && print '../'
-        command ls -Apr | grep -vxE '\.git/?'
+        __fb_ls
     } | fzf --cycle --layout=reverse --prompt="${dir:t}/ > " \
         --bind=right:accept \
         --bind="left:$([[ "$dir" != "$root" ]] && print 'become(echo ../)' || print ignore)" \
         --preview-window='down,60%' \
-        --preview='if [ -d {} ]; then ls -Apr {} | grep -vxE "\.git/?"; else case {} in
+        --preview="if [ -d {} ]; then zsh -fc 'autoload -Uz -- \"\$1\" && __fb_ls \"\$2\"' zsh ${(q)lister} {}; else "'case {} in
             *.md|*.markdown) glow -s dark -w "$FZF_PREVIEW_COLUMNS" {} ;;
             *) bat --color=always --style=numbers --terminal-width="$FZF_PREVIEW_COLUMNS" {} ;;
             esac; fi')

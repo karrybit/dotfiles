@@ -1,0 +1,28 @@
+# List the entries of a directory for fb: folders first, then files. In each
+# group, names starting with YYYY-MM-DD come first, newest birth time first;
+# the rest follow in ascending name order. zsh has no birth time in zstat or
+# glob qualifiers, so it comes from stat(1): GNU `-c` is tried first because
+# GNU stat would misread BSD's `-f`. A birth time of 0 or `-` means the
+# filesystem does not record one, and the modification time stands in.
+emulate -L zsh -o extendedglob -o globdots
+cd -- "${1:-.}" || return 1
+local date_pat='[0-9](#c4)-[0-9](#c2)-[0-9](#c2)*'
+local -a group dated rest keyed times
+local q n b
+for q in / '^/'; do
+    dated=( ${~date_pat}~.git(N${~q}) )
+    rest=( ^${~date_pat}~.git(N${~q}) )
+    keyed=()
+    if (( $#dated )); then
+        times=( ${(f)"$(command stat -c '%W %Y' -- $dated 2>/dev/null ||
+            command stat -f '%B %m' -- $dated 2>/dev/null)"} )
+        for n in {1..$#dated}; do
+            b=${times[n]%% *}
+            [[ $b == <1-> ]] || b=${times[n]#* }
+            keyed+=( ${(l:20::0:)b}$'\t'${dated[n]} )
+        done
+    fi
+    group=( ${${(On)keyed}#*$'\t'} ${(o)rest} )
+    [[ $q == / ]] && group=( ${^group}/ )
+    (( ! $#group )) || print -rl -- $group
+done
