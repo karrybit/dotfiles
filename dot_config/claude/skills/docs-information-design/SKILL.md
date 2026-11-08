@@ -1,26 +1,83 @@
 ---
 name: docs-information-design
-description: Decide what a technical document or documentation set should contain, where each piece of information belongs, and whether anything should change at all. Use when a document's content, structure, audience, or placement is undecided or in question: drafting a document whose content or structure is not yet settled, restructuring, auditing, trimming, splitting, merging, moving, retiring, or retargeting documentation (README, design docs, ADRs, specs, runbooks, docs/ trees), checking consistency across documents, documenting a new feature, and finding docs made stale by a code change. Not for writing whose content and structure are already settled, local wording or typo fixes, or proofreading.
+description: "Decide what a technical document or documentation set should contain, where each piece of information belongs, and whether anything should change at all. Use when a document's content, structure, audience, or placement is undecided or in question: drafting a document whose content or structure is not yet settled, restructuring, auditing, trimming, splitting, merging, moving, retiring, or retargeting documentation (README, design docs, ADRs, specs, runbooks, docs/ trees), checking consistency across documents, documenting a new feature, and finding docs made stale by a code change. Not for writing whose content and structure are already settled, local wording or typo fixes, or proofreading."
 ---
 
 # Documentation information design
 
-A good document gives its reader what their task needs, in the amount, order, and place that minimizes the reader's **total cost**: finding the information, reading it, understanding it, rebuilding context across files, acting on it, and recovering from mistakes. Length is not the measure. Deleting, compressing, moving, consolidating, adding, splitting, merging, and leaving things as they are are equal outcomes, and **no change is a passing result**.
+A good document gives its reader what their task needs, in the amount, order,
+and place that minimizes the reader's total cost: finding the information,
+reading it, understanding it, rebuilding context across files, acting on it,
+and recovering from mistakes.
+
+## Rules for the whole task
+
+- Judge a document by the reader's total cost, not by its length.
+- Treat deleting, compressing, moving, consolidating, adding, splitting,
+  merging, and leaving things as they are as equal outcomes; no change is a
+  passing result.
+- Give every piece of information you remove a known fate: deleted because no
+  reader needs it, or moved to a named place.
+- Present as fact only what you verified against the code and configuration.
+- Keep the edit inside the requested boundary, and mention problems outside it
+  instead of fixing them.
+- When goals conflict, prefer them in this order: factual accuracy and safety;
+  the information readers need; the requested scope and existing work; the
+  placement and structure of the doc set; concision.
+- Leave sentence-level wording out of scope; for Japanese prose, apply
+  `japanese-tech-writing`.
+
+## Steps
+
+1. Fix the frame (section 1).
+   Completion: the reader and task of each document in play, the mode and
+   boundary, and the existing conventions are stated.
+2. Judge each piece of information (section 2).
+   Completion: every piece in scope has one finding from the table.
+3. Decide document boundaries (section 3).
+   Completion: each proposed split, merge, or new document names the reader and
+   job it serves, or the boundary is kept.
+4. Ground every fact (section 4).
+   Completion: every command, flag, default, path, configuration key, and
+   described behavior in scope is verified or marked unconfirmed.
+5. Act within the request (section 5).
+   Completion: the output matches the mode: a report for audit, an operation
+   list for plan, an edit for apply.
+6. Check the result (section 6).
+   Completion: every check in section 6 passes, and the report covers its four
+   items.
 
 ## 1. Fix the frame
 
-Establish these from the request, the documents, and the repository; ask only for what they cannot answer:
+Establish these from the request, the documents, and the repository; ask only
+for what they cannot answer:
 
-- **Reader and task** for each document in play: who opens it, to do what (act, look something up, understand, decide), and what they already know.
-- **Mode and boundary**: audit (report only), plan (propose changes), or apply (edit). A request to fix one paragraph bounds the edit to that paragraph.
-- **Existing conventions**: the doc set's layout, project instructions, and style guide.
-- **Problem, expected result, evidence, proposed means, decisions made**: keep these five apart when reading the request and the source material. A proposed means (a structure, a split, a template) is a signal to evaluate, not the requirement. When the means is clear but the problem it solves is not, ask what problem it addresses before proceeding; a problem you infer yourself is a guess, and the document would be built around it.
+- Reader and task for each document in play: who opens it, to do what (act,
+  look something up, understand, decide), and what they already know.
+- Mode and boundary: audit (report only), plan (propose changes), or apply
+  (edit). A request to fix one paragraph bounds the edit to that paragraph.
+- Existing conventions: the doc set's layout, project instructions, and style
+  guide.
+- Problem, expected result, evidence, proposed means, decisions made: keep
+  these five apart when reading the request and the source material.
 
-Scale the investigation to the request. For a local edit, read the surrounding section and whatever it links to or is linked from. For work across a doc set, first inventory it: for each file, its reader, its job, what it owns, and what links to it.
+Then:
+
+- Treat a proposed means (a structure, a split, a template) as a signal to
+  evaluate, not the requirement.
+- When the means is clear but the problem it solves is not, ask what problem it
+  addresses before proceeding, since a problem you infer yourself is a guess
+  and the document would be built around it.
+- Scale the investigation to the request: for a local edit, read the
+  surrounding section and whatever it links to or is linked from.
+- For work across a doc set, first inventory it: for each file, its reader, its
+  job, what it owns, and what links to it.
 
 ## 2. Judge each piece of information
 
-For each piece, ask two questions: does a reader of *this* document need it for their task, and is this its **home**? Being correct, interesting, or thorough does not make information needed here.
+For each piece, ask two questions: does a reader of *this* document need it for
+their task, and is this its home? Being correct, interesting, or thorough does
+not make information needed here.
 
 | Finding | Meaning | Usual action |
 | --- | --- | --- |
@@ -31,44 +88,75 @@ For each piece, ask two questions: does a reader of *this* document need it for 
 | Missing | The reader cannot complete the task without it | Add, after verifying it |
 | Fine | — | Keep |
 
-**Load-bearing** information often looks redundant but carries the document: rationale, constraints and invariants, rejected alternatives and why, exceptions, warnings before irreversible actions, preconditions, known failure modes, and examples the reader will copy. Compress the wording around it, not the information itself. Every piece you remove has a known fate: deleted because no reader needs it, or moved to a named place.
-
-Repetition earns its place when it puts something at the point of action that the reader would otherwise miss, such as a safety warning at each step where the danger arises, or a one-line recap that saves a jump to another file. Consolidate duplicated facts that can drift apart (versions, defaults, commands, limits); keep short repeated cues that point at their home.
+- Keep load-bearing information, which often looks redundant but carries the
+  document: rationale, constraints and invariants, rejected alternatives and
+  why, exceptions, warnings before irreversible actions, preconditions, known
+  failure modes, and examples the reader will copy.
+- Compress the wording around load-bearing information, not the information
+  itself.
+- Keep repetition that puts something at the point of action that the reader
+  would otherwise miss, such as a safety warning at each step where the danger
+  arises, or a one-line recap that saves a jump to another file.
+- Consolidate duplicated facts that can drift apart (versions, defaults,
+  commands, limits), and keep short repeated cues that point at their home.
 
 ## 3. Decide document boundaries
 
-That a document can be split does not mean it should be. Compare split, merge, and leave-as-is:
+That a document can be split does not mean it should be. Compare split, merge,
+and leave-as-is:
 
 - Do the parts serve different readers or tasks, or are they read together?
 - Do they change at different rates, or have different owners?
-- Would a split add navigation, link upkeep, and context rebuilding? Would a merge bury one reader's material inside another's?
+- Would a split add navigation, link upkeep, and context rebuilding? Would a
+  merge bury one reader's material inside another's?
 - Can each fact keep exactly one home either way?
 
-Keep the current boundary when the benefit of changing it is unclear or small. Length and heading count alone are not reasons. Document-type frameworks such as Diátaxis help tell content apart (does this help someone act or understand, learn or work?); that separation can live in sections of one file and does not require a file per type.
+Then:
 
-Create a new document only when no existing one is the right home, and link to it from where its readers already start. For a project without documentation, start with the smallest set its readers need, often a README alone; add a document when it has a distinct reader and job, not because a filename is customary.
+- Keep the current boundary when the benefit of changing it is unclear or
+  small; length and heading count alone are not reasons.
+- Use document-type frameworks such as Diátaxis to tell content apart (does
+  this help someone act or understand, learn or work?); that separation can
+  live in sections of one file and does not require a file per type.
+- Create a new document only when no existing one is the right home, and link
+  to it from where its readers already start.
+- For a project without documentation, start with the smallest set its readers
+  need, often a README alone; add a document when it has a distinct reader and
+  job, not because a filename is customary.
 
 ## 4. Ground every fact
 
-Check commands, flags, defaults, paths, configuration keys, and described behavior against the code and configuration, including statements you keep unchanged. Present as fact only what you verified. When readers need a step or fact you cannot verify, keep it in the document marked as unconfirmed rather than dropping it or guessing. Word the mark for the reader (what to check, what may differ); where the evidence was missing belongs in your report.
-
-Records of past decisions (ADRs, changelogs, dated reports) describe what was decided at the time. When the code has moved on, mark the record superseded or flag the conflict; rewrite its decision only when the user asks.
+- Check commands, flags, defaults, paths, configuration keys, and described
+  behavior against the code and configuration, including statements you keep
+  unchanged.
+- When readers need a step or fact you cannot verify, keep it in the document
+  marked as unconfirmed rather than dropping it or guessing.
+- Word the unconfirmed mark for the reader (what to check, what may differ),
+  and put where the evidence was missing in your report.
+- Treat records of past decisions (ADRs, changelogs, dated reports) as
+  describing what was decided at the time: when the code has moved on, mark the
+  record superseded or flag the conflict, and rewrite its decision only when
+  the user asks.
 
 ## 5. Act within the request
 
-- **Audit**: report problems with evidence, ordered by impact on readers. If the docs serve their readers, say that no change is needed. Leave files untouched.
-- **Plan**: list the operations (what is deleted and why, what moves where, which boundaries change) before editing.
-- **Apply**: make the smallest change set that reaches the goal. For a large restructure the user has not yet seen, present the plan first. Mention problems outside the boundary instead of fixing them.
-
-Sentence-level wording is out of scope; for Japanese prose, apply `japanese-tech-writing`.
-
-When goals conflict, prefer them in this order: factual accuracy and safety; the information readers need; the requested scope and existing work; the placement and structure of the doc set; concision.
+- Audit: report problems with evidence, ordered by impact on readers. If the
+  docs serve their readers, say that no change is needed. Leave files untouched.
+- Plan: list the operations (what is deleted and why, what moves where, which
+  boundaries change) before editing.
+- Apply: make the smallest change set that reaches the goal. For a large
+  restructure the user has not yet seen, present the plan first.
 
 ## 6. Check the result
 
-- Walk through each affected reader's task using only the documents, including what they do when a step fails. Can they find what they need and complete the task?
-- Every piece of load-bearing information is still present, moved somewhere reachable, or deliberately dropped with a stated reason.
-- Every link and anchor resolves, including those pointing at moved, renamed, or deleted content.
+- Walk through each affected reader's task using only the documents, including
+  what they do when a step fails. Can they find what they need and complete the
+  task?
+- Every piece of load-bearing information is still present, moved somewhere
+  reachable, or deliberately dropped with a stated reason.
+- Every link and anchor resolves, including those pointing at moved, renamed,
+  or deleted content.
 - The diff stays inside the requested boundary.
 
-Report briefly: what changed and why, what you deliberately left unchanged, what you could not verify, and any remaining risk.
+Report briefly: what changed and why, what you deliberately left unchanged,
+what you could not verify, and any remaining risk.

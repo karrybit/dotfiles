@@ -4,7 +4,7 @@
 - source: this dotfiles repository
 - source_url: local
 - license: local
-- reviewed_at: 2026-09-08
+- reviewed_at: 2026-11-08
 - notes: |
     業務リポジトリで未整理のタスク一覧を毎回手で書き直していた依頼を手順化したもの。
     `disable-model-invocation: true` で明示呼び出しのみ。実行手順は `parallel-work`

@@ -5,44 +5,46 @@ description: Decide the granularity and boundaries of GitHub issues. Use when sp
 
 # Sizing GitHub issues
 
-These are defaults for repositories with no issue-authoring policy of their own.
-A repo-specific policy always wins; check for one before applying anything here.
+These are defaults for repositories with no issue-authoring policy of their
+own.
+
+- Before applying anything here, check the repository for its own
+  issue-authoring policy, and follow that policy when one exists.
+- Before creating any issue, confirm the proposed titles and boundaries with
+  the user, since issue creation is a visible, external action and the split is
+  reviewed before it is published.
 
 ## Granularity
 
-- Size each issue to an independently mergeable PR-sized unit of work — not by
-  mirroring a source document's headings, and not by tool/component name alone.
-  Default to more, smaller issues over fewer, larger ones whenever the sub-parts
-  are independently actionable.
-- Two changes to the same tool/component but of a different kind (e.g. version
-  bump vs. config-content review) belong in separate issues when independent —
-  don't bundle by component name alone.
-- A core mechanism change and its optional/deferrable follow-ons belong in
-  separate issues even when the follow-on depends on the core change landing
+- Size each issue to an independently mergeable PR-sized unit of work, not by
+  mirroring a source document's headings and not by tool or component name
+  alone.
+- When sub-parts are independently actionable, default to more, smaller issues
+  over fewer, larger ones.
+- Put two independent changes to the same tool or component but of a different
+  kind (for example, version bump vs. config-content review) in separate
+  issues.
+- Put a core mechanism change and its optional or deferrable follow-ons in
+  separate issues, even when the follow-on depends on the core change landing
   first.
 
-## What is not an issue
+## What Is Not an Issue
 
-- A cross-cutting policy question spanning multiple concrete artifacts should not
-  become its own issue with no code deliverable — resolve it locally inside each
-  concretely affected issue instead, so every issue ships a decision and its
+- Resolve a cross-cutting policy question spanning multiple concrete artifacts
+  inside each concretely affected issue instead of filing it as its own issue
+  with no code deliverable, so every issue ships a decision and its
   implementation together.
-- A decision with no code deliverable right now is not an issue — record it as a
-  caveat inside the nearest concrete issue's body.
-- Don't pre-create speculative issues for follow-on scope that isn't concretely
-  actionable yet. File the pilot/first-instance issue, validate the approach, and
-  note in a parent/tracking issue that further issues will follow once it lands.
+- Record a decision with no code deliverable right now as a caveat inside the
+  nearest concrete issue's body.
+- For follow-on scope that is not concretely actionable yet, file only the
+  pilot or first-instance issue, validate the approach, and note in a parent or
+  tracking issue that further issues will follow once it lands.
 
-## Dependencies and provenance
+## Dependencies and Provenance
 
-- Express cross-issue ordering dependencies as a short note in the dependent
-  issue's body, not as a separate coordination/blocking issue.
-- When new issues originate from an investigation/audit issue, keep that original
-  issue open as a parent/tracking issue with a checklist linking to the new
-  issues, rather than closing it — closing it loses the evidence that justified
-  the split.
-
-## Before creating anything
-
-Confirm the proposed titles and boundaries with the user. Issue creation is a
-visible, external action, so the split is reviewed before it is published.
+- Express a cross-issue ordering dependency as a short note in the dependent
+  issue's body, not as a separate coordination or blocking issue.
+- When new issues originate from an investigation or audit issue, keep that
+  original issue open as a parent or tracking issue with a checklist linking
+  to the new issues, since closing it loses the evidence that justified the
+  split.
