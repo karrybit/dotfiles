@@ -7,7 +7,7 @@ checksum:
     - darwin/arm64
 registries:
   - type: standard
-    ref: v4.582.0
+    ref: v4.583.0
   - name: local
     type: local
     path: registry.yaml
@@ -17,7 +17,7 @@ packages:
   - name: apple/pkl@0.33.0
   - name: aquasecurity/tfsec@v1.28.14
   - name: astral-sh/uv@0.13.7
-  - name: aws/aws-cli@2.39.5
+  - name: aws/aws-cli@2.39.6
   - name: bootandy/dust@v1.2.7
   - name: charmbracelet/glow@v3.0.0
   - name: bufbuild/buf@v1.75.0
@@ -36,9 +36,9 @@ packages:
   - name: hashicorp/terraform@v1.17.1
   - name: helm/helm@v4.3.1
   - name: herdrdev/herdr@v0.9.5
-  - name: jesseduffield/lazygit@v0.66.2
+  - name: jesseduffield/lazygit@v0.66.3
   - name: jqlang/jq@jq-1.8.2
-  - name: junegunn/fzf@v0.74.5
+  - name: junegunn/fzf@v0.75.0
   - name: k1LoW/tbls@v1.96.1
   - name: Kitware/CMake@v4.4.5
   - name: koalaman/shellcheck@v0.11.0
@@ -54,12 +54,12 @@ packages:
   - name: rs/curlie@v1.8.2
   - name: rvben/rumdl@v0.3.2
   - name: sharkdp/bat@v0.26.1
-  - name: sharkdp/fd@v10.5.1
+  - name: sharkdp/fd@v10.5.2
   - name: sharkdp/hyperfine@v2.0.0
   - name: starship/starship@v1.27.0
   - name: terraform-linters/tflint@v0.65.0
-  - name: tmux/tmux-builds@v3.7c
+  - name: tmux/tmux-builds@v3.8
   - name: tomasz-tomczyk/crit@v0.23.2
     registry: local
-  - name: tree-sitter/tree-sitter@v0.27.1
+  - name: tree-sitter/tree-sitter@v0.27.2
   - name: x-motemen/ghq@v1.12.0
