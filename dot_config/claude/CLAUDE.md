@@ -46,7 +46,7 @@ Reference files named below live in `~/.local/share/agents/docs/`.
   or leave out a corner case you considered, state the essential complexity or
   the reason in your report, and in the commit message when you commit.
 
-## Before Settling a Design, Recommendation, or Tool Choice
+## Before Settling a Design, Recommendation, Instruction, or Tool Choice
 
 - Consult established external knowledge, and adapt what exists rather than
   re-deriving a solved problem.
@@ -54,23 +54,9 @@ Reference files named below live in `~/.local/share/agents/docs/`.
   and recognized domain experts over novel local reasoning.
 - When the user's idea conflicts with established practice, lay out the evidence
   and tradeoffs, then recommend what the sources support.
-- Before wiring an integration to a path, port, endpoint, or config key, confirm
-  where the consuming program reads it here, resolving environment variables,
-  config overrides, and XDG or platform defaults that override documented ones.
-- When a change must work across targets you cannot all observe (agents,
-  machines, operating systems, runtimes), verify each one directly or make the
-  mechanism self-verify at apply or run time before depending on it.
-- Generate derived artifacts from a single source of truth; hand-maintained
-  derived sets drift and scale with item count times target count.
-- Before accepting a refactor, confirm it preserves every invariant the current
-  solution satisfies (correct consumer path, coexistence with other writers,
-  idempotency, reversibility); a lower file or step count is no justification.
-- Prefer per-item ownership over whole-directory ownership, so additions by
-  other tools survive.
-- When collecting information into a durable artifact (research notes, ledgers,
-  analyses, reports, handoffs), keep policy-safe raw observations, normalized
-  records, and use-case-shaped outputs separable, so it can be rebuilt when the
-  use case changes (`medallion-information-design.md`).
+- Before wiring an integration, making a change that must work across machines
+  or agents, generating derived artifacts, accepting a refactor, or designing a
+  durable information artifact, read `designing-against-the-environment.md`.
 - Before quoting a source, citing a file or prior decision, writing that
   something is absent, or caching a source summary, read `citing-sources.md`.
 - When an action fails or you diagnose or fix a defect, read
@@ -87,15 +73,17 @@ Reference files named below live in `~/.local/share/agents/docs/`.
 - Write no comments unless the reason is non-obvious to a reader unfamiliar with
   the context.
 - Write documents and comments to describe the current design as if it were the
-  original design; put rationale and history worth keeping in the commit
-  message, PR description, or a decision log.
+  original design, not the revisions or conversations that produced it; put
+  rationale worth keeping in the commit message, PR description, or a decision
+  log, tied to the decision to commit now.
 - After editing files, run `git diff --check`.
 - After editing comments or documentation, re-check the diff against the
-  current-design rule and report the result; long sessions let it slip.
+  current-design rule and report the result; a long, context-heavy session is
+  the likeliest place for a violation to slip through unstated.
 - Treat a documentation-affecting configuration change as complete only after
   reviewing the relevant README.
-- Before committing work that created new files, classify each as canonical,
-  draft, merged, or deletion candidate.
+- Before committing work that created new files, inventory them and classify
+  each as canonical, draft, merged, or deletion candidate.
 - Report deletion candidates with evidence; delete drafts and obsolete-looking
   files only when the user requests cleanup.
 - Before finishing work that changed multiple artifacts, review them as one
@@ -104,7 +92,8 @@ Reference files named below live in `~/.local/share/agents/docs/`.
 - When committing, group unrelated changes into separate logical commits unless
   the user requests a single commit.
 - Before reporting a measured number, run one input whose result is known and
-  one that must differ, and confirm the harness separates them.
+  one that must differ, and confirm the harness separates them; until then its
+  output describes the harness, not the thing measured.
 - Report checks that could not be run.
 
 ## Before Publishing
@@ -112,26 +101,31 @@ Reference files named below live in `~/.local/share/agents/docs/`.
 - Before any publish action (`git push`, PR creation, sharing a diff, making a
   repository public), inspect the exact outgoing content for secrets, personal
   data, real home paths, machine names, private organization names, and
-  session-only context; treat findings as blockers and use placeholders instead
-  of real local values. A secret-pattern hook does not replace this inspection.
+  session-only context; treat findings as blockers and prefer placeholders over
+  real local values. A hook may block high-confidence secret patterns; it does
+  not replace this inspection.
 - Session-only context is anything a reader outside this session could not
   resolve: labels invented to organize this session's work ("Tier2", "wave 3"),
   progress framed against a private artifact, and the agent harness's own
-  mechanism names. It binds code comments, commit messages, PR and issue bodies
-  and comments, and any committed document.
+  mechanism names rather than the project's. It binds code comments, commit
+  messages, PR and issue bodies and comments, and any committed document.
 - State the underlying fact instead of the mechanism that produced it: "this
   test cannot run in this environment, for reasons unrelated to the change",
   not the flag that worked around it.
 - When delegating comment-, PR-, or document-writing, give the subagent only
-  facts traceable to the repository, and read its output against these rules
-  yourself before publishing; only the delegating session knows what is
-  session-only.
+  facts traceable to the repository, since background context in a delegation
+  prompt tends to be echoed verbatim into its output.
+- Read that output against these rules yourself before it is published; only
+  the delegating session knows what is session-only.
 - Before creating any GitHub issue, confirm titles and boundaries with the user,
-  sizing each to an independently mergeable PR; load `size-github-issues`
-  before splitting a document, investigation, or audit into issues.
-- When a pull request turns CI-green, report it and merge only after the user
-  explicitly confirms; restate this in any delegation prompt whose task could
-  end in a mergeable state, since a subagent acts on its prompt.
+  since issue creation is a visible, external action; size each issue to an
+  independently mergeable PR, and load `size-github-issues` before splitting a
+  document, investigation, or audit into issues.
+- Treat a pull request turning CI-green as a status to report, not
+  authorization to merge: report it, wait, and merge only after the user
+  explicitly confirms.
+- Restate that in any delegation prompt whose task could end in a mergeable
+  state, since a subagent acts on its prompt, not on this file.
 
 ## When Editing Instructions
 
@@ -156,39 +150,41 @@ Reference files named below live in `~/.local/share/agents/docs/`.
 - For structured data in a file or from an earlier command, use `jq` for JSON,
   `yq` for YAML, and `qsv` for CSV/TSV; fall back to a general-purpose language
   or `sed`/`awk`/`cut` only for a transformation they cannot express, and name
-  the missing capability (awkward syntax is not one).
+  the missing capability (awkward syntax is not one). This picks the tool; the
+  one-plain-call rule below governs how calls connect.
 - When a preferred tool does not resolve here, name the fallback and recommend
   installing the preferred one, with the package and where to declare it.
-- For `git push`, `git pull`, `git fetch`, and `chezmoi update`, request the
-  required approval on the first attempt instead of first reporting a sandbox
-  DNS or network failure.
-- Keep approval requests scoped to the exact command family needed.
+- For known network operations such as `git push`, `git pull`, `git fetch`, and
+  `chezmoi update`, request the required approval on the first attempt instead
+  of first reporting a sandbox DNS or network failure.
+- Keep approval requests narrowly scoped to the exact command family needed.
 - Run a command that an allow rule or `sandbox.excludedCommands` names as one
-  plain Bash call, then process its output in the next call; a pipe, `&&`, `;`,
-  loop, `$(...)`, `cd`, or file redirect makes the call match neither.
+  plain Bash call, then process its output in the next call; with a pipe, `&&`,
+  `;`, loop, `$(...)`, `cd`, or file redirect, an allow rule needs every part
+  allowed and an excluded command stays sandboxed unless every part is excluded.
 - Keep broad auto-approval off commands that can rewrite history, delete refs,
   run arbitrary scripts, or exfiltrate secrets, force-push above all.
 - Before `git push`, creating a branch, deleting branches or worktrees, or
   sending GitHub API requests, read `git-and-github.md`.
-- Treat an apparent `.env*` deletion in `git status`/`git diff` as a sandbox
-  read-deny artifact: confirm with `git show HEAD:<path>`, and leave it
-  unrestored, unstaged, and uncommitted.
-- When an environment variable does not match what the dotfiles export, suspect
-  the session's long-lived ancestor process before the dotfiles or the sandbox
-  allowlist.
-- When a sandbox or environment failure needs diagnosis, read
+- When `git status` or `git diff` reports a `.env*` file deleted, when an
+  environment variable does not match what the dotfiles export, or when another
+  sandbox or environment failure needs diagnosis, read
   `sandbox-and-environment-gotchas.md`.
-- Make a durable change to a chezmoi-managed file in the source repository:
-  `chezmoi update`, edit the source, commit and push, then `chezmoi apply`.
+- Make a durable change to a chezmoi-managed file in the source repository, not
+  the live target: `chezmoi update`, edit the source, commit and push, then
+  `chezmoi apply`.
 - When `chezmoi apply` fails on a permission-gated state database or managed
   path, rerun the same command with the required approval, keeping the path and
   flags.
+- Keep secrets, cookies, raw logs, scraped HTML, and other sensitive runtime
+  data out of every chezmoi-managed file.
 
 ## Agent Scripts and Extensions
 
 - Keep a script needed only in this session in the session scratchpad named in
   the environment preamble, not `$TMPDIR`, which every concurrent session
-  shares; name that absolute path in delegation prompts too.
+  shares, so a common subdirectory name there overwrites another session's
+  files; name the scratchpad's absolute path in delegation prompts too.
 - Before writing a script that will run again, be handed to another agent, or
   be kept as a procedure, read `agent-scripts.md`.
 - Before installing or enabling a public skill, subagent, plugin, or MCP-backed

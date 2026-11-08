@@ -19,8 +19,7 @@ and recovering from mistakes.
 - Give every piece of information you remove a known fate: deleted because no
   reader needs it, or moved to a named place.
 - Present as fact only what you verified against the code and configuration.
-- Keep the edit inside the requested boundary, and mention problems outside it
-  instead of fixing them.
+- Keep the diff inside the requested boundary.
 - When goals conflict, prefer them in this order: factual accuracy and safety;
   the information readers need; the requested scope and existing work; the
   placement and structure of the doc set; concision.
@@ -115,7 +114,7 @@ Then:
 
 - Keep the current boundary when the benefit of changing it is unclear or
   small; length and heading count alone are not reasons.
-- Use document-type frameworks such as Diátaxis to tell content apart (does
+- Document-type frameworks such as Diátaxis help tell content apart (does
   this help someone act or understand, learn or work?); that separation can
   live in sections of one file and does not require a file per type.
 - Create a new document only when no existing one is the right home, and link
@@ -145,7 +144,8 @@ Then:
 - Plan: list the operations (what is deleted and why, what moves where, which
   boundaries change) before editing.
 - Apply: make the smallest change set that reaches the goal. For a large
-  restructure the user has not yet seen, present the plan first.
+  restructure the user has not yet seen, present the plan first. Mention
+  problems outside the boundary instead of fixing them.
 
 ## 6. Check the result
 

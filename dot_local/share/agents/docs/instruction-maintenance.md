@@ -6,6 +6,8 @@ between a skill, a hook, and a `CLAUDE.md` rule. The form of the lines is in
 
 ## Proposing a Change
 
+- Place instructions in the narrowest applicable repository `CLAUDE.md` or
+  `AGENTS.md`.
 - Classify each proposed improvement: user-level guidance belongs in
   `$XDG_CONFIG_HOME/claude/CLAUDE.md`, repository-specific guidance in the
   narrowest applicable repository `CLAUDE.md` or `AGENTS.md`.

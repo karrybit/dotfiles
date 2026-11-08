@@ -2,7 +2,7 @@
 
 Last checked: 2026-06-07
 
-Grounds the durable-artifact rule in `~/.config/claude/CLAUDE.md`
+Grounds the durable-artifact rule in `designing-against-the-environment.md`
 (policy-safe raw observations / normalized comparable records /
 use-case-shaped outputs) in established lakehouse practice, without copying
 enterprise platform details into small local workflows. Formerly bundled with

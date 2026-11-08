@@ -6,10 +6,11 @@ Revalidate when the command sandbox's filesystem restrictions change, when git's
 tracking-setup defaults change, or when the shell startup files change which
 variables they export.
 
-Each section below explains one rule in the user `CLAUDE.md` under "Command-Line
-Tools and Permissions" or in `git-and-github.md` beside this file. The rule
-there is the operating constraint; this file is the diagnosis to read when a
-command actually fails in one of these ways.
+Each section below explains one rule: in `git-and-github.md` beside this file,
+or, for the `.env*` and environment-variable sections, the rule stated at the
+top of the section. The user `CLAUDE.md` says when to read this file. The rule
+is the operating constraint; the rest is the diagnosis to read when a command
+actually fails in one of these ways.
 
 ## Pushing A New Branch Without `-u`
 
@@ -100,6 +101,12 @@ tracking-setup write.
 
 ## `.env*` Files Reported As Deleted
 
+Rule: treat an apparent `.env*` deletion in `git status`/`git diff` as a
+sandbox read-deny artifact, not a real deletion; confirm with
+`git show HEAD:<path>`, and leave the file unrestored, unstaged, and
+uncommitted. The `env-deny-hint` hook adds the same reminder to Bash commands
+that touch `.env` paths.
+
 `.env.example` and similar template files fall under the sandbox's filesystem
 read-deny for `.env*` paths. When that applies, `git status` and `git diff`
 report the file as deleted even though it still exists on disk and in git
@@ -109,6 +116,10 @@ all corrupt the tree further. `git show HEAD:<path>` reads the committed content
 and confirms the real state.
 
 ## Environment Variables That Do Not Match The Dotfiles
+
+Rule: when an environment variable does not match what the dotfiles export,
+suspect the session's long-lived ancestor process before the dotfiles or the
+sandbox allowlist.
 
 A running Claude Code session's Bash tool spawns a fresh shell per call, but that
 shell inherits environment variables frozen from whenever its actual long-lived

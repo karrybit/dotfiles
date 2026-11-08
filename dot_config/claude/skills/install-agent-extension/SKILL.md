@@ -5,9 +5,10 @@ description: Vet a Claude Code skill, subagent, plugin, or MCP server before ins
 
 # Installing an agent extension
 
-The approval rule for risky extensions lives in the user `CLAUDE.md` under
-"Agent Scripts and Extensions", and the rules for committing an extension live
-in `~/.local/share/agents/docs/agent-extensions.md`; both apply whether or not
+The rules to vet before installing and to get approval for risky extensions
+live in the user `CLAUDE.md` under "Agent Scripts and Extensions", and the
+rules for committing an extension live in
+`~/.local/share/agents/docs/agent-extensions.md`; both apply whether or not
 this skill is loaded. What follows is the procedure.
 
 ## Vetting Steps
@@ -39,8 +40,8 @@ this skill is loaded. What follows is the procedure.
 
 ## Authoring a Subagent
 
-- Start a subagent with read-only tools, and without `mcpServers`, `hooks`, or
-  an elevated `permissionMode`, unless the task requires those capabilities.
+- For a new subagent, prefer read-only tools, and no `mcpServers`, `hooks`, or
+  elevated `permissionMode`, unless the task requires those capabilities.
 - Subagents can declare tools, disallowed tools, model, permission mode, MCP
   servers, hooks, preloaded skills, memory, background execution, and worktree
   isolation; treat each of the last four as a review gate rather than a

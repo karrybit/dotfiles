@@ -31,8 +31,6 @@ that will run again, be handed to another agent, or be kept as a procedure.
 - Treat that root as chezmoi-managed and the files below it as unmanaged;
   promote a script set to explicit management only when the user asks to sync
   it across machines.
-- Keep secrets, cookies, raw logs, scraped HTML, and other sensitive runtime
-  data out of every chezmoi-managed file.
 
 ## Running a Script
 
