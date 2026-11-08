@@ -45,7 +45,7 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/).
 
 ~/.config/                    ← live configuration files
 ~/.config/claude/CLAUDE.md    ← user-level agent instructions
-~/.local/share/agents/docs/   ← reusable local agent source summaries
+~/.local/share/agents/docs/   ← agent source summaries and reference files
 ~/.local/share/agents/scripts/ ← reusable agent-operated scripts
 ~/.config/claude/skills/      ← user-level agent skills
 ```

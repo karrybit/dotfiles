@@ -6,10 +6,10 @@ Revalidate when the command sandbox's filesystem restrictions change, when git's
 tracking-setup defaults change, or when the shell startup files change which
 variables they export.
 
-Each section below explains one rule in the user `CLAUDE.md` under "Known
-Permission-Gated Operations". The rule there is the operating constraint; this
-file is the diagnosis to read when a command actually fails in one of these
-ways.
+Each section below explains one rule in the user `CLAUDE.md` under "Command-Line
+Tools and Permissions" or in `git-and-github.md` beside this file. The rule
+there is the operating constraint; this file is the diagnosis to read when a
+command actually fails in one of these ways.
 
 ## Pushing A New Branch Without `-u`
 

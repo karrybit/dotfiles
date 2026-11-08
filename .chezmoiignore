@@ -29,6 +29,12 @@ docs
 .config/claude/hooks/*
 .local/share/agents/docs/*
 !.local/share/agents/docs/agent-extension-security.md
+!.local/share/agents/docs/agent-extensions.md
+!.local/share/agents/docs/agent-scripts.md
+!.local/share/agents/docs/citing-sources.md
+!.local/share/agents/docs/failure-diagnosis.md
+!.local/share/agents/docs/git-and-github.md
+!.local/share/agents/docs/instruction-maintenance.md
 !.local/share/agents/docs/document-review-evidence.md
 !.local/share/agents/docs/instruction-writing-standard.md
 !.local/share/agents/docs/llm-as-reviewer-evidence.md
