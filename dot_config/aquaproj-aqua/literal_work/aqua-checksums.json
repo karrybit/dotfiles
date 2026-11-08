@@ -186,8 +186,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/terraform-linters/tflint/v0.65.0/tflint_darwin_arm64.zip",
-      "checksum": "5A71C63481BA56760864298011FDB7317A9AE80A0BBAECEEFA35883C7F62AC71",
+      "id": "github_release/github.com/terraform-linters/tflint/v0.66.0/tflint_darwin_arm64.zip",
+      "checksum": "859B26AF07EAD7E65CEE7EEC9D050B2E2571DC28395B7A39191CAE088CD67803",
       "algorithm": "sha256"
     },
     {
