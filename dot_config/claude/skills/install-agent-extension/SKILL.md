@@ -19,15 +19,13 @@ this skill is loaded. What follows is the procedure.
    update commands, network access, and secret-handling behavior. Review more
    than `SKILL.md`, since a skill is a folder of instructions, scripts, and
    resources.
-   Completion: each item in that list is reported as present with its
-   findings, or absent.
+   Completion: every item in that list has been inspected.
 2. When the candidate is on disk, run
    `$XDG_DATA_HOME/agents/scripts/agent-extension-security/bin/vet-agent-extension`
    against its directory.
-   Completion: the script's output is in the report.
+   Completion: the script has run against the candidate's directory.
 3. Check the source and license as "Source and License" describes.
-   Completion: the report names the source repository, the pinned ref, and the
-   license.
+   Completion: each item in "Source and License" has been checked.
 
 ## Source and License
 

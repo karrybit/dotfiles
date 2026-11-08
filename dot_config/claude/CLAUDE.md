@@ -46,10 +46,11 @@ Reference files named below live in `~/.local/share/agents/docs/`.
   or leave out a corner case you considered, state the essential complexity or
   the reason in your report, and in the commit message when you commit.
 
-## Before Settling a Design, Recommendation, Instruction, or Tool Choice
+## External Knowledge and Practices
 
-- Consult established external knowledge, and adapt what exists rather than
-  re-deriving a solved problem.
+- Before settling on any design, recommendation, durable instruction, or tool
+  choice, consult established external knowledge, and adapt what exists rather
+  than re-deriving a solved problem.
 - Prefer official docs, standards, maintainer guidance, canonical repositories,
   and recognized domain experts over novel local reasoning.
 - When the user's idea conflicts with established practice, lay out the evidence
@@ -74,8 +75,9 @@ Reference files named below live in `~/.local/share/agents/docs/`.
   the context.
 - Write documents and comments to describe the current design as if it were the
   original design, not the revisions or conversations that produced it; put
-  rationale worth keeping in the commit message, PR description, or a decision
-  log, tied to the decision to commit now.
+  rationale and historical context worth keeping in the commit message, PR
+  description, or a decision log, tied to the decision to commit now, not to
+  the artifact's ongoing self-description.
 - After editing files, run `git diff --check`.
 - After editing comments or documentation, re-check the diff against the
   current-design rule and report the result; a long, context-heavy session is
@@ -94,7 +96,7 @@ Reference files named below live in `~/.local/share/agents/docs/`.
 - Before reporting a measured number, run one input whose result is known and
   one that must differ, and confirm the harness separates them; until then its
   output describes the harness, not the thing measured.
-- Report checks that could not be run.
+- In every report of finished work, name the checks that could not be run.
 
 ## Before Publishing
 
@@ -129,7 +131,7 @@ Reference files named below live in `~/.local/share/agents/docs/`.
 
 ## When Editing Instructions
 
-- Before editing a `CLAUDE.md`, `AGENTS.md`, rule, `SKILL.md`, or subagent
+- Before editing a `CLAUDE.md`, `AGENTS.md`, rule, skill file, or subagent
   definition, read `instruction-writing-standard.md` and load
   `writing-for-agents`.
 - After editing such a file, run
@@ -182,9 +184,10 @@ Reference files named below live in `~/.local/share/agents/docs/`.
 ## Agent Scripts and Extensions
 
 - Keep a script needed only in this session in the session scratchpad named in
-  the environment preamble, not `$TMPDIR`, which every concurrent session
-  shares, so a common subdirectory name there overwrites another session's
-  files; name the scratchpad's absolute path in delegation prompts too.
+  the environment preamble, not `$TMPDIR`: the sandboxed `$TMPDIR` is shared by
+  every concurrent session for this user, so a common subdirectory name
+  silently overwrites another session's files.
+- Name the scratchpad's absolute path in delegation prompts too.
 - Before writing a script that will run again, be handed to another agent, or
   be kept as a procedure, read `agent-scripts.md`.
 - Before installing or enabling a public skill, subagent, plugin, or MCP-backed

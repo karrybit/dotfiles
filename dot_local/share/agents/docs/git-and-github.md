@@ -26,9 +26,10 @@ worktrees, or sending GitHub API requests. Why each sandbox-related rule holds:
   since it writes its restore log under `$XDG_STATE_HOME`.
 - Rely on its merge evidence instead of `[gone]` markers, which never appear on
   branches pushed without `-u`.
-- When it deletes a branch that another tool gave tracking config, report the
-  `[branch "..."]` section left behind instead of working around the denial,
-  since removing it needs the denied `.git/config` write.
+- Deleting a branch that another tool gave tracking config leaves its
+  `[branch "..."]` section behind, since removing it needs the denied
+  `.git/config` write; report the leftover instead of working around the
+  denial.
 
 ## GitHub API Requests
 

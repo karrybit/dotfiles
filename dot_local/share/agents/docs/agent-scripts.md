@@ -27,7 +27,8 @@ that will run again, be handed to another agent, or be kept as a procedure.
   `$XDG_DATA_HOME/agents/scripts/`, in a named subdirectory holding `README.md`
   and `bin/`.
 - When a pipeline is needed repeatedly as one allowed or sandbox-excluded call,
-  add it there as a script and run it as one call.
+  add it as a script where this section or the CLAUDE.md scratchpad rule places
+  it, and run it as one call.
 - Treat that root as chezmoi-managed and the files below it as unmanaged;
   promote a script set to explicit management only when the user asks to sync
   it across machines.

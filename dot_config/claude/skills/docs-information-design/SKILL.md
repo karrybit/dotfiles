@@ -34,8 +34,8 @@ and recovering from mistakes.
 2. Judge each piece of information (section 2).
    Completion: every piece in scope has one finding from the table.
 3. Decide document boundaries (section 3).
-   Completion: each proposed split, merge, or new document names the reader and
-   job it serves, or the boundary is kept.
+   Completion: each boundary in question has been compared as split, merge, and
+   leave-as-is against the questions in section 3.
 4. Ground every fact (section 4).
    Completion: every command, flag, default, path, configuration key, and
    described behavior in scope is verified or marked unconfirmed.
