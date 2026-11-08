@@ -279,6 +279,13 @@
   `chezmoi update`, request the required approval on the first attempt rather
   than reporting a sandbox DNS or network failure first.
 - Keep approval requests narrowly scoped to the exact command family needed.
+- Run a command that an allow rule or `sandbox.excludedCommands` names as one
+  plain Bash call. A pipe, `&&`, `;`, loop, `$(...)`, `cd`, or file redirect
+  makes the call match neither: an allow rule needs every part allowed, and an
+  excluded command stays sandboxed unless every part is excluded. Run the
+  command alone, then process its output in the next call. For a pipeline
+  needed repeatedly, add a script under the repository's `bin/` and run it as
+  one call.
 - Keep broad auto-approval off the table for commands that can rewrite history,
   delete refs, run arbitrary scripts, or exfiltrate secrets — force-push above
   all.
