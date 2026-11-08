@@ -28,6 +28,7 @@ docs
 .local/share/agents/docs/*
 !.local/share/agents/docs/agent-extension-security.md
 !.local/share/agents/docs/document-review-evidence.md
+!.local/share/agents/docs/instruction-writing-standard.md
 !.local/share/agents/docs/llm-as-reviewer-evidence.md
 !.local/share/agents/docs/medallion-information-design.md
 !.local/share/agents/docs/sandbox-and-environment-gotchas.md
