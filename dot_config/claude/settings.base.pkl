@@ -23,13 +23,20 @@ settings: Dynamic = new Dynamic {
       "Read(~/.config/claude/plans/**)"
       // Ported from the retired Codex default.rules. Deliberately absent:
       // git push (publishing stays a per-call decision), git commit and
-      // git rebase (both can rewrite history).
+      // git rebase (both can rewrite history), and uv run (runs any script).
       "Bash(chezmoi update *)"
       "Bash(chezmoi apply *)"
       "Bash(chezmoi add *)"
       "Bash(git add *)"
       "Bash(git fetch *)"
-      "Bash(uv run *)"
+      // Read-only under every argument; redirect targets are checked against
+      // Edit rules separately. Deliberately absent: `aqua which` (--trace
+      // writes a file), `chezmoi source-path` (-c runs that config's hooks),
+      // and `brew info` (loads a formula file given by path as Ruby).
+      "Bash(shasum -a 256 *)"
+      "Bash(yq --version)"
+      "Bash(rumdl --version)"
+      "Bash(glow --version)"
     }
     deny {
       "Read(./.env)"
