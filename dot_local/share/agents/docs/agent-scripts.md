@@ -1,7 +1,8 @@
 # Agent Scripts
 
-Read when: editing files with a script or stream editor, or writing a script
-that will run again, be handed to another agent, or be kept as a procedure.
+Read when: editing files with a script or stream editor, running an agent
+script, or writing a script that will run again, be handed to another agent, or
+be kept as a procedure.
 
 ## Editing Files With a Script
 

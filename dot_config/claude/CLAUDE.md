@@ -55,11 +55,12 @@ Reference files named below live in `~/.local/share/agents/docs/`.
   and recognized domain experts over novel local reasoning.
 - When the user's idea conflicts with established practice, lay out the evidence
   and tradeoffs, then recommend what the sources support.
-- Before wiring an integration, making a change that must work across machines
-  or agents, generating derived artifacts, accepting a refactor, or designing a
-  durable information artifact, read `designing-against-the-environment.md`.
-- Before quoting a source, citing a file or prior decision, writing that
-  something is absent, or caching a source summary, read `citing-sources.md`.
+- Before wiring an integration, making a change that must work across machines,
+  agents, operating systems, or runtimes, generating derived artifacts, picking
+  per-item or whole-directory file ownership, accepting a refactor, or designing
+  a durable information artifact, read `designing-against-the-environment.md`.
+- Before quoting, citing, or claiming from a source, writing that something is
+  absent, or using or writing a cached summary, read `citing-sources.md`.
 - When an action fails or you diagnose or fix a defect, read
   `failure-diagnosis.md`.
 
@@ -142,8 +143,8 @@ Reference files named below live in `~/.local/share/agents/docs/`.
 - When a conversation reveals reusable friction, or agent behavior violates
   user intent, propose the smallest concrete instruction improvement before
   ending the task.
-- Before proposing or applying an instruction change, or choosing between a
-  skill, a hook, and a rule, read `instruction-maintenance.md`.
+- Before proposing or applying an instruction change, picking a skill, hook, or
+  rule, or hand-copying an external skill, read `instruction-maintenance.md`.
 
 ## Command-Line Tools and Permissions
 
@@ -188,12 +189,12 @@ Reference files named below live in `~/.local/share/agents/docs/`.
   every concurrent session for this user, so a common subdirectory name
   silently overwrites another session's files.
 - Name the scratchpad's absolute path in delegation prompts too.
-- Before writing a script that will run again, be handed to another agent, or
-  be kept as a procedure, read `agent-scripts.md`.
+- Before running an agent script, or writing a script that will run again, be
+  handed to another agent, or be kept as a procedure, read `agent-scripts.md`.
 - Before installing or enabling a public skill, subagent, plugin, or MCP-backed
   extension, vet it with `install-agent-extension`.
 - Install or enable an extension that requests bypass permissions, broad write
   or shell access, hooks, MCP servers, credential reads, or automatic network
   actions only after the user explicitly approves that risk.
-- Before committing an agent extension or a managed skill, read
+- Before installing or committing an agent extension or a managed skill, read
   `agent-extensions.md`.

@@ -2,8 +2,9 @@
 
 Read when: wiring an integration to a path, port, endpoint, or config key;
 making a change that must work across machines, agents, operating systems, or
-runtimes; generating derived artifacts; accepting a refactor; or collecting
-information into a durable artifact.
+runtimes; generating derived artifacts; picking per-item or whole-directory
+file ownership; accepting a refactor; or collecting information into a durable
+artifact.
 
 ## Integrations and Targets
 

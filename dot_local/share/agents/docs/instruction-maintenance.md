@@ -1,7 +1,8 @@
 # Instruction Maintenance
 
-Read when: proposing or applying a change to an instruction file, or choosing
-between a skill, a hook, and a `CLAUDE.md` rule. The form of the lines is in
+Read when: proposing or applying a change to an instruction file, choosing
+between a skill, a hook, and a `CLAUDE.md` rule, or copying an external skill
+in by hand. The form of the lines is in
 `instruction-writing-standard.md` beside this file.
 
 ## Proposing a Change

@@ -7,7 +7,7 @@ description: Vet a Claude Code skill, subagent, plugin, or MCP server before ins
 
 The rules to vet before installing and to get approval for risky extensions
 live in the user `CLAUDE.md` under "Agent Scripts and Extensions", and the
-rules for committing an extension live in
+rules for installing and committing an extension live in
 `~/.local/share/agents/docs/agent-extensions.md`; both apply whether or not
 this skill is loaded. What follows is the procedure.
 

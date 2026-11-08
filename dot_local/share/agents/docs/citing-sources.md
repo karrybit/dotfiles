@@ -1,7 +1,7 @@
 # Citing Sources
 
-Read when: quoting a source, citing a file or prior decision, writing that
-something is absent, or caching a source summary.
+Read when: quoting, citing, or claiming from a source, writing that something
+is absent, or using or writing a cached summary.
 
 ## Quoting and Citing
 

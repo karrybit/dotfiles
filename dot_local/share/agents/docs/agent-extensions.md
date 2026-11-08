@@ -1,7 +1,8 @@
 # Agent Extensions
 
-Read when: committing an agent extension or a managed skill, or deciding where
-an installed skill, plugin, MCP server, hook, or subagent is recorded.
+Read when: installing or committing an agent extension or a managed skill, or
+deciding where an installed skill, plugin, MCP server, hook, or subagent is
+recorded.
 
 - Treat skills, plugins, MCP servers, hooks, and subagents installed by Claude
   Code commands as runtime state, not chezmoi-managed source, unless the
