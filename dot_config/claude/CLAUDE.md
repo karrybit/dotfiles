@@ -248,10 +248,12 @@
 - Search file contents with `rg` and file paths with `fd`. Fall back to `grep` or
   `find` only when a required capability has no equivalent, and state that reason.
 - For structured data, reach for the structure-aware tool first: `jq` for JSON,
-  `yq` for YAML, `qsv` for CSV/TSV — for command output as well as files. Fall
-  back to a general-purpose language or a text tool (`sed`/`awk`/`cut`) only when
-  the structure-aware tool cannot express the transformation, and say which
-  capability was missing; awkward syntax is not such a reason.
+  `yq` for YAML, `qsv` for CSV/TSV — whether the data sits in a file or came
+  from an earlier command. This rule picks the tool; how calls connect is under
+  Known Permission-Gated Operations. Fall back to a general-purpose language or
+  a text tool (`sed`/`awk`/`cut`) only when the structure-aware tool cannot
+  express the transformation, and say which capability was missing; awkward
+  syntax is not such a reason.
 - When a preferred tool does not resolve here, say which fallback you are using
   and recommend installing the preferred one, naming the package and where to
   declare it.
@@ -284,15 +286,16 @@
   makes the call match neither: an allow rule needs every part allowed, and an
   excluded command stays sandboxed unless every part is excluded. Run the
   command alone, then process its output in the next call. For a pipeline
-  needed repeatedly, add a script under the repository's `bin/` and run it as
-  one call.
+  needed repeatedly, add a script where User-Scoped Agent Scripts places it and
+  run it as one call.
 - Keep broad auto-approval off the table for commands that can rewrite history,
   delete refs, run arbitrary scripts, or exfiltrate secrets — force-push above
   all.
 - Do not add `-u`/`--set-upstream` when pushing a new branch; `push.default =
   current` already covers it.
-- Branch from a remote ref with `git branch --no-track <new> <remote-ref> && git
-  checkout <new>`, never with `git switch -c` or `git checkout -b`.
+- Branch from a remote ref by running `git branch --no-track <new>
+  <remote-ref>`, then `git checkout <new>` as a separate call, never with `git
+  switch -c` or `git checkout -b`.
 - Clean up merged branches and worktrees with `git-vacuum`, an autoloaded zsh
   function reachable from the Bash tool as `zsh -ic 'git-vacuum "$@"' _ <repo>`.
   Always name the repository; without one it covers every ghq repository. It
@@ -321,8 +324,10 @@
   sandboxed `$TMPDIR` is shared by every concurrent session for this user, so a
   common subdirectory name silently overwrites another session's files. Name
   that absolute path in delegation prompts too.
-- A script expected to run again across sessions, be handed to another agent,
-  or kept as an executable procedure belongs under
+- A script that processes material of only one repository belongs in that
+  repository's `bin/`.
+- Any other script expected to run again across sessions or repositories, be
+  handed to another agent, or kept as an executable procedure belongs under
   `$XDG_DATA_HOME/agents/scripts/`, in a named subdirectory holding
   `README.md` and `bin/`.
 - That root is chezmoi-managed, but files below it are not unless explicitly
