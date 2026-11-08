@@ -94,8 +94,9 @@ remote-tracking ref implicitly sets up upstream tracking too
 Unlike a plain push, this failure is not cosmetic: it can leave the repository
 half-switched, with HEAD and the branch ref still on the old branch while the
 index and working tree already hold the new ref's content.
-`git branch --no-track <new> <remote-ref> && git checkout <new>` reaches the same
-end state without triggering the tracking-setup write.
+Running `git branch --no-track <new> <remote-ref>`, then `git checkout <new>` as
+a separate call, reaches the same end state without triggering the
+tracking-setup write.
 
 ## `.env*` Files Reported As Deleted
 
