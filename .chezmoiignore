@@ -22,6 +22,8 @@ docs
 !.local/share/agents/scripts/env-deny-hint/**
 !.local/share/agents/scripts/aqua-policy-allow
 !.local/share/agents/scripts/aqua-policy-allow/**
+!.local/share/agents/scripts/instruction-lint
+!.local/share/agents/scripts/instruction-lint/**
 .config/herdr/*
 !.config/herdr/config.toml
 .config/claude/hooks/*

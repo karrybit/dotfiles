@@ -1,0 +1,96 @@
+#!/bin/sh
+# Check the machine-checkable rules of instruction-writing-standard.md.
+# usage: instruction-lint FILE...
+# Prints one finding per line as FILE:LINE: message and exits 1 when any exist.
+
+set -u
+
+if [ "$#" -eq 0 ]; then
+	echo "usage: instruction-lint FILE..." >&2
+	exit 2
+fi
+
+status=0
+finding() {
+	printf '%s:%s: %s\n' "$1" "$2" "$3"
+	status=1
+}
+
+# Blank out fenced code blocks, inline code spans, and quoted spans, keeping
+# line numbers, so commands, examples, and words mentioned rather than used are
+# not read as rules.
+prose() {
+	awk '
+		/^[ \t]*(```|~~~)/ { fence = !fence; print ""; next }
+		fence { print ""; next }
+		{ gsub(/`[^`]*`/, ""); gsub(/「[^」]*」/, ""); gsub(/"[^"]*"/, ""); print }
+	' "$1"
+}
+
+for f in "$@"; do
+	if [ ! -f "$f" ]; then
+		finding "$f" 0 "not a file"
+		continue
+	fi
+
+	base=$(basename "$f")
+	parent=$(basename "$(dirname "$f")")
+	case $base in
+	SKILL.md) kind=skill ;;
+	CLAUDE.md | AGENTS.md) kind=always ;;
+	*)
+		case $parent in
+		agents) kind=agent ;;
+		rules) kind=always ;;
+		*) kind=other ;;
+		esac
+		;;
+	esac
+
+	lines=$(wc -l <"$f" | tr -d ' ')
+	if [ "$kind" = always ] && [ "$lines" -gt 200 ]; then
+		finding "$f" "$lines" "$lines lines; keep an always-loaded file at or under 200 (C12)"
+	fi
+	if [ "$kind" = skill ] && [ "$lines" -ge 500 ]; then
+		finding "$f" "$lines" "$lines lines; keep SKILL.md under 500"
+	fi
+
+	if [ "$kind" = skill ] || [ "$kind" = agent ]; then
+		if [ "$(head -n 1 "$f")" != "---" ]; then
+			finding "$f" 1 "no YAML frontmatter on line 1"
+		elif ! yq --front-matter=extract '.' "$f" >/dev/null 2>&1; then
+			finding "$f" 1 "frontmatter is not valid YAML; quote a value that contains ': '"
+		else
+			name=$(yq --front-matter=extract '.name // ""' "$f")
+			desc=$(yq --front-matter=extract '.description // ""' "$f")
+			[ -n "$desc" ] || finding "$f" 1 "frontmatter has no description"
+			if [ "$kind" = agent ]; then
+				[ -n "$name" ] || finding "$f" 1 "frontmatter has no name"
+			else
+				chars=$(yq --front-matter=extract '((.description // "") + (.when_to_use // "")) | length' "$f")
+				[ "$chars" -le 1536 ] ||
+					finding "$f" 1 "description and when_to_use total $chars characters; keep within 1536"
+			fi
+		fi
+	fi
+
+	prose "$f" |
+		rg -n --pcre2 '\b(MUST|IMPORTANT|NEVER|ALWAYS|CRITICAL)\b|必ず|絶対(?!パス)' |
+		while IFS=: read -r n _; do
+			echo "$f:$n: emphasis word; write it as plain wording (C6)"
+		done | rg -N --color=never . && status=1
+
+	prose "$f" |
+		awk -v f="$f" '
+			function close_step() {
+				if (step && !done) print f ":" step ": numbered step has no Completion: or 完了条件: line (C4)"
+				step = 0
+			}
+			/^[ \t]*[0-9]+\.[ \t]/ { close_step(); step = NR; done = 0; next }
+			/^#/ { close_step(); next }
+			/(Completion|完了条件):/ { done = 1 }
+			END { close_step() }
+		' | rg -N --color=never . && status=1
+done
+
+exit "$status"
