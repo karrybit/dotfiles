@@ -23,8 +23,8 @@ prose() {
 	awk '
 		/^[ \t]*(```|~~~)/ { fence = !fence; print ""; next }
 		fence { print ""; next }
-		{ gsub(/`[^`]*`/, ""); gsub(/「[^」]*」/, ""); gsub(/"[^"]*"/, ""); print }
-	' "$1"
+		{ gsub(/`[^`]*`/, ""); gsub(/"[^"]*"/, ""); print }
+	' "$1" | rg --passthru -N --color=never -r '' '「[^」]*」'
 }
 
 for f in "$@"; do
@@ -67,7 +67,7 @@ for f in "$@"; do
 			if [ "$kind" = agent ]; then
 				[ -n "$name" ] || finding "$f" 1 "frontmatter has no name"
 			else
-				chars=$(yq --front-matter=extract '((.description // "") + (.when_to_use // "")) | length' "$f")
+				chars=$(yq --front-matter=extract '((.description // "") + (.when_to_use // "")) | split("") | length' "$f")
 				[ "$chars" -le 1536 ] ||
 					finding "$f" 1 "description and when_to_use total $chars characters; keep within 1536"
 			fi
