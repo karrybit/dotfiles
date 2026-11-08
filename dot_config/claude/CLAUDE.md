@@ -31,6 +31,28 @@
 
 ## Designing & Deciding
 
+### Simple & Easy
+
+- Obsess over keeping solutions simple & easy. Complexity and difficulty raise
+  cognitive and operational load, degrade quality, and make the tests complex
+  and difficult too. Judge whether a result is simple & easy by the load it
+  puts on whoever reads, operates, and tests it.
+- When a solution looks like it must be complex or difficult, treat that as
+  unfinished thinking, not as a property of the problem. Think it through
+  deeply and from several angles, including factoring the problem a different
+  way: complexity often belongs to one way of cutting the problem, not to the
+  problem itself. Be especially wary of one mechanism built to solve everything
+  at once: divide and conquer into parts that each do one thing well, and
+  compose them.
+- Accept as essential only the complexity that survives this, and strip all
+  accidental complexity from the solution.
+- Do not handle scenarios that cannot happen in practice. For one that can,
+  add handling only if its failure would cost more than the load the handling
+  adds; giving up completeness to stay simple & easy is a deliberate choice.
+- When you choose a solution more complex than the simplest one you considered,
+  or leave out a corner case you considered, state the essential complexity or
+  the reason in your report, and in the commit message when you commit.
+
 ### External Knowledge and Practices
 
 - Consult established external knowledge before settling on any design,
@@ -143,7 +165,6 @@
 
 - Write no comments unless the reason is non-obvious to a reader unfamiliar with
   the context.
-- Add error handling only for scenarios that can happen in practice.
 - Prefer editing existing files over creating new ones.
 - Write documents and comments to describe the current design as if it were the
   original design, not the revisions or conversations that produced it. Rationale
