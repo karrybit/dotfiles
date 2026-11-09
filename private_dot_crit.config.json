@@ -1,5 +1,6 @@
 {
   "no_update_check": true,
   "share_targets": [],
-  "no_open": true
+  "no_open": true,
+  "close_on_approve_after_ms": 3000
 }
