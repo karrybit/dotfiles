@@ -136,8 +136,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/mikefarah/yq/v4.54.2/yq_darwin_arm64",
-      "checksum": "D7CFC43FD81E3EB56E4A5E1649C20133DD1A7151C40B702E90B8F6E98BEF272BC81B535B89BBA2DE38CD9FAC114BE534DC76DF062FD2B7B72D28269191A10883",
+      "id": "github_release/github.com/mikefarah/yq/v4.54.3/yq_darwin_arm64",
+      "checksum": "03ED7026BA8BE7B8D534ED029A950115E7FB2838BD84555E012004751FD073C6240B2F020D2F6A70ED394E76550A55B66427A4FE82B481E1560C53E8E220CFDF",
       "algorithm": "sha512"
     },
     {
@@ -206,8 +206,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "http/awscli.amazonaws.com/AWSCLIV2-2.39.6.pkg",
-      "checksum": "EC350E9E8E9CEB49CCD2CB7FCDC69F3B6A424F83DBAE64F3DC6499157A5ECA07",
+      "id": "http/awscli.amazonaws.com/AWSCLIV2-2.39.7.pkg",
+      "checksum": "A6D419EC5CE460101499246C9EE8A8A6020E43B7CF6355A388274F5127F2E99F",
       "algorithm": "sha256"
     },
     {
