@@ -37,6 +37,14 @@ settings: Dynamic = new Dynamic {
       "Bash(yq --version)"
       "Bash(rumdl --version)"
       "Bash(glow --version)"
+      // ghq clones and creates only under `ghq root`; `ghq rm` stays in ask.
+      "Bash(ghq get *)"
+      "Bash(ghq create *)"
+      "Bash(ghq list *)"
+      "Bash(ghq root *)"
+    }
+    ask {
+      "Bash(ghq rm *)"
     }
     deny {
       "Read(./.env)"
@@ -59,6 +67,9 @@ settings: Dynamic = new Dynamic {
     enableWeakerNetworkIsolation = true
     excludedCommands {
       "docker *"
+      // `ghq root` is outside the sandbox's writable paths.
+      "ghq get *"
+      "ghq create *"
     }
     filesystem {
       // The chezmoi source repository, so editing source and running git inside
