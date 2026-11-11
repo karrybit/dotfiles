@@ -9,4 +9,7 @@
 # work hash: {{ if eq .profile "work" }}{{ output "sh" "-c" (printf "if [ -f %q ]; then shasum -a 256 %q; else printf absent; fi" $workSettings $workSettings) }}{{ else }}ignored{{ end }}
 set -euo pipefail
 
+export AQUA_GLOBAL_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/aquaproj-aqua/{{ .profile }}/aqua.yaml"
+PATH="${AQUA_ROOT_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua}/bin:$PATH"
+
 generate_claude_settings

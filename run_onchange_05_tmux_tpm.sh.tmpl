@@ -3,6 +3,9 @@
 # hash: {{ include "dot_config/tmux/tmux.conf" | sha256sum }}
 set -e
 
+export AQUA_GLOBAL_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/aquaproj-aqua/{{ .profile }}/aqua.yaml"
+PATH="${AQUA_ROOT_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua}/bin:$PATH"
+
 if ! command -v tmux >/dev/null 2>&1; then
   exit 0
 fi
