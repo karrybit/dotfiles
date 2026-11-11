@@ -155,6 +155,7 @@ settings: Dynamic = new Dynamic {
     ["slack@claude-plugins-official"] = true
     ["yomiyasu@yomiyasu"] = true
     ["imozuru@imozuru"] = true
+    ["plannotator-effective-html@effective-html"] = true
   }
   extraKnownMarketplaces {
     ["yomiyasu"] {
