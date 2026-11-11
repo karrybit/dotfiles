@@ -169,6 +169,12 @@ settings: Dynamic = new Dynamic {
         repo = "MaryCache/imozuru"
       }
     }
+    ["effective-html"] {
+      source {
+        source = "github"
+        repo = "plannotator/effective-html"
+      }
+    }
   }
   alwaysThinkingEnabled = true
   effortLevel = "xhigh"
