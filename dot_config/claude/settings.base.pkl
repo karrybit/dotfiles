@@ -156,6 +156,7 @@ settings: Dynamic = new Dynamic {
     ["yomiyasu@yomiyasu"] = true
     ["imozuru@imozuru"] = true
     ["plannotator-effective-html@effective-html"] = true
+    ["pstack@cursor-plugins"] = true
   }
   extraKnownMarketplaces {
     ["yomiyasu"] {
@@ -174,6 +175,12 @@ settings: Dynamic = new Dynamic {
       source {
         source = "github"
         repo = "plannotator/effective-html"
+      }
+    }
+    ["cursor-plugins"] {
+      source {
+        source = "github"
+        repo = "cursor/plugins"
       }
     }
   }
