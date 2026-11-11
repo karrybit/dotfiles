@@ -1,5 +1,7 @@
 #!/bin/zsh
 
+# zsh-abbr comes from Homebrew, so Linux profiles have no abbreviations.
+[[ -r /opt/homebrew/share/zsh-abbr/zsh-abbr.zsh ]] || return 0
 source /opt/homebrew/share/zsh-abbr/zsh-abbr.zsh
 
 if type brew &>/dev/null; then
