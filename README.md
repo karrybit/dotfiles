@@ -102,10 +102,19 @@ On first launch, Neovim will automatically install plugins via lazy.nvim.
 
 #### Linux (`private_minipc`)
 
-No Homebrew. Install aqua with
+No Homebrew. Install the apt packages and aqua with
 [aqua-installer](https://aquaproj.github.io/docs/products/aqua-installer)
 first, so the `run_onchange_` scripts can install the aqua-managed tools and
-Python during the first apply.
+Python during the first apply. `build-essential` provides the C linker that
+`cargo install` needs, and `bubblewrap` and `socat` are what the Claude Code
+sandbox requires on Linux.
+
+```sh
+# 0. Install the apt prerequisites and make zsh the login shell
+sudo apt update
+sudo apt install -y zsh git curl build-essential bubblewrap socat
+chsh -s "$(command -v zsh)"
+```
 
 ```sh
 # 1. Install aqua (check the installer's current version and checksum in its docs)
@@ -117,10 +126,22 @@ chmod +x aqua-installer
 
 ```sh
 # 2. Install chezmoi and apply dotfiles
-sh -c "$(curl -fsLS get.chezmoi.io)"
+sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin
+export PATH="$HOME/.local/bin:$PATH"
 chezmoi init --apply karrybit/dotfiles
 # When prompted, enter: private_minipc
 ```
+
+```sh
+# 3. Log in with zsh, install Claude Code, and authenticate GitHub
+exec zsh -l
+curl -fsSL https://claude.ai/install.sh | bash
+gh auth login
+gh auth setup-git
+```
+
+Claude Code comes from its native installer, as on macOS, and Codex from aqua,
+as on `private_neo`.
 
 On first launch, Neovim will automatically install plugins via lazy.nvim.
 
