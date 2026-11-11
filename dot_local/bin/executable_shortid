@@ -1,0 +1,6 @@
+#!/bin/bash
+# Prints a random 8-character id of lowercase letters and digits.
+# LC_ALL=C keeps macOS tr from failing on bytes that are not valid UTF-8.
+# No pipefail: tr exits on SIGPIPE once head has its 8 bytes.
+LC_ALL=C tr -dc 'a-z0-9' </dev/urandom | head -c 8
+echo
