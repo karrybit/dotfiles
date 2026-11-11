@@ -81,8 +81,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/gradle/gradle-distributions/v9.9.0/gradle-9.9.0-bin.zip",
-      "checksum": "0B00B0FFE07C4D4789C12D4935A44A7057D55774B7540BD4A3F76F336DEB177A",
+      "id": "github_release/github.com/gradle/gradle-distributions/v9.9.1/gradle-9.9.1-bin.zip",
+      "checksum": "D8A18A7A841DD5DF825D35A685FAD6F2D7F12AC0C280E57B67C27B4A520BA228",
       "algorithm": "sha256"
     },
     {
@@ -161,8 +161,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/rvben/rumdl/v0.3.2/rumdl-v0.3.2-aarch64-apple-darwin.tar.gz",
-      "checksum": "A1EEFB1CD2E0CAFA42F0CA98D3F8713D7E73F9EBA77FC8EF0ED6836875197935",
+      "id": "github_release/github.com/rvben/rumdl/v0.3.3/rumdl-v0.3.3-aarch64-apple-darwin.tar.gz",
+      "checksum": "8C60FBFC8064ACDA1E40856BFDBC7CC5F51A477920DE1BAE9426482D08916424",
       "algorithm": "sha256"
     },
     {
@@ -206,8 +206,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "http/awscli.amazonaws.com/AWSCLIV2-2.39.7.pkg",
-      "checksum": "A6D419EC5CE460101499246C9EE8A8A6020E43B7CF6355A388274F5127F2E99F",
+      "id": "http/awscli.amazonaws.com/AWSCLIV2-2.40.0.pkg",
+      "checksum": "B261555732C894B11E2AF09BC7A0469E7B788A32333CCB54FAE0E87423323DC0",
       "algorithm": "sha256"
     },
     {
@@ -221,8 +221,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "http/golang.org/dl/go1.27.3.darwin-arm64.tar.gz",
-      "checksum": "DD3908CF20959D798C1E06EBE5B72213F0505CE01373B40CE3110975A6CD99C2",
+      "id": "http/golang.org/dl/go1.27.4.darwin-arm64.tar.gz",
+      "checksum": "91A44A2B8A716600AD94A4F143E156116620DB8828086A6E3602291BE9BD0BB4",
       "algorithm": "sha256"
     },
     {
