@@ -1,6 +1,6 @@
 #!/bin/bash
-# Prints a random id of lowercase letters and digits: the length given with
-# -n, or 8 characters when -n is absent or not a positive integer.
+# Prints a random id of lowercase letters and digits: 8 characters, or the
+# length given with -n.
 # LC_ALL=C keeps macOS tr from failing on bytes that are not valid UTF-8.
 # No pipefail: tr exits on SIGPIPE once head has its bytes.
 
@@ -19,9 +19,9 @@ done
 shift $((OPTIND - 1))
 [ $# -eq 0 ] || usage
 case $length in
-  '' | *[!0-9]*) length=8 ;;
+  '' | *[!0-9]*) usage ;;
 esac
-[ "$length" -gt 0 ] || length=8
+[ "$length" -gt 0 ] || usage
 
 LC_ALL=C tr -dc 'a-z0-9' </dev/urandom | head -c "$length"
 echo
