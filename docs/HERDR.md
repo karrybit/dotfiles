@@ -223,7 +223,9 @@ whatever is missing. Running it again only brings the same session back:
    - Restores the name on a Claude Code agent that a server restart brought
      back unnamed.
    - Otherwise starts Claude Code in a free shell pane, or in a new tab when
-     every pane is busy.
+     every pane is busy. A pane whose shell has not reached its prompt yet,
+     as right after a restore, is retried for a few seconds before the next
+     pane is tried.
 4. Focuses the workspace and attaches. Inside herdr it focuses without
    attaching.
 

@@ -44,11 +44,19 @@ fi
 
 # Starting Claude reports agent_not_ready while a dialog such as workspace
 # trust is open; that pane is still the CoS and the user answers it on attach.
+# A pane the server has just created or restored reports agent_pane_busy until
+# its shell reaches the prompt, so the pane is retried for a few seconds
+# before the next one is tried; otherwise Claude lands in whichever pane's
+# shell starts first instead of the first pane of the layout.
 start_claude() {
   local pane=$1 err
-  if err=$(herdr agent start "$name" --kind claude --pane "$pane" -- "${claude_args[@]}" 2>&1 >/dev/null); then
-    return 0
-  fi
+  for _ in $(seq 1 25); do
+    if err=$(herdr agent start "$name" --kind claude --pane "$pane" -- "${claude_args[@]}" 2>&1 >/dev/null); then
+      return 0
+    fi
+    jq -e '.error.code == "agent_pane_busy"' <<<"$err" >/dev/null 2>&1 || break
+    sleep 0.2
+  done
   jq -e '.error.code == "agent_not_ready"' <<<"$err" >/dev/null 2>&1
 }
 
