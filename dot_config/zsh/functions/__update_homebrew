@@ -15,7 +15,7 @@ __lib_require_commands chezmoi git jq __lib_chezmoi_profile || return 1
     local _profile
     local _brewfile
 
-    _profile=$(__lib_chezmoi_profile "work") || exit
+    _profile=$(__lib_chezmoi_profile) || exit
     _brewfile="${XDG_CONFIG_HOME:-$HOME/.config}/homebrew/Brewfile.${_profile}"
 
     brew upgrade || exit

@@ -4,7 +4,6 @@ __lib_chezmoi_profile() {
     # `jq` can hang forever waiting on stdin if a stray version-manager shim
     # shadows it. Bound the wait so that surfaces as a visible warning
     # instead of silently blocking whatever called this.
-    local _default=$1
     local _timeout=10
     local _outfile
     local _pid
@@ -31,11 +30,11 @@ __lib_chezmoi_profile() {
     rm -f "${_outfile}"
 
     if (( _timed_out )); then
-        __lib_echo_warning "chezmoi profile lookup timed out after ${_timeout}s (chezmoi data | jq hung) — falling back to \"${_default:-unknown}\"\n"
+        __lib_echo_warning "chezmoi profile lookup timed out after ${_timeout}s (chezmoi data | jq hung)\n"
     fi
 
-    [[ -z "${_profile}" ]] && _profile=${_default}
     if [[ -z "${_profile}" ]]; then
+        __lib_echo_failure "chezmoi profile not found; set it with chezmoi init\n"
         return 1
     fi
     printf '%s' "${_profile}"
