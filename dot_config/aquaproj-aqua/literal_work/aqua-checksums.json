@@ -206,8 +206,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "http/awscli.amazonaws.com/AWSCLIV2-2.40.0.pkg",
-      "checksum": "B261555732C894B11E2AF09BC7A0469E7B788A32333CCB54FAE0E87423323DC0",
+      "id": "http/awscli.amazonaws.com/AWSCLIV2-2.40.1.pkg",
+      "checksum": "A7BAAFB7FBB1C395A738906CFE49EA15F6B0E13E22C2B4CD2BC51D8F4AAF5FC7",
       "algorithm": "sha256"
     },
     {
@@ -226,13 +226,13 @@
       "algorithm": "sha256"
     },
     {
-      "id": "http/nodejs.org/dist/v26.13.0/node-v26.13.0-darwin-arm64.tar.gz",
-      "checksum": "D38BD5E5A2DDCE6BBB5CE45E46E208337DA4D51FFFE611E567FD32073D6439F6",
+      "id": "http/nodejs.org/dist/v26.13.1/node-v26.13.1-darwin-arm64.tar.gz",
+      "checksum": "AEC2514EA1CEB2BA52455E9EC65986F6749A06DD759E5DB2A72E6889668C9735",
       "algorithm": "sha256"
     },
     {
-      "id": "http/releases.hashicorp.com/terraform/1.17.1/terraform_1.17.1_darwin_arm64.zip",
-      "checksum": "B1ECB3FE0D0A0290C1AB6F83D967D43F25DA05D0B671EE0FB355252268DCE95A",
+      "id": "http/releases.hashicorp.com/terraform/1.17.2/terraform_1.17.2_darwin_arm64.zip",
+      "checksum": "DA0C7EF278A911347862758E7573A5907365E66485C2637CF5C217C5E227992E",
       "algorithm": "sha256"
     },
     {
@@ -241,8 +241,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.583.0/registry.yaml",
-      "checksum": "4DF93DAEA98288B1C20AFA5AA9559CD09E6311C82D5FEBB6081B0D7F5F57A3EF",
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.584.0/registry.yaml",
+      "checksum": "2850916D8E46BCB75075F4CCE621C713C4BC8EDEF33D616E84426F428BBB6EA8",
       "algorithm": "sha256"
     }
   ]
