@@ -1,0 +1,24 @@
+#!/bin/bash
+# Claude Code PreToolUse hook (matcher: the chrome-devtools MCP server's
+# new_page, navigate_page, and slim navigate tools).
+# Blocks opening any URL other than a local development server or a local
+# file. A tool call without a url (navigate_page back/forward/reload) passes.
+# Extra allowed URL prefixes, one per line, can be listed in the file below,
+# which lives outside the dotfiles repository so private hosts stay out of it.
+set -u
+
+if ! command -v jq >/dev/null 2>&1; then
+    echo "chrome-devtools-url-guard: jq is missing, so the URL cannot be checked." >&2
+    exit 2
+fi
+
+url=$(jq -r '.tool_input.url // empty')
+[ -n "$url" ] || exit 0
+
+printf '%s' "$url" | grep -qE '^(http://(localhost|127\.0\.0\.1)(:[0-9]+)?([/?#]|$)|file://)' && exit 0
+
+extra="${XDG_CONFIG_HOME:-$HOME/.config}/chrome-devtools-url-guard/allowed-url-prefixes"
+[ -r "$extra" ] && while IFS= read -r prefix; do [ -n "$prefix" ] && case "$url" in "$prefix"*) exit 0 ;; esac; done <"$extra"
+
+echo "chrome-devtools-url-guard: $url is not a local page. Open only http://localhost, http://127.0.0.1 (any port), or file:// URLs; ask the user to check any other site in their own browser." >&2
+exit 2

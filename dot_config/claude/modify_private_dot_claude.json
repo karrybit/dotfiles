@@ -1,0 +1,21 @@
+#!/bin/bash
+# Declares the user-scope chrome-devtools MCP server and passes the rest of
+# Claude Code's runtime state through unchanged. jq keeps the file's key order,
+# so only the declared entry differs from what Claude Code wrote.
+# Its URL guard is the PreToolUse hook in settings.base.pkl.
+set -euo pipefail
+
+jq -n '(try input catch {}) | .mcpServers["chrome-devtools"] = {
+  type: "stdio",
+  command: "npx",
+  args: [
+    "-y",
+    "chrome-devtools-mcp@1.13.0",
+    "--isolated",
+    "--headless",
+    "--no-usage-statistics",
+    "--no-performance-crux",
+    "--no-category-network"
+  ],
+  env: {CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS: "1"}
+}'

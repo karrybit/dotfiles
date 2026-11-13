@@ -24,6 +24,8 @@ docs
 !.local/share/agents/scripts/aqua-policy-allow/**
 !.local/share/agents/scripts/instruction-lint
 !.local/share/agents/scripts/instruction-lint/**
+!.local/share/agents/scripts/chrome-devtools-url-guard
+!.local/share/agents/scripts/chrome-devtools-url-guard/**
 .config/herdr/*
 !.config/herdr/config.toml
 .config/claude/hooks/*

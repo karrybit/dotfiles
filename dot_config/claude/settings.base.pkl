@@ -234,6 +234,15 @@ settings: Dynamic = new Dynamic {
           }
         }
       }
+      new Dynamic {
+        matcher = "mcp__chrome-devtools__(new_page|navigate_page|navigate)"
+        hooks = new Listing {
+          new Dynamic {
+            type = "command"
+            command = "\"$HOME\"/.local/share/agents/scripts/chrome-devtools-url-guard/bin/check-url"
+          }
+        }
+      }
     }
     ["PostToolUse"] = new Listing {
       new Dynamic {

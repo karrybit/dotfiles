@@ -63,6 +63,12 @@ preferences declared there while passing machine-local state such as
 enter this repository. The `private_` source attribute keeps the live file at
 mode `0600`.
 
+Claude Code's `~/.config/claude/.claude.json` is partially managed the same
+way by `dot_config/claude/modify_private_dot_claude.json`, which declares only
+the user-scope `chrome-devtools` MCP server and passes the rest of that runtime
+state file through with `jq`. The server's URL guard is described in
+`dot_local/share/agents/scripts/chrome-devtools-url-guard/README.md`.
+
 ---
 
 ## Usage
