@@ -157,6 +157,7 @@ settings: Dynamic = new Dynamic {
     ["imozuru@imozuru"] = true
     ["plannotator-effective-html@effective-html"] = true
     ["pstack@cursor-plugins"] = true
+    ["visual-explainer@visual-explainer-marketplace"] = true
   }
   extraKnownMarketplaces {
     ["yomiyasu"] {
@@ -181,6 +182,12 @@ settings: Dynamic = new Dynamic {
       source {
         source = "github"
         repo = "cursor/plugins"
+      }
+    }
+    ["visual-explainer-marketplace"] {
+      source {
+        source = "github"
+        repo = "nicobailon/visual-explainer"
       }
     }
   }
