@@ -34,13 +34,10 @@ URL を開く呼び出しを exit 2 で止める。
 - **`evaluate_script` は止めない。** JavaScript からのページ移動（`location.href` など）
   は hook では見えないが、ブラウザは一時プロファイルで認証情報を持たず、開く起点は
   ローカルのページだけなので、止める仕組みを足す負荷に見合わない。
-- **サーバーの `--allowedUrlPattern` は使わない。** サブリソースも止めるため、CDN から
-  スクリプトやフォントを読む HTML が正しく描画されなくなる。
+- **サーバーの `--allowedUrlPattern` は重ねない。** 外への通信は proxy で止まっている。
+  この引数は Chrome 149 以上が要り、URL Pattern の書き方（ポートを省くと既定のポート
+  だけに一致するなど）に癖があり、動きを確かめていない。
 - **jq が無ければ止める。** URL を確かめられないまま通さない。
-- 許す URL を足すときは、git 管理の外の
-  `${XDG_CONFIG_HOME:-$HOME/.config}/chrome-devtools-url-guard/allowed-url-prefixes` に
-  1 行 1 つの前置きで書く（例: `https://dev.example.test/`）。末尾の `/` まで書くと、
-  `https://dev.example.test.attacker.example/` のような別ホストに一致しない。
 
 ## 動作確認
 
