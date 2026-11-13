@@ -15,7 +15,8 @@ jq -n '(try input catch {}) | .mcpServers["chrome-devtools"] = {
     "--headless",
     "--no-usage-statistics",
     "--no-performance-crux",
-    "--no-category-network"
+    "--no-category-network",
+    "--proxyServer=127.0.0.1:9"
   ],
   env: {CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS: "1"}
 }'

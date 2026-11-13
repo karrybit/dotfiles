@@ -28,6 +28,9 @@ URL を開く呼び出しを exit 2 で止める。
 - **サーバー側の引数で一時プロファイルと headless に固定する。** `--isolated` と
   `--headless` で、既存のプロファイルやタブを持つ Chrome に触れない。既存の Chrome
   につなぐ `--autoConnect`・`--browserUrl`・`--wsEndpoint` は使わない。
+- **外への通信は、待ち受けのないポートを指す `--proxyServer=127.0.0.1:9` で止める。**
+  ページが読み込む外部のスクリプトやフォントも失敗し、Chrome が既定で proxy を通さない
+  loopback（`localhost`・`127.0.0.1`）と `file://` だけが開ける。
 - **`evaluate_script` は止めない。** JavaScript からのページ移動（`location.href` など）
   は hook では見えないが、ブラウザは一時プロファイルで認証情報を持たず、開く起点は
   ローカルのページだけなので、止める仕組みを足す負荷に見合わない。
