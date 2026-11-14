@@ -1,6 +1,6 @@
 ---
 name: eval-auditor
-description: Audit a `claude plugin eval` suite and its result JSON files, and propose grader and case changes without applying them. Use before adopting a change to an eval suite's graders or cases.
+description: Audit a `claude plugin eval` suite and its result JSON files, and propose grader and case changes without applying them. Use when changing an eval suite's graders or cases, or when its results disagree; the skill-eval skill runs it with `claude -p --agent eval-auditor`.
 tools: Read, Glob, Grep, Bash
 model: claude-fable-5-1
 ---

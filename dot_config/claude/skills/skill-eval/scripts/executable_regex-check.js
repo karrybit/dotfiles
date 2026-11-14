@@ -1,4 +1,5 @@
-// Usage: node regex-check.js GRADER.md FILE
+#!/usr/bin/env node
+// Usage: regex-check.js GRADER.md FILE
 // Applies a Plugin Evals regex grader (pattern, flags, match) to FILE and prints pass/fail.
 const fs = require("fs");
 const [grader, file] = process.argv.slice(2);

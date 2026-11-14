@@ -1,0 +1,27 @@
+#!/bin/sh
+# Usage: skill-wrap SKILL_DIR REF OUT_DIR
+# Builds a plugin directory at OUT_DIR (which must not exist yet) holding the
+# skill in SKILL_DIR as committed at git REF, and the suites and fixtures from
+# SKILL_DIR/evals in the working tree, so one suite can be run against several
+# skill versions. Each SKILL_DIR/evals/plugin-eval* directory becomes evals*.
+set -eu
+skill=$(cd "$1" && pwd)
+ref=$2
+out=$3
+name=$(basename "$skill")
+
+mkdir "$out"
+mkdir -p "$out/.claude-plugin" "$out/skills/$name"
+git -C "$skill" archive "$ref" . \
+  | tar -x -C "$out/skills/$name" --exclude=evals --exclude=PROVENANCE.md
+commit=$(git -C "$skill" rev-parse --short "$ref")
+printf '{"name":"kit","version":"0.0.0+%s","description":"Tools"}\n' "$commit" \
+  > "$out/.claude-plugin/plugin.json"
+for suite in "$skill"/evals/plugin-eval*; do
+  base=$(basename "$suite")
+  cp -R "$suite" "$out/evals${base#plugin-eval}"
+done
+if [ -d "$skill/evals/fixtures" ]; then
+  cp -R "$skill/evals/fixtures" "$out/fixtures"
+fi
+echo "$out <- $name@$commit"

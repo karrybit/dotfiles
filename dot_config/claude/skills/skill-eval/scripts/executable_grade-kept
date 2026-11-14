@@ -1,0 +1,30 @@
+#!/bin/sh
+# Usage: grade-kept GRADE_PY RESULT_JSON ITER_DIR
+# Runs GRADE_PY over the workspaces that `claude plugin eval --keep-temp` left
+# behind. Each case is looked up by name in the evals.json beside GRADE_PY,
+# whose files[0] is the case's fixture directory relative to that evals.json.
+# Each workspace is copied, without its .git, onto a fresh repository built
+# from the fixture, so git never runs inside a directory the agent wrote.
+set -eu
+grade=$(cd "$(dirname "$1")" && pwd)/$(basename "$1")
+result=$2
+iter=$3
+evals=$(dirname "$grade")
+
+jq -r '.cases[] | .name as $n | (.arms | to_entries[]) | .key as $arm
+  | .value | to_entries[] | [$n, $arm, (.key + 1), .value.tracePath] | @tsv' "$result" |
+while IFS="$(printf '\t')" read -r name arm i trace; do
+  files=$(jq -r --arg n "$name" '.evals[] | select(.name == $n) | .files[0]' \
+    "$evals/evals.json")
+  fixture=$(basename "$files")
+  kept=$(dirname "$(dirname "$trace")")
+  chmod 700 "$kept" "$kept/sealed"
+  repo=$iter/eval-$fixture/$arm-$i/repo
+  mkdir -p "$repo"
+  cp -R "$evals/$files/." "$repo/"
+  git -C "$repo" init -q
+  git -C "$repo" add -A
+  git -C "$repo" -c user.name=fixture -c user.email=fixture@example.invalid commit -qm fixture
+  rsync -a --delete --exclude .git "$kept/sealed/home/cwd/" "$repo/"
+done
+python3 -I "$grade" "$iter"
