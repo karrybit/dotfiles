@@ -12,8 +12,6 @@ docs
 .config/zsh/.zcompdump
 .config/zsh/.zsh_sessions
 .local/share/agents/scripts/*
-!.local/share/agents/scripts/agent-extension-security
-!.local/share/agents/scripts/agent-extension-security/**
 !.local/share/agents/scripts/pii-publish-guard
 !.local/share/agents/scripts/pii-publish-guard/**
 !.local/share/agents/scripts/pdf-cite
@@ -30,7 +28,6 @@ docs
 !.config/herdr/config.toml
 .config/claude/hooks/*
 .local/share/agents/docs/*
-!.local/share/agents/docs/agent-extension-security.md
 !.local/share/agents/docs/agent-extensions.md
 !.local/share/agents/docs/agent-scripts.md
 !.local/share/agents/docs/citing-sources.md
@@ -38,9 +35,7 @@ docs
 !.local/share/agents/docs/failure-diagnosis.md
 !.local/share/agents/docs/git-and-github.md
 !.local/share/agents/docs/instruction-maintenance.md
-!.local/share/agents/docs/document-review-evidence.md
 !.local/share/agents/docs/instruction-writing-standard.md
-!.local/share/agents/docs/llm-as-reviewer-evidence.md
 !.local/share/agents/docs/medallion-information-design.md
 !.local/share/agents/docs/sandbox-and-environment-gotchas.md
 

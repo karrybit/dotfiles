@@ -3,10 +3,10 @@
 Utilities for reviewing public Claude Code skills, subagents, and
 plugin-provided agent extensions before installation.
 
-Run the vetting script against a candidate directory:
+From the skill's folder, run the vetting script against a candidate directory:
 
 ```sh
-$XDG_DATA_HOME/agents/scripts/agent-extension-security/bin/vet-agent-extension /path/to/candidate
+scripts/vet-agent-extension /path/to/candidate
 ```
 
 The script reports risky indicators. Treat its output as a review checklist,

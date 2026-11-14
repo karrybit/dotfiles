@@ -78,3 +78,7 @@
   explicitly allowlisted summaries are chezmoi-managed.
 - Agent-operated scripts belong under `~/.local/share/agents/scripts/`; only
   explicitly allowlisted script sets are chezmoi-managed.
+- When a summary or script is used by one skill only, put it in that skill's
+  folder instead, and reference a script there as
+  `${CLAUDE_SKILL_DIR}/scripts/<name>`; keep under `~/.local/share/agents/`
+  what `CLAUDE.md`, settings, hooks, or more than one skill use.

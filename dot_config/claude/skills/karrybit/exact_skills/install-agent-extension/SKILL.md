@@ -1,6 +1,6 @@
 ---
 name: install-agent-extension
-description: Vet a Claude Code skill, subagent, plugin, or MCP server before installing or enabling it. Use when asked to install, add, enable, or try out an agent extension from a marketplace, a GitHub repository, or a directory on disk, and when authoring a subagent definition. Covers what to inspect, source and license requirements, and the tool defaults a new subagent should start from. The source basis is recorded in ~/.local/share/agents/docs/agent-extension-security.md.
+description: Vet a Claude Code skill, subagent, plugin, or MCP server before installing or enabling it. Use when asked to install, add, enable, or try out an agent extension from a marketplace, a GitHub repository, or a directory on disk, and when authoring a subagent definition. Covers what to inspect, source and license requirements, and the tool defaults a new subagent should start from. The source basis is recorded in agent-extension-security.md in this skill's folder.
 ---
 
 # Installing an agent extension
@@ -21,7 +21,7 @@ this skill is loaded. What follows is the procedure.
    resources.
    Completion: every item in that list has been inspected.
 2. When the candidate is on disk, run
-   `$XDG_DATA_HOME/agents/scripts/agent-extension-security/bin/vet-agent-extension`
+   `${CLAUDE_SKILL_DIR}/scripts/vet-agent-extension`
    against its directory.
    Completion: the script has run against the candidate's directory.
 3. Check the source and license as "Source and License" describes.
