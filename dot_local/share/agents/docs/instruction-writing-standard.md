@@ -34,6 +34,8 @@ date in Cases), `[inferred]` is unverified reasoning.
 - Compare your model ID with Models checked; when it is missing, or when another
   Revalidate when trigger holds, run Revalidation before the edit. [inferred]
 - Keep the file's current language; write one language per file. [inferred]
+- When delegating the edit, name this file's path in the delegation prompt,
+  since a subagent acts on its prompt. [inferred]
 
 ## Common Rules
 

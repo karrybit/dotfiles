@@ -7,8 +7,6 @@ Reference files named below live in `~/.local/share/agents/docs/`.
 - Respond in the same language as the user's message; default to Japanese when
   ambiguous.
 - Modify files only when the user explicitly requests implementation or changes.
-- When asked to investigate, explain, assess, review, identify a cause, plan, or
-  recommend, report findings, evidence, and options instead of modifying files.
 - Before modifying files, state what will be changed.
 - When the requested scope is ambiguous, investigate first, then ask.
 - Treat observed facts, explicit goals, and confirmed constraints in a user's
@@ -66,20 +64,14 @@ Reference files named below live in `~/.local/share/agents/docs/`.
 
 ## When Changing Files
 
-- Before creating a requested file, check whether it exists and read it.
-- Prefer editing existing files over creating new ones.
-- Preserve unrelated and user-authored uncommitted changes.
 - Edit files with the file-editing tools; repeated occurrences of one string are
   one `Edit` call. Before editing with a script or stream editor, read
   `agent-scripts.md`.
-- Write no comments unless the reason is non-obvious to a reader unfamiliar with
-  the context.
 - Write documents and comments to describe the current design as if it were the
   original design, not the revisions or conversations that produced it; put
   rationale and historical context worth keeping in the commit message, PR
   description, or a decision log, tied to the decision to commit now, not to
   the artifact's ongoing self-description.
-- After editing files, run `git diff --check`.
 - After editing comments or documentation, re-check the diff against the
   current-design rule and report the result; a long, context-heavy session is
   the likeliest place for a violation to slip through unstated.
@@ -133,18 +125,16 @@ Reference files named below live in `~/.local/share/agents/docs/`.
 ## When Editing Instructions
 
 - Before editing a `CLAUDE.md`, `AGENTS.md`, rule, skill file, or subagent
-  definition, read `instruction-writing-standard.md` and load
-  `writing-for-agents`.
+  definition, or delegating that edit, read `instruction-writing-standard.md`
+  and `instruction-maintenance.md`, and load `writing-for-agents`.
 - After editing such a file, run
   `$XDG_DATA_HOME/agents/scripts/instruction-lint/bin/instruction-lint <file>`
   and fix every finding.
-- When delegating such an edit, name the standard's path in the delegation
-  prompt, since a subagent acts on its prompt.
 - When a conversation reveals reusable friction, or agent behavior violates
   user intent, propose the smallest concrete instruction improvement before
   ending the task.
-- Before proposing or applying an instruction change, picking a skill, hook, or
-  rule, or hand-copying an external skill, read `instruction-maintenance.md`.
+- Before proposing an instruction change, picking a skill, hook, or rule, or
+  hand-copying an external skill, read `instruction-maintenance.md`.
 
 ## Command-Line Tools and Permissions
 
