@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# Show that crit-open hands open only http://localhost:<port> for a port made of digits and refuses
+# any other argument, against an open on PATH that logs what it is given. Given a Claude Code
+# settings.json, also show that it allows crit-open and runs it outside the sandbox, and has no rule
+# or exclusion for open itself.
+# usage: crit-open-test [<settings.json>]   (tests the crit-open beside this script; its files go
+#        to a temporary directory that is removed)
+set -uo pipefail
+exec </dev/null
+bin=$(cd "$(dirname "$0")" && pwd)
+co=$bin/crit-open
+settings=${1:-}
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/crit-open-test.XXXXXX") || exit 2
+trap 'rm -rf "$tmp"' EXIT
+failed=0
+fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
+pass() { printf 'ok\t%s\n' "$1"; }
+
+mkdir -p "$tmp/fake"
+cat > "$tmp/fake/open" <<'EOF'
+#!/bin/sh
+printf '%s\n' "$*" >> "$FAKE_LOG"
+EOF
+chmod +x "$tmp/fake/open"
+
+export FAKE_LOG=$tmp/log
+run() {
+  : > "$FAKE_LOG"
+  out=$(env PATH="$tmp/fake:$PATH" "$co" "$@" 2>&1); code=$?
+}
+
+run 49809
+if [[ $code -eq 0 && $(cat "$FAKE_LOG") == "http://localhost:49809" ]]; then
+  pass "a port opens http://localhost:<port>"
+else
+  fail "a port: exit $code: $out: $(paste -sd '|' "$FAKE_LOG")"
+fi
+
+refused() {
+  run "$@"
+  if [[ $code -eq 2 && ! -s $FAKE_LOG ]]; then pass "\"crit-open $1\" is refused"; else fail "\"crit-open $1\": exit $code: $out: $(paste -sd '|' "$FAKE_LOG")"; fi
+}
+run
+if [[ $code -eq 2 && ! -s $FAKE_LOG ]]; then pass "no argument is refused"; else fail "no argument: exit $code: $out"; fi
+for arg in "" "4980a" "-a" "49809/x" "49809@example.com" "1 2" "49809;x" "\$x" "４９８０９"; do
+  refused "$arg"
+done
+run 49809 ~/x.command
+if [[ $code -eq 2 && ! -s $FAKE_LOG ]]; then pass "a second argument is refused"; else fail "a second argument: exit $code: $out"; fi
+
+if [[ -n $settings ]]; then
+  if ! jq -e . "$settings" >/dev/null; then fail "$settings is not valid JSON"; else
+    if jq -e '.permissions.allow // [] | any(test("^Bash\\(.*/crit-open \\*\\)$"))' "$settings" >/dev/null; then
+      pass "crit-open is allowed"
+    else
+      fail "crit-open is not in permissions.allow"
+    fi
+    if jq -e '.sandbox.excludedCommands // [] | any(test("/crit-open \\*$"))' "$settings" >/dev/null; then
+      pass "crit-open runs outside the sandbox, where open works"
+    else
+      fail "crit-open is not in sandbox.excludedCommands"
+    fi
+    if jq -e '[(.permissions.allow // [])[], (.sandbox.excludedCommands // [])[]] | any(test("^(Bash\\()?open "))' "$settings" >/dev/null; then
+      fail "$settings still allows or excludes open itself"
+    else
+      pass "open itself is neither allowed nor excluded"
+    fi
+  fi
+fi
+
+if [[ $failed -gt 0 ]]; then echo "$failed failed"; exit 1; fi
+echo "all passed"

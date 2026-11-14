@@ -1,0 +1,17 @@
+#!/bin/sh
+# Opens the crit review at http://localhost:<port> in the default browser.
+# open is blocked inside the sandbox, and a "*" in a permission rule or a
+# sandbox exclusion matches any run of words, so a rule on open itself would
+# also let open run other files and apps outside the sandbox; this script
+# takes only a port number and is the allowed form.
+set -eu
+
+usage() {
+  echo "usage: crit-open <port>" >&2
+  exit 2
+}
+[ $# -eq 1 ] || usage
+case "$1" in
+  '' | *[!0123456789]*) usage ;;
+esac
+exec open "http://localhost:$1"
