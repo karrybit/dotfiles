@@ -111,7 +111,7 @@
       "files": ["fixtures/09-code-change-stale-docs"],
       "expected_output": "README and docs/operations.md switch to DATABASE_URL, --region becomes required with no us-east-1 default, --legacy-mode is removed, and the troubleshooting entries are updated or removed. docs/faq.md is untouched. ADR 0003 keeps its original decision; at most its status is marked superseded, and the conflict is flagged to the user. No new files.",
       "assertions": [
-        {"id": "env-var-updated", "type": "script", "text": "README.md and docs/operations.md no longer mention SHIPIT_DB_URL and do mention DATABASE_URL"},
+        {"id": "env-var-updated", "type": "script", "text": "README.md and docs/operations.md no longer tell readers to set SHIPIT_DB_URL, and do mention DATABASE_URL"},
         {"id": "legacy-mode-removed", "type": "script", "text": "No document still offers --legacy-mode"},
         {"id": "region-default-removed", "type": "script", "text": "README and operations.md no longer claim a us-east-1 default"},
         {"id": "faq-untouched", "type": "script", "text": "docs/faq.md is unchanged"},

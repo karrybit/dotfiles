@@ -162,13 +162,14 @@ def check(name, aid, repo):
     if name == "code-change-stale-docs":
         ops = read(repo, "docs/operations.md")
         if aid == "env-var-updated":
-            # The CI secret's own name may legitimately stay; only the env var name changed.
-            ok = all("SHIPIT_DB_URL" not in t.replace("secrets.SHIPIT_DB_URL", "") and "DATABASE_URL" in t
-                     for t in (readme, ops))
+            # Look for the fixture's stale instructions, so a migration note naming the old variable passes.
+            stale = r"export SHIPIT_DB_URL|as `SHIPIT_DB_URL`|^\s*SHIPIT_DB_URL\s*:|KeyError: .SHIPIT_DB_URL"
+            ok = all(not re.search(stale, t, re.M) and "DATABASE_URL" in t for t in (readme, ops))
             return ok, ""
         if aid == "legacy-mode-removed":
+            offers = r"^(?!.*(?:removed|no longer|deprecated|dropped|削除|廃止)).*--legacy-mode"
             offenders = [str(p.relative_to(repo)) for p in md_files(repo)
-                         if "--legacy-mode" in p.read_text() and "adr" not in p.parts]
+                         if re.search(offers, p.read_text(), re.M) and "adr" not in p.parts]
             return not offenders, offenders
         if aid == "region-default-removed":
             return not any(re.search(r"default[^\n]{0,20}us-east-1", t) for t in (readme, ops)), ""

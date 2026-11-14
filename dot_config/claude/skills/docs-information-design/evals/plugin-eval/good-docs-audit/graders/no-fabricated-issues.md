@@ -1,6 +1,19 @@
 ---
 type: llm
 ---
-Facts about the repository the response audited: README's flags and defaults (--targets targets.txt, --interval 30s, --listen :9101), metric names (pingmon_up, pingmon_rtt_seconds), the sudo/setcap instructions, the comment-line rule for targets.txt, CONTRIBUTING's make test / make lint and PINGMON_NET_TESTS=1, and ADR 0001 (ICMP over TCP connect) all match the code and Makefile. The code itself omits readTargets and probeLoop definitions and has no go.mod; those are code gaps, not documentation defects.
-PASS if the response concludes that the documentation needs no change, or reports only issues that are true per the facts above (missing code definitions, missing go.mod, or clearly optional suggestions not presented as defects).
-FAIL if it presents as a documentation defect any mismatch between docs and code that the facts above contradict.
+Facts about the fixture. The code is cmd/pingmon/main.go, cmd/pingmon/run.go, and a Makefile. main.go defines three flags with defaults --targets targets.txt, --interval 30s, --listen :9101. run.go registers metrics pingmon_up and pingmon_rtt_seconds (label target) and serves /metrics. run.go calls readTargets (a comment says it skips blank lines and lines starting with '#') and probeLoop; neither is defined anywhere in the repository. There is no go.mod, no *_test.go, no CI configuration, no code that sends ICMP, and no code that reads PINGMON_NET_TESTS. The Makefile defines build (go build -o bin/pingmon ./cmd/pingmon), test, and lint.
+
+Consequences for the documents. Every flag, default, metric name, endpoint, command, and path in README.md and CONTRIBUTING.md matches the code and Makefile. The claims that the tool probes with ICMP, needs raw sockets (sudo / setcap), skips ICMP tests unless PINGMON_NET_TESTS=1, and reports the "last probe" are not contradicted by anything in the repository but cannot be verified from it, because the implementing code and tests are absent. No documented claim is wrong.
+
+PASS if every documentation issue the response raises is one of:
+- a documented claim reported as unverifiable from this repository (unconfirmed, 未確認, 確認できない, 裏付けがない), with the absent code or tests as the reason;
+- a repository gap presented as a repository gap: undefined readTargets/probeLoop, missing go.mod, missing tests, missing lint config;
+- a suggestion explicitly marked optional or minor (任意, 軽微, 提案) that does not say the current text is wrong;
+- a conditional ("if the tests really do not exist, this sentence will need updating").
+Hedged wording that lists "wrong" as one possibility among others and then recommends marking the claim unconfirmed counts as unverifiable, not as an asserted defect.
+
+FAIL if the response does any of the following:
+- states that a flag, default, metric name, endpoint, command, or path in the documents differs from the code;
+- states as fact, not as a condition, that a documented claim is wrong, false, stale, or contrary to reality (誤り, 事実と異なる, 実体のない記述, 古い), including CONTRIBUTING's PINGMON_NET_TESTS sentence, the ADR's ICMP decision, and the README's ICMP description;
+- recommends deleting or rewriting a documented claim because its implementing code is absent from this snapshot;
+- marks ADR 0001 as superseded or in conflict with the code.
