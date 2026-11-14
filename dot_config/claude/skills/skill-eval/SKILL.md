@@ -1,6 +1,7 @@
 ---
 name: skill-eval
-description: Evaluate an existing Claude Code skill without changing it, by running its `claude plugin eval` suite against a plugin wrapper and comparing the skill with no skill, an older version, a canary, or a holdout. Use when measuring whether a skill or a skill change helps, when designing, running, or grading a skill's eval suite, and when deciding whether to adopt a change to a suite's graders or cases. Not for writing or editing the skill itself.
+description: Evaluate an existing skill unchanged with `claude plugin eval`, comparing it with no skill, an older version, a canary, or a holdout.
+disable-model-invocation: true
 ---
 
 # Evaluating a Skill With Plugin Evals
