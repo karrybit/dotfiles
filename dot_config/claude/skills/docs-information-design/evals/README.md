@@ -49,9 +49,19 @@ Run `claude plugin eval` and `bin/grade-kept` outside the OS sandbox: the runs w
 - Compare skill versions by per-grader pass counts, not by case scores: with two arms the `tool_used: Skill` grader is unscored, and with `--ablation none` it counts.
 - Repeat a run before trusting a difference: repeating the same command has moved an `llm` grader's pass count by one run in three.
 - Select several cases with `--tag` or a separate eval directory; `--case` keeps only its last value when repeated.
-- Cases grant no Bash, so a `tool_used` grader with `max: 0` on `Edit` or `Write` shows that no file changed.
+- Cases grant no Bash, so a `tool_used` grader with `max: 0` on `Edit` or `Write` shows that no file changed, as long as no run delegates edits: `allowed_tools` leaves `Agent` callable, and `--disallow-tools Agent` removes it.
 - `regex` patterns run as JavaScript and count UTF-16 code units.
 - An `llm` judge sees only the output, so a rubric states the fixture facts it relies on; check each against the fixture.
+
+### What the suite separates
+
+Measured with the step 2 command, two repeats per configuration:
+
+- `good-docs-audit/no-change-verdict` scores the skill above both the canary and no skill (skill 3/3 in both repeats, canary 1/3, no skill 1/3).
+- `good-docs-audit/no-fabricated-issues` scores the skill above no skill (3/3 against 1/3 and 2/3); the canary keeps the rule it checks and scores like the skill.
+- `splittable-but-cohesive/runbook-mismatch-reported` passes less often with the skill (5 of 15 runs) than without it (7 of 15) or with the canary (11 of 15): runs that never open `docs/runbook.md` miss the mismatch.
+- The other graders fail at most one run in any repeat of any configuration. They guard against regressions and do not separate configurations.
+- `local-paragraph-edit` never fires the skill, since its description excludes local wording fixes, so the case measures the model alone.
 
 ### Changing the suite
 
@@ -59,4 +69,4 @@ Run `claude plugin eval` and `bin/grade-kept` outside the OS sandbox: the runs w
 - Before adopting a suite change, run the changed suite twice against the skill and twice against the canary.
 - Adopt it when the canary still passes less often than the skill on at least as many graders as before, the holdout score does not fall and its failing-grader count does not rise, and any rise in score comes with closer agreement with the fixture's facts.
 - After two consecutive rejected suite changes, stop changing the suite and keep the results so far.
-- Run `eval-auditor` only when changing the suite or when results disagree, and decide adoption from reruns rather than from its predictions. Write a request naming `DIR/kit` and each result file with its label (skill with baseline, canary, older version, repeat), leaving the holdout out, then run `bin/to-agents-json eval-auditor.md`, save its output as `DIR/agents.json`, and run `claude -p --agents DIR/agents.json --agent eval-auditor --add-dir <system temp directory> --add-dir DIR --allowedTools Read Glob Grep 'Bash(jq *)' --max-budget-usd 15 --output-format json` with the request on stdin.
+- Run `eval-auditor` only when changing the suite or when results disagree, and decide adoption from reruns rather than from its predictions. Write a request naming `DIR/kit` and each result file with its label (skill with baseline, canary, older version, repeat), leaving the holdout out, then run `bin/to-agents-json eval-auditor.md`, save its output as `DIR/agents.json`, and run `claude -p "Follow the audit request in <request path>." --agents DIR/agents.json --agent eval-auditor --add-dir <system temp directory> --add-dir DIR --max-budget-usd 15 --output-format json --allowedTools Read Glob Grep 'Bash(jq *)'`. Run `bin/grade-kept` on each named result file first, since it opens the kept workspaces the auditor reads.
