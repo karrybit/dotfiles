@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2016  # checks are single-quoted for eval
+# Show that safe-key sends Enter only to a blocked agent whose name matches HERDR_AGENT_NAME_PATTERN,
+# outside the caller's pane, and nothing when the pattern is unset; q only to a pane showing a pager;
+# and refuses any other argument, against a herdr on PATH that logs what it is sent. The rules a
+# caller's settings.json needs for safe-key are checked by agent-ctl-test.
+# usage: safe-key-test   (tests the safe-key beside this script; its files go to a temporary
+#        directory that is removed)
+set -uo pipefail
+exec </dev/null
+bin=$(cd "$(dirname "$0")" && pwd)
+sk=$bin/safe-key
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/safe-key-test.XXXXXX") || exit 2
+trap 'rm -rf "$tmp"' EXIT
+failed=0
+fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
+pass() { printf 'ok\t%s\n' "$1"; }
+
+mkdir -p "$tmp/fake"
+cat > "$tmp/fake/herdr" <<'EOF'
+#!/bin/sh
+log() { printf '%s\n' "$*" >> "$FAKE_LOG"; }
+case "$1 $2" in
+  "agent get")
+    jq -nc --arg name "$3" --arg pane "$FAKE_AGENT_PANE" --arg status "$FAKE_STATUS" \
+      '{result: {agent: {name: $name, pane_id: $pane, agent_status: $status}}}' ;;
+  "pane process-info")
+    jq -nc --arg fg "$FAKE_FG" '{result: {process_info: {foreground_processes: [{name: $fg}]}}}' ;;
+  "agent send-keys" | "pane send-keys") log "$*" ;;
+  *) log unexpected "$*"; exit 1 ;;
+esac
+EOF
+chmod +x "$tmp/fake/herdr"
+
+export FAKE_LOG=$tmp/log
+# A caller's pattern: a1 and four digits, with -rv for a review agent.
+pattern='^a1[0-9]{4}(-rv)?$'
+# key <status> <agent's pane> <pane's foreground> <safe-key arguments...>
+key() {
+  : > "$FAKE_LOG"
+  out=$(env PATH="$tmp/fake:$PATH" HERDR_PANE_ID=w1:p1 HERDR_AGENT_NAME_PATTERN="$pattern" \
+    FAKE_STATUS="$1" FAKE_AGENT_PANE="$2" FAKE_FG="$3" "$sk" "${@:4}" 2>&1); code=$?
+}
+sent() { [[ $(cat "$FAKE_LOG") == "$1" ]]; }
+check() { if "${@:2}"; then pass "$1"; else fail "$1: exit $code: $out: $(paste -sd '|' "$FAKE_LOG")"; fi; }
+
+key blocked w2:p1 zsh enter a10001
+check "a blocked agent gets Enter" eval '[[ $code -eq 0 ]] && sent "agent send-keys a10001 Enter"'
+
+key blocked w2:p1 zsh enter a10001-rv
+check "a blocked agent whose name has the pattern's suffix gets Enter" eval '[[ $code -eq 0 ]] && sent "agent send-keys a10001-rv Enter"'
+
+for status in idle working "done" unknown; do
+  key "$status" w2:p1 zsh enter a10001
+  check "an agent that is $status gets nothing" eval '[[ $code -eq 1 && ! -s $FAKE_LOG ]]'
+done
+
+key blocked w1:p1 zsh enter a10002
+check "the agent in the caller's own pane gets nothing" eval '[[ $code -eq 1 && ! -s $FAKE_LOG ]]'
+
+pattern=
+key blocked w2:p1 zsh enter a10001
+check "with HERDR_AGENT_NAME_PATTERN unset, a blocked agent gets nothing" eval '[[ $code -eq 1 && $out == *"HERDR_AGENT_NAME_PATTERN is not set"* && ! -s $FAKE_LOG ]]'
+pattern='^a1[0-9]{4}(-rv)?$'
+
+for fg in less glow; do
+  key idle w2:p1 "$fg" quit w2:pD
+  check "a pane showing $fg gets q" eval '[[ $code -eq 0 ]] && sent "pane send-keys w2:pD q"'
+done
+
+for fg in zsh claude vim fzf null; do
+  key idle w2:p1 "$fg" quit w2:pD
+  check "a pane running $fg gets nothing" eval '[[ $code -eq 1 && ! -s $FAKE_LOG ]]'
+done
+
+key idle w2:p1 less quit w1:p1
+check "the caller's own pane gets nothing" eval '[[ $code -eq 1 && ! -s $FAKE_LOG ]]'
+
+refused() { [[ $code -eq 2 && ! -s $FAKE_LOG ]]; }
+for args in "enter" "enter a10001 C-c" "quit w2:pD x" "send w2:pD" "enter -a10001" "enter a10001;x" "enter a10001\$x" \
+  "enter ../a10001" "enter b10001" "enter a1001" "enter a100001" "enter a10001-rvx" "enter A10001" \
+  "quit a10001" "quit w2:pD;x" "quit -w2:pD"; do
+  read -ra a <<< "$args"
+  key blocked w2:p1 less "${a[@]}"
+  check "\"safe-key $args\" is refused" refused
+done
+key blocked w2:p1 less enter "$(printf 'x\na10001')"
+check "a name with a line break is refused" refused
+
+if [[ $failed -gt 0 ]]; then echo "$failed failed"; exit 1; fi
+echo "all passed"

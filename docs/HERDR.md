@@ -210,6 +210,15 @@ not in herdr's scrollback. herdr pages it back through the agent's own scroll
 interface, but only for an idle agent: `agent read --lines N` returns
 `agent_not_idle` while the agent is working or blocked.
 
+### Handing Work to Another Claude Code Agent
+
+The `karrybit:herdr-agent` skill
+(`dot_config/claude/skills/karrybit/exact_skills/herdr-agent/`) starts a Claude
+Code agent in a workspace or tab of its own, sends it prompts, waits for its
+report, and closes only what it started. A project that uses it allows the
+skill's scripts in its `.claude/settings.json`; the skill's `SKILL.md` lists
+the rules, and `scripts/agent-ctl-test <settings.json>` checks them.
+
 ### `cos`
 
 `cos` (`dot_local/bin/executable_cos`) opens a long-lived Claude Code session

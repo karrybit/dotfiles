@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2016,SC2088  # the commands are single-quoted on purpose: they are the hook's input
+# Show that herdr-call-check stops a path to its own folder written without ~/, a herdr call joined
+# to another command or a file redirection, and a lone one that asks to leave the sandbox, while it
+# lets through ~/ calls, lone herdr calls (2>&1 included), commands without herdr, quoted text and
+# heredoc bodies that mention herdr, and calls to a throwaway Herdr (--session). The hook is copied
+# into a fake home folder, since the path it guards is where it runs. The hook rule a caller's
+# settings.json needs is checked by agent-ctl-test.
+# usage: herdr-call-check-test   (tests the herdr-call-check beside this script; its files go to a
+#        temporary directory that is removed)
+set -uo pipefail
+exec </dev/null
+bin=$(cd "$(dirname "$0")" && pwd)
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/herdr-call-check-test.XXXXXX") || exit 2
+trap 'rm -rf "$tmp"' EXIT
+# The hook compares HOME with its folder as cd and pwd spell it (a TMPDIR ending in / gives //).
+tmp=$(cd "$tmp" && pwd)
+failed=0
+fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
+pass() { printf 'ok\t%s\n' "$1"; }
+
+home=$tmp/home
+mkdir -p "$home/.config/s/scripts" "$tmp/elsewhere"
+cp "$bin/herdr-call-check" "$home/.config/s/scripts/herdr-call-check"
+cp "$bin/herdr-call-check" "$tmp/elsewhere/herdr-call-check"
+hc=$home/.config/s/scripts/herdr-call-check
+
+# run <command> [<dangerouslyDisableSandbox>]: feed the hook a Bash PreToolUse input.
+run() {
+  out=$(jq -n --arg c "$1" --argjson d "${2:-false}" \
+    '{hook_event_name: "PreToolUse", tool_name: "Bash", tool_input: {command: $c, dangerouslyDisableSandbox: $d}}' |
+    HOME=$home LC_ALL=en_US.UTF-8 "$hc" 2>&1); code=$?
+}
+# The reason starts with what is wrong with the call. The hook runs under a UTF-8 locale, where
+# sh reads a multibyte character right after "$name" as part of the name and drops the sentence.
+stops() {
+  run "$@"
+  if [[ ${2:-false} == true ]]; then first='dangerouslyDisableSandbox は要らない。herdr'; else first='つないでいる。herdr'; fi
+  if [[ $code -eq 2 && $out == *"$first"* && $out == *単独の呼び出しで実行する* && $out == *socket* ]]; then pass "stops: $1 ${2:-}"
+  else fail "stops: $1 ${2:-}: exit $code: $out"; fi
+}
+stops_home() {
+  run "$@"
+  if [[ $code -eq 2 && $out == *'書き方（ホームの絶対パスや $HOME）で指している。'* && $out == *'~/.config/s/scripts/… の形に書き直して'* ]]; then pass "stops_home: $1"
+  else fail "stops_home: $1: exit $code: $out"; fi
+}
+passes() {
+  run "$@"
+  if [[ $code -eq 0 && -z $out ]]; then pass "passes: $1 ${2:-}"; else fail "passes: $1 ${2:-}: exit $code: $out"; fi
+}
+
+stops_home "$home/.config/s/scripts/agent-ctl close a1"
+stops_home '$HOME/.config/s/scripts/agent-report a1'
+stops_home '${HOME}/.config/s/scripts/agent-ctl close a1'
+stops_home '"$HOME"/.config/s/scripts/safe-key enter a1'
+stops_home "cat $home/.config/s/scripts/agent-ctl"
+stops_home "$home/.config/s/scripts/agent-report a1 | head"
+
+stops 'herdr pane layout --current | head'
+stops 'herdr status --json; echo'
+stops 'herdr agent list > f'
+stops 'herdr status --json 2>/dev/null'
+stops 'herdr workspace list && echo done'
+stops 'herdr tab list || true'
+stops 'x=$(herdr status)'
+stops 'echo `herdr agent list`'
+stops 'herdr api snapshot > snapshot.json'
+stops 'herdr pane list
+herdr tab list'
+stops "echo \"it's\"; herdr pane list"
+stops 'herdr status --json' true
+stops 'herdr pane layout --current' true
+
+passes '~/.config/s/scripts/agent-ctl close a1'
+passes "$home/.config/sx/scripts/agent-ctl close a1"
+passes '$HOME/.config/sXscripts/agent-ctl close a1'
+passes 'git status'
+passes 'herdr agent list'
+passes 'herdr pane layout --current'
+passes 'herdr pane layout --current 2>&1'
+passes 'herdr agent list --json'
+passes "jq '.a | .b' f"
+passes 'git log | head'
+passes "rg -n 'herdr status | head' notes.md"
+passes 'herdr --session x workspace list'
+passes 'herdr --session x workspace list' true
+passes 'herdr --skill | head'
+passes 'herdr-call-check-test | tail'
+passes 'herdr api snapshot'
+passes "cat > s.sh <<'EOF'
+herdr pane list | jq .
+EOF"
+passes 'git status' true
+
+# Outside the home folder there is no ~/ form, so the hook guards no path there.
+out=$(jq -n --arg c "$tmp/elsewhere/agent-ctl close a1" '{tool_input: {command: $c}}' |
+  HOME=$home "$tmp/elsewhere/herdr-call-check" 2>&1); code=$?
+if [[ $code -eq 0 && -z $out ]]; then pass "a hook outside the home folder guards no path"; else fail "outside home: exit $code: $out"; fi
+
+echo "herdr-call-check-test: $failed failure(s)" >&2
+[ "$failed" -eq 0 ]

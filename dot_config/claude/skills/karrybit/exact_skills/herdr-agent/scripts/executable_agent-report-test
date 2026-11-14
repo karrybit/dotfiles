@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# Show what agent-report prints, with herdr replaced by a stub and a transcript in a temporary
+# config folder: the last assistant text alone, and with --wait the agent's state after the wait,
+# followed by the report only for idle or done, and "status: error" when herdr fails.
+# usage: agent-report-test   (tests the agent-report beside this script; its files go to a
+#        temporary directory that is removed)
+set -uo pipefail
+bin=$(cd "$(dirname "$0")" && pwd)
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/agent-report-test.XXXXXX") || exit 2
+trap 'rm -rf "$tmp"' EXIT
+failed=0
+fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
+pass() { printf 'ok\t%s\n' "$1"; }
+
+mkdir -p "$tmp/fake" "$tmp/claude/projects/-work-a1"
+cat > "$tmp/fake/herdr" <<'EOF'
+#!/bin/sh
+printf '%s\n' "$*" >> "$STUB_LOG"
+case "$1 $2" in
+  "agent wait") [ -z "${STUB_WAIT_FAIL:-}" ] || exit 1; exit 0 ;;
+  "agent get") [ "$STUB_STATUS" != fail ] || exit 1; printf '{"result":{"agent":{"agent_status":"%s","agent_session":{"value":"s1"},"cwd":"/work/a1"}}}\n' "$STUB_STATUS" ;;
+  *) exit 1 ;;
+esac
+EOF
+chmod +x "$tmp/fake/herdr"
+printf '%s\n' '{"type":"assistant","message":{"content":[{"type":"text","text":"first"}]}}' \
+  '{"type":"user","message":{"content":"next"}}' \
+  '{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Bash"},{"type":"text","text":"the report"}]}}' \
+  > "$tmp/claude/projects/-work-a1/s1.jsonl"
+export PATH=$tmp/fake:$PATH CLAUDE_CONFIG_DIR=$tmp/claude STUB_LOG=$tmp/log
+
+run() { : > "$tmp/log"; out=$(STUB_STATUS=$1 "$bin/agent-report" "${@:2}" 2>&1); code=$?; calls=$(tr '\n' ';' < "$tmp/log"); }
+
+run idle a1
+if [[ $code -eq 0 && $out == "the report" && $calls == "agent get a1;" ]]; then pass "prints the last assistant text without waiting"; else fail "plain: $code $out ($calls)"; fi
+run idle --wait a1
+if [[ $code -eq 0 && $out == $'status: idle\nthe report' && $calls == "agent wait a1 --until idle --until done --until blocked --until unknown;agent get a1;" ]]; then pass "--wait waits, then prints the state and the report"; else fail "--wait idle: $code $out ($calls)"; fi
+run blocked --wait a1
+if [[ $code -eq 0 && $out == "status: blocked" ]]; then pass "--wait on a blocked agent prints the state alone"; else fail "--wait blocked: $code $out"; fi
+STUB_WAIT_FAIL=1 run working --wait a1
+if [[ $code -eq 0 && $out == "status: working" ]]; then pass "--wait whose wait fails says the agent still works"; else fail "--wait failing: $code $out"; fi
+run unknown --wait a1
+if [[ $code -eq 0 && $out == "status: unknown" ]]; then pass "--wait on an agent whose pane is gone prints the state alone"; else fail "--wait unknown: $code $out"; fi
+run fail --wait a1
+if [[ $code -eq 1 && $out == *"status: error" ]]; then pass "--wait says error when herdr fails"; else fail "--wait error: $code $out"; fi
+mv "$tmp/claude/projects/-work-a1/s1.jsonl" "$tmp/s1.jsonl"
+run idle --wait a1
+if [[ $code -eq 1 && ${out%%$'\n'*} == "status: error" ]]; then pass "--wait with no transcript says error first"; else fail "--wait no transcript: $code $out"; fi
+mv "$tmp/s1.jsonl" "$tmp/claude/projects/-work-a1/s1.jsonl"
+run idle --wait
+if [[ $code -eq 2 ]]; then pass "no agent name is a usage error"; else fail "usage: $code $out"; fi
+
+echo "agent-report-test: $failed failure(s)" >&2
+[[ $failed -eq 0 ]]

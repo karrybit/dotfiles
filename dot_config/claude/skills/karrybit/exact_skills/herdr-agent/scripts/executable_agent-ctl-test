@@ -1,0 +1,758 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2016,SC2088  # $names in single quotes are jq variables; "~/" is rule text, not a path
+# Show that "agent-ctl close" closes only what it may: against the running Herdr, with workspaces and
+# a tab labelled ac...-test that this test makes for a temporary repository and notes in a test
+# ledger, an agent missing from the ledger and each unmet condition stop it with nothing closed, and
+# a done worktree, a pushed main checkout and a tab are tidied up with one JSON line. The
+# herdr-worktree place, which needs herdr worktrees and their parent workspaces, runs against a herdr
+# on PATH that keeps its state in a file. Every step runs git with no hook, fsmonitor, filter, or
+# include from the repository, and refuses a main checkout whose .git names another repository; the
+# start steps are checked against a herdr on PATH that starts no agent, and --goal and send against
+# one that logs the prompts: /goal follows the brief, never goes into a dialog, and a condition that
+# could submit another line, hide text or clear the goal stops agent-ctl before it makes anything.
+# Given a Claude Code settings.json, also show that it holds every rule and value the skill's
+# scripts need, in the ~/ form they are called by, and that herdr's own close, prompt and key
+# commands are not allowed.
+# usage: agent-ctl-test [<settings.json>]   (tests the agent-ctl beside this script, inside Herdr; the
+#        repositories go to a folder made with mktemp, left for the OS to clear, and the workspaces it
+#        made are closed)
+set -uo pipefail
+exec </dev/null
+bin=$(cd "$(dirname "$0")" && pwd)
+ac=$bin/agent-ctl
+settings=${1:-}
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/agent-ctl-test.XXXXXX") || exit 2
+tmp=$(cd "$tmp" && pwd -P)
+# The caller's settings may set these; each case below sets what it needs.
+unset HERDR_AGENT_NAME_PATTERN HERDR_AGENT_BRANCH_PATTERN HERDR_AGENT_BRANCH_DENY HERDR_AGENT_TEST_LEDGER
+made=()
+pids=()
+cleanup() {
+  local id
+  if [[ ${#pids[@]} -gt 0 ]]; then
+    pkill -P "${pids[1]}" 2>/dev/null
+    kill "${pids[@]}" 2>/dev/null
+    wait "${pids[@]}" 2>/dev/null
+  fi
+  for id in ${made[@]+"${made[@]}"}; do
+    if herdr workspace list | jq -e --arg id "$id" 'any(.result.workspaces[]; .workspace_id == $id)' >/dev/null; then
+      herdr workspace close "$id" >/dev/null
+    fi
+  done
+}
+trap cleanup EXIT
+failed=0
+fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
+pass() { printf 'ok\t%s\n' "$1"; }
+
+if [[ -z ${HERDR_PANE_ID:-} ]]; then echo "agent-ctl-test: run it inside Herdr" >&2; exit 2; fi
+if herdr workspace list | jq -e 'any(.result.workspaces[]; .label // "" | test("^ac[0-9].*-test$"))' >/dev/null; then
+  echo "agent-ctl-test: a workspace labelled ac...-test is already open" >&2; exit 2
+fi
+
+g() { git -c user.name=test -c user.email=test@example.invalid "$@"; }
+printf 'brief\n' > "$tmp/brief.md"
+repo=$tmp/repo
+mkdir -p "$tmp/worktrees"
+g init -q -b main "$repo" && g -C "$repo" commit -q --allow-empty -m init || exit 2
+export HERDR_AGENT_TEST_LEDGER=$tmp/ledger-live
+ledger=$HERDR_AGENT_TEST_LEDGER
+
+# worktree <title>: a worktree of the test repository on its own branch, like start worktree makes.
+worktree() {
+  g -C "$repo" worktree add -q -b "feat/$1" "$tmp/worktrees/$1" main
+  printf '%s\n' "$tmp/worktrees/$1"
+}
+# workspace <label> <cwd>: set id to the new workspace's ID and remember it for the cleanup (so it
+# is not called in a subshell).
+workspace() {
+  id=$(herdr workspace create --cwd "$2" --label "$1" --no-focus | jq -re .result.workspace.workspace_id) || exit 2
+  made+=("$id")
+}
+# note_worktree <name> <workspace> <place> and note_dir <name> <workspace> <place> <branch>: the
+# ledger line start writes for that place.
+note_worktree() {
+  jq -nc --arg n "$1" --arg w "$2" --arg p "$3" --arg r "$repo" \
+    '{name: $n, kind: "worktree", workspace: $w, tab: null, place: $p, repo: $r, base: "main", branch: ("feat/" + ($p | split("/") | last))}' >> "$ledger"
+}
+note_dir() {
+  jq -nc --arg n "$1" --arg w "$2" --arg p "$3" --arg b "$4" \
+    '{name: $n, kind: "dir", workspace: $w, tab: null, place: $p, repo: $p, base: null, branch: $b}' >> "$ledger"
+}
+noted() { [[ -f $ledger ]] && jq -se --arg n "$1" 'any(.[]; .name == $n)' "$ledger" >/dev/null; }
+exists() { herdr workspace list | jq -e --arg id "$1" 'any(.result.workspaces[]; .workspace_id == $id)' >/dev/null; }
+run() { out=$("$ac" close "$@" 2>&1); code=$?; }
+
+# refuses <case> <want in the message> <workspace ID or -> <place or -> <name> [env...]
+refuses() {
+  local case=$1 want=$2 id=$3 dir=$4 name=$5
+  shift 5
+  out=$(env "$@" "$ac" close "$name" 2>&1); code=$?
+  if [[ $code -ne 1 ]] || ! printf '%s\n' "$out" | rg -q -- "$want"; then
+    fail "$case: exit $code, want /$want/: $out"
+  elif [[ $id != - ]] && ! exists "$id"; then
+    fail "$case: closed $id"
+  elif [[ $dir != - && ! -d $dir ]]; then
+    fail "$case: removed $dir"
+  else
+    pass "$case"
+  fi
+}
+
+refuses "an agent the ledger does not hold" "ac0101-test is not in .*close tidies up only what start made" - - ac0101-test
+
+dir=$(worktree relabelled)
+workspace ac0102-other-test "$dir"
+note_worktree ac0102-test "$id" "$dir"
+refuses "a ledger line whose workspace has another label" "is labelled 'ac0102-other-test', not ac0102-test" "$id" "$dir" ac0102-test
+
+dir=$(worktree own)
+workspace ac0103-test "$dir"
+note_worktree ac0103-test "$id" "$dir"
+own=$(herdr pane list --workspace "$id" | jq -r '.result.panes[0].pane_id')
+refuses "the caller's own workspace" "is the caller's own workspace" "$id" "$dir" ac0103-test HERDR_PANE_ID="$own"
+refuses "no HERDR_PANE_ID" "HERDR_PANE_ID is not set" "$id" "$dir" ac0103-test HERDR_PANE_ID=
+
+# A herdr on PATH that reports every pane's agent as working or blocked, and passes the rest through.
+dir=$(worktree busy)
+workspace ac0104-test "$dir"
+note_worktree ac0104-test "$id" "$dir"
+for status in working blocked; do
+  mkdir -p "$tmp/$status"
+  cat > "$tmp/$status/herdr" <<EOF
+#!/bin/sh
+if [ "\$1 \$2" = "pane list" ]; then
+  $(command -v herdr) "\$@" | jq -c '.result.panes[].agent_status = "$status"'
+else
+  exec $(command -v herdr) "\$@"
+fi
+EOF
+  chmod +x "$tmp/$status/herdr"
+  refuses "an agent that is $status" "still busy: .* is $status" "$id" "$dir" ac0104-test PATH="$tmp/$status:$PATH"
+done
+
+dir=$(worktree dirty)
+workspace ac0105-test "$dir"
+note_worktree ac0105-test "$id" "$dir"
+printf 'x\n' > "$dir/new.txt"
+refuses "an untracked file" "has uncommitted changes" "$id" "$dir" ac0105-test
+g -C "$dir" add new.txt
+refuses "a staged change" "has uncommitted changes" "$id" "$dir" ac0105-test
+
+dir=$(worktree ahead)
+workspace ac0106-test "$dir"
+note_worktree ac0106-test "$id" "$dir"
+g -C "$dir" commit -q --allow-empty -m 'not in main'
+refuses "a commit not in the base" "1 commit\(s\) not in main of" "$id" "$dir" ac0106-test
+
+dir=$(worktree config)
+workspace ac0107-test "$dir"
+note_worktree ac0107-test "$id" "$dir"
+g -C "$repo" config filter.demo.clean cat
+refuses "a git config key that can run a command" "does not allow: filter.demo.clean" "$id" "$dir" ac0107-test
+g -C "$repo" config --unset filter.demo.clean
+
+# A line whose workspace was closed outside agent-ctl is dropped, so it cannot match an ID herdr
+# hands out again.
+dir=$(worktree gone)
+workspace ac0108-test "$dir"
+note_worktree ac0108-test "$id" "$dir"
+herdr workspace close "$id" >/dev/null
+refuses "an agent whose workspace is already closed" "ac0108-test is not in" - "$dir" ac0108-test
+if noted ac0108-test; then fail "the ledger still holds the closed workspace's line"; else pass "the ledger drops the line of a closed workspace"; fi
+
+# A done worktree: its commit is in main, so the worktree is removed and the workspace closed.
+dir=$(worktree finished)
+workspace ac0109-test "$dir"
+note_worktree ac0109-test "$id" "$dir"
+g -C "$dir" commit -q --allow-empty -m 'done work'
+g -C "$repo" merge -q --ff-only feat/finished
+run ac0109-test
+want=$(jq -nc --arg id "$id" --arg dir "$dir" '{name: "ac0109-test", kind: "worktree", workspace: $id, place: $dir, parent: null}')
+if [[ $code -eq 0 && $out == "$want" ]] && ! exists "$id" && [[ ! -d $dir ]] && ! noted ac0109-test &&
+  g -C "$repo" rev-parse -q --verify refs/heads/feat/finished >/dev/null; then
+  pass "a done worktree is removed, its workspace closed, its branch kept, and its line dropped"
+else
+  fail "done worktree: exit $code: $out (want $want)"
+fi
+
+# A main checkout used as it is: closed only when its branch has nothing unpushed, and it stays.
+checkout=$tmp/checkout
+g init -q --bare "$tmp/remote.git" && g clone -q "$tmp/remote.git" "$checkout" 2>/dev/null &&
+  g -C "$checkout" checkout -q -b main && g -C "$checkout" commit -q --allow-empty -m init &&
+  g -C "$checkout" push -q origin main || exit 2
+workspace ac0110-test "$checkout"
+note_dir ac0110-test "$id" "$checkout" main
+g -C "$checkout" commit -q --allow-empty -m 'not pushed'
+refuses "a dir whose branch has an unpushed commit" "main in .* has 1 commit\(s\) not pushed" "$id" "$checkout" ac0110-test
+g -C "$checkout" push -q origin main
+run ac0110-test
+want=$(jq -nc --arg id "$id" --arg dir "$checkout" '{name: "ac0110-test", kind: "dir", workspace: $id, place: $dir, parent: null}')
+if [[ $code -eq 0 && $out == "$want" ]] && ! exists "$id" && [[ -d $checkout ]]; then
+  pass "a pushed dir: the workspace is closed and the checkout stays"
+else
+  fail "pushed dir: exit $code: $out (want $want)"
+fi
+
+# A done worktree closed under a global config whose fsmonitor would leave a mark: agent-ctl's
+# command-line config must keep it from running.
+dir=$(worktree fsmonitor)
+workspace ac0111-test "$dir"
+note_worktree ac0111-test "$id" "$dir"
+printf '#!/bin/sh\ntouch %s/ran-fsmonitor\n' "$tmp" > "$tmp/fsmonitor" && chmod +x "$tmp/fsmonitor"
+printf '[core]\n\tfsmonitor = %s/fsmonitor\n' "$tmp" > "$tmp/global-gitconfig"
+out=$(env GIT_CONFIG_GLOBAL="$tmp/global-gitconfig" "$ac" close ac0111-test 2>&1); code=$?
+if [[ $code -eq 0 && ! -e $tmp/ran-fsmonitor ]] && ! exists "$id"; then
+  pass "close runs no fsmonitor"
+else
+  fail "close and fsmonitor: exit $code, fsmonitor ran: $([[ -e $tmp/ran-fsmonitor ]] && echo yes || echo no): $out"
+fi
+
+# A done worktree whose only ignored files are Claude Code's .claude/.cc-writes/ is closed.
+printf '.claude/.cc-writes/\n' >> "$repo/.git/info/exclude"
+dir=$(worktree cc-writes)
+workspace ac0123-test "$dir"
+note_worktree ac0123-test "$id" "$dir"
+mkdir -p "$dir/.claude/.cc-writes" && touch "$dir/.claude/.cc-writes/a"
+run ac0123-test
+if [[ $code -eq 0 ]] && ! exists "$id" && [[ ! -d $dir ]]; then
+  pass "a done worktree with only .claude/.cc-writes/ ignored is removed"
+else
+  fail "worktree .cc-writes: exit $code: $out"
+fi
+
+dir=$(worktree submodule)
+workspace ac0112-test "$dir"
+note_worktree ac0112-test "$id" "$dir"
+g -C "$dir" update-index --add --cacheinfo "160000,$(g -C "$dir" rev-parse HEAD),sub"
+refuses "a place with a submodule" "has submodules" "$id" "$dir" ac0112-test
+
+# A tab: close shuts only that tab, never the workspace it is in, and never the caller's own tab.
+workspace ac0124-host-test "$tmp"
+host=$id
+tabbed=$(herdr tab create --workspace "$host" --cwd "$tmp" --label ac0124-test --no-focus)
+tab=$(printf '%s' "$tabbed" | jq -r .result.tab.tab_id)
+tab_pane=$(printf '%s' "$tabbed" | jq -r .result.root_pane.pane_id)
+jq -nc --arg w "$host" --arg t "$tab" --arg p "$tmp" \
+  '{name: "ac0124-test", kind: "tab", workspace: $w, tab: $t, place: $p, repo: null, base: null, branch: null}' >> "$ledger"
+refuses "the caller's own tab" "is the caller's own tab" "$host" - ac0124-test HERDR_PANE_ID="$tab_pane"
+run ac0124-test
+want=$(jq -nc --arg w "$host" --arg t "$tab" --arg p "$tmp" '{name: "ac0124-test", kind: "tab", workspace: $w, tab: $t, place: $p, parent: null}')
+if [[ $code -eq 0 && $out == "$want" ]] && exists "$host" &&
+  ! herdr tab list --workspace "$host" | jq -e --arg t "$tab" 'any(.result.tabs[]; .tab_id == $t)' >/dev/null; then
+  pass "a tab: only the tab is closed"
+else
+  fail "tab: exit $code: $out (want $want)"
+fi
+
+# The start steps, against a herdr on PATH that starts no agent, so only their git runs for real.
+# Each case uses its own repository and leaves a mark when a hook or filter runs.
+mkdir -p "$tmp/fake"
+cat > "$tmp/fake/herdr" <<'EOF'
+#!/bin/sh
+case "$1 $2" in
+  "workspace create") echo '{"result":{"workspace":{"workspace_id":"wF"},"root_pane":{"pane_id":"wF:p1"}}}' ;;
+  "workspace list") echo '{"result":{"workspaces":[{"workspace_id":"wF"}]}}' ;;
+  "tab list") echo '{"result":{"tabs":[]}}' ;;
+  "agent list") printf '{"result":{"type":"agent_list","list":[%s]}}\n' "${FAKE_RUNNING:-}" ;;
+  "agent get") echo '{"result":{"agent":{"agent_status":"working"}}}' ;;
+esac
+EOF
+chmod +x "$tmp/fake/herdr"
+seen_marks=$(cd "$tmp" && fd -d 1 -g 'ran-*' | sort)
+# test_repo <name>: a repository with one file in main, its worktrees in <name>-worktrees.
+test_repo() {
+  g init -q -b main "$tmp/$1" && printf 'x\n' > "$tmp/$1/file.txt" && printf '* filter=demo\n' > "$tmp/$1/.gitattributes" &&
+    g -C "$tmp/$1" add -A && g -C "$tmp/$1" commit -q -m init && mkdir -p "$tmp/$1-worktrees" || exit 2
+}
+# start <case> <want: ok, a message, or exit2:<message>> <start args...>: run a start step against the fake.
+start() {
+  local case=$1 want=$2
+  shift 2
+  out=$(env PATH="$tmp/fake:$PATH" HERDR_AGENT_TEST_LEDGER="$tmp/ledger-start" "$ac" start "$@" 2>&1); code=$?
+  # A mark already seen belongs to an earlier case, so only the new ones count.
+  local marks now
+  now=$(cd "$tmp" && fd -d 1 -g 'ran-*' | sort)
+  marks=$(comm -13 <(printf '%s\n' "$seen_marks") <(printf '%s\n' "$now") | rg -v '^$' | paste -sd ' ' -)
+  seen_marks=$now
+  if [[ -n $marks ]]; then
+    fail "$case: git ran $marks: $out"
+  elif [[ $want == ok ]]; then
+    if [[ $code -eq 0 ]] && printf '%s' "$out" | jq -e '.status == "working"' >/dev/null; then pass "$case"; else fail "$case: exit $code: $out"; fi
+  elif [[ $want == exit2:* ]]; then
+    if [[ $code -eq 2 && $out == *"${want#exit2:}"* ]]; then pass "$case"; else fail "$case: exit $code, want 2 and '${want#exit2:}': $out"; fi
+  elif [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -q -- "$want"; then
+    pass "$case"
+  else
+    fail "$case: exit $code, want /$want/: $out"
+  fi
+}
+b=$tmp/brief.md
+
+test_repo repo-hook
+# git worktree add -b runs the reference-transaction hook when it makes the branch.
+printf '#!/bin/sh\ntouch %s/ran-hook\n' "$tmp" > "$tmp/repo-hook/.git/hooks/reference-transaction"
+chmod +x "$tmp/repo-hook/.git/hooks/reference-transaction"
+start "worktree runs no hook" ok ac0113-test "$b" worktree "$tmp/repo-hook" main feat/hook "$tmp/repo-hook-worktrees/hook"
+[[ -f $tmp/repo-hook-worktrees/hook/file.txt ]] || fail "repo-hook: the worktree was not made"
+if jq -se --arg r "$tmp/repo-hook" --arg p "$tmp/repo-hook-worktrees/hook" \
+  'any(.[]; . == {name: "ac0113-test", kind: "worktree", workspace: "wF", tab: null, place: $p, repo: $r, base: "main", branch: "feat/hook"})' \
+  "$tmp/ledger-start" >/dev/null; then
+  pass "start notes the agent, its place, repository, base and branch in the ledger"
+else
+  fail "start ledger line: $(cat "$tmp/ledger-start" 2>&1)"
+fi
+start "a name the ledger already holds" "ac0113-test is already in" ac0113-test "$b" dir "$tmp/repo-hook"
+
+# A failing git command ends in one line that keeps git's own message.
+start "a failing git command" "^agent-ctl start ac0121-test: git worktree in .*repo-hook failed: .*already exists$" \
+  ac0121-test "$b" worktree "$tmp/repo-hook" main feat/hook "$tmp/repo-hook-worktrees/hook2"
+
+test_repo repo-filter
+g -C "$tmp/repo-filter" config filter.demo.smudge "touch $tmp/ran-smudge; cat"
+start "a filter in the repository's config" "does not allow: filter.demo.smudge" ac0114-test "$b" worktree "$tmp/repo-filter" main feat/filter "$tmp/repo-filter-worktrees/filter"
+
+test_repo repo-include
+printf '[filter "demo"]\n\tsmudge = touch %s/ran-include; cat\n' "$tmp" > "$tmp/included"
+g -C "$tmp/repo-include" config include.path "$tmp/included"
+start "an include in the repository's config" "does not allow: .*include.path" ac0115-test "$b" worktree "$tmp/repo-include" main feat/include "$tmp/repo-include-worktrees/include"
+
+test_repo repo-commondir
+printf '.\n' > "$tmp/repo-commondir/.git/commondir"
+start "a commondir file" "has a commondir file" ac0116-test "$b" worktree "$tmp/repo-commondir" main feat/commondir "$tmp/repo-commondir-worktrees/commondir"
+
+test_repo repo-link-target
+mkdir -p "$tmp/repo-link" && cp "$tmp/repo-link-target/file.txt" "$tmp/repo-link/" && ln -s "$tmp/repo-link-target/.git" "$tmp/repo-link/.git"
+start "a .git that is a link" "repo-link/.git is not a folder" ac0117-test "$b" worktree "$tmp/repo-link" main feat/link "$tmp/repo-link-worktrees/link"
+
+test_repo repo-broken-config
+printf '[core\n' >> "$tmp/repo-broken-config/.git/config"
+start "a broken config" "git config in .*repo-broken-config failed" ac0120-test "$b" worktree "$tmp/repo-broken-config" main feat/broken "$tmp/repo-broken-config-worktrees/broken"
+
+test_repo dir-gitdir
+printf '%s\n' "$tmp/repo-hook/.git" > "$tmp/dir-gitdir/.git/gitdir"
+start "a dir whose .git has a gitdir file" "has a gitdir file" ac0118-test "$b" dir "$tmp/dir-gitdir" main
+
+test_repo dir-alias
+g -C "$tmp/dir-alias" config alias.st status
+start "a dir with an alias in its config" "does not allow: alias.st" ac0119-test "$b" dir "$tmp/dir-alias" main
+
+test_repo dir-plain
+start "a dir on another branch" "is on 'main', not other" ac0125-test "$b" dir "$tmp/dir-plain" other
+start "a dir on its branch" ok ac0126-test "$b" dir "$tmp/dir-plain" main
+start "a dir with no branch" ok ac0127-test "$b" dir "$tmp/dir-plain"
+FAKE_RUNNING='{"name":"ac0128-test"}' start "a name a running agent holds" "an agent named ac0128-test is already running" ac0128-test "$b" dir "$tmp/dir-plain"
+
+# Arguments that stop start with exit code 2 before it makes anything.
+wt=$tmp/repo-hook-worktrees
+start "a relative path" "exit2:must be an absolute path" ac0130-test "$b" dir dir-plain
+start "a relative worktree path" "exit2:must be an absolute path" ac0130-test "$b" worktree "$tmp/repo-hook" main feat/rel rel
+start "a mode that approves more" "exit2:--permission-mode must be" --permission-mode bypassPermissions ac0130-test "$b" dir "$tmp/dir-plain"
+start "a branch that names the agent" "exit2:must not hold the agent's name" ac0130-test "$b" worktree "$tmp/repo-hook" main feat/ac0130-test "$wt/n"
+start "a branch that is an option" "exit2:not a branch name" ac0130-test "$b" worktree "$tmp/repo-hook" main -x "$wt/n"
+start "a base that is an option" "exit2:not a branch name" ac0130-test "$b" worktree "$tmp/repo-hook" -x feat/x "$wt/n"
+start "a name herdr refuses" "exit2:as herdr requires" Ac0130 "$b" dir "$tmp/dir-plain"
+start "a missing brief" "exit2:brief not found" ac0130-test "$tmp/none.md" dir "$tmp/dir-plain"
+printf '/clear\n' > "$tmp/slash.md"
+start "a brief that is a command" "exit2:the brief starts with /" ac0130-test "$tmp/slash.md" dir "$tmp/dir-plain"
+HERDR_AGENT_NAME_PATTERN='^x[0-9]+$' start "a name outside HERDR_AGENT_NAME_PATTERN" \
+  "exit2:does not match HERDR_AGENT_NAME_PATTERN" ac0130-test "$b" dir "$tmp/dir-plain"
+HERDR_AGENT_BRANCH_PATTERN='^fix/' start "a branch outside HERDR_AGENT_BRANCH_PATTERN" \
+  "exit2:does not match HERDR_AGENT_BRANCH_PATTERN" ac0130-test "$b" worktree "$tmp/repo-hook" main feat/x "$wt/n"
+HERDR_AGENT_BRANCH_DENY='(^|/)x$' start "a branch HERDR_AGENT_BRANCH_DENY matches" \
+  "exit2:matches HERDR_AGENT_BRANCH_DENY" ac0130-test "$b" worktree "$tmp/repo-hook" main feat/x "$wt/n"
+HERDR_AGENT_NAME_PATTERN='^ac[0-9]+-test$' HERDR_AGENT_BRANCH_PATTERN='^feat/' HERDR_AGENT_BRANCH_DENY='(^|/)y$' \
+  start "a name and branch that meet the patterns" ok ac0131-test "$b" worktree "$tmp/repo-hook" main feat/x "$wt/x"
+if [[ -e $wt/n ]] || jq -se 'any(.[]; .name == "ac0130-test")' "$tmp/ledger-start" >/dev/null; then
+  fail "an argument stop still made something"
+else
+  pass "an argument stop makes nothing"
+fi
+
+# --goal, --permission-mode, tab and send, against a herdr on PATH that logs each start, tab and
+# prompt, and reports the agent as $FAKE_STATUS in workspace $FAKE_WS.
+mkdir -p "$tmp/fakelog"
+cat > "$tmp/fakelog/herdr" <<'EOF'
+#!/bin/sh
+case "$1 $2" in
+  "workspace create") echo '{"result":{"workspace":{"workspace_id":"wG"},"root_pane":{"pane_id":"wG:p1"}}}' ;;
+  "workspace list") echo '{"result":{"workspaces":[{"workspace_id":"wG"}]}}' ;;
+  "tab list") echo '{"result":{"tabs":[{"tab_id":"wG:t2"}]}}' ;;
+  "tab create")
+    printf '%s\n' "$*" >> "$FAKE_LOG.start"
+    echo '{"result":{"tab":{"tab_id":"wG:t2"},"root_pane":{"pane_id":"wG:p2"}}}' ;;
+  "agent list") echo '{"result":{"type":"agent_list","list":[]}}' ;;
+  "agent start") printf '%s\n' "$*" >> "$FAKE_LOG.start" ;;
+  "agent prompt") printf 'prompt %s\n' "$4" >> "$FAKE_LOG" ;;
+  "agent get") jq -nc --arg s "$FAKE_STATUS" --arg w "${FAKE_WS:-wG}" \
+    '{result: {agent: {agent_status: $s, workspace_id: $w, tab_id: "wG:t1", pane_id: "wG:p1", cwd: "/work"}}}' ;;
+esac
+EOF
+chmod +x "$tmp/fakelog/herdr"
+test_repo goal-dir
+log_env=(PATH="$tmp/fakelog:$PATH" FAKE_LOG="$tmp/log" HERDR_AGENT_TEST_LEDGER="$tmp/ledger-log" HERDR_PANE_ID=w1:p1)
+# logged <agent status> <agent-ctl args...>: run agent-ctl against the logging herdr.
+logged() {
+  : > "$tmp/log"
+  : > "$tmp/log.start"
+  out=$(env "${log_env[@]}" FAKE_STATUS="$1" "$ac" "${@:2}" 2>&1); code=$?
+  log=$(cat "$tmp/log")
+}
+# goal <case> <agent status> <condition>: start with --goal at the goal-dir checkout.
+goal() { logged "$2" start --goal "$3" "g-$1-test" "$b" dir "$tmp/goal-dir"; }
+goal sent working 'テストが通り, git status is clean'
+if [[ $code -eq 0 && $log == $'prompt brief\nprompt /goal テストが通り, git status is clean' ]] &&
+  printf '%s' "$out" | jq -e '.goal == "sent" and .status == "working"' >/dev/null; then
+  pass "--goal sends /goal <condition> after the brief"
+else
+  fail "--goal sent: exit $code: $out: $log"
+fi
+goal wide idle "$(printf '%4000s' '' | sed 's/ /あ/g')"
+if [[ $code -eq 0 ]] && printf '%s' "$out" | jq -e '.goal == "sent"' >/dev/null; then
+  pass "--goal counts the 4000-character limit in characters, not bytes"
+else
+  fail "--goal 4000 characters: exit $code: $out"
+fi
+goal blocked blocked 'all tests pass'
+if [[ $code -eq 0 && $log == "prompt brief" ]] && printf '%s' "$out" | jq -e '.goal == "not_sent" and .status == "blocked"' >/dev/null; then
+  pass "--goal sends nothing into a dialog the brief raised"
+else
+  fail "--goal blocked: exit $code: $out: $log"
+fi
+# refuses_goal <case> <want in the message> <condition>: stops before making anything.
+refuses_goal() {
+  goal "$1" working "$3"
+  if [[ $code -eq 2 && $out == *"$2"* && -z $log ]] && ! jq -se --arg n "g-$1-test" 'any(.[]; .name == $n)' "$tmp/ledger-log" >/dev/null; then
+    pass "--goal refuses $1"
+  else
+    fail "--goal $1: exit $code, want '$2': $out: $log"
+  fi
+}
+refuses_goal newline "must be one line" "$(printf 'first\n/goal clear')"
+refuses_goal carriage-return "control or invisible" "$(printf 'first\rsecond')"
+refuses_goal tab "control or invisible" "$(printf 'a\tb')"
+refuses_goal escape "control or invisible" "$(printf 'a\033[2Jb')"
+refuses_goal zero-width "control or invisible" "$(printf 'a\342\200\213b')"
+refuses_goal bidi "control or invisible" "$(printf 'a\342\200\256b')"
+refuses_goal empty "is empty" '  '
+refuses_goal clear "would clear the goal" ' Clear '
+refuses_goal cancel "would clear the goal" 'cancel'
+refuses_goal long "longer than 4000" "$(printf '%4001s' '' | tr ' ' x)"
+out=$("$ac" close --goal x ac0122-test 2>&1); code=$?
+if [[ $code -eq 2 && $out == usage:* ]]; then pass "close takes no --goal"; else fail "close --goal: exit $code: $out"; fi
+
+logged working start --permission-mode plan g-mode-test "$b" dir "$tmp/goal-dir"
+if [[ $code -eq 0 && $(cat "$tmp/log.start") == "agent start g-mode-test --kind claude --pane wG:p1 -- -n g-mode-test --permission-mode plan" ]]; then
+  pass "--permission-mode is passed to claude"
+else
+  fail "--permission-mode: exit $code: $out: $(cat "$tmp/log.start")"
+fi
+logged working start --permission-mode plan g-rv-test "$b" tab g-mode-test
+want=$(printf '%s\n' "tab create --workspace wG --cwd /work --label g-rv-test --no-focus" \
+  "agent start g-rv-test --kind claude --pane wG:p2 -- -n g-rv-test --permission-mode plan")
+if [[ $code -eq 0 && $(cat "$tmp/log.start") == "$want" ]] &&
+  printf '%s' "$out" | jq -e '.kind == "tab" and .tab == "wG:t2" and .workspace == "wG" and .place == "/work"' >/dev/null; then
+  pass "tab opens a tab in the other agent's workspace at its cwd"
+else
+  fail "tab: exit $code: $out: $(cat "$tmp/log.start")"
+fi
+
+# sends <case> <status> <want: a prompt line, or exit1:/exit2:<message>> <send args...>
+sends() {
+  local case=$1 status=$2 want=$3
+  shift 3
+  logged "$status" send "$@"
+  if [[ $want == exit[12]:* ]]; then
+    if [[ $code -eq ${want:4:1} && $out == *"${want:6}"* && -z $log ]]; then pass "send: $case"; else fail "send $case: exit $code: $out: $log"; fi
+  elif [[ $code -eq 0 && $log == "$want" ]] && printf '%s' "$out" | jq -e '.name and .status' >/dev/null; then
+    pass "send: $case"
+  else
+    fail "send $case: exit $code: $out: $log"
+  fi
+}
+sends "an idle agent gets the text" idle "prompt next step" g-sent-test "next step"
+sends "a done agent gets the text" 'done' "prompt next step" g-sent-test "next step"
+sends "a working agent gets nothing" working "exit1:is working" g-sent-test "next step"
+sends "a working agent gets the text with --interrupt" working "prompt next step" --interrupt g-sent-test "next step"
+sends "a blocked agent gets nothing" blocked "exit1:is blocked" g-sent-test "next step"
+sends "an agent the ledger does not hold gets nothing" idle "exit1:is not in" g-other-test "next step"
+sends "a command gets refused" idle "exit2:starts with /" g-sent-test " /clear"
+sends "a shell escape gets refused" idle "exit2:starts with !" g-sent-test "!ls"
+sends "a control character gets refused" idle "exit2:control characters" g-sent-test "$(printf 'a\033[201~b')"
+sends "an empty text gets refused" idle "exit2:is empty" g-sent-test $'\n '
+sends "a goal is sent as /goal" idle "prompt /goal all tests pass" --goal 'all tests pass' g-sent-test
+sends "a goal is not sent to a blocked agent" blocked "exit1:/goal is not sent" --goal 'all tests pass' g-sent-test
+sends "a goal condition that clears the goal gets refused" idle "exit2:would clear the goal" --goal clear g-sent-test
+FAKE_WS=wX sends "an agent in another workspace gets nothing" idle "exit1:not in the workspace start made it in" g-sent-test "next step"
+log_env+=(HERDR_PANE_ID=wG:p1)
+sends "the caller's own pane gets nothing" idle "exit1:in the caller's own pane" g-sent-test "next step"
+
+# The herdr-worktree place, against a herdr on PATH that keeps its workspaces in a JSON file, makes
+# real git worktrees at <herdr worktrees>/<repository>/<name>, logs what it removes and closes, and
+# fails the command named in .fail. The caller's own workspace is wO.
+mkdir -p "$tmp/fakepr"
+cat > "$tmp/fakepr/herdr" <<'EOF'
+#!/bin/sh
+st=$FAKE_STATE
+save() { jq "$@" "$st" > "$st.new" && mv "$st.new" "$st"; }
+if [ "$(jq -r '.fail // ""' "$st")" = "$1 $2" ]; then
+  echo '{"error":{"code":"fake","message":"injected failure"}}' >&2
+  exit 1
+fi
+case "$1 $2" in
+  "workspace list") jq -c '{result: {workspaces: .workspaces}}' "$st" ;;
+  "workspace close")
+    echo "close $3" >> "$FAKE_LOG"
+    save --arg id "$3" '.workspaces |= map(select(.workspace_id != $id))'
+    echo '{}' ;;
+  "worktree remove")
+    path=$(jq -r --arg id "$4" '.workspaces[] | select(.workspace_id == $id) | .worktree.checkout_path' "$st")
+    root=$(jq -r --arg id "$4" '.workspaces[] | select(.workspace_id == $id) | .worktree.repo_root' "$st")
+    git -C "$root" worktree remove "$path" || exit 1
+    echo "remove $4" >> "$FAKE_LOG"
+    save --arg id "$4" '.workspaces |= map(select(.workspace_id != $id))'
+    echo '{}' ;;
+  "worktree create")
+    root=$(cd "$4" && pwd -P) branch=$6 label=$8
+    path=$FAKE_HERDR_WORKTREES/${root##*/}/$(printf '%s' "$branch" | tr / -)
+    mkdir -p "${path%/*}" && git -C "$root" worktree add -q -b "$branch" "$path" main || exit 1
+    n=$(jq '.next // 1' "$st")
+    save --arg root "$root" --arg path "$path" --arg label "$label" --arg n "$n" '
+      ($root + "/.git") as $key
+      | (if any(.workspaces[]; .worktree.repo_key == $key and (.worktree.is_linked_worktree | not)) then []
+         else [{workspace_id: ("wP" + $n), label: "repo", worktree: {checkout_path: $root, is_linked_worktree: false, repo_key: $key, repo_root: $root}}] end) as $parent
+      | .workspaces += $parent + [{workspace_id: ("wW" + $n), label: $label,
+          worktree: {checkout_path: $path, is_linked_worktree: true, repo_key: $key, repo_root: $root}}]
+      | .next = ($n | tonumber) + 1'
+    jq -c --arg n "$n" --arg path "$path" '{result: {workspace: (.workspaces[] | select(.workspace_id == ("wW" + $n))),
+      root_pane: {pane_id: ("wW" + $n + ":p1")}, worktree: {path: $path}}}' "$st" ;;
+  "pane get") jq -c '{result: {pane: {workspace_id: .own, tab_id: (.own + ":t1")}}}' "$st" ;;
+  "pane list") jq -c --arg id "$4" '{result: {panes: [{pane_id: ($id + ":p1"), agent_status: "idle", cwd: "/"}]}}' "$st" ;;
+  "pane process-info")
+    jq -c '{result: {process_info: {foreground_processes: [{name: (.fg // "zsh")}], shell_pid: .shell}}}' "$st" ;;
+  "tab list") echo '{"result":{"tabs":[]}}' ;;
+  "agent list") echo '{"result":{"type":"agent_list","list":[]}}' ;;
+  "agent get") echo '{"result":{"agent":{"agent_status":"working"}}}' ;;
+esac
+EOF
+chmod +x "$tmp/fakepr/herdr"
+hw=$tmp/herdr-worktrees
+mkdir -p "$hw"
+export FAKE_STATE=$tmp/fake-state.json FAKE_LOG=$tmp/fake-log
+: > "$FAKE_LOG"
+# A shell at its prompt has no child; one with a job in the background has one.
+# They write nowhere, so a sleep left behind keeps no output pipe of this test open.
+sleep 300 >/dev/null 2>&1 & idle_shell=$!
+sh -c 'sleep 300 & wait' >/dev/null 2>&1 & busy_shell=$!
+pids+=("$idle_shell" "$busy_shell")
+jq -n --argjson shell "$idle_shell" '{own: "wO", workspaces: [{workspace_id: "wO", label: "caller"}], shell: $shell}' > "$FAKE_STATE"
+state() { jq "$@" "$FAKE_STATE" > "$FAKE_STATE.new" && mv "$FAKE_STATE.new" "$FAKE_STATE"; }
+pl=$tmp/ledger-pr
+pr_env=(PATH="$tmp/fakepr:$PATH" FAKE_HERDR_WORKTREES="$hw" HERDR_AGENT_TEST_LEDGER="$pl" HERDR_PANE_ID=wO:p1)
+# pr_repo <name>: a repository with a remote, main pushed, and *.local and .claude/.cc-writes/ ignored.
+pr_repo() {
+  g init -q --bare "$tmp/$1-remote.git" && g init -q -b main "$tmp/$1" && printf '*.local\n.claude/.cc-writes/\n' > "$tmp/$1/.gitignore" &&
+    g -C "$tmp/$1" add -A && g -C "$tmp/$1" commit -q -m init && g -C "$tmp/$1" remote add origin "$tmp/$1-remote.git" &&
+    g -C "$tmp/$1" push -q origin main || exit 2
+}
+# pr_start <repository> <name>: start herdr-worktree for the repository; sets wt (its worktree) and ws (its workspace).
+pr_start() {
+  out=$(env "${pr_env[@]}" "$ac" start "$2" "$b" herdr-worktree "$tmp/$1" "feat/$1" 2>&1) || { fail "start herdr-worktree $1: $out"; return 1; }
+  wt=$(printf '%s' "$out" | jq -r .place) ws=$(printf '%s' "$out" | jq -r .workspace)
+}
+parent_of() { jq -r --arg root "$tmp/$1" '.workspaces[] | select(.worktree.checkout_path == $root) | .workspace_id' "$FAKE_STATE"; }
+pr_close() { : > "$FAKE_LOG"; out=$(env "${pr_env[@]}" "$ac" close "$1" 2>&1); code=$?; }
+closed() { rg -qx "close $1" "$FAKE_LOG"; }
+parent_noted() { jq -se --arg w "$1" 'any(.[]; .parent == true and .workspace == $w)' "$pl" >/dev/null; }
+
+pr_repo pr-done
+if pr_start pr-done ac0201-test; then
+  p=$(parent_of pr-done)
+  if [[ -n $p ]] && jq -se --arg w "$p" --arg k "$tmp/pr-done/.git" 'any(.[]; . == {parent: true, workspace: $w, repo_key: $k})' "$pl" >/dev/null; then
+    pass "start herdr-worktree notes the parent it opened"
+  else
+    fail "parent in the ledger: parent '$p': $(cat "$pl" 2>&1)"
+  fi
+  # A line for a workspace that is no longer open is dropped the next time the ledger is rewritten.
+  jq -nc --arg k "$tmp/pr-done/.git" '{parent: true, workspace: "wGone", repo_key: $k}' >> "$pl"
+  g -C "$wt" commit -q --allow-empty -m 'not pushed'
+  pr_close ac0201-test
+  if [[ $code -eq 1 && $out == *"1 commit(s) not on a remote"* && -d $wt && ! -s $FAKE_LOG ]]; then
+    pass "herdr-worktree: an unpushed commit stops it"
+  else
+    fail "herdr-worktree unpushed: exit $code: $out: $(cat "$FAKE_LOG")"
+  fi
+  g -C "$wt" push -q origin feat/pr-done
+  pr_close ac0201-test
+  want=$(jq -nc --arg ws "$ws" --arg wt "$wt" --arg p "$p" '{name: "ac0201-test", kind: "herdr-worktree", workspace: $ws, place: $wt, parent: $p}')
+  if [[ $code -eq 0 && $out == "$want" && ! -d $wt ]] && rg -qx "remove $ws" "$FAKE_LOG" && closed "$p"; then
+    pass "herdr-worktree: removes the worktree and closes the parent start opened"
+  else
+    fail "herdr-worktree done: exit $code: $out (want $want): $(cat "$FAKE_LOG")"
+  fi
+  if [[ -f $pl ]] && ! parent_noted "$p" && ! parent_noted wGone; then
+    pass "herdr-worktree: the ledger keeps its file and drops the closed and the stale parent"
+  else
+    fail "ledger after close: $(cat "$pl" 2>&1)"
+  fi
+fi
+
+# A parent that was open before start is the owner's: it stays, named in parent_kept.
+pr_repo pr-owned
+state --arg root "$tmp/pr-owned" '.workspaces += [{workspace_id: "wOwner", label: "pr-owned",
+  worktree: {checkout_path: $root, is_linked_worktree: false, repo_key: ($root + "/.git"), repo_root: $root}}]'
+if pr_start pr-owned ac0202-test; then
+  g -C "$wt" push -q origin feat/pr-owned
+  pr_close ac0202-test
+  if [[ $code -eq 0 ]] && printf '%s' "$out" | jq -e '.parent == null and (.parent_kept | contains("wOwner: agent-ctl start did not note"))' >/dev/null &&
+    ! closed wOwner && ! parent_noted wOwner; then
+    pass "herdr-worktree: a parent start did not open stays open"
+  else
+    fail "herdr-worktree owner's parent: exit $code: $out: $(cat "$FAKE_LOG")"
+  fi
+fi
+
+pr_repo pr-busy
+if pr_start pr-busy ac0203-test; then
+  p=$(parent_of pr-busy)
+  g -C "$wt" push -q origin feat/pr-busy
+  state --argjson shell "$busy_shell" '.shell = $shell'
+  pr_close ac0203-test
+  state --argjson shell "$idle_shell" '.shell = $shell'
+  if [[ $code -eq 0 ]] && printf '%s' "$out" | jq -e --arg p "$p" '.parent == null and (.parent_kept | contains($p + ": the shell in")) and (.parent_kept | contains("background job"))' >/dev/null &&
+    ! closed "$p"; then
+    pass "herdr-worktree: a parent whose shell has a background job stays open"
+  else
+    fail "herdr-worktree background job: exit $code: $out: $(cat "$FAKE_LOG")"
+  fi
+fi
+
+pr_repo pr-node
+if pr_start pr-node ac0204-test; then
+  p=$(parent_of pr-node)
+  g -C "$wt" push -q origin feat/pr-node
+  state '.fg = "node"'
+  pr_close ac0204-test
+  state 'del(.fg)'
+  if [[ $code -eq 0 ]] && printf '%s' "$out" | jq -e --arg p "$p" '.parent == null and (.parent_kept | contains($p + ": " + $p + ":p1 runs node"))' >/dev/null &&
+    ! closed "$p"; then
+    pass "herdr-worktree: a parent running something other than a shell stays open"
+  else
+    fail "herdr-worktree foreground: exit $code: $out: $(cat "$FAKE_LOG")"
+  fi
+fi
+
+pr_repo pr-ignored
+if pr_start pr-ignored ac0205-test; then
+  g -C "$wt" push -q origin feat/pr-ignored
+  printf 'secret\n' > "$wt/.env.local"
+  mkdir "$wt/cache.local" "$wt/sub" "$wt/メモ" && touch "$wt/cache.local/a" "$wt/cache.local/b" "$wt/sub/a.local" "$wt/sub/b.local" "$wt/メモ/x.local"
+  pr_close ac0205-test
+  if [[ $code -eq 1 && $out == *"has ignored files that removing it would delete: .env.local cache.local/ sub/ メモ/" && -f $wt/.env.local && ! -s $FAKE_LOG ]]; then
+    pass "herdr-worktree: ignored files stop it and are all listed, an ignored or all-ignored folder once, a Japanese name unquoted"
+  else
+    fail "herdr-worktree ignored: exit $code: $out: $(cat "$FAKE_LOG")"
+  fi
+fi
+
+pr_repo pr-cc-writes
+if pr_start pr-cc-writes ac0210-test; then
+  g -C "$wt" push -q origin feat/pr-cc-writes
+  printf 'secret\n' > "$wt/.env.local"
+  mkdir -p "$wt/.claude/.cc-writes" && touch "$wt/.claude/.cc-writes/a"
+  pr_close ac0210-test
+  if [[ $code -eq 1 && $out == *"has ignored files that removing it would delete: .env.local" && -f $wt/.env.local && ! -s $FAKE_LOG ]]; then
+    pass "herdr-worktree: with other ignored files, only those are listed, not .claude/.cc-writes/"
+  else
+    fail "herdr-worktree .cc-writes: exit $code: $out: $(cat "$FAKE_LOG")"
+  fi
+fi
+
+# A failure after the worktree is removed is one line, exit 1, saying what was already done.
+pr_repo pr-fail
+if pr_start pr-fail ac0207-test; then
+  g -C "$wt" push -q origin feat/pr-fail
+  state '.fail = "workspace close"'
+  pr_close ac0207-test
+  state 'del(.fail)'
+  lines=$(printf '%s\n' "$out" | wc -l | tr -d ' ')
+  if [[ $code -eq 1 && $lines -eq 1 && $out == "agent-ctl close ac0207-test: herdr workspace close failed: "*"(already done: removed the worktree $wt and closed $ws)" ]]; then
+    pass "herdr-worktree: a failure partway says what was done"
+  else
+    fail "herdr-worktree failure partway: exit $code, $lines line(s): $out"
+  fi
+fi
+
+# The ledger may be pointed elsewhere only directly in a folder agent-ctl-test made.
+mkdir -p "$tmp/nested"
+: > "$FAKE_LOG"
+out=$(env "${pr_env[@]}" HERDR_AGENT_TEST_LEDGER="$tmp/nested/ledger" "$ac" close ac0209-test 2>&1); code=$?
+if [[ $code -eq 1 && $out == *"HERDR_AGENT_TEST_LEDGER must be directly in a folder agent-ctl-test made"* && ! -s $FAKE_LOG ]]; then
+  pass "HERDR_AGENT_TEST_LEDGER below the test folder stops it"
+else
+  fail "HERDR_AGENT_TEST_LEDGER nested: exit $code: $out"
+fi
+out=$(env "${pr_env[@]}" HERDR_AGENT_TEST_LEDGER="$HOME/ledger" "$ac" close ac0209-test 2>&1); code=$?
+if [[ $code -eq 1 && $out == *"HERDR_AGENT_TEST_LEDGER must be in a folder agent-ctl-test made"* ]]; then
+  pass "HERDR_AGENT_TEST_LEDGER in the home folder stops it"
+else
+  fail "HERDR_AGENT_TEST_LEDGER home: exit $code: $out"
+fi
+
+# rule_matches <rule> <command>: a Bash rule's pattern matches the whole command, "*" standing in for
+# any text, and a trailing " *" also matching the bare command.
+rule_matches() {
+  jq -nr --arg rule "$1" --arg cmd "$2" '
+    ($rule | capture("^Bash\\((?<p>.*)\\)$").p) as $p
+    | ($p | gsub("(?<c>[.+?^${}()|\\[\\]\\\\])"; "\\\(.c)") | gsub("\\*"; ".*")) as $re
+    | ($cmd | test("^" + $re + "$")) or (($p | endswith(" *")) and $cmd == ($p | rtrimstr(" *")))' | rg -qx true
+}
+# decision <command>: what the settings decide for a command with no prompt from the mode, reading
+# the rules as the permissions docs describe them: deny, then ask, then allow, the first match winning.
+decision() {
+  local list rule
+  for list in deny ask allow; do
+    while IFS= read -r rule; do
+      if rule_matches "$rule" "$1"; then echo "$list"; return; fi
+    done < <(jq -r --arg l "$list" '(.permissions[$l] // [])[] | select(startswith("Bash("))' "$settings")
+  done
+  echo none
+}
+# has <jq path to a list> <entry>: the list in the settings holds the entry.
+has() {
+  if jq -e --arg v "$2" "($1 // []) | index(\$v)" "$settings" >/dev/null; then pass "$1 has $2"; else fail "$1 lacks $2"; fi
+}
+
+if [[ -n $settings ]]; then
+  if ! jq -e . "$settings" >/dev/null; then fail "$settings is not valid JSON"; else
+    pass "$settings is valid JSON"
+    if rule_matches 'Bash(herdr agent send-keys * Enter)' 'herdr agent send-keys a1 C-c Enter'; then
+      pass 'a "*" in the middle of a rule also matches other keys before Enter'
+    else
+      fail 'the rule reading does not let "*" match spaces'
+    fi
+    form='~/.config/claude/skills/karrybit/skills/herdr-agent/scripts'
+    for s in agent-ctl agent-report safe-key; do
+      has .permissions.allow "Bash($form/$s *)"
+      has .sandbox.excludedCommands "$form/$s *"
+    done
+    if jq -e --arg c "$form/herdr-call-check" '[.hooks.PreToolUse[]? | select(.matcher == "Bash") | .hooks[]?.command] | any(contains($c))' "$settings" >/dev/null; then
+      pass "hooks.PreToolUse runs $form/herdr-call-check before Bash"
+    else
+      fail "hooks.PreToolUse lacks a Bash hook that runs $form/herdr-call-check"
+    fi
+    if jq -e '.env.HERDR_AGENT_NAME_PATTERN // "" | length > 0' "$settings" >/dev/null; then
+      pass "env sets HERDR_AGENT_NAME_PATTERN"
+    else
+      fail "env lacks HERDR_AGENT_NAME_PATTERN"
+    fi
+    for c in 'herdr workspace close w1' 'herdr tab close w1:t2' 'herdr worktree remove --workspace w1' \
+      'herdr agent prompt a1 /clear' 'herdr agent send-keys a1 Enter' 'herdr pane send-keys w1:p2 q' 'herdr pane send-text w1:p2 yes'; do
+      got=$(decision "$c")
+      if [[ $got != allow ]]; then pass "not allowed ($got): $c"; else fail "permissions.allow lets through: $c"; fi
+    done
+  fi
+fi
+
+echo "agent-ctl-test: $failed failure(s)" >&2
+[[ $failed -eq 0 ]]

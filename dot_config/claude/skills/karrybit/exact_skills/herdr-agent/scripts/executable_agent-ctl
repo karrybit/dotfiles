@@ -1,0 +1,616 @@
+#!/bin/sh
+# Starts a Claude Code agent in Herdr at a place the caller names, sends it a
+# brief, sends it more prompts, and tidies up after it. Each call prints one
+# JSON line, so a hand-off takes one call and almost no output.
+#
+#   start [--goal <condition>] [--permission-mode <mode>] <name> <brief-file> <place>
+#     dir <path> [<branch>]                  a main checkout used as it is; with
+#                                            <branch>, it must be on that branch
+#     worktree <repo> <base> <branch> <path> git worktree add -b <branch> <path> <base>
+#     herdr-worktree <repo> <branch>         herdr worktree create
+#     tab <agent>                            a new tab in <agent>'s workspace, at its cwd
+#   send [--interrupt] <name> <text>
+#   send --goal <condition> <name>
+#   close <name>
+#
+# start opens a workspace labelled <name> (a tab, for tab), starts claude
+# there as agent <name>, and sends the brief. --goal then sends
+# "/goal <condition>", so the agent keeps taking turns until a model judges
+# the condition met; it is sent only while the agent is working, idle or
+# done, since a dialog the brief raised is not the caller's to answer by
+# typing. The condition is one line with no control or invisible format
+# characters, so it cannot submit a second line or hide text, and is never a
+# word /goal reads as clearing the goal.
+#
+# send prompts an agent start made, outside the caller's own pane, when it is
+# idle or done (working too with --interrupt). Text that Claude Code reads as
+# a command (a leading / or !) is refused; a goal goes through --goal.
+#
+# start writes one line per agent to a ledger, and close tidies up only an
+# agent the ledger holds: herdr workspace close takes only an ID, so a
+# permission rule cannot tell a workspace start made from any other, and this
+# command can be allowed instead because it checks. close finds the
+# workspace (or tab) the ledger names, checks that it may be closed and that
+# the work at the place has landed, removes a worktree the way its kind needs
+# (the branch stays), and closes the workspace. A herdr worktree's parent
+# workspace is closed only when start noted opening it.
+#
+# The caller's settings may set three EREs: HERDR_AGENT_NAME_PATTERN, which a
+# name must match, and HERDR_AGENT_BRANCH_PATTERN and HERDR_AGENT_BRANCH_DENY,
+# which a new branch must and must not match. A new branch never holds the
+# name as a word. The ledger is one file at a fixed path;
+# HERDR_AGENT_TEST_LEDGER points it elsewhere only directly inside a folder
+# agent-ctl-test made with mktemp.
+set -eu
+
+usage() {
+  printf '%s\n' \
+    'usage: agent-ctl start [--goal <condition>] [--permission-mode <mode>] <name> <brief-file> <place>' \
+    '         <place>: dir <path> [<branch>] | worktree <repo> <base> <branch> <path>' \
+    '                | herdr-worktree <repo> <branch> | tab <agent>' \
+    '       agent-ctl send [--interrupt] <name> <text>' \
+    '       agent-ctl send --goal <condition> <name>' \
+    '       agent-ctl close <name>' >&2
+  exit 2
+}
+
+[ $# -ge 1 ] || usage
+cmd=$1
+shift
+goal='' has_goal='' mode='' interrupt='' kind='' branch='' repo='' base='' place='' host='' text=''
+case $cmd in
+  start)
+    while :; do
+      case ${1:-} in
+        --goal) [ $# -ge 2 ] || usage; goal=$2 has_goal=1; shift 2 ;;
+        --permission-mode) [ $# -ge 2 ] || usage; mode=$2; shift 2 ;;
+        *) break ;;
+      esac
+    done
+    [ $# -ge 4 ] || usage
+    name=$1 brief=$2 kind=$3
+    shift 3
+    case $kind in
+      dir) case $# in 1) place=$1 ;; 2) place=$1 branch=$2 ;; *) usage ;; esac ;;
+      worktree) [ $# -eq 4 ] || usage; repo=$1 base=$2 branch=$3 place=$4 ;;
+      herdr-worktree) [ $# -eq 2 ] || usage; repo=$1 branch=$2 ;;
+      tab) [ $# -eq 1 ] || usage; host=$1 ;;
+      *) usage ;;
+    esac
+    ;;
+  send)
+    case ${1:-} in
+      --goal) [ $# -eq 3 ] || usage; goal=$2 has_goal=1 name=$3 ;;
+      --interrupt) [ $# -eq 3 ] || usage; interrupt=1 name=$2 text=$3 ;;
+      *) [ $# -eq 2 ] || usage; name=$1 text=$2 ;;
+    esac
+    ;;
+  close) [ $# -eq 1 ] || usage; name=$1 ;;
+  *) usage ;;
+esac
+
+nl='
+'
+# matches <ERE> <text>: the text is one line and the ERE matches it.
+matches() {
+  case $2 in *"$nl"*) return 1 ;; esac
+  printf '%s\n' "$2" | grep -Eq -- "$1"
+}
+bad_arg() {
+  echo "agent-ctl: $*" >&2
+  exit 2
+}
+
+name_ok() {
+  matches '^[a-z][a-z0-9_-]{0,31}$' "$1" || bad_arg "a name must match [a-z][a-z0-9_-]{0,31}, as herdr requires: $1"
+}
+name_ok "$name"
+if [ -n "${HERDR_AGENT_NAME_PATTERN:-}" ] && ! matches "$HERDR_AGENT_NAME_PATTERN" "$name"; then
+  bad_arg "the name does not match HERDR_AGENT_NAME_PATTERN ($HERDR_AGENT_NAME_PATTERN): $name"
+fi
+
+# goal_ok: the condition can follow /goal on one line and sets a goal.
+goal_ok() {
+  case $goal in *"$nl"*) bad_arg "the goal condition must be one line" ;; esac
+  found=0
+  printf '%s' "$goal" | rg -q '[\p{Cc}\p{Cf}]' || found=$?
+  [ "$found" -eq 1 ] || bad_arg "the goal condition must not hold control or invisible format characters"
+  trimmed=$(printf '%s' "$goal" | sed 's/^ *//; s/ *$//')
+  [ -n "$trimmed" ] || bad_arg "the goal condition is empty"
+  case $(printf '%s' "$trimmed" | tr '[:upper:]' '[:lower:]') in
+    clear | stop | off | reset | none | cancel) bad_arg "the goal condition '$trimmed' would clear the goal instead of setting it" ;;
+  esac
+  # The limit /goal states, in characters.
+  [ "$(printf '%s' "$goal" | LC_ALL=en_US.UTF-8 wc -m)" -le 4000 ] || bad_arg "the goal condition is longer than 4000 characters"
+}
+[ -z "$has_goal" ] || goal_ok
+
+# prompt_ok <what> <text>: the text reaches Claude Code as a prompt, not as a
+# command or as terminal control (tab and newline are text).
+prompt_ok() {
+  first=$(printf '%s' "$2" | tr -d '[:space:]' | cut -c 1)
+  case $first in
+    '') bad_arg "$1 is empty" ;;
+    / | !) bad_arg "$1 starts with $first, which Claude Code reads as a command" ;;
+  esac
+  found=0
+  printf '%s' "$2" | rg -q '[\p{Cc}&&[^\t\n]]' || found=$?
+  [ "$found" -eq 1 ] || bad_arg "$1 holds control characters other than tab and newline"
+}
+
+# branch_ok <branch>: a branch start makes is valid, matches the caller's
+# patterns, and does not name the agent.
+branch_ok() {
+  case $1 in -*) bad_arg "not a branch name: $1" ;; esac
+  git check-ref-format --branch "$1" >/dev/null 2>&1 || bad_arg "not a branch name: $1"
+  if [ -n "${HERDR_AGENT_BRANCH_PATTERN:-}" ] && ! matches "$HERDR_AGENT_BRANCH_PATTERN" "$1"; then
+    bad_arg "the branch does not match HERDR_AGENT_BRANCH_PATTERN ($HERDR_AGENT_BRANCH_PATTERN): $1"
+  fi
+  if [ -n "${HERDR_AGENT_BRANCH_DENY:-}" ] && matches "$HERDR_AGENT_BRANCH_DENY" "$1"; then
+    bad_arg "the branch matches HERDR_AGENT_BRANCH_DENY ($HERDR_AGENT_BRANCH_DENY): $1"
+  fi
+  ! matches "(^|[/-])$name([/-]|\$)" "$1" || bad_arg "the branch must not hold the agent's name: $1"
+}
+absolute() {
+  case $2 in /*) ;; *) bad_arg "$1 must be an absolute path: $2" ;; esac
+}
+
+if [ "$cmd" = start ]; then
+  [ -f "$brief" ] || bad_arg "brief not found: $brief"
+  prompt_ok "the brief" "$(cat "$brief")"
+  # A mode that approves more than the caller's settings would widen what
+  # this call, which runs without a prompt, can start.
+  case $mode in
+    '' | default | plan | dontAsk) ;;
+    *) bad_arg "--permission-mode must be default, plan or dontAsk: $mode" ;;
+  esac
+  case $kind in
+    dir) absolute "the path" "$place" ;;
+    worktree)
+      absolute "the repository" "$repo"
+      absolute "the worktree path" "$place"
+      branch_ok "$branch"
+      case $base in -*) bad_arg "not a branch name: $base" ;; esac
+      git check-ref-format "refs/heads/$base" || bad_arg "not a branch name: $base"
+      ;;
+    herdr-worktree) absolute "the repository" "$repo"; branch_ok "$branch" ;;
+    tab) name_ok "$host" ;;
+  esac
+fi
+[ "$cmd" != send ] || [ -n "$has_goal" ] || prompt_ok "the text" "$text"
+
+# Every failure after the arguments are read ends in one line and exit code 1.
+# A stop partway through also says what it had already done.
+cleaned=
+stop() {
+  echo "agent-ctl $cmd $name: $*${cleaned:+ (already done: $cleaned)}" >&2
+  exit 1
+}
+oneline() { printf '%s' "$1" | tr '\n' ' ' | cut -c 1-300; }
+
+# herdr_ok <args>: run herdr and print its output, or stop.
+herdr_ok() {
+  herdr_out=$(herdr "$@" 2>&1) || stop "herdr $1 $2 failed: $(oneline "$herdr_out")"
+  printf '%s\n' "$herdr_out"
+}
+# herdr_json <jq filter> <args>: print the filter's result of herdr's output, or stop.
+herdr_json() {
+  filter=$1
+  shift
+  json=$(herdr_ok "$@") || exit 1
+  printf '%s' "$json" | jq -cre "$filter" 2>/dev/null || stop "herdr $1 $2 did not give $filter"
+}
+
+# This runs outside the sandbox, while a sandboxed agent can write the .git of
+# the repositories it runs git in. So every git here runs no hooks, fsmonitor
+# or automatic maintenance (command-line config outranks every config file),
+# and safe_git lets a git command run only when the repository's own config
+# (local and worktree scope) holds no key that makes git run a command.
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR GIT_OBJECT_DIRECTORY
+export GIT_OPTIONAL_LOCKS=0 GIT_CONFIG_COUNT=4 \
+  GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/dev/null \
+  GIT_CONFIG_KEY_1=core.fsmonitor GIT_CONFIG_VALUE_1=false \
+  GIT_CONFIG_KEY_2=gc.auto GIT_CONFIG_VALUE_2=0 \
+  GIT_CONFIG_KEY_3=maintenance.auto GIT_CONFIG_VALUE_3=false
+# The main checkout of a dir or worktree agent, set once it is resolved.
+main=
+
+# safe_git <repo> <args>: run git in the repository, or stop.
+safe_git() {
+  repo_dir=$(cd "$1" && pwd -P)
+  shift
+  # A main checkout's .git is a folder that names no other repository; a link
+  # or a commondir or gitdir file in it would send git to config that was
+  # never checked.
+  if [ "$repo_dir" = "$main" ]; then
+    { [ -d "$repo_dir/.git" ] && [ ! -L "$repo_dir/.git" ]; } || stop "$repo_dir/.git is not a folder"
+    for f in commondir gitdir; do
+      { [ ! -e "$repo_dir/.git/$f" ] && [ ! -L "$repo_dir/.git/$f" ]; } ||
+        stop "$repo_dir/.git has a $f file, which points at another repository"
+    done
+  fi
+  # stderr is read through descriptor 3, so no temporary file is left to remove.
+  listing=$(git -C "$repo_dir" config --list --show-scope --name-only 2>/dev/null) || {
+    err=$(git -C "$repo_dir" config --list --show-scope --name-only 2>&1 >/dev/null) || true
+    stop "git config in $repo_dir failed: $(oneline "$err")"
+  }
+  bad=$(printf '%s\n' "$listing" |
+    awk -F '\t' '$1 == "local" || $1 == "worktree" { print tolower($2) }' |
+    grep -Ev '^core\.(repositoryformatversion|filemode|bare|logallrefupdates|ignorecase|precomposeunicode|symlinks)$|^extensions\.worktreeconfig$|^user\.(name|email)$|^submodule\.active$|^remote\..+\.(url|pushurl|fetch|push|prune|tagopt)$|^branch\..+\.[a-z0-9-]+$' |
+    sort -u | paste -sd ' ' -) || true
+  [ -z "$bad" ] || stop "the git config of $repo_dir has keys this command does not allow: $bad"
+  # git's stdout goes on to the caller through descriptor 3 while its stderr
+  # is kept for the stop line.
+  { err=$(git -C "$repo_dir" "$@" 2>&1 >&3 3>&-); } 3>&1 || stop "git $1 in $repo_dir failed: $(oneline "$err")"
+}
+
+# The ledger holds one JSON object per line: an agent start made
+# ({name, kind, workspace, tab, place, repo, base, branch}) or a parent
+# workspace herdr worktree create opened for it ({parent: true, workspace,
+# repo_key}). Lines are appended, and a line is dropped by writing the rest to
+# a temporary file in the same folder and moving it over the ledger.
+ledger=$HOME/.local/state/herdr-agent/ledger
+if [ -n "${HERDR_AGENT_TEST_LEDGER:-}" ]; then
+  test_dir=$(cd "${HERDR_AGENT_TEST_LEDGER%/*}" 2>/dev/null && pwd -P || true)
+  tmp_root=$(cd "${TMPDIR:-/tmp}" && pwd -P)
+  case $test_dir in
+    "$tmp_root"/agent-ctl-test.*/*) stop "HERDR_AGENT_TEST_LEDGER must be directly in a folder agent-ctl-test made: $HERDR_AGENT_TEST_LEDGER" ;;
+    "$tmp_root"/agent-ctl-test.*) ledger=$test_dir/${HERDR_AGENT_TEST_LEDGER##*/} ;;
+    *) stop "HERDR_AGENT_TEST_LEDGER must be in a folder agent-ctl-test made: $HERDR_AGENT_TEST_LEDGER" ;;
+  esac
+fi
+
+# ledger_prune [<name>]: drop the lines of workspaces and tabs that are no
+# longer open, so a line never outlives them and an ID herdr hands out again
+# later cannot match it, and the line of agent <name>.
+ledger_prune() {
+  [ -f "$ledger" ] || return 0
+  open_ws=$(herdr_json '[.result.workspaces[].workspace_id]' workspace list) || exit 1
+  open_tabs=$(herdr_json '[.result.tabs[].tab_id]' tab list) || exit 1
+  next=$(mktemp "${ledger%/*}/ledger.XXXXXX") || stop "cannot make a temporary file beside $ledger"
+  jq -c --argjson ws "$open_ws" --argjson tabs "$open_tabs" --arg drop "${1:-}" '
+    select((.workspace as $w | $ws | index($w)) and (.tab == null or (.tab as $t | $tabs | index($t)))
+      and .name != $drop)' "$ledger" > "$next" || stop "cannot rewrite $ledger"
+  mv -f "$next" "$ledger"
+}
+ledger_add() {
+  mkdir -p "${ledger%/*}"
+  printf '%s\n' "$1" >> "$ledger"
+}
+# ledger_line: print this agent's line, or nothing.
+ledger_line() {
+  [ ! -f "$ledger" ] || jq -c --arg n "$name" 'select(.name == $n)' "$ledger" | head -n 1
+}
+
+# parent_check <workspace ID> <repo_key> <caller's workspace>: print why the
+# parent workspace must stay open, or nothing when it may be closed.
+parent_check() {
+  if [ ! -f "$ledger" ] ||
+    ! jq -se --arg w "$1" --arg k "$2" 'any(.[]; .parent == true and .workspace == $w and .repo_key == $k)' "$ledger" >/dev/null; then
+    echo "$1: agent-ctl start did not note opening it"
+    return
+  fi
+  if [ "$1" = "$3" ]; then
+    echo "$1: it is the caller's own workspace"
+    return
+  fi
+  parent_panes=$(herdr_json '.result.panes[].pane_id' pane list --workspace "$1") || exit 1
+  for p in $parent_panes; do
+    info=$(herdr_json .result.process_info pane process-info --pane "$p") || exit 1
+    fg=$(printf '%s' "$info" | jq -r '.foreground_processes[0].name // empty')
+    shell=$(printf '%s' "$info" | jq -r '.shell_pid // empty')
+    case $fg in
+      zsh | -zsh | bash | sh) ;;
+      *) echo "$1: $p runs ${fg:-an unknown process}"; return ;;
+    esac
+    # A job sent to the background is a child of the shell; a shell at its
+    # prompt has none.
+    if [ -z "$shell" ] || pgrep -P "$shell" >/dev/null; then
+      echo "$1: the shell in $p has a background job"
+      return
+    fi
+  done
+}
+
+# own_pane: set own_ws and own_tab to the caller's workspace and tab.
+own_pane() {
+  [ -n "${HERDR_PANE_ID:-}" ] || stop "HERDR_PANE_ID is not set, so the caller's own pane is unknown"
+  own=$(herdr_json .result.pane pane get "$HERDR_PANE_ID")
+  own_ws=$(printf '%s' "$own" | jq -r .workspace_id)
+  own_tab=$(printf '%s' "$own" | jq -r .tab_id)
+}
+
+close_tab() {
+  info=$(herdr_json .result.tab tab get "$tab")
+  label=$(printf '%s' "$info" | jq -r '.label // ""')
+  [ "$label" = "$name" ] || stop "$tab is labelled '$label', not $name"
+  [ "$tab" != "$own_tab" ] || stop "$tab is the caller's own tab"
+  panes=$(herdr_json .result.panes pane list --workspace "$workspace")
+  busy=$(printf '%s' "$panes" | jq -r --arg tab "$tab" '[.[] | select(.tab_id == $tab)
+    | select(.agent_status == "working" or .agent_status == "blocked") | "\(.pane_id) is \(.agent_status)"] | join(", ")')
+  [ -z "$busy" ] || stop "an agent in $tab is still busy: $busy"
+  herdr_ok tab close "$tab" >/dev/null
+  cleaned="closed $tab"
+  ledger_prune "$name"
+  jq -nc --arg name "$name" --arg ws "$workspace" --arg tab "$tab" --arg place "$place" \
+    '{name: $name, kind: "tab", workspace: $ws, tab: $tab, place: $place, parent: null}'
+}
+
+close_workspace() {
+  workspaces=$(herdr_json .result.workspaces workspace list)
+  ws=$(printf '%s' "$workspaces" | jq -c --arg id "$workspace" 'first(.[] | select(.workspace_id == $id)) // {}')
+  label=$(printf '%s' "$ws" | jq -r '.label // ""')
+  [ "$label" = "$name" ] || stop "$workspace is labelled '$label', not $name"
+  [ "$workspace" != "$own_ws" ] || stop "$workspace is the caller's own workspace"
+
+  panes=$(herdr_json .result.panes pane list --workspace "$workspace")
+  busy=$(printf '%s' "$panes" | jq -r '[.[] | select(.agent_status == "working" or .agent_status == "blocked")
+    | "\(.pane_id) is \(.agent_status)"] | join(", ")')
+  [ -z "$busy" ] || stop "an agent in $workspace is still busy: $busy"
+
+  [ -d "$place" ] || stop "the place $workspace works in is not a folder: $place"
+  case $kind in dir) main=$place ;; worktree) main=$repo ;; esac
+
+  # Each git output is assigned before it is tested: a stop inside a command
+  # substitution ends only the subshell, and set -e then ends the script.
+  # A submodule is a repository whose config safe_git has not checked, and
+  # status and worktree remove would run git in it.
+  index=$(safe_git "$place" ls-files --stage)
+  case $index in
+    160000* | *"$nl"160000*) stop "$place has submodules" ;;
+  esac
+  changes=$(safe_git "$place" status --porcelain --ignore-submodules=all)
+  [ -z "$changes" ] || stop "$place has uncommitted changes"
+  # Removing a worktree deletes the files git ignores too (.env.local, a local
+  # database), and status does not list them. The stop lists every path, an
+  # ignored folder once, so the owner can decide on them without a search.
+  # ls-files also lists the files of a folder it lists as ignored when the
+  # folder is untracked; the sorted list puts the folder first, so awk drops
+  # them.
+  if [ "$kind" != dir ]; then
+    # Claude Code keeps its log of writes in .claude/.cc-writes/ as scratch
+    # that may go with the worktree. Removing it first, rather than leaving it
+    # out of the list, also keeps an otherwise empty .claude/ off the list.
+    rm -rf -- "$place/.claude/.cc-writes"
+    ignored=$(safe_git "$place" -c core.quotePath=false ls-files --others --ignored --exclude-standard --directory)
+    [ -z "$ignored" ] || stop "$place has ignored files that removing it would delete: $(printf '%s\n' "$ignored" |
+      awk 'd != "" && index($0, d) == 1 { next } /\/$/ { d = $0 } { print }' | paste -sd ' ' -)"
+  fi
+  case $kind in
+    dir)
+      ref=HEAD
+      [ -z "$branch" ] || ref=refs/heads/$branch
+      ahead=$(safe_git "$place" rev-list --count "$ref" --not --remotes)
+      [ "$ahead" -eq 0 ] || stop "${branch:-HEAD} in $place has $ahead commit(s) not pushed"
+      ;;
+    worktree)
+      head=$(safe_git "$place" rev-parse HEAD)
+      ahead=$(safe_git "$repo" rev-list --count "$head" --not "refs/heads/$base")
+      [ "$ahead" -eq 0 ] || stop "the branch in $place has $ahead commit(s) not in $base of $repo"
+      ;;
+    herdr-worktree)
+      ahead=$(safe_git "$place" rev-list --count HEAD --not --remotes)
+      [ "$ahead" -eq 0 ] || stop "the branch in $place has $ahead commit(s) not on a remote"
+      ;;
+  esac
+
+  parent=
+  kept=
+  case $kind in
+    dir)
+      herdr_ok workspace close "$workspace" >/dev/null
+      ;;
+    worktree)
+      safe_git "$repo" worktree remove "$place"
+      cleaned="removed the worktree $place"
+      herdr_ok workspace close "$workspace" >/dev/null
+      ;;
+    herdr-worktree)
+      repo_key=$(printf '%s' "$ws" | jq -r .worktree.repo_key)
+      herdr_ok worktree remove --workspace "$workspace" >/dev/null
+      cleaned="removed the worktree $place"
+      workspaces=$(herdr_json .result.workspaces workspace list)
+      if printf '%s' "$workspaces" | jq -e --arg id "$workspace" 'any(.[]; .workspace_id == $id)' >/dev/null; then
+        herdr_ok workspace close "$workspace" >/dev/null
+        workspaces=$(herdr_json .result.workspaces workspace list)
+      fi
+      cleaned="$cleaned and closed $workspace"
+      if ! printf '%s' "$workspaces" | jq -e --arg key "$repo_key" \
+        'any(.[]; .worktree.repo_key == $key and .worktree.is_linked_worktree)' >/dev/null; then
+        candidates=$(printf '%s' "$workspaces" | jq -r --arg key "$repo_key" \
+          '.[] | select(.worktree.repo_key == $key and (.worktree.is_linked_worktree | not)) | .workspace_id')
+        for c in $candidates; do
+          why=$(parent_check "$c" "$repo_key" "$own_ws")
+          if [ -n "$why" ]; then
+            kept="${kept:+$kept; }$why"
+          else
+            herdr_ok workspace close "$c" >/dev/null
+            parent=$c
+            cleaned="$cleaned and its parent $c"
+          fi
+        done
+      fi
+      ;;
+  esac
+  cleaned=${cleaned:-closed $workspace}
+  ledger_prune "$name"
+
+  jq -nc --arg name "$name" --arg kind "$kind" --arg workspace "$workspace" --arg place "$place" \
+    --arg parent "$parent" --arg kept "$kept" \
+    '{name: $name, kind: $kind, workspace: $workspace, place: $place,
+      parent: (if $parent == "" then null else $parent end)}
+     + (if $kept == "" then {} else {parent_kept: $kept} end)'
+}
+
+if [ "$cmd" = close ]; then
+  ledger_prune
+  line=$(ledger_line)
+  [ -n "$line" ] || stop "$name is not in $ledger (or its workspace is closed); close tidies up only what start made"
+  field() { printf '%s' "$line" | jq -r ".$1 // \"\""; }
+  kind=$(field kind) workspace=$(field workspace) tab=$(field tab) place=$(field place)
+  repo=$(field repo) base=$(field base) branch=$(field branch)
+  own_pane
+  if [ "$kind" = tab ]; then close_tab; else close_workspace; fi
+  exit 0
+fi
+
+# wait_started: wait until the prompt just sent shows as working or blocked,
+# and set status to the agent's state.
+wait_started() {
+  herdr agent wait "$name" --until working --until blocked --timeout 15000 >/dev/null 2>&1 || true
+  status=$(herdr_json .result.agent.agent_status agent get "$name")
+}
+
+if [ "$cmd" = send ]; then
+  line=$(ledger_line)
+  [ -n "$line" ] || stop "$name is not in $ledger; send prompts only an agent start made"
+  [ -n "${HERDR_PANE_ID:-}" ] || stop "HERDR_PANE_ID is not set, so the caller's own pane is unknown"
+  agent=$(herdr_json .result.agent agent get "$name")
+  # The name follows whatever agent holds it now; it must still be the one
+  # start made, in the workspace (and tab) the ledger names.
+  printf '%s' "$agent" | jq -e --argjson line "$line" \
+    '.workspace_id == $line.workspace and ($line.tab == null or .tab_id == $line.tab)' >/dev/null ||
+    stop "the agent named $name is not in the workspace start made it in"
+  pane=$(printf '%s' "$agent" | jq -r .pane_id)
+  status=$(printf '%s' "$agent" | jq -r .agent_status)
+  [ "$pane" != "$HERDR_PANE_ID" ] || stop "$name is in the caller's own pane"
+  if [ -n "$has_goal" ]; then
+    # A /goal sent while a turn runs is queued and takes effect at its end.
+    case $status in
+      working | idle | done) ;;
+      *) stop "$name is $status, not working, idle or done; /goal is not sent" ;;
+    esac
+    herdr_ok agent prompt "$name" "/goal $goal" >/dev/null
+    status=$(herdr_json .result.agent.agent_status agent get "$name")
+    jq -nc --arg name "$name" --arg status "$status" '{name: $name, status: $status, goal: "sent"}'
+    exit 0
+  fi
+  case $status in
+    idle | done) ;;
+    working) [ -n "$interrupt" ] || stop "$name is working; wait for it, or send with --interrupt" ;;
+    *) stop "$name is $status, not idle or done; nothing is sent" ;;
+  esac
+  herdr_ok agent prompt "$name" "$text" >/dev/null
+  wait_started
+  jq -nc --arg name "$name" --arg status "$status" '{name: $name, status: $status}'
+  exit 0
+fi
+
+# start
+ledger_prune
+[ -z "$(ledger_line)" ] || stop "$name is already in $ledger; close it first"
+# agent list holds one list beside its type, under .result.
+running=$(herdr_json '[.result[] | arrays | .[].name]' agent list)
+! printf '%s' "$running" | jq -e --arg n "$name" 'index($n)' >/dev/null || stop "an agent named $name is already running"
+
+tab=
+# open_workspace <cwd>: open a workspace labelled with the name at <cwd>.
+open_workspace() {
+  created=$(herdr_ok workspace create --cwd "$1" --label "$name" --no-focus)
+  workspace=$(printf '%s' "$created" | jq -r .result.workspace.workspace_id)
+  pane=$(printf '%s' "$created" | jq -r .result.root_pane.pane_id)
+}
+
+case $kind in
+  dir)
+    p=$(cd "$place" 2>/dev/null && pwd -P) || stop "not a folder: $place"
+    place=$p main=$p
+    if [ -n "$branch" ]; then
+      current=$(safe_git "$place" branch --show-current)
+      [ "$current" = "$branch" ] || stop "$place is on '$current', not $branch"
+    else
+      safe_git "$place" rev-parse --git-dir >/dev/null
+    fi
+    open_workspace "$place"
+    ;;
+  worktree)
+    r=$(cd "$repo" 2>/dev/null && pwd -P) || stop "the repository is not a folder: $repo"
+    repo=$r main=$r
+    safe_git "$repo" rev-parse -q --verify "refs/heads/$base" >/dev/null
+    safe_git "$repo" worktree add -q -b "$branch" "$place" "refs/heads/$base"
+    cleaned="made the worktree $place"
+    place=$(cd "$place" && pwd -P)
+    open_workspace "$place"
+    ;;
+  herdr-worktree)
+    [ -d "$repo" ] || stop "the repository is not a folder: $repo"
+    # herdr worktree create runs git inside the Herdr server, out of reach of
+    # the guard above. It also opens a parent workspace at the repository when
+    # none is open there; the parents it opens now go into the ledger, so that
+    # close shuts only those and never one the owner opened.
+    before=$(herdr_json '[.result.workspaces[].workspace_id]' workspace list)
+    created=$(herdr_ok worktree create --cwd "$repo" --branch "$branch" --label "$name" --no-focus)
+    workspace=$(printf '%s' "$created" | jq -r .result.workspace.workspace_id)
+    pane=$(printf '%s' "$created" | jq -r .result.root_pane.pane_id)
+    place=$(printf '%s' "$created" | jq -r .result.worktree.path)
+    repo_key=$(printf '%s' "$created" | jq -r .result.workspace.worktree.repo_key)
+    after=$(herdr_json .result.workspaces workspace list)
+    opened=$(printf '%s' "$after" | jq -r --arg key "$repo_key" --argjson before "$before" \
+      '.[] | select(.worktree.repo_key == $key and (.worktree.is_linked_worktree | not))
+        | .workspace_id | select(. as $id | $before | index($id) | not)')
+    for id in $opened; do
+      ledger_add "$(jq -nc --arg w "$id" --arg k "$repo_key" '{parent: true, workspace: $w, repo_key: $k}')"
+    done
+    ;;
+  tab)
+    hosted=$(herdr_json .result.agent agent get "$host")
+    workspace=$(printf '%s' "$hosted" | jq -r .workspace_id)
+    place=$(printf '%s' "$hosted" | jq -r .cwd)
+    created=$(herdr_ok tab create --workspace "$workspace" --cwd "$place" --label "$name" --no-focus)
+    tab=$(printf '%s' "$created" | jq -r .result.tab.tab_id)
+    pane=$(printf '%s' "$created" | jq -r .result.root_pane.pane_id)
+    ;;
+esac
+ledger_add "$(jq -nc --arg name "$name" --arg kind "$kind" --arg ws "$workspace" --arg tab "$tab" \
+  --arg place "$place" --arg repo "${main:-$repo}" --arg base "$base" --arg branch "$branch" '
+  def opt: if . == "" then null else . end;
+  {name: $name, kind: $kind, workspace: $ws, tab: ($tab | opt), place: $place,
+   repo: ($repo | opt), base: ($base | opt), branch: ($branch | opt)}')"
+
+goal_state=
+report() {
+  jq -nc --arg name "$name" --arg kind "$kind" --arg workspace "$workspace" --arg tab "$tab" --arg pane "$pane" \
+    --arg place "$place" --arg branch "$branch" --arg status "$1" --arg error "${2:-}" --arg goal "$goal_state" '
+    {name: $name, kind: $kind, workspace: $workspace, pane: $pane, place: $place,
+     branch: (if $branch == "" then null else $branch end), status: $status}
+     + (if $tab == "" then {} else {tab: $tab} end)
+     + (if $goal == "" then {} else {goal: $goal} end)
+     + (if $error == "" then {} else {error: $error} end)'
+}
+[ -z "$has_goal" ] || goal_state=not_sent
+
+# A new pane's shell may still be loading its rc files, and agent start
+# rejects a pane that is not at its prompt. Retry only while no agent has
+# appeared in the pane; once one has, a failure such as agent_not_ready means
+# a trust or approval dialog someone must see.
+set -- -n "$name"
+[ -z "$mode" ] || set -- "$@" --permission-mode "$mode"
+attempt=1
+until started=$(herdr agent start "$name" --kind claude --pane "$pane" -- "$@" 2>&1); do
+  code=$(printf '%s' "$started" | jq -r '.error.code // empty' 2>/dev/null || true)
+  if [ "$attempt" -ge 10 ] || herdr pane get "$pane" | jq -e '.result.pane.agent' >/dev/null; then
+    report not_ready "${code:-$(oneline "$started")}"
+    exit 1
+  fi
+  attempt=$((attempt + 1))
+  sleep 3
+done
+herdr_ok agent prompt "$name" "$(cat "$brief")" >/dev/null
+wait_started
+# A dialog the brief raised is not the caller's to answer by typing, and
+# /goal typed into it would be taken as the answer; unknown may be such a
+# dialog too.
+if [ -n "$has_goal" ]; then
+  case $status in
+    working | idle | done)
+      if sent=$(herdr agent prompt "$name" "/goal $goal" 2>&1); then
+        goal_state=sent
+        status=$(herdr_json .result.agent.agent_status agent get "$name")
+      else
+        report "$status" "/goal: $(oneline "$sent")"
+        exit 1
+      fi
+      ;;
+  esac
+fi
+report "$status"

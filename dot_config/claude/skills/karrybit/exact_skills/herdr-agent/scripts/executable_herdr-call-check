@@ -1,0 +1,44 @@
+#!/bin/sh
+# PreToolUse hook on Bash: stops calls that would miss sandbox.excludedCommands, which matches the
+# command text as written.
+# A path to this script's folder written another way than ~/ ($HOME or ${HOME} in place of ~, or the
+# home folder spelled out) anywhere in the command stops, reads included: the settings list the ~/
+# form only, and a read works just as well with ~/. The folder comes from where the hook runs, so it
+# needs no setting; outside the home folder there is no ~/ form, and this check is off.
+# A herdr call that touches the Herdr socket stops when it is joined to anything else (pipe, &&,
+# ||, ;, redirection other than an fd duplicate such as 2>&1, $(...), backquote, newline), and a
+# lone such call stops when it asks to leave the sandbox. A joined call stays in the sandbox, where
+# the socket is out of reach and herdr fails with "Operation not permitted"; a lone one already runs
+# outside it through sandbox.excludedCommands.
+# Quoted strings, backslash escapes and heredoc bodies are dropped before looking for herdr, so a jq
+# filter or a script written through a heredoc is not mistaken for a joined call. This is not a
+# shell parser: a shape it cannot read passes. Calls with --session (a throwaway Herdr) always pass.
+# usage: herdr-call-check < <PreToolUse hook input JSON>   (exit 2 with the reason on stderr to stop)
+dir=$(cd "$(dirname "$0")" && pwd)
+case $dir in
+  "$HOME"/*) rel=${dir#"$HOME"/}/ ;;
+  *) rel= ;;
+esac
+verdict=$(jq -r --arg home "$HOME/" --arg rel "$rel" '
+  (.tool_input.command // "") as $cmd
+  | ($rel | gsub("(?<c>[.+?^${}()|\\[\\]\\\\*])"; "\\\(.c)")) as $rel_re
+  | ($cmd
+     | gsub("<<-?[ \t]*([\"'\''])?(?<t>[A-Za-z_][A-Za-z0-9_]*)[\"'\'']?(?<rest>[^\n]*)\n([\\s\\S]*?\n)?\\k<t>(?=\n|$)"; "<<H\(.rest)")
+     | gsub("\\\\.|'\''[^'\'']*'\''|\"(\\\\.|[^\"\\\\])*\""; "Q")
+     | gsub("[0-9]*[<>]&[0-9-]+"; " ")) as $bare
+  | if $rel != "" and (($cmd | contains($home + $rel)) or ($cmd | test("\\$(HOME|\\{HOME\\})\"?/" + $rel_re))) then "absolute"
+    elif ($bare | test("--session")) then "pass"
+    elif ($bare | test("(^|[\\s;&|(`/])herdr\\s+(status|agent|workspace|worktree|tab|pane|api)(?![\\w-])") | not) then "pass"
+    elif ($bare | test("[|;<>\n`]|&&|\\$\\(")) then "joined"
+    elif .tool_input.dangerouslyDisableSandbox == true then "unsandboxed"
+    else "pass" end')
+case $verdict in
+  absolute)
+    printf '%s\n' "このコマンドは ~/${rel} を ~ 以外の書き方（ホームの絶対パスや \$HOME）で指している。settings の許可と sandbox.excludedCommands は ~/${rel}… の形だけを載せているので、ほかの書き方は規則に当たらず確認が出るか sandbox に残り、Operation not permitted で止まる。~/${rel}… の形に書き直して呼び直す。" >&2
+    exit 2 ;;
+  joined) what="このコマンドは herdr に別のコマンドかリダイレクトをつないでいる" ;;
+  unsandboxed) what="単独の herdr に dangerouslyDisableSandbox は要らない" ;;
+  *) exit 0 ;;
+esac
+printf '%s\n' "${what}。herdr は単独の呼び出しで実行する（パイプ・&&・||・;・リダイレクト・\$(...) をつながない。2>&1 はよい）。単独の呼び出しなら sandbox.excludedCommands で sandbox の外で動く。Operation not permitted（EPERM）は、つないだせいで sandbox に残ったためで、herdr の socket が塞がれているのではない。dangerouslyDisableSandbox を付けずに単独で呼び直し、出力の加工は次の呼び出しで行う。" >&2
+exit 2

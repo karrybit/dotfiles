@@ -1,0 +1,68 @@
+#!/bin/sh
+# Sends one of the two keys a caller may send without a permission prompt:
+# Enter to an agent whose approval dialog is open (it picks the highlighted
+# answer, Yes), or q to a pane whose foreground program is a pager. A "*" in a
+# permission rule matches any run of words, so a rule cannot hold herdr
+# send-keys to one target and one key; this script is the allowed form, and
+# herdr send-keys itself still asks. Nothing is sent to the caller's own pane.
+#
+# enter sends only to an agent whose name matches HERDR_AGENT_NAME_PATTERN, an
+# ERE the caller's settings set; when it is unset, enter sends nothing.
+set -eu
+
+usage() {
+  echo "usage: safe-key enter <agent> | safe-key quit <pane>" >&2
+  exit 2
+}
+[ $# -eq 2 ] || usage
+self=${HERDR_PANE_ID:?}
+
+case "$1" in
+  enter)
+    case $2 in
+      *'
+'*) usage ;;
+    esac
+    printf '%s\n' "$2" | grep -Eq '^[a-z][a-z0-9_-]{0,31}$' || usage
+    if [ -z "${HERDR_AGENT_NAME_PATTERN:-}" ]; then
+      echo "safe-key: HERDR_AGENT_NAME_PATTERN is not set; not sending keys" >&2
+      exit 1
+    fi
+    printf '%s\n' "$2" | grep -Eq -- "$HERDR_AGENT_NAME_PATTERN" || usage
+    agent=$(herdr agent get "$2" | jq -c '.result.agent')
+    pane=$(printf '%s\n' "$agent" | jq -r '.pane_id')
+    status=$(printf '%s\n' "$agent" | jq -r '.agent_status')
+    if [ "$pane" = "$self" ]; then
+      echo "safe-key: $2 is in this pane; not sending keys" >&2
+      exit 1
+    fi
+    if [ "$status" != blocked ]; then
+      echo "safe-key: $2 is $status, not blocked; not sending keys" >&2
+      exit 1
+    fi
+    herdr agent send-keys "$2" Enter >/dev/null
+    ;;
+  quit)
+    case "$2" in
+      w*:p*) ;;
+      *) usage ;;
+    esac
+    case "$2" in
+      *[!A-Za-z0-9:]*) usage ;;
+    esac
+    if [ "$2" = "$self" ]; then
+      echo "safe-key: $2 is this pane; not sending keys" >&2
+      exit 1
+    fi
+    fg=$(herdr pane process-info --pane "$2" | jq -r '.result.process_info.foreground_processes[0].name')
+    case "$fg" in
+      less | glow) ;;
+      *)
+        echo "safe-key: $2 is running $fg; not sending keys" >&2
+        exit 1
+        ;;
+    esac
+    herdr pane send-keys "$2" q >/dev/null
+    ;;
+  *) usage ;;
+esac

@@ -1,0 +1,59 @@
+#!/bin/sh
+# Prints the last assistant message of the Claude session running as a Herdr
+# agent. Reading the transcript instead of the screen returns the report
+# alone, without the rest of the terminal output.
+#
+# --wait first waits with "herdr agent wait" until the agent is idle, done,
+# blocked or unknown (an agent whose pane someone is watching ends idle, not
+# done; one whose pane is gone is unknown), then prints "status: <state>" and,
+# for idle or done, the report. When herdr agent get fails or the transcript
+# cannot be read it prints "status: error" and exits 1; a wait that fails
+# returns at once and shows the state as it is (working). Run in the
+# background after the agent is seen working, it hands the caller the outcome
+# in the one completion notice.
+set -eu
+
+usage() {
+  echo "usage: agent-report [--wait] <agent-name>" >&2
+  exit 2
+}
+wait=
+if [ "${1:-}" = --wait ]; then
+  wait=1
+  shift
+fi
+[ $# -eq 1 ] || usage
+
+report() {
+  session=$(printf '%s' "$agent" | jq -r .result.agent.agent_session.value)
+  cwd=$(printf '%s' "$agent" | jq -r .result.agent.cwd)
+  # Claude Code names a project directory after its cwd with every
+  # non-alphanumeric character replaced by "-".
+  project=$(printf '%s' "$cwd" | tr -c 'A-Za-z0-9' '-')
+  jq -rs '[.[] | select(.type == "assistant") | .message.content[]? | select(.type == "text") | .text] | last // ""' \
+    "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/$project/$session.jsonl"
+}
+
+if [ -z "$wait" ]; then
+  agent=$(herdr agent get "$1")
+  report
+  exit 0
+fi
+herdr agent wait "$1" --until idle --until 'done' --until blocked --until unknown >/dev/null || true
+if ! agent=$(herdr agent get "$1"); then
+  echo "status: error"
+  exit 1
+fi
+status=$(printf '%s' "$agent" | jq -r .result.agent.agent_status)
+case $status in
+  idle | done)
+    # The report is read first, so a missing transcript is an error line, not a report.
+    if ! text=$(report 2>&1); then
+      echo "status: error"
+      printf '%s\n' "$text"
+      exit 1
+    fi
+    printf 'status: %s\n%s\n' "$status" "$text"
+    ;;
+  *) echo "status: $status" ;;
+esac
