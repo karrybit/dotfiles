@@ -1,0 +1,21 @@
+#!/bin/sh
+# Prints the lines of standard input that contain this machine's host name,
+# computer name or local host name, or the login user name, as
+# "<line number>:<line>", ignoring case. Prints nothing when no line does.
+# The names are compared here and never printed on their own, so a caller
+# checking outgoing text sees a name only where the text already holds it.
+set -u
+
+names=$({
+  hostname
+  hostname -s
+  scutil --get ComputerName
+  scutil --get LocalHostName
+  id -un
+} 2>/dev/null | grep -v '^$' | sort -u)
+if [ -z "$names" ]; then
+  cat >/dev/null
+  exit 0
+fi
+grep -n -i -F -- "$names"
+exit 0
