@@ -11,4 +11,4 @@
   - `llm-as-reviewer-evidence.md` in this skill's folder: demanding findings raises false defect reports, and checking against external facts is the mitigation that worked. This is why the skill treats "no change" as a pass and grounds every fact in code.
   - `document-review-evidence.md` in this skill's folder: editing levels (structure before style), Write the Docs principles, and the limits of minimalism and cognitive-load evidence for reference documents.
   - Sentence-level style is out of scope: `karrybit:japanese-tech-writing` covers it.
-  - `evals/` holds the behavior cases and fixtures used to compare against a no-skill baseline. It is listed in `.chezmoiignore` and is not deployed.
+  - The plugin's `evals/docs-information-design/` holds the behavior cases and fixtures used to compare against a no-skill baseline.

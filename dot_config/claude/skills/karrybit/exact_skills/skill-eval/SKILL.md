@@ -6,10 +6,11 @@ disable-model-invocation: true
 
 # Evaluating a Skill With Plugin Evals
 
-This skill measures a skill by running `claude plugin eval` against a plugin
-directory that wraps it, so the skill's own files stay unchanged. Paths below
-that start with `scripts/` or name a `.md` file are relative to this skill's
-base directory.
+This skill measures a skill by running `claude plugin eval` against the plugin
+that holds it, loaded in place, or against a wrapper plugin that holds one
+committed version of the skill, so the skill's own files stay unchanged. Paths
+below that start with `scripts/` or name a `.md` file are relative to this
+skill's base directory.
 
 ## Rules for the Whole Task
 
@@ -27,10 +28,14 @@ base directory.
   pass count by one run in three.
 - Commit suite changes separately from skill changes, and commit the suite
   before a run, since the wrapper copies the suite from the working tree.
+- Deploy the plugin before an in-place run (`chezmoi apply` for the dotfiles'
+  `karrybit`), since an in-place run evaluates the copy that sessions load.
 
-## The Evaluated Skill's `evals/` Directory
+## The Evaluated Skill's Eval Directory
 
-Each skill keeps its evaluation data in its own `evals/` directory:
+Each skill keeps its evaluation data in `evals/<skill name>/` at its plugin's
+root, outside `skills/`, since `claude plugin eval` refuses an `--eval-dir`
+inside a loaded component directory:
 
 | Path | Holds |
 | --- | --- |
@@ -47,13 +52,17 @@ wrapper, so `plugin-eval-holdout/` runs with `--eval-dir evals-holdout`.
 
 ## Comparisons
 
-| Comparison | Wrappers | Flags beyond the suite command |
+| Comparison | Target | Flags beyond the suite command |
 | --- | --- | --- |
-| Skill against no skill | `DIR/kit` at `HEAD` | none (two arms: with and without the plugin) |
-| Older against newer version | one wrapper per ref | `--ablation none` on each |
-| Canary | `DIR/kit-c`: a second `HEAD` wrapper with `canary.patch` applied | `--ablation none` |
-| Holdout | `DIR/kit` | `--eval-dir evals-holdout` |
-| Activation | `DIR/kit` | `--eval-dir evals-activation --ablation none`, without `--scaffold` |
+| Skill against no skill | the plugin in place, such as `karrybit@skills-dir` | `--eval-dir evals/<skill name>/plugin-eval` (two arms: with and without the plugin) |
+| Holdout | the plugin in place | `--eval-dir evals/<skill name>/plugin-eval-holdout` |
+| Activation | the plugin in place | `--eval-dir evals/<skill name>/plugin-eval-activation --ablation none`, without `--scaffold` |
+| Older against newer version | one wrapper per ref, `HEAD` included | `--ablation none` on each |
+| Canary | `DIR/kit` at `HEAD`, and `DIR/kit-c`: a second `HEAD` wrapper with `canary.patch` applied | `--ablation none` on each |
+
+An in-place run loads every skill in the plugin, and a wrapper holds only the
+evaluated skill at one commit, so a version or canary comparison uses wrappers
+on both sides.
 
 Compare configurations by per-grader pass counts, not by case scores: with two
 arms the `tool_used: Skill` grader is left out of the score, and with
@@ -61,8 +70,8 @@ arms the `tool_used: Skill` grader is left out of the score, and with
 
 ## Steps
 
-1. Build the wrappers: `scripts/skill-wrap <skill dir> HEAD DIR/kit`, one per
-   ref the comparison needs. For the canary, build `DIR/kit-c` the same way and
+1. For a comparison that uses wrappers, build them:
+   `scripts/skill-wrap <skill dir> HEAD DIR/kit`, one per ref. For the canary, build `DIR/kit-c` the same way and
    run `patch -p1 -d DIR/kit-c/skills/<skill name> -i <absolute path of canary.patch>`.
    Completion: `claude plugin validate DIR/kit` reports `Validation passed`
    for each wrapper; warnings about author, README, LICENSE, and icon are
@@ -72,11 +81,11 @@ arms the `tool_used: Skill` grader is left out of the score, and with
    and one it must fail.
    Completion: each new or changed `regex` grader printed `PASS` for one file
    and `FAIL` for the other.
-3. Run the suite with the command in `running.md`, once per wrapper and eval
+3. Run the suite with the command in `running.md`, once per target and eval
    directory the comparison needs.
    Completion: each result JSON has `"partial": false`, every run has
    `"error": null`, and `costUsd` is recorded.
-4. When the skill's `evals/` holds `grade.py`, run
+4. When the skill's eval directory holds `grade.py`, run
    `scripts/grade-kept <evals dir>/grade.py DIR/results/<label>.json DIR/grade/<label>`
    for each scaffold suite result.
    Completion: `grade.py` printed one line per run with its pass count.
@@ -98,7 +107,8 @@ arms the `tool_used: Skill` grader is left out of the score, and with
 Report these items in this order:
 
 - Per-grader pass counts per arm, one column per result file, labeled with
-  the wrapped commit.
+  the wrapped commit, or for an in-place run with the commit the deployed
+  plugin was applied from.
 - `--model`, `--judge-model`, and `--runs` for each result file.
 - The summed `costUsd` of every run, plus `total_cost_usd` of any `claude -p`.
 - Which differences rest on one run, and which held across repeats.

@@ -25,13 +25,14 @@ adoption from reruns, not from its predictions.
 1. Run `scripts/grade-kept` on each result file to audit, since that opens
    the kept workspaces the auditor reads.
    Completion: `grade.py` printed one line per run for each result file.
-2. Write `DIR/request.md` naming `DIR/kit` and each result file with its
-   label (skill with baseline, canary, older version, repeat); leave the
-   holdout out.
+2. Write `DIR/request.md` naming the plugin directory under test (the
+   deployed plugin for an in-place run, `DIR/kit` for a wrapper), its eval
+   directory, and each result file with its label (skill with baseline,
+   canary, older version, repeat); leave the holdout out.
    Completion: the request names the plugin directory and every result file
    with a label, and no holdout path.
 3. Run
-   `claude -p "Follow the audit request in DIR/request.md." --agent eval-auditor --add-dir <system temp directory> --add-dir DIR --max-budget-usd 15 --output-format json --allowedTools Read Glob Grep 'Bash(jq *)'`.
+   `claude -p "Follow the audit request in DIR/request.md." --agent eval-auditor --add-dir <system temp directory> --add-dir DIR --add-dir <plugin directory> --max-budget-usd 15 --output-format json --allowedTools Read Glob Grep 'Bash(jq *)'`.
    Completion: the JSON has `"is_error": false` and `total_cost_usd` is
    recorded.
 4. Apply a proposal only after rerunning as "Adopting a Change" describes.

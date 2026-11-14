@@ -76,5 +76,5 @@ ADR と PR 本文では、プラグインの `mattpocock-skills:domain-modeling`
 - 各ケースを fixture リポジトリの複製で `claude -p "<依頼>" --output-format stream-json --verbose --disallowedTools Edit,Write` として複数回実行し、出力の `Skill` ツール呼び出しを `jq` で数える。名前で呼ぶ Skill の起動は Skill ツール呼び出しとして現れる。
 - 計測の前に、起動が分かっている依頼と起動しないはずの依頼を一つずつ流し、この方法で両者を区別できることを確かめる。
 - 普段使うモデル（`settings.base.pkl` の `ANTHROPIC_MODEL`）で測る。起動はモデルによって変わる。
-- `karrybit:docs-information-design` の `description` は、`evals/trigger-evals.json` と skill-creator の `run_eval` でも確かめる（手順は `evals/README.md`）。
+- `karrybit:docs-information-design` の `description` は、プラグインの `evals/docs-information-design/trigger-evals.json` と skill-creator の `run_eval` でも確かめる（手順は同じフォルダの `README.md`）。
 - 運用中は `/skill-doctor` で各 Skill の起動頻度を確認する。

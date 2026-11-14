@@ -1,16 +1,17 @@
 # Running a Suite
 
-Read when: running `claude plugin eval` against a wrapper built by
-`scripts/skill-wrap`, or grading and tabulating its results.
+Read when: running `claude plugin eval` against a plugin in place or a wrapper
+built by `scripts/skill-wrap`, or grading and tabulating its results.
 
 ## The Suite Command
 
 ```sh
-claude plugin eval DIR/kit --scaffold --allow-tools <tools> --runs 3 -j 3 --model claude-sonnet-5-5 --judge-model claude-opus-5-5 --max-cost-usd <ceiling> --no-publish --trust-plugin --threshold 0 --keep-temp --json DIR/results/<label>.json
+claude plugin eval <target> --scaffold --allow-tools <tools> --runs 3 -j 3 --model claude-sonnet-5-5 --judge-model claude-opus-5-5 --max-cost-usd <ceiling> --no-publish --trust-plugin --threshold 0 --keep-temp --output-dir DIR/out/<label> --json DIR/results/<label>.json
 ```
 
-Take `<tools>` from the evaluated skill's `evals/README.md`, and add the flags
-from the Comparisons table in `SKILL.md`.
+Take `<target>` and the flags beyond this command from the Comparisons table
+in `SKILL.md`, and `<tools>` from the `README.md` in the skill's eval
+directory.
 
 | Flag | Purpose |
 | --- | --- |
@@ -24,6 +25,7 @@ from the Comparisons table in `SKILL.md`.
 | `--threshold 0` | Keeps the exit status 0 when a case scores below 1.0, so low scores are read from the JSON |
 | `--keep-temp` | Keeps each run's workspace and trace; without it `tracePath` names a deleted file |
 | `--no-publish` | Keeps the HTML report local |
+| `--output-dir` | Writes `aggregate-result.json` and the HTML report there instead of into the plugin's eval directory, or the current directory for a target named by id |
 | `--json <path>` | Writes the full result: prompts, graders, per-run scores, `costUsd` |
 
 ## Selecting Cases
@@ -37,7 +39,8 @@ from the Comparisons table in `SKILL.md`.
 - Read runs at `.cases[].arms.<arm>[]`; each run has `graders[]` with `name`,
   `passed`, and `judgeVotes` for `llm` graders, plus `error` and `tracePath`.
 - The JSON records the models once per suite (`.suite.modelOverride`,
-  `.suite.judgeModel`) and the wrapped commit in `.suite.plugins[].version`;
+  `.suite.judgeModel`), and for a wrapper the wrapped commit in
+`.suite.plugins[].version`;
   a run's own model is in the `system` `init` line of its trace.
 - A kept run directory, two levels above `tracePath`, holds `config/`,
   `out/trace.jsonl`, and `sealed/` (mode 000, holding `home/` and `tmp/`); the

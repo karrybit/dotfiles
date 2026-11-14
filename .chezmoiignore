@@ -5,7 +5,6 @@ README.md
 docs
 .config/nvim/AGENTS.md
 .config/nvim/README.md
-.config/claude/skills/karrybit/skills/docs-information-design/evals
 
 # Runtime artifacts
 .config/zsh/.zsh_history

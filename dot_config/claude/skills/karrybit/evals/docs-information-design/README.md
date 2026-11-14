@@ -1,6 +1,6 @@
 # karrybit:docs-information-design evals
 
-Behavior cases for comparing the skill against a no-skill baseline, across skill versions and models. Not deployed (see `.chezmoiignore`). Run them with the `karrybit:skill-eval` skill, which wraps this skill as a plugin and runs `claude plugin eval`.
+Behavior cases for comparing the skill against a no-skill baseline, across skill versions and models. Run them with the `karrybit:skill-eval` skill, which runs `claude plugin eval` against the deployed `karrybit` plugin or against a wrapper plugin holding one version of this skill.
 
 ## Files
 
@@ -18,13 +18,13 @@ For trigger tests with skill-creator's `run_eval`, run queries one at a time. Pa
 ## Settings for This Suite
 
 - `plugin-eval/` and `plugin-eval-holdout/` cases edit files and grant no Bash: run them with `--scaffold --allow-tools Write Edit`.
-- `plugin-eval-activation/` cases have no scaffold: run them with `--eval-dir evals-activation --ablation none --runs 2 -j 8`.
+- `plugin-eval-activation/` cases have no scaffold: run them with `--eval-dir evals/docs-information-design/plugin-eval-activation --ablation none --runs 2 -j 8` against the plugin, or `--eval-dir evals-activation` against a wrapper.
 - Pass `grade.py` in this directory to `grade-kept` for `plugin-eval/` and `plugin-eval-holdout/` results.
 - Since cases grant no Bash, the `no-edit` and `no-write` graders (`tool_used` with `max: 0`) show that no file changed.
 
 ## What the Suite Separates
 
-Measured with `karrybit:skill-eval`'s suite command (`--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`), two repeats per configuration:
+Measured on a wrapper holding only this skill, with `karrybit:skill-eval`'s suite command (`--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`), two repeats per configuration:
 
 - `good-docs-audit/no-change-verdict` scores the skill above both the canary and no skill (skill 3/3 in both repeats, canary 1/3, no skill 1/3).
 - `good-docs-audit/no-fabricated-issues` scores the skill above no skill (3/3 against 1/3 and 2/3); the canary keeps the rule it checks and scores like the skill.
