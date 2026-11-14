@@ -60,11 +60,15 @@
 - User-scope instructions stay `dot_config/claude/CLAUDE.md`, deployed to
   `~/.config/claude/CLAUDE.md`: Claude Code has no user-scope `AGENTS.md`.
   No instruction file imports another.
-- Skills live under `dot_config/claude/skills/` and deploy straight to
-  `~/.config/claude/skills/`; there is no intermediate canonical copy.
-  `run_onchange_04_prune-skills.sh.tmpl` removes deployed skills whose source
-  entry is gone, which chezmoi does not do on its own. It only removes skills
-  recorded in its own manifest, so skills installed by other routes survive.
+- Skills live in the `karrybit` plugin at `dot_config/claude/skills/karrybit/`,
+  which deploys to `~/.config/claude/skills/karrybit/` and loads in place as
+  `karrybit@skills-dir`, so each skill is called `karrybit:<skill>`; there is
+  no intermediate canonical copy. The plugin's `exact_skills/` makes
+  `chezmoi apply` remove a deployed skill whose source folder is gone.
+- `run_onchange_04_prune-skills.sh.tmpl` removes skills deployed directly
+  under `~/.config/claude/skills/` whose source entry is gone, which chezmoi
+  does not do on its own. It only removes skills recorded in its own manifest,
+  so skills installed by other routes survive.
 - When changing the `description` of a document-writing skill
   (`docs-information-design`, `japanese-tech-writing`) or adding one, update
   the routing table and test cases in `docs/WRITING.md` in the same change.

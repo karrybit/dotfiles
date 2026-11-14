@@ -4,8 +4,8 @@
 
 | Skill | 担当 | 起動 | 置き場所 |
 | --- | --- | --- | --- |
-| `docs-information-design` | 文書に何を書き、どこに置くか。文書の分割、統合、文書間の整合 | 自動 | `dot_config/claude/skills/` |
-| `japanese-tech-writing` | 日本語の文章の論理構成と文章品質 | 自動 | `dot_config/claude/skills/`（原典からの派生。`PROVENANCE.md` 参照） |
+| `docs-information-design` | 文書に何を書き、どこに置くか。文書の分割、統合、文書間の整合 | 自動 | プラグイン `karrybit`（`dot_config/claude/skills/karrybit/`） |
+| `japanese-tech-writing` | 日本語の文章の論理構成と文章品質 | 自動 | プラグイン `karrybit`（`dot_config/claude/skills/karrybit/`。原典からの派生。`PROVENANCE.md` 参照） |
 | `yomiyasu:yomiyasu` | 書き上がった日本語の独立した推敲 | 名前を出した依頼だけ | プラグイン（`settings.base.pkl` の `enabledPlugins`） |
 
 ## 設計原則

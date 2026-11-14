@@ -47,7 +47,7 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/).
 ~/.config/claude/CLAUDE.md    ← user-level agent instructions
 ~/.local/share/agents/docs/   ← agent source summaries and reference files
 ~/.local/share/agents/scripts/ ← reusable agent-operated scripts
-~/.config/claude/skills/      ← user-level agent skills
+~/.config/claude/skills/karrybit/ ← user-level agent skills (karrybit plugin)
 ~/.config/claude/agents/      ← user-level subagents
 ```
 
@@ -255,7 +255,7 @@ These run automatically during `chezmoi apply` when their tracked content change
 | `run_onchange_00_rustup.sh` | First apply | Install rustup into `$CARGO_HOME` and set the stable toolchain as default (its default profile includes clippy and rustfmt) |
 | `run_onchange_02_cargo_packages.sh.tmpl` | `rust/package` changed | `cargo install` for packages not managed elsewhere |
 | `run_onchange_03_claude_settings.sh.tmpl` | Claude settings pkl files changed | Regenerate `~/.config/claude/settings.json` |
-| `run_onchange_04_prune-skills.sh.tmpl` | Skills under `dot_config/claude/skills/` changed | Remove deployed skills whose source entry is gone (chezmoi leaves such targets in place) |
+| `run_onchange_04_prune-skills.sh.tmpl` | Skills directly under `dot_config/claude/skills/` changed | Remove skills deployed directly under `~/.config/claude/skills/` whose source entry is gone (chezmoi leaves such targets in place); the `karrybit` plugin's skills are removed by its `exact_skills/` |
 | `run_onchange_07_uv_python.sh.tmpl` | `uv/.python-version` changed | `uv python install` for the pinned version, linking `python`/`python3` |
 ---
 
