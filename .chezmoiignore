@@ -37,6 +37,7 @@ docs
 !.local/share/agents/docs/instruction-writing-standard.md
 !.local/share/agents/docs/medallion-information-design.md
 !.local/share/agents/docs/sandbox-and-environment-gotchas.md
+!.local/share/agents/docs/skill-design.md
 
 # Claude Code generated/local settings
 .config/claude/settings.json

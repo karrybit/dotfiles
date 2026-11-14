@@ -101,18 +101,13 @@ These apply to all five kinds.
 - Start the `description` with the main use case: what the skill does, then when
   to use it, within 1,536 characters together with `when_to_use`. [doc]
 - Set `disable-model-invocation: true` on a skill whose steps have side effects.
-  [doc]
+  [doc] Count spending on paid model calls as a side effect. [inferred]
 - Keep `SKILL.md` under 500 lines, put the most important rules near the top,
   and move reference material into separate files. [doc]
 - Word each rule so it applies to the whole task ("run the tests after every
   edit", not "run the tests"). [doc]
-- Write each skill as a deep module that knows no other skill: describe what it
-  needs from outside as an input contract instead of naming the skill that
-  produces it. [inferred]
-- When a skill exists to use one specific skill well, name that skill; this is
-  the only exception to the rule above. [inferred]
-- When a task needs several skills combined, put the combination in a separate
-  orchestrator skill, and leave the combined skills unaware of it. [inferred]
+- When creating, splitting, or combining skills, or placing a skill, subagent,
+  or script, read `skill-design.md` beside this file. [inferred]
 
 ### Subagent Definitions
 
