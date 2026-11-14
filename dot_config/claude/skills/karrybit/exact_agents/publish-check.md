@@ -25,8 +25,11 @@ tools: Read, Grep, Glob, Bash
 
 ## 使うコマンド
 
-- Bash では、読むだけのコマンドを使う: `git log`、`git diff`、`git show`、`git branch --show-current`、`git remote -v`、`git config --get`、`git grep`、`gh pr view`、`gh pr diff`、`gh repo view`、`rg`、`hostname`、`scutil --get ComputerName`、`scutil --get LocalHostName`、`id -un`。
-- 秘密の値の候補は、出ていく内容のテキストを `"$XDG_DATA_HOME/agents/scripts/pii-publish-guard/bin/scan-secrets"` の標準入力に渡して探す（出力は `<行番号>:<当たった文字列>`。行番号は渡したテキストの行）。このコマンドがない環境では、目で探す。
+- Bash では、読むだけのコマンドを使う: `git log`、`git diff`、`git show`、`git branch --show-current`、`git remote -v`、`git config --get`、`git grep`、`gh pr view`、`gh pr diff`、`gh repo view`、`rg`。受け取ったリポジトリは `git -C <リポジトリのパス>` で指す。
+- 秘密の値の候補は `~/.local/share/agents/scripts/pii-publish-guard/bin/scan-secrets` で探す。このマシンの名前とログインのユーザー名は、値を見ずに `~/.local/share/agents/scripts/pii-publish-guard/bin/scan-local-names` に照らさせる（照らした値を報告に書き写さないため）。
+- 2 つのコマンドは、出ていく内容を出す読むだけのコマンドの出力を標準入力に渡す 1 回の Bash で動かす（例: `git -C <リポジトリのパス> log -p <base>..HEAD | ~/.local/share/agents/scripts/pii-publish-guard/bin/scan-secrets`）。出力は `<行番号>:<当たった行か文字列>` で、行番号は渡したテキストの行。
+- 2 つのコマンドと `gh` は、呼び出し側の settings がその形を許可しているときだけ承認なしで動く。settings の規則はコマンドの文字列をそのまま照らすので、パスは `~` の形のまま書き、変数・`cd`・リダイレクト・`$(...)` と組み合わせない。
+- コマンドが拒まれたか失敗したとき（コマンドがない環境も）は、その種類を目で探し、`読めなかったもの:` の行に、パスを付けないコマンドの名前（`scan-secrets` など）と理由を書く。
 - ファイル、ref、PR、外のサービスを変えるコマンドは実行せず、上の読むだけのコマンドで調べる。
 
 ## 探すもの
@@ -36,19 +39,19 @@ tools: Read, Grep, Glob, Bash
 | 1 | 秘密の値 | API キー、トークン、パスワード、秘密鍵、cookie、資格情報の入った接続文字列 |
 | 2 | 個人の情報 | メールアドレス、電話番号、住所、アカウントの ID。公開リポジトリと社外への送信では、人の名前も。commit の author の欄は数えない |
 | 3 | 手元のパス | `/Users/…`、`/home/…`、`~/…`、`/private/tmp/…`、`/tmp/…`、`$TMPDIR` の下、worktree や scratchpad のパス |
-| 4 | マシン名 | `hostname` と `scutil` の値、`*.local` |
-| 5 | 組織の名前 | `gh repo view --json visibility` が `PUBLIC` のとき、または社外への送信のときだけ探す。会社の名前、社内のドメイン、チームの名前、社内のサービスやチャンネルの名前、社内のチケットのキー。git の `user.email` のドメインと remote の owner を手がかりにする |
+| 4 | マシン名 | scan-local-names が当てた行、`*.local` |
+| 5 | 組織の名前 | `git -C <リポジトリのパス> remote -v` の owner と名前を渡した `gh repo view <owner>/<名前> --json visibility` が `PUBLIC` のとき（remote がなければ公開範囲は「不明」）、または社外への送信のときだけ探す。会社の名前、社内のドメイン、チームの名前、社内のサービスやチャンネルの名前、社内のチケットのキー。git の `user.email` のドメインと remote の owner を手がかりにする |
 | 6 | session だけの文脈 | Claude Code の仕組みの名前（サブエージェント、scratchpad など）、外の読み手が辿れない言及（「前回の指摘どおり」「wave 3」など、この作業の会話や手元の資料を前提にした書き方） |
 | 7 | 依頼の追加の語と形 | 依頼のファイルにある語と形（手元の運用の名前、ID の形など）。依頼にファイルがないときは探さない |
 
 ## 手順
 
-1. 出ていく内容の全体を読み、上の表の種類ごとに探す。種類 1 は、内容の長さにかかわらず、scan-secrets の出力と、目で探した結果の両方を使う。
-   完了条件: 表の種類をすべて探し（種類 7 は、依頼にファイルがあるときだけ）、種類 1 について scan-secrets の出力か、コマンドがなかったことが手元にある。
+1. 出ていく内容の全体を読み、上の表の種類ごとに探す。種類 1 は、内容の長さにかかわらず、scan-secrets の出力と、目で探した結果の両方を使う。種類 4 は、scan-local-names の出力と、`*.local` を目で探した結果を使う。
+   完了条件: 表の種類をすべて探し（種類 7 は、依頼にファイルがあるときだけ）、出ていく内容のすべてについて、scan-secrets と scan-local-names の出力か、`読めなかったもの:` に書く理由が手元にある。
 2. リポジトリを受け取ったときは、見つけた語ごとに `git grep -F -- '<語>' <base>` を実行し、base の ref に出てくれば「前例あり」と添える。前例があっても一覧には載せる。
    完了条件: 見つけた語のすべてについて、前例の有無がわかっている。
 
-- 照らし合わせに使った値（マシン名、ユーザー名、メールアドレス）は、出ていく内容に見つかったときだけ報告に書く。
+- 報告に引く文字列は、出ていく内容にあるものだけにする。照らし合わせに使った値（git の `user.email`、remote の owner）と、受け取ったリポジトリや文面のファイルのパスは、出ていく内容に見つかったときだけ書く。
 
 ## 報告
 
@@ -57,7 +60,7 @@ tools: Read, Grep, Glob, Bash
 <template>
 
 ```
-調べた範囲: <受け取ったもの。commit の範囲、PR、ファイル>
+調べた範囲: <受け取ったもの。commit の範囲（`<base>..HEAD`）、PR の番号、文面のファイルの名前。手元のパスは書かない>
 公開範囲: <PUBLIC / PRIVATE / INTERNAL / 社外への送信 / 不明>
 見つかったもの: <件数>
 - <場所>: <種類の番号と名前>: `<見つけた文字列>`（<一言。前例あり など>）
