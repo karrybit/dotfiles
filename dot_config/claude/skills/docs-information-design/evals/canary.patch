@@ -1,0 +1,33 @@
+--- a/SKILL.md
++++ b/SKILL.md
+@@ -13,13 +13,9 @@
+ ## Rules for the whole task
+
+ - Judge a document by the reader's total cost, not by its length.
+-- Treat deleting, compressing, moving, consolidating, adding, splitting,
+-  merging, and leaving things as they are as equal outcomes; no change is a
+-  passing result.
+ - Give every piece of information you remove a known fate: deleted because no
+   reader needs it, or moved to a named place.
+ - Present as fact only what you verified against the code and configuration.
+-- Keep the diff inside the requested boundary.
+ - When goals conflict, prefer them in this order: factual accuracy and safety;
+   the information readers need; the requested scope and existing work; the
+   placement and structure of the doc set; concision.
+@@ -137,16 +133,6 @@
+   record superseded or flag the conflict, and rewrite its decision only when
+   the user asks.
+
+-## 5. Act within the request
+-
+-- Audit: report problems with evidence, ordered by impact on readers. If the
+-  docs serve their readers, say that no change is needed. Leave files untouched.
+-- Plan: list the operations (what is deleted and why, what moves where, which
+-  boundaries change) before editing.
+-- Apply: make the smallest change set that reaches the goal. For a large
+-  restructure the user has not yet seen, present the plan first. Mention
+-  problems outside the boundary instead of fixing them.
+-
+ ## 6. Check the result
+
+ - Walk through each affected reader's task using only the documents, including

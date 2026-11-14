@@ -1,0 +1,26 @@
+#!/bin/sh
+# Usage: grade-kept RESULT_JSON ITER_DIR
+# Runs grade.py over the workspaces that `claude plugin eval --keep-temp` left
+# behind. Each workspace is copied, without its .git, onto a fresh repository
+# built from the fixture, so git never runs inside a directory the agent wrote.
+set -eu
+result=$1
+iter=$2
+evals=$(cd "$(dirname "$0")/.." && pwd)
+
+jq -r '.cases[] | .name as $n | (.arms | to_entries[]) | .key as $arm
+  | .value | to_entries[] | [$n, $arm, (.key + 1), .value.tracePath] | @tsv' "$result" |
+while IFS="$(printf '\t')" read -r name arm i trace; do
+  fixture=$(jq -r --arg n "$name" '.evals[] | select(.name == $n) | .files[0] | split("/")[-1]' \
+    "$evals/evals.json")
+  kept=$(dirname "$(dirname "$trace")")
+  chmod 700 "$kept" "$kept/sealed"
+  repo=$iter/eval-$fixture/$arm-$i/repo
+  mkdir -p "$repo"
+  cp -R "$evals/fixtures/$fixture/." "$repo/"
+  git -C "$repo" init -q
+  git -C "$repo" add -A
+  git -C "$repo" -c user.name=fixture -c user.email=fixture@example.invalid commit -qm fixture
+  rsync -a --delete --exclude .git "$kept/sealed/home/cwd/" "$repo/"
+done
+python3 -I "$evals/grade.py" "$iter"
