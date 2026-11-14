@@ -70,7 +70,9 @@ These apply to all five kinds.
   rules first. [doc]
 - C13: Move a rule that only applies in some situations into a skill, a
   path-scoped rule, or a reference file, and leave a one-line pointer that names
-  the trigger. [doc]
+  the trigger. [doc] Before keeping the move, run Small Evaluation on the
+  rule's situation with the rule inline and behind the pointer, and keep the
+  move only when the pointer version passes at least as often. [inferred]
 - C14: In Japanese, keep the subject and object explicit and end each sentence
   with a verb. [inferred]
 
