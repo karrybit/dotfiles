@@ -17,5 +17,5 @@
 | rubric.md 評価のしかた: 1 つの評価役には文書を 1 つだけ渡す | Wang ら「Large Language Models are not Fair Evaluators」2023 https://arxiv.org/abs/2305.17926（§2.2「The degree of positional bias varies based on the difference in response quality.」）。Tripathi ら「Pairwise or Pointwise? Evaluating Feedback Protocols for Bias in LLM-Based Evaluation」2025 https://arxiv.org/abs/2504.14716（要旨の「Pairwise preferences flip in about 35% of the cases, compared to only 9% for absolute scores.」） |
 | rubric.md 観点 1（正確さ）: 推論と未確認が確かな事実と見分けられる | plugin `html/references/documents-and-presentations.md`（節「Documents」の「distinguish observation, interpretation, recommendation, and uncertainty」） |
 | rubric.md 観点 2（中心の概念）: 中心の概念が定義とともに最初に会う場所で説明される | Mayer & Pilegard 2014（同上、pre-training principle。章の本文は未確認）。Google Technical Writing Two（同上、節「Disclose information progressively」） |
-| rubric.md 観点 5（理解）: 全体像から詳細へ進み、問いに効かない情報で妨げられない | 全体像から詳細へは Shneiderman 1996（同上）。問いに効かない情報は Mayer & Fiorella 2014（同上、coherence principle。章の本文は未確認） |
-| rubric.md 観点 8（見出し）: 同じ階層の見出しが 1 つの観点で分けられ、親の見出しが子をまとめる | Minto の 3 つの規則（原著は未確認。二次資料: lethain.com、同上） |
+| rubric.md 観点 4（理解）: 全体像から詳細へ進み、問いに効かない情報で妨げられない | 全体像から詳細へは Shneiderman 1996（同上）。問いに効かない情報は Mayer & Fiorella 2014（同上、coherence principle。章の本文は未確認） |
+| rubric.md 観点 6（見出し）: 同じ階層の見出しが 1 つの観点で分けられ、親の見出しが子をまとめる | Minto の 3 つの規則（原著は未確認。二次資料: lethain.com、同上） |
