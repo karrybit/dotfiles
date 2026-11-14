@@ -102,6 +102,13 @@ These apply to all five kinds.
   and move reference material into separate files. [doc]
 - Word each rule so it applies to the whole task ("run the tests after every
   edit", not "run the tests"). [doc]
+- Write each skill as a deep module that knows no other skill: describe what it
+  needs from outside as an input contract instead of naming the skill that
+  produces it. [inferred]
+- When a skill exists to use one specific skill well, name that skill; this is
+  the only exception to the rule above. [inferred]
+- When a task needs several skills combined, put the combination in a separate
+  orchestrator skill, and leave the combined skills unaware of it. [inferred]
 
 ### Subagent Definitions
 
