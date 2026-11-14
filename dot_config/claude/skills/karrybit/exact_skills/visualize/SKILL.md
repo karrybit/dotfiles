@@ -6,7 +6,7 @@ description: 'Markdown の説明の文書から、plannotator-effective-html を
 # 説明の文書を HTML にさせる
 
 - HTML の制作は plugin（`plannotator-effective-html:html`）に任せ、この skill は plugin を活かす仕組み（図法の選び方、design-artifact の design plan、plugin への渡し方、品質のゲート、ブラウザでの確かめ）を依頼の型（[brief.md](brief.md)）に、評価のしかたを下の「依頼の型を直すとき」に持つ。
-- 入力は、次の「説明の文書」の形を持つ Markdown 1 ファイル。
+- 入力は、次の「説明の文書」の形を持つ Markdown 1 ファイルと、HTML を書き出すパス。
 
 ## 説明の文書
 
@@ -18,14 +18,14 @@ description: 'Markdown の説明の文書から、plannotator-effective-html を
 
 ## 手順
 
-1. 材料を集める。材料は、説明の文書のパスと、頼まれた内容の原文と、scratchpad のパス。元の資料と読み手は説明の文書の題の直後にある。
-   - 置き場所は、依頼に指定がなければ scratchpad の `visualize/<話題>/index.html` にする。説明の文書は、依頼が直してよいと言わなければ「読むだけ」にする。
+1. 材料を集める。材料は、説明の文書のパスと、HTML を書き出すパスと、頼まれた内容の原文と、scratchpad のパス。元の資料と読み手は説明の文書の題の直後にある。
+   - HTML を書き出すパスが依頼にないときは、作り始めずに依頼した側に尋ねる。説明の文書は、依頼が直してよいと言わなければ「読むだけ」にする。
 
    完了条件: 型の `<…>` のすべてに入れる値が手元にある。
 2. [brief.md](brief.md) の型の `<…>` を埋めて、新しいサブエージェントに Agent tool で頼む。型の `<rubric.md の絶対パス>` は `${CLAUDE_SKILL_DIR}/rubric.md` にする。
-   完了条件: サブエージェントの報告に、`index.html` のパスと、`plannotator-effective-html:html` を呼んだことと、説明の文書の誤りと欠けの一覧（なければ「なし」）がある。
-3. `index.html` のパスと、説明の文書の誤りと欠けを依頼した側に返す。
-   完了条件: 返事に `index.html` の絶対パスがある。
+   完了条件: サブエージェントの報告に、書き出した HTML のパスと、`plannotator-effective-html:html` を呼んだことと、説明の文書の誤りと欠けの一覧（なければ「なし」）がある。
+3. 書き出した HTML のパスと、説明の文書の誤りと欠けを依頼した側に返す。
+   完了条件: 返事に、渡されたパスと同じ HTML の絶対パスがある。
 
 ## 依頼の型を直すとき
 
