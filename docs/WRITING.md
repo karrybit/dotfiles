@@ -14,6 +14,7 @@
 - Skill を選ぶことと、文書を書き換えてよいことは別である。書き換えてよいかは、依頼から決まる作業モードで判断する（ユーザー指示 `dot_config/claude/CLAUDE.md` の Scope Control）。
 - 必要な Skill だけを使う。内容と構成が決まっている執筆に情報設計を足さず、通常の執筆に独立した推敲工程を足さない。
 - 同じ文章を `karrybit:japanese-tech-writing` と `yomiyasu` で重ねて直さない。両者の規範は細部で食い違う。
+- 下の表の「併用」のような Skill の組み合わせは、各 Skill の本文に書かず、この文書と、組み合わせを受け持つ呼び出し側（3 つを順に使う subagent の `karrybit:polisher` など）が持つ。
 
 ## 場面
 

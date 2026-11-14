@@ -23,8 +23,7 @@ and recovering from mistakes.
 - When goals conflict, prefer them in this order: factual accuracy and safety;
   the information readers need; the requested scope and existing work; the
   placement and structure of the doc set; concision.
-- Leave sentence-level wording out of scope; for Japanese prose, apply
-  `karrybit:japanese-tech-writing`.
+- Leave sentence-level wording out of scope.
 
 ## Steps
 

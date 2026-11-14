@@ -1,6 +1,6 @@
 ---
 name: analyze-tasks
-description: GitHub Issue 群や既存の未整理メモを、並行して進められる独立したタスクへ分解し、影響度・作業量・重要度と依存・ファイル衝突を評価して、構造化されたチェックリスト markdown に落とす。Issue をまたぐ依存の整理、ローカルでの分割、並行可能集合の算出、進行状態の追跡を含む。実行は karrybit:parallel-work が引き取る。
+description: GitHub Issue 群や既存の未整理メモを、並行して進められる独立したタスクへ分解し、影響度・作業量・重要度と依存・ファイル衝突を評価して、構造化されたチェックリスト markdown に落とす。Issue をまたぐ依存の整理、ローカルでの分割、並行可能集合の算出、進行状態の追跡を含む。
 disable-model-invocation: true
 argument-hint: [source-file|issue-number...]
 ---
@@ -33,8 +33,7 @@ argument-hint: [source-file|issue-number...]
   「1つも捨てない」は記述の忠実性の原則で、これらを写す理由にならない。
 - 進行状態・ブランチ名・PR 番号・worktree のパス・並行可能集合は、
   ファイルに書かず、「進行状態の導出」の表のとおり git と GitHub から導出する。
-- この手順では worktree を作らず、コードも変更しない。実行は `karrybit:parallel-work`
-  が引き取る。
+- この手順では worktree を作らず、コードも変更しない。
 
 ## 手順
 
@@ -144,9 +143,8 @@ argument-hint: [source-file|issue-number...]
   など）だけ、`関連:` を足す。
 - 並行数の上限はこのファイルに書かない。理由:
   上限は人間のレビュー体力という実行側の制約で、
-  この手順の3軸評価や依存分析からは導出できない。上限を決めるのは
-  `karrybit:parallel-work` で、着手前にユーザーと合意し、ヘッダーの `生成元`
-  行の直後に追記する。
+  この手順の3軸評価や依存分析からは導出できない。上限は、実行する側が
+  着手前にユーザーと合意し、ヘッダーの `生成元` 行の直後に追記する。
 
 出力スキーマ:
 
