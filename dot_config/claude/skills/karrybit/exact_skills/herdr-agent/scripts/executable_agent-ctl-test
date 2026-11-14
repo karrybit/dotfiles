@@ -221,6 +221,17 @@ else
   fail "worktree .cc-writes: exit $code: $out"
 fi
 
+# An ignored .claude that is a link: status does not list it, so close reaches the cleanup, removes
+# nothing through the link, and stops on the ignored link.
+printf '/.claude\n' >> "$repo/.git/info/exclude"
+dir=$(worktree claude-link)
+workspace ac0125-test "$dir"
+note_worktree ac0125-test "$id" "$dir"
+mkdir -p "$tmp/outside/.cc-writes" && touch "$tmp/outside/.cc-writes/keep"
+ln -s "$tmp/outside" "$dir/.claude"
+refuses "an ignored .claude that is a link" "has ignored files that removing it would delete: .claude" "$id" "$dir" ac0125-test
+if [[ -f $tmp/outside/.cc-writes/keep ]]; then pass "nothing is removed through a .claude link"; else fail "close removed $tmp/outside/.cc-writes through a link"; fi
+
 dir=$(worktree submodule)
 workspace ac0112-test "$dir"
 note_worktree ac0112-test "$id" "$dir"
@@ -477,7 +488,10 @@ sends "a working agent gets the text with --interrupt" working "prompt next step
 sends "a blocked agent gets nothing" blocked "exit1:is blocked" g-sent-test "next step"
 sends "an agent the ledger does not hold gets nothing" idle "exit1:is not in" g-other-test "next step"
 sends "a command gets refused" idle "exit2:starts with /" g-sent-test " /clear"
-sends "a shell escape gets refused" idle "exit2:starts with !" g-sent-test "!ls"
+sends "a shell escape gets refused" idle "exit2:starts with / or !" g-sent-test "!ls"
+sends "a command after an ideographic space gets refused" idle "exit2:starts with / or !" g-sent-test "$(printf '\343\200\200/clear')"
+sends "a command after a zero-width space gets refused" idle "exit2:starts with / or !" g-sent-test "$(printf '\342\200\213/clear')"
+sends "a / later in the text is text" idle $'prompt see\n/clear' g-sent-test $'see\n/clear'
 sends "a control character gets refused" idle "exit2:control characters" g-sent-test "$(printf 'a\033[201~b')"
 sends "an empty text gets refused" idle "exit2:is empty" g-sent-test $'\n '
 sends "a goal is sent as /goal" idle "prompt /goal all tests pass" --goal 'all tests pass' g-sent-test

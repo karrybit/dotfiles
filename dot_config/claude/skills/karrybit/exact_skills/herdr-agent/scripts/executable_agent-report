@@ -26,6 +26,10 @@ fi
 
 report() {
   session=$(printf '%s' "$agent" | jq -r .result.agent.agent_session.value)
+  # The session ID names the transcript file, so it may hold no path.
+  case $session in
+    '' | *[!A-Za-z0-9-]*) echo "agent-report: not a session ID: $session" >&2; return 1 ;;
+  esac
   cwd=$(printf '%s' "$agent" | jq -r .result.agent.cwd)
   # Claude Code names a project directory after its cwd with every
   # non-alphanumeric character replaced by "-".

@@ -126,13 +126,16 @@ goal_ok() {
 [ -z "$has_goal" ] || goal_ok
 
 # prompt_ok <what> <text>: the text reaches Claude Code as a prompt, not as a
-# command or as terminal control (tab and newline are text).
+# command or as terminal control (tab and newline are text). Claude Code reads
+# a command only at the start of a prompt, after any blank or invisible
+# characters.
 prompt_ok() {
-  first=$(printf '%s' "$2" | tr -d '[:space:]' | cut -c 1)
-  case $first in
-    '') bad_arg "$1 is empty" ;;
-    / | !) bad_arg "$1 starts with $first, which Claude Code reads as a command" ;;
-  esac
+  found=0
+  printf '%s' "$2" | rg -U -q '\A[\s\p{Cf}]*\z' || found=$?
+  [ "$found" -eq 1 ] || bad_arg "$1 is empty"
+  found=0
+  printf '%s' "$2" | rg -U -q '\A[\s\p{Cf}]*[/!]' || found=$?
+  [ "$found" -eq 1 ] || bad_arg "$1 starts with / or !, which Claude Code reads as a command"
   found=0
   printf '%s' "$2" | rg -q '[\p{Cc}&&[^\t\n]]' || found=$?
   [ "$found" -eq 1 ] || bad_arg "$1 holds control characters other than tab and newline"
@@ -371,7 +374,10 @@ close_workspace() {
     # Claude Code keeps its log of writes in .claude/.cc-writes/ as scratch
     # that may go with the worktree. Removing it first, rather than leaving it
     # out of the list, also keeps an otherwise empty .claude/ off the list.
-    rm -rf -- "$place/.claude/.cc-writes"
+    # A .claude that is a link would send rm to a folder outside the place.
+    if [ -d "$place/.claude" ] && [ ! -L "$place/.claude" ]; then
+      rm -rf -- "$place/.claude/.cc-writes"
+    fi
     ignored=$(safe_git "$place" -c core.quotePath=false ls-files --others --ignored --exclude-standard --directory)
     [ -z "$ignored" ] || stop "$place has ignored files that removing it would delete: $(printf '%s\n' "$ignored" |
       awk 'd != "" && index($0, d) == 1 { next } /\/$/ { d = $0 } { print }' | paste -sd ' ' -)"

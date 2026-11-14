@@ -18,7 +18,7 @@ cat > "$tmp/fake/herdr" <<'EOF'
 printf '%s\n' "$*" >> "$STUB_LOG"
 case "$1 $2" in
   "agent wait") [ -z "${STUB_WAIT_FAIL:-}" ] || exit 1; exit 0 ;;
-  "agent get") [ "$STUB_STATUS" != fail ] || exit 1; printf '{"result":{"agent":{"agent_status":"%s","agent_session":{"value":"s1"},"cwd":"/work/a1"}}}\n' "$STUB_STATUS" ;;
+  "agent get") [ "$STUB_STATUS" != fail ] || exit 1; printf '{"result":{"agent":{"agent_status":"%s","agent_session":{"value":"%s"},"cwd":"/work/a1"}}}\n' "$STUB_STATUS" "${STUB_SESSION:-s1}" ;;
   *) exit 1 ;;
 esac
 EOF
@@ -47,6 +47,9 @@ mv "$tmp/claude/projects/-work-a1/s1.jsonl" "$tmp/s1.jsonl"
 run idle --wait a1
 if [[ $code -eq 1 && ${out%%$'\n'*} == "status: error" ]]; then pass "--wait with no transcript says error first"; else fail "--wait no transcript: $code $out"; fi
 mv "$tmp/s1.jsonl" "$tmp/claude/projects/-work-a1/s1.jsonl"
+cp "$tmp/claude/projects/-work-a1/s1.jsonl" "$tmp/claude/outside.jsonl"
+STUB_SESSION=../../outside run idle --wait a1
+if [[ $code -eq 1 && ${out%%$'\n'*} == "status: error" && $out != *"the report"* ]]; then pass "--wait refuses a session ID that holds a path"; else fail "session path: $code $out"; fi
 run idle --wait
 if [[ $code -eq 2 ]]; then pass "no agent name is a usage error"; else fail "usage: $code $out"; fi
 
