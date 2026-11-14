@@ -24,7 +24,7 @@ and recovering from mistakes.
   the information readers need; the requested scope and existing work; the
   placement and structure of the doc set; concision.
 - Leave sentence-level wording out of scope; for Japanese prose, apply
-  `japanese-tech-writing`.
+  `karrybit:japanese-tech-writing`.
 
 ## Steps
 

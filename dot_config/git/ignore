@@ -40,7 +40,7 @@ Temporary Items
 
 **/.claude/.cc-writes/
 
-# analyze-tasks の出力。どのリポジトリでも同じ場所に置けるよう global で無視する。
+# karrybit:analyze-tasks の出力。どのリポジトリでも同じ場所に置けるよう global で無視する。
 # リポジトリごとに .gitignore を編集する手間と、編集し忘れて commit する事故を
 # どちらも避けるため。
 #

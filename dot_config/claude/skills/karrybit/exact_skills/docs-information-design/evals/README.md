@@ -1,6 +1,6 @@
-# docs-information-design evals
+# karrybit:docs-information-design evals
 
-Behavior cases for comparing the skill against a no-skill baseline, across skill versions and models. Not deployed (see `.chezmoiignore`). Run them with the `skill-eval` skill, which wraps this skill as a plugin and runs `claude plugin eval`.
+Behavior cases for comparing the skill against a no-skill baseline, across skill versions and models. Not deployed (see `.chezmoiignore`). Run them with the `karrybit:skill-eval` skill, which wraps this skill as a plugin and runs `claude plugin eval`.
 
 ## Files
 
@@ -10,7 +10,7 @@ Behavior cases for comparing the skill against a no-skill baseline, across skill
 - `canary.patch`: removes from `SKILL.md` the equal-outcomes rule, the diff-boundary rule, and section 5. A grader that measures the skill passes less often on the canary than on the skill.
 - `fixtures/`: small repositories, one per case. Several deliberately reward leaving things alone (cases 4, 5, 7, 11).
 - `evals.json`: one case per fixture. `expected_output` describes one good outcome, not the only one; `assertions` are either `script` (checked by `grade.py`) or `judge` (needs a reader's judgment).
-- `grade.py ITERATION_DIR`: runs the script assertions over `eval-<fixture>/<config>/repo`, where each repo is the fixture committed once and then edited by a run. Writes `grading.json` per run. `skill-eval`'s `grade-kept` builds that layout from a `--keep-temp` run, for the assertions graders cannot express (searches across files, link resolution, files whose names are not known in advance).
+- `grade.py ITERATION_DIR`: runs the script assertions over `eval-<fixture>/<config>/repo`, where each repo is the fixture committed once and then edited by a run. Writes `grading.json` per run. `karrybit:skill-eval`'s `grade-kept` builds that layout from a `--keep-temp` run, for the assertions graders cannot express (searches across files, link resolution, files whose names are not known in advance).
 - `trigger-evals.json`: should-trigger and near-miss should-not-trigger queries for the description.
 
 For trigger tests with skill-creator's `run_eval`, run queries one at a time. Parallel workers each write an identically described command file into the same `.claude/commands/`, so the model often invokes a sibling's copy and the run counts it as not triggered.
@@ -24,7 +24,7 @@ For trigger tests with skill-creator's `run_eval`, run queries one at a time. Pa
 
 ## What the Suite Separates
 
-Measured with `skill-eval`'s suite command (`--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`), two repeats per configuration:
+Measured with `karrybit:skill-eval`'s suite command (`--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`), two repeats per configuration:
 
 - `good-docs-audit/no-change-verdict` scores the skill above both the canary and no skill (skill 3/3 in both repeats, canary 1/3, no skill 1/3).
 - `good-docs-audit/no-fabricated-issues` scores the skill above no skill (3/3 against 1/3 and 2/3); the canary keeps the rule it checks and scores like the skill.

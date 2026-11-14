@@ -122,7 +122,7 @@ Reference files named below live in `~/.local/share/agents/docs/`.
   the delegating session knows what is session-only.
 - Before creating any GitHub issue, confirm titles and boundaries with the user,
   since issue creation is a visible, external action; size each issue to an
-  independently mergeable PR, and load `size-github-issues` before splitting a
+  independently mergeable PR, and load `karrybit:size-github-issues` before splitting a
   document, investigation, or audit into issues.
 - Treat a pull request turning CI-green as a status to report, not
   authorization to merge: report it, wait, and merge only after the user
@@ -192,7 +192,7 @@ Reference files named below live in `~/.local/share/agents/docs/`.
 - Before running an agent script, or writing a script that will run again, be
   handed to another agent, or be kept as a procedure, read `agent-scripts.md`.
 - Before installing or enabling a public skill, subagent, plugin, or MCP-backed
-  extension, vet it with `install-agent-extension`.
+  extension, vet it with `karrybit:install-agent-extension`.
 - Install or enable an extension that requests bypass permissions, broad write
   or shell access, hooks, MCP servers, credential reads, or automatic network
   actions only after the user explicitly approves that risk.

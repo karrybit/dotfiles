@@ -70,7 +70,7 @@
   does not do on its own. It only removes skills recorded in its own manifest,
   so skills installed by other routes survive.
 - When changing the `description` of a document-writing skill
-  (`docs-information-design`, `japanese-tech-writing`) or adding one, update
+  (`karrybit:docs-information-design`, `karrybit:japanese-tech-writing`) or adding one, update
   the routing table and test cases in `docs/WRITING.md` in the same change.
 - Claude Code subagents are under `dot_config/claude/agents/` and deploy to
   `~/.config/claude/agents/`.
