@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Show that crit-open hands open only http://localhost:<port> for a port made of digits and refuses
 # any other argument, against an open on PATH that logs what it is given. Given a Claude Code
-# settings.json, also show that it allows crit-open and runs it outside the sandbox, and has no rule
-# or exclusion for open itself.
+# settings.json, also show that it allows crit-open and runs it outside the sandbox in the ~/ form
+# the skill calls it by (rules match the command text, so an absolute-path rule misses that call),
+# and has no rule or exclusion for open itself.
 # usage: crit-open-test [<settings.json>]   (tests the crit-open beside this script; its files go
 #        to a temporary directory that is removed)
 set -uo pipefail
@@ -50,15 +51,15 @@ if [[ $code -eq 2 && ! -s $FAKE_LOG ]]; then pass "a second argument is refused"
 
 if [[ -n $settings ]]; then
   if ! jq -e . "$settings" >/dev/null; then fail "$settings is not valid JSON"; else
-    if jq -e '.permissions.allow // [] | any(test("^Bash\\(.*/crit-open \\*\\)$"))' "$settings" >/dev/null; then
-      pass "crit-open is allowed"
+    if jq -e '.permissions.allow // [] | any(test("^Bash\\(~/.*/crit-open \\*\\)$"))' "$settings" >/dev/null; then
+      pass "crit-open is allowed in the ~/ form"
     else
-      fail "crit-open is not in permissions.allow"
+      fail "crit-open is not in permissions.allow in the ~/ form"
     fi
-    if jq -e '.sandbox.excludedCommands // [] | any(test("/crit-open \\*$"))' "$settings" >/dev/null; then
-      pass "crit-open runs outside the sandbox, where open works"
+    if jq -e '.sandbox.excludedCommands // [] | any(test("^~/.*/crit-open \\*$"))' "$settings" >/dev/null; then
+      pass "crit-open runs outside the sandbox, where open works, in the ~/ form"
     else
-      fail "crit-open is not in sandbox.excludedCommands"
+      fail "crit-open is not in sandbox.excludedCommands in the ~/ form"
     fi
     if jq -e '[(.permissions.allow // [])[], (.sandbox.excludedCommands // [])[]] | any(test("^(Bash\\()?open "))' "$settings" >/dev/null; then
       fail "$settings still allows or excludes open itself"

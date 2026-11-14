@@ -37,7 +37,7 @@ argument-hint: "[GitHub の PR の URL | PR になっていないブランチ | 
 
 1. 上の表のコマンドを、Bash の `run_in_background: true` と `timeout: 86400000` で動かす（引数なしのほかは、先に「ポートを決める」でポートを決める。PR と 1 つの commit なら、そのあと `crit stop` を動かす）。timeout を付けないと、Claude Code が 30 分で crit を止める。
    完了条件: crit の出力にある review の URL が手元にある。
-2. review の URL（`http://localhost:<ポート>`）のポートを `${CLAUDE_SKILL_DIR}/scripts/crit-open <ポート>` に渡し、ほかのコマンドとつながない 1 回の Bash で動かしてブラウザで開く（どの対象でも）。crit-open は、settings でこのパスを許可し sandbox の外で動く形として除外したときに `open` を動かせる（`${CLAUDE_SKILL_DIR}/scripts/crit-open-test <settings.json>` で確かめられる）。つなぐと sandbox の中に残って `open` が止められる。そのうえで URL をユーザーに伝え、「コメントを付けて Finish Review を押してください」と返して、background の crit が終わるのを待つ。レビューのファイルは、crit が終わってから読む。
+2. review の URL（`http://localhost:<ポート>`）のポートを crit-open に渡し、ほかのコマンドとつながない 1 回の Bash で動かしてブラウザで開く（どの対象でも）。crit-open は、この plugin を配る場所の `~` の形の `~/.config/claude/skills/karrybit/skills/crit/scripts/crit-open <ポート>` で呼ぶ。crit-open は、settings でこの `~` の形を許可し sandbox の外で動く形として除外したときに `open` を動かせる（`${CLAUDE_SKILL_DIR}/scripts/crit-open-test <settings.json>` で確かめられる）。settings の規則はコマンドの文字列をそのまま照らすので、絶対パスで呼ぶと `~` の形の規則に合わず、つなぐと sandbox の中に残って `open` が止められる。そのうえで URL をユーザーに伝え、「コメントを付けて Finish Review を押してください」と返して、background の crit が終わるのを待つ。レビューのファイルは、crit が終わってから読む。
    完了条件: background の crit が終わった。
 3. crit の stdout を読み、その指示と、次に動かすコマンド（`crit --session <id>`）を控える。stderr の `approved: true` か `approved: false` を見る。stdout にコメントがなければ `crit comments --session <id> --json` で読む。
    完了条件: session の ID と、未解決のコメントの一覧（0 件でもよい）が手元にある。
