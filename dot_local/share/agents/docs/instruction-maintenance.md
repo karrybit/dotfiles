@@ -12,6 +12,8 @@ in by hand. The form of the lines is in
 - Classify each proposed improvement: user-level guidance belongs in
   `$XDG_CONFIG_HOME/claude/CLAUDE.md`, repository-specific guidance in the
   narrowest applicable repository `CLAUDE.md` or `AGENTS.md`.
+- When a repository instruction repeats a user-scope rule, remove it from the
+  repository file and keep the user-scope rule.
 - For each proposed change, give the target file, proposed wording, reason, and
   overlap or conflict with existing rules.
 - Apply instruction changes only after user approval.
