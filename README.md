@@ -47,7 +47,7 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/).
 ~/.config/claude/CLAUDE.md    ← user-level agent instructions
 ~/.local/share/agents/docs/   ← agent source summaries and reference files
 ~/.local/share/agents/scripts/ ← reusable agent-operated scripts
-~/.config/claude/skills/karrybit/ ← user-level agent skills (karrybit plugin)
+~/.config/claude/skills/karrybit/ ← user-level agent skills and subagents (karrybit plugin)
 ~/.config/claude/agents/      ← user-level subagents
 ```
 

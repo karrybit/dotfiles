@@ -72,7 +72,9 @@
 - When changing the `description` of a document-writing skill
   (`karrybit:docs-information-design`, `karrybit:japanese-tech-writing`) or adding one, update
   the routing table and test cases in `docs/WRITING.md` in the same change.
-- Claude Code subagents are under `dot_config/claude/agents/` and deploy to
+- Claude Code subagents are in the `karrybit` plugin's `exact_agents/` and are
+  called `karrybit:<agent>`; `dot_config/claude/agents/` holds the user-scope
+  subagents called by a bare name (`eval-auditor`), deployed to
   `~/.config/claude/agents/`.
 - Agent source summaries belong under `~/.local/share/agents/docs/`; only
   explicitly allowlisted summaries are chezmoi-managed.
