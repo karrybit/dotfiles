@@ -48,6 +48,7 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/).
 ~/.local/share/agents/docs/   ← agent source summaries and reference files
 ~/.local/share/agents/scripts/ ← reusable agent-operated scripts
 ~/.config/claude/skills/      ← user-level agent skills
+~/.config/claude/agents/      ← user-level subagents
 ```
 
 `chezmoi apply` deploys source → live. The `dot_` prefix is converted to `.` (e.g. `dot_config/` → `~/.config/`).
@@ -86,12 +87,12 @@ brew install chezmoi
 chezmoi init --apply karrybit/dotfiles
 ```
 
-`chezmoi init --apply` automatically:
+`chezmoi init --apply` automatically, in this order:
 
-1. Clones this repository to `~/.local/share/chezmoi/`
-2. Prompts for machine profile: enter `work` or `private_neo`
-3. Runs `chezmoi apply` to deploy live files
-4. Executes `run_onchange_` scripts (rustup and cargo packages except on `private_neo`, Claude settings, skills sync)
+- Clones this repository to `~/.local/share/chezmoi/`
+- Prompts for machine profile: enter `work` or `private_neo`
+- Runs `chezmoi apply` to deploy live files
+- Executes `run_onchange_` scripts (rustup and cargo packages except on `private_neo`, Claude settings, skills sync)
 
 aqua comes from Homebrew, so the aqua and Python `run_onchange_` scripts skip
 on the first apply. Install it, then run what those scripts would have:
