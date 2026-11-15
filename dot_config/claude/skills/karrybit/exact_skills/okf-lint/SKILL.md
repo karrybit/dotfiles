@@ -20,7 +20,8 @@ ${CLAUDE_SKILL_DIR}/scripts/okf-lint [--only <パス>]... <schema> <フォルダ
 - okf-lint は bash、yq（mikefarah の v4）、fd、rg を使う。
 - `--only` には、変えた・足した・消したファイルのフォルダからのパスを渡す（名前を変えたときは前と後の両方）。そのファイルと、そのファイルを読む検査を持つファイル（`derived_from` にそのパスを挙げたノート、消したファイルならそこへリンクするファイルと `supersedes` で指すノート）だけを確かめる。
 - 問題ごとに `<パス><TAB><問題>`、`stale_after` を過ぎたノートごとに `<パス><TAB>stale since <stale_after>` を stdout に、件数を stderr の `okf-lint: <件数> stale note(s)` と `okf-lint: <件数> problem(s)` に出す。
-- 終了コードは、問題がなければ 0、あれば 1、引数か schema の誤りは 2。`stale since` は問題に数えない。
+- 終了コードは、問題がなければ 0、あれば 1、引数か schema の誤りと、yq・fd・rg のどれかを動かせないとき（`okf-lint: cannot run <道具>`）は 2。`stale since` は問題に数えない。
+- `cannot run <道具>` で止まったら、動かせない道具の名前と、okf-lint で確かめられなかったことを依頼した側に伝えて止まる。
 
 ## schema の形
 

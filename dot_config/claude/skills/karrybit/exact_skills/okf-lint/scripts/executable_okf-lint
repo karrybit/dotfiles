@@ -22,6 +22,9 @@ while (( $# )); do
   esac
 done
 [[ ${#args[@]} -eq 2 && -f ${args[0]} && -d ${args[1]} ]] || usage
+for tool in yq fd rg; do
+  "$tool" --version >/dev/null 2>&1 || { echo "okf-lint: cannot run $tool" >&2; exit 2; }
+done
 SCHEMA=$(cd "$(dirname "${args[0]}")" && pwd)/$(basename "${args[0]}")
 cd "${args[1]}" || exit 2
 [[ $(yq '.types | tag' "$SCHEMA" 2>/dev/null) == '!!map' ]] || { echo "okf-lint: $SCHEMA has no types map" >&2; exit 2; }
