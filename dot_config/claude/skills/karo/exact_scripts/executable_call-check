@@ -1,10 +1,9 @@
 #!/bin/sh
 # PreToolUse hook on Bash: stops calls that bypass what the cos settings expect.
-# A path under ~/.config/claude/skills/karo/ (where this plugin is deployed), ~/cos/bin or
-# ~/cos/.claude/skills written another way ($HOME or ${HOME} in place of ~, or the home directory
-# spelled out) anywhere in the command stops, reads included: sandbox.excludedCommands matches the
-# command text as written and lists the ~ form only, and a read works just as well with ~.
-# ~/cos/bin and ~/cos/.claude/skills hold scripts of ~/cos itself that its settings allow the same way.
+# A path under ~/.config/claude/skills/karo/ (where this plugin is deployed) written another way
+# ($HOME or ${HOME} in place of ~, or the home directory spelled out) anywhere in the command stops,
+# reads included: sandbox.excludedCommands matches the command text as written and lists the ~ form
+# only, and a read works just as well with ~.
 # A git rebase that asks to leave the sandbox stops (git rebase --abort passes): a cos branch is
 # rebased by the karo:land skill's scripts/land <branch> --rebase, which is the one way that rebases
 # with git's hooks off.
@@ -17,15 +16,15 @@ verdict=$(jq -r --arg home "$HOME/" '
   | ($cmd
      | gsub("<<-?[ \t]*([\"'\''])?(?<t>[A-Za-z_][A-Za-z0-9_]*)[\"'\'']?(?<rest>[^\n]*)\n([\\s\\S]*?\n)?\\k<t>(?=\n|$)"; "<<H\(.rest)")
      | gsub("\\\\.|'\''[^'\'']*'\''|\"(\\\\.|[^\"\\\\])*\""; "Q")) as $bare
-  | if any(".config/claude/skills/karo/", "cos/bin/", "cos/.claude/skills/"; . as $dir | $cmd | contains($home + $dir))
-      or ($cmd | test("\\$(HOME|\\{HOME\\})\"?/(\\.config/claude/skills/karo|cos/bin|cos/\\.claude/skills)/")) then "absolute"
+  | if ($cmd | contains($home + ".config/claude/skills/karo/"))
+      or ($cmd | test("\\$(HOME|\\{HOME\\})\"?/\\.config/claude/skills/karo/")) then "absolute"
     elif .tool_input.dangerouslyDisableSandbox == true
       and ($bare | test("(^|[\\s;&|(])git(\\s+-[cC]\\s+\\S+)*\\s+rebase(?![\\w-])(?!\\s+--abort)")) then "rebase"
     else "pass" end')
 case $verdict in
   absolute)
     cat >&2 <<EOF
-このコマンドは ~/.config/claude/skills/karo/、~/cos/bin/、~/cos/.claude/skills/ のどれかを ~ 以外の書き方（ホームの絶対パスや \$HOME）で指している。sandbox.excludedCommands は ~ の形だけを載せているので、ほかの書き方は除外に当たらず sandbox に残り、Operation not permitted で止まる。~/.config/claude/skills/karo/… のように ~ の形に書き直して呼び直す。
+このコマンドは ~/.config/claude/skills/karo/ を ~ 以外の書き方（ホームの絶対パスや \$HOME）で指している。sandbox.excludedCommands は ~ の形だけを載せているので、ほかの書き方は除外に当たらず sandbox に残り、Operation not permitted で止まる。~/.config/claude/skills/karo/… のように ~ の形に書き直して呼び直す。
 EOF
     exit 2 ;;
   rebase)

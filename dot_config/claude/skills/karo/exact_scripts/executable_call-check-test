@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2016,SC2088  # the commands are single-quoted on purpose: they are the hook's input
-# Show that call-check stops a ~/.config/claude/skills/karo, ~/cos/bin or ~/cos/.claude/skills path
-# written without ~ and a git rebase that asks to leave the sandbox, while it lets through ~ calls,
-# paths under a worktree, git rebase --abort, a rebase inside the sandbox, and quoted text and
-# heredoc bodies that mention git rebase. settings-test checks that the settings run it.
+# Show that call-check stops a ~/.config/claude/skills/karo path written without ~ and a git rebase
+# that asks to leave the sandbox, while it lets through ~ calls, git rebase --abort, a rebase inside
+# the sandbox, and quoted text and heredoc bodies that mention git rebase. settings-test checks that
+# the settings run it.
 # usage: call-check-test [<call-check>]   (default: the one beside this script)
 set -uo pipefail
 exec </dev/null
@@ -34,14 +34,7 @@ stops_bin '$HOME/.config/claude/skills/karo/skills/land/scripts/land b'
 stops_bin '${HOME}/.config/claude/skills/karo/scripts/thread-show t'
 stops_bin '"$HOME"/.config/claude/skills/karo/scripts/right-pane'
 stops_bin "cat $HOME/.config/claude/skills/karo/scripts/call-check"
-stops_bin "$HOME/cos/bin/record --detach x"
-stops_bin '$HOME/cos/.claude/skills/cos/skills/land/scripts/land b'
-stops_bin "$HOME/cos/.claude/skills/cos/skills/land/scripts/land b --rebase"
-stops_bin '${HOME}/cos/.claude/skills/cos/skills/land/scripts/land-test x'
-stops_bin '${HOME}/cos/bin/thread-show t'
-stops_bin '"$HOME"/cos/bin/okf-check'
-stops_bin "cat $HOME/cos/bin/record"
-stops_bin "$HOME/cos/bin/record x | head"
+stops_bin "$HOME/.config/claude/skills/karo/scripts/record x | head"
 
 # git rebase outside the sandbox, in the shapes the CoS and Agents have run it in.
 stops_rebase() {
@@ -63,10 +56,6 @@ EOF" true
 
 passes '~/.config/claude/skills/karo/scripts/record --detach x'
 passes '~/.config/claude/skills/karo/skills/land/scripts/land b'
-passes '~/cos/bin/record --detach x'
-passes '~/cos/.claude/skills/cos/skills/land/scripts/land b'
-passes "$HOME/.local/state/cos/worktrees/b/.claude/skills/cos/skills/land/scripts/land-test x"
-passes "$HOME/.local/state/cos/worktrees/b/bin/record-test"
 passes 'git status'
 passes 'git status' true
 
