@@ -10,7 +10,7 @@
 # for a removed file, files linking to it and notes whose supersedes names it. A file brought in is checked in full.
 # Prints "<path><TAB><problem>" per problem and "<path><TAB>stale since <stale_after>" per stale note on
 # stdout, the counts on stderr, and exits 0 when there is no problem, 1 when there is one, and 2 on a usage
-# or schema error.
+# or schema error or when yq, fd, or rg cannot run ("okf-lint: cannot run <tool>").
 set -uo pipefail
 usage() { echo "usage: okf-lint [--only <path>]... <schema.yaml> <folder>" >&2; exit 2; }
 only=(); args=()

@@ -73,12 +73,14 @@ done
 printf 'exclude: []\n' > "$tmp/no-types.yaml"
 fresh; run "$tmp/no-types.yaml" "$copy"
 if [[ $code -eq 2 ]]; then pass "schema without types is an error"; else fail "schema without types: exit $code: $out"; fi
-# A tool that cannot run is named, not mistaken for a schema error.
-mkdir "$tmp/broken-bin"
-printf '#!/bin/sh\nexit 126\n' > "$tmp/broken-bin/yq"
-chmod +x "$tmp/broken-bin/yq"
-fresh; out=$(PATH="$tmp/broken-bin:$PATH" "$lint" "$schema" "$copy" 2>&1); code=$?
-if [[ $code -eq 2 && $out == 'okf-lint: cannot run yq' ]]; then pass "a yq that cannot run is named"; else fail "broken yq: exit $code: $out"; fi
+# A tool that cannot run is named, not mistaken for a schema error or for a folder without notes.
+for tool in yq fd rg; do
+  mkdir "$tmp/broken-$tool"
+  printf '#!/bin/sh\nexit 126\n' > "$tmp/broken-$tool/$tool"
+  chmod +x "$tmp/broken-$tool/$tool"
+  fresh; out=$(PATH="$tmp/broken-$tool:$PATH" "$lint" "$schema" "$copy" 2>&1); code=$?
+  if [[ $code -eq 2 && $out == "okf-lint: cannot run $tool" ]]; then pass "a $tool that cannot run is named"; else fail "broken $tool: exit $code: $out"; fi
+done
 
 # A note past its stale_after is reported, counted, and not failed.
 for v in '"2020-01-01T00:00:00+09:00"' '2020-01-01T00:00:00Z'; do
