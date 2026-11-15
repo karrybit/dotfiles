@@ -69,12 +69,8 @@ Then:
   and the document would be built around it.
 - Scale the investigation to the request: for a local edit, read the
   surrounding section and whatever it links to or is linked from.
-- For a boundary decision (split, merge, move, retire), also find every
-  document that links to or names the documents in question by searching the
-  repository for their file names, and read them, since their links and the
-  facts they repeat change with the boundary.
 - For work across a doc set, first inventory it: for each file, its reader, its
-  job, what it owns, and what links to it.
+  job, what it owns, and what links to it (found as section 3 describes).
 
 ## 2. Judge each piece of information
 
@@ -105,8 +101,11 @@ not make information needed here.
 
 ## 3. Decide document boundaries
 
-That a document can be split does not mean it should be. Compare split, merge,
-and leave-as-is:
+That a document can be split does not mean it should be. First find every
+document that links to or names the documents in question by searching the
+repository for their file names, and read them, since their links and the facts
+they repeat change with the boundary. Then compare split, merge, and
+leave-as-is:
 
 - Do the parts serve different readers or tasks, or are they read together?
 - Do they change at different rates, or have different owners?
