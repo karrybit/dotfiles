@@ -11,7 +11,7 @@
 # paths). okf-lint gets the same paths; the CoS checks also read the notes naming a given path (derived_from),
 # and for a removed project file, the notes listing it as a project. A file brought in is checked in full.
 # Prints "<path><TAB><problem>" per problem, okf-lint's and its own, and exits 1 when any is found, or stops
-# with okf-lint's code when okf-lint finds an argument or schema error.
+# with okf-lint's code 2 when okf-lint finds an argument or schema error or cannot run yq, fd, or rg.
 # Notes past their stale_after are printed as "<path><TAB>stale since ...", and task IDs in a thread's body that its
 # tasks lacks as "<path><TAB>task in body not in tasks: ..."; neither fails the check.
 set -uo pipefail
@@ -29,7 +29,7 @@ untracked=0
 report() { printf '%s\t%s\n' "$1" "$2"; problems=$((problems+1)); }
 
 # The general checks. okf-lint's lines are passed on and counted with the CoS checks' lines; its own count
-# lines are dropped, and on an argument or schema error its output goes to stderr and nothing is counted.
+# lines are dropped, and when it stops with code 2 its output goes to stderr and nothing is counted.
 lint_args=()
 for p in ${only[@]+"${only[@]}"}; do lint_args+=(--only "$p"); done
 lint_out=$("$lint" ${lint_args[@]+"${lint_args[@]}"} "$SCHEMA" . 2>&1); code=$?

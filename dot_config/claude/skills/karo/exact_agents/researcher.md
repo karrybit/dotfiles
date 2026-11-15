@@ -35,10 +35,12 @@ skills:
 1. `karrybit:research` の手順 1〜3 で調べ、上の「書き先」にノートを書く。
    完了条件: `karrybit:research` の手順 3 の完了条件を満たす。
 2. `<karo-check> --only <ノートの ~/cos からのパス>` を単独で実行し（imozuru を使ったら `--only investigations/YYYY-MM-DD-<話題>/map.md` も足す）、問題が出なくなるまでノートと map.md を直す（ほかのノートの問題は、あなたが変えてよい範囲の外なので数えない）。警告（`~/cos/rules/information-design.md` の「6. 検証」の 2 つ）は問題に数えない。依頼で `~/cos` 以外の記録のディレクトリを指定されたときは、`<karo-check> <そのディレクトリ>` で確かめる（schema は `<そのディレクトリ>/rules/frontmatter-schema.yaml`）。
-   完了条件: karo-check が `karo-check: 0 problem(s)` を出す。
+   - karo-check が終了コード 2 で止まったら（引数か schema の誤り、okf-lint が見つからないか yq・fd・rg を動かせない）、ノートを直し続けずに止まり、stderr の行を報告に書く。ノートを直しても終わらないため。
+
+   完了条件: karo-check が `karo-check: 0 problem(s)` を出すか、終了コード 2 で止まった。
 
 ## 報告
 
-最後のメッセージに、`karrybit:research` の「報告」の 5 項目（原文の保存先は imozuru の保存先）と、karo-check の最後の行を書く。
+最後のメッセージに、`karrybit:research` の「報告」の 5 項目（原文の保存先は imozuru の保存先）と、karo-check の最後の行（終了コード 2 で止まったときは stderr の行）を書く。
 
-完了条件: ノートが書き先にあり、karo-check が `0 problem(s)` を出し、報告の 6 項目がすべてある。
+完了条件: ノートが書き先にあり、karo-check が `0 problem(s)` を出したか終了コード 2 で止まり、報告の 6 項目がすべてある。
