@@ -68,6 +68,9 @@ Then:
   and the document would be built around it.
 - Scale the investigation to the request: for a local edit, read the
   surrounding section and whatever it links to or is linked from.
+- For a boundary decision (split, merge, move, retire), also read every
+  document that links to or names the documents in question, since their links
+  and the facts they repeat change with the boundary.
 - For work across a doc set, first inventory it: for each file, its reader, its
   job, what it owns, and what links to it.
 
