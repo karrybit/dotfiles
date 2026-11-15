@@ -65,6 +65,12 @@
   `karrybit@skills-dir`, so each skill is called `karrybit:<skill>`; there is
   no intermediate canonical copy. The plugin's `exact_skills/` makes
   `chezmoi apply` remove a deployed skill whose source folder is gone.
+- Skills and scripts that know the layout of the `~/cos` record repository
+  live in the `karo` plugin at `dot_config/claude/skills/karo/`, deployed and
+  loaded the same way as `karo@skills-dir`. Its manifest sets
+  `defaultEnabled: false`, so it loads only where a project's settings enable
+  it; keep owner-specific values out of it and read them from the caller's
+  arguments or `~/cos/rules/karo.yaml`.
 - `run_onchange_04_prune-skills.sh.tmpl` removes skills deployed directly
   under `~/.config/claude/skills/` whose source entry is gone, which chezmoi
   does not do on its own. It only removes skills recorded in its own manifest,

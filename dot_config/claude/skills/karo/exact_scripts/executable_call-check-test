@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2016,SC2088  # the commands are single-quoted on purpose: they are the hook's input
+# Show that call-check stops a ~/.config/claude/skills/karo, ~/cos/bin or ~/cos/.claude/skills path
+# written without ~ and a git rebase that asks to leave the sandbox, while it lets through ~ calls,
+# paths under a worktree, git rebase --abort, a rebase inside the sandbox, and quoted text and
+# heredoc bodies that mention git rebase. settings-test checks that the settings run it.
+# usage: call-check-test [<call-check>]   (default: the one beside this script)
+set -uo pipefail
+exec </dev/null
+bin=$(cd "$(dirname "$0")" && pwd)
+hc=${1:-$bin/call-check}
+failed=0
+fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
+pass() { printf 'ok\t%s\n' "$1"; }
+
+# run <command> [<dangerouslyDisableSandbox>]: feed the hook a Bash PreToolUse input.
+run() {
+  out=$(jq -n --arg c "$1" --argjson d "${2:-false}" \
+    '{hook_event_name: "PreToolUse", tool_name: "Bash", tool_input: {command: $c, dangerouslyDisableSandbox: $d}}' |
+    LC_ALL=en_US.UTF-8 "$hc" 2>&1); code=$?
+}
+stops_bin() {
+  run "$@"
+  if [[ $code -eq 2 && $out == *'書き方（ホームの絶対パスや $HOME）で指している。'* && $out == *'~/.config/claude/skills/karo/… のように ~ の形に書き直して'* ]]; then pass "stops_bin: $1"
+  else fail "stops_bin: $1: exit $code: $out"; fi
+}
+passes() {
+  run "$@"
+  if [[ $code -eq 0 && -z $out ]]; then pass "passes: $1 ${2:-}"; else fail "passes: $1 ${2:-}: exit $code: $out"; fi
+}
+
+stops_bin "$HOME/.config/claude/skills/karo/scripts/record --detach x"
+stops_bin '$HOME/.config/claude/skills/karo/skills/land/scripts/land b'
+stops_bin '${HOME}/.config/claude/skills/karo/scripts/thread-show t'
+stops_bin '"$HOME"/.config/claude/skills/karo/scripts/right-pane'
+stops_bin "cat $HOME/.config/claude/skills/karo/scripts/call-check"
+stops_bin "$HOME/cos/bin/record --detach x"
+stops_bin '$HOME/cos/.claude/skills/cos/skills/land/scripts/land b'
+stops_bin "$HOME/cos/.claude/skills/cos/skills/land/scripts/land b --rebase"
+stops_bin '${HOME}/cos/.claude/skills/cos/skills/land/scripts/land-test x'
+stops_bin '${HOME}/cos/bin/thread-show t'
+stops_bin '"$HOME"/cos/bin/okf-check'
+stops_bin "cat $HOME/cos/bin/record"
+stops_bin "$HOME/cos/bin/record x | head"
+
+# git rebase outside the sandbox, in the shapes the CoS and Agents have run it in.
+stops_rebase() {
+  run "$1" true
+  if [[ $code -eq 2 && $out == *'git rebase を sandbox の外で'* && $out == *'karo/skills/land/scripts/land <branch> --rebase'* ]]; then pass "stops_rebase: $1"
+  else fail "stops_rebase: $1: exit $code: $out"; fi
+}
+stops_rebase 'git -c core.hooksPath=/dev/null -c core.fsmonitor=false -c maintenance.auto=false -c gc.auto=0 -C /home/owner/.local/state/cos/worktrees/land-agent-branches rebase main'
+stops_rebase 'git rebase main'
+stops_rebase 'git status --short && git rebase main 2>&1 | tail -5; git status --short | head'
+stops_rebase 'cd ~/.local/state/cos/worktrees/markdown-format && git rebase -q main && git log --oneline -3'
+passes 'git rebase main'
+passes 'git -c core.hooksPath=/dev/null -C /home/owner/.local/state/cos/worktrees/x rebase --abort' true
+passes 'git log --oneline main..HEAD' true
+passes "rg -n 'git rebase main' notes.md" true
+passes "cat > s.sh <<'EOF'
+git rebase main
+EOF" true
+
+passes '~/.config/claude/skills/karo/scripts/record --detach x'
+passes '~/.config/claude/skills/karo/skills/land/scripts/land b'
+passes '~/cos/bin/record --detach x'
+passes '~/cos/.claude/skills/cos/skills/land/scripts/land b'
+passes "$HOME/.local/state/cos/worktrees/b/.claude/skills/cos/skills/land/scripts/land-test x"
+passes "$HOME/.local/state/cos/worktrees/b/bin/record-test"
+passes 'git status'
+passes 'git status' true
+
+echo "call-check-test: $failed failure(s)" >&2
+[ "$failed" -eq 0 ]

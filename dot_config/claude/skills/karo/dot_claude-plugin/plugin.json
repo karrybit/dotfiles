@@ -1,0 +1,5 @@
+{
+  "name": "karo",
+  "description": "Skills and scripts for a chief-of-staff record repository at ~/cos (tasks, threads, journal, record), called as /karo:<skill>. Enabled only by the settings of the project that uses it.",
+  "defaultEnabled": false
+}

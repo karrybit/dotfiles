@@ -1,0 +1,115 @@
+#!/bin/sh
+# Opens a thread file with glow's pager in a thread pane, wrapped at the pane
+# width and scrolled to the end; run again after each append to keep the newest
+# message in view. The topic is the frontmatter's topic: the pager shows
+# a copy of the file with "## <topic>" in place of the frontmatter (kept
+# under COS_THREAD_VIEW_DIR, the thread file itself is not written), and the pane
+# is labelled "thread - <topic>". A file without a topic is refused.
+# With two thread panes, a file already
+# shown reopens in its own pane and any other file replaces the pane used less
+# recently; the last-used pane ID is kept in a one-line state file, and a
+# missing or stale one falls back to the first pane. One call, so it needs no
+# permission prompt per herdr step. Keys are sent only while the pane shows
+# the pager or a shell, never into another program. The pager shows the file
+# as it was when opened, so the view is reopened rather than reloaded.
+set -eu
+
+if [ $# -ne 1 ]; then
+  echo "usage: thread-show <thread-file>" >&2
+  exit 2
+fi
+threads=$(cd "${COS_THREADS_DIR:-$HOME/cos/threads}" && pwd -P)
+
+# The path is interpolated into a shell command line in the pane, so only a
+# plain thread file under the threads directory is accepted.
+case "$1" in
+  */*) dir=${1%/*} ;;
+  *) dir=. ;;
+esac
+file=$(cd "$dir" && pwd -P)/${1##*/}
+case "$file" in
+  "$threads"/*.md) ;;
+  *)
+    echo "thread-show: not a thread file: $1" >&2
+    exit 2
+    ;;
+esac
+case "$file" in
+  *[!A-Za-z0-9._/-]*)
+    echo "thread-show: refusing $file" >&2
+    exit 2
+    ;;
+esac
+if [ -L "$file" ] || [ ! -f "$file" ]; then
+  echo "thread-show: refusing $file" >&2
+  exit 2
+fi
+
+topic=$(yq --front-matter=extract '.topic // ""' "$file" 2>/dev/null || true)
+if [ -z "$topic" ]; then
+  echo "thread-show: no topic in $file" >&2
+  exit 2
+fi
+label="thread - $topic"
+view=${COS_THREAD_VIEW_DIR:-$HOME/.local/state/cos/thread-view}/${file##*/}
+case "$view" in
+  *[!A-Za-z0-9._/-]*)
+    echo "thread-show: refusing $view" >&2
+    exit 2
+    ;;
+esac
+state=${COS_THREAD_STATE:-$HOME/.local/state/cos/thread-last-pane}
+last=$(head -n 1 "$state" 2>/dev/null || true)
+
+pane=$(herdr pane list --workspace "${HERDR_WORKSPACE_ID:?}" |
+  jq -r --arg label "$label" --arg last "$last" '
+    [.result.panes[] | select(.label // "" | . == "thread" or startswith("thread - "))] as $p
+    | if ($p | length) == 0 then empty
+      else first($p[] | select($label != "thread" and .label == $label))
+        // (if any($p[]; .pane_id == $last) then first($p[] | select(.pane_id != $last)) // $p[0]
+            else $p[0] end)
+      | .pane_id end')
+if [ -z "$pane" ]; then
+  echo "thread-show: no pane labelled thread" >&2
+  exit 1
+fi
+
+foreground() {
+  herdr pane process-info --pane "$pane" | jq -r '.result.process_info.foreground_processes[0].name'
+}
+
+fg=$(foreground)
+# The pager gets a q, resent while it is still the foreground program since a
+# q sent while it is drawing can be lost. As the shell comes back, its prompt
+# renderer (starship) and the prompt hook of direnv (direnv.darwin-a and the
+# like) are in the foreground for a moment, so they, like a pane with no
+# foreground program yet, are waited out until the shell shows; any other
+# program ends the wait and gets nothing.
+for i in 1 2 3 4 5 6 7 8 9 10; do
+  case "$fg" in
+    less | glow) [ "$i" -eq 1 ] || [ $((i % 3)) -eq 0 ] && herdr pane send-keys "$pane" q >/dev/null ;;
+    starship | direnv* | null | '') ;;
+    *) break ;;
+  esac
+  sleep 0.4
+  fg=$(foreground)
+done
+case "$fg" in
+  zsh | -zsh | bash | sh) ;;
+  *)
+    echo "thread-show: $pane is running $fg; not sending keys" >&2
+    exit 1
+    ;;
+esac
+
+mkdir -p "${view%/*}"
+{
+  printf '## %s\n\n' "$topic"
+  awk 'NR == 1 && /^---$/ {fm = 1; next} fm && /^---$/ {fm = 0; lead = 1; next} fm {next}
+    lead && /^$/ {next} {lead = 0; print}' "$file"
+} >"$view"
+herdr pane run "$pane" "PAGER='less -R +G' glow -p -w \$(( \$(tput cols) - 4 )) -- '$view'" >/dev/null
+herdr pane rename "$pane" "$label" >/dev/null
+mkdir -p "${state%/*}"
+printf '%s\n' "$pane" >"$state"
+herdr agent focus cos >/dev/null 2>&1 || true

@@ -1,0 +1,247 @@
+#!/bin/sh
+# Brings back the CoS right column: a files pane running fb over ~/cos above
+# a row of thread panes showing conversations with glow's pager. A herdr server
+# restart restores panes as fresh shells, and a pane whose saved directory is
+# gone comes back unusable (restore_error), so the SessionStart hook runs this
+# on startup and resume. Only panes labelled files or thread... are closed,
+# thread panes beyond the row's count among them, and only missing ones are made; keys go
+# only to a pane at a shell prompt, so a second run, or a run with fb and the pagers already up, changes nothing. It
+# acts only in the workspace labelled cos, does nothing outside herdr, and
+# always exits 0 so it never holds up the session.
+#
+# The panes: map in <cos>/rules/karo.yaml sets the column, each key optional:
+#   workspace      label of the workspace to act in (default cos;
+#                  COS_WORKSPACE_LABEL wins over it)
+#   files_command  what the files pane runs, as written (default fb '<cos>')
+#   thread_panes   how many thread panes (default 2)
+set -u
+
+[ -n "${HERDR_WORKSPACE_ID:-}" ] && [ -n "${HERDR_PANE_ID:-}" ] || exit 0
+bin=$(cd "$(dirname "$0")" && pwd)
+cos=${COS_DIR:-$HOME/cos}
+threads=${COS_THREADS_DIR:-$cos/threads}
+ws=$HERDR_WORKSPACE_ID
+own=$HERDR_PANE_ID
+
+say() { echo "right-pane: $*" >&2; }
+
+# setting <key>: panes.<key> from rules/karo.yaml, or nothing.
+setting() {
+  [ -f "$cos/rules/karo.yaml" ] || return 0
+  yq ".panes.$1 // \"\"" "$cos/rules/karo.yaml" 2>/dev/null || say "could not read panes.$1 from $cos/rules/karo.yaml"
+}
+want=${COS_WORKSPACE_LABEL:-$(setting workspace)}
+files_command=$(setting files_command)
+[ -n "$files_command" ] || files_command="fb '$cos'"
+thread_panes=$(setting thread_panes)
+case ${thread_panes:=2} in
+  *[!0-9]*)
+    say "panes.thread_panes in $cos/rules/karo.yaml is not a number: $thread_panes"
+    exit 0
+    ;;
+esac
+
+label=$(herdr workspace get "$ws" 2>/dev/null | jq -r '.result.workspace.label // ""')
+[ "$label" = "${want:-cos}" ] || exit 0
+
+# Until a client attaches, herdr lays the panes out on a screen of its own
+# default size, and glow wraps a thread at the width it opens with, never
+# again. So the screen size at the start is kept, and the threads open only
+# once it has changed and held for one poll, or after COS_SCREEN_WAIT polls
+# (default 40, ten seconds) when it does not change, as with a client
+# attached from the start. fzf redraws on resize, so fb does not wait.
+area() {
+  herdr pane layout --pane "$own" 2>/dev/null |
+    jq -r '.result.layout.area // empty | "\(.width)x\(.height)"' 2>/dev/null
+}
+area0=$(area)
+screen_settled() {
+  [ -n "$area0" ] || return 0
+  prev=$area0
+  i=0
+  while [ "$i" -lt "${COS_SCREEN_WAIT:-40}" ]; do
+    now=$(area)
+    [ -n "$now" ] || return 0
+    [ "$now" != "$area0" ] && [ "$now" = "$prev" ] && return 0
+    prev=$now
+    i=$((i + 1))
+    sleep 0.25
+  done
+}
+
+# ours <jq filter on .label>: IDs of this workspace's panes, other than the
+# caller's, whose label passes the filter, in layout order.
+ours() {
+  herdr pane list --workspace "$ws" | jq -r --arg own "$own" "
+    .result.panes[] | select(.pane_id != \$own) | select(.label // \"\" | $1) | .pane_id"
+}
+is_files='. == "files" or startswith("files - ")'
+is_thread='. == "thread" or startswith("thread - ")'
+
+# foreground <pane>: the foreground program's name, or nothing when herdr
+# cannot read the pane.
+foreground() {
+  herdr pane process-info --pane "$1" 2>/dev/null |
+    jq -r '.result.process_info.foreground_processes[0].name // empty' 2>/dev/null
+}
+is_shell() { case "$1" in zsh | -zsh | bash | sh) return 0 ;; esac; return 1; }
+is_pager() { [ "$1" = less ] || [ "$1" = glow ]; }
+
+# A pane whose restore failed (restore_error, or no process herdr can read)
+# cannot run anything, so it is closed and made again below.
+for p in $(herdr pane list --workspace "$ws" | jq -r --arg own "$own" "
+  .result.panes[] | select(.pane_id != \$own)
+  | select(.label // \"\" | ($is_files) or ($is_thread))
+  | (if .restore_error != null then \"broken \" else \"check \" end) + .pane_id"); do
+  case "$p" in
+    broken) close=1 ;;
+    check) close= ;;
+    *)
+      if [ -n "$close" ] || [ -z "$(foreground "$p")" ]; then
+        herdr pane close "$p" >/dev/null || say "could not close $p"
+      fi
+      ;;
+  esac
+done
+
+split() {
+  herdr pane split --pane "$1" --direction "$2" --ratio 0.5 --cwd "$cos" --no-focus |
+    jq -r '.result.pane.pane_id // empty'
+}
+made=
+files=$(ours "$is_files" | head -n 1)
+# shellcheck disable=SC2046  # pane IDs have no spaces; one positional each
+set -- $(ours "$is_thread")
+if [ -z "$files" ] && [ $# -gt 0 ]; then
+  # A files pane cannot be put back above existing thread panes, so the column
+  # is rebuilt when the thread panes can be closed without killing anything.
+  for p in "$@"; do
+    fg=$(foreground "$p")
+    if ! is_shell "$fg" && ! is_pager "$fg"; then
+      say "$p is running ${fg:-nothing}; leaving the column as it is"
+      herdr agent focus cos >/dev/null 2>&1
+      exit 0
+    fi
+  done
+  for p in "$@"; do herdr pane close "$p" >/dev/null || say "could not close $p"; done
+  set --
+fi
+# The column holds thread_panes thread panes; the ones after them are closed
+# unless that would kill something.
+if [ $# -gt "$thread_panes" ]; then
+  keep=
+  i=0
+  for p in "$@"; do
+    i=$((i + 1))
+    if [ "$i" -le "$thread_panes" ]; then
+      keep="$keep $p"
+      continue
+    fi
+    fg=$(foreground "$p")
+    if is_shell "$fg" || is_pager "$fg"; then
+      herdr pane close "$p" >/dev/null || say "could not close $p"
+    else
+      say "$p is running ${fg:-nothing}; leaving it open"
+    fi
+  done
+  # shellcheck disable=SC2086  # pane IDs, one positional each
+  set -- $keep
+fi
+if [ -z "$files" ]; then
+  files=$(split "$own" right) && [ -n "$files" ] || { say "could not split $own"; exit 0; }
+  herdr pane rename "$files" files >/dev/null
+  made="$made $files"
+fi
+# The first thread pane goes below files, and each one after it to the right
+# of the one before.
+last=$files direction=down
+for p in "$@"; do last=$p direction=right; done
+while [ $# -lt "$thread_panes" ]; do
+  p=$(split "$last" "$direction") && [ -n "$p" ] || { say "could not split $last"; break; }
+  herdr pane rename "$p" thread >/dev/null
+  made="$made $p"
+  set -- "$@" "$p"
+  last=$p direction=right
+done
+
+# A new pane's shell runs its rc files' commands in the foreground first, so
+# a pane made here is given a few seconds to reach its prompt. In any pane,
+# the prompt renderer (starship) holds the foreground for a moment while the
+# shell draws its prompt, so it is waited out the same way.
+settled() {
+  for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+    fg=$(foreground "$1")
+    is_shell "$fg" && break
+    case " $made " in *" $1 "*) ;; *) [ "$fg" = starship ] || break ;; esac
+    sleep 0.25
+  done
+}
+
+settled "$files"
+if is_shell "$fg"; then
+  herdr pane run "$files" "$files_command" >/dev/null || say "could not start $files_command in $files"
+elif [ "$fg" != fzf ]; then
+  say "$files is running ${fg:-nothing}; not sending keys"
+fi
+
+# heading <file>: the frontmatter's topic, which thread-show labels
+# its pane with.
+heading() { yq --front-matter=extract '.topic // ""' "$1" 2>/dev/null; }
+# shown: the topics in thread panes that already show a pager, which the
+# panes at a prompt must not open again.
+shown=
+waiting=
+for p in $(ours "$is_thread"); do
+  settled "$p"
+  if is_pager "$fg"; then
+    shown="$shown
+$(herdr pane get "$p" | jq -r '.result.pane.label // ""' | sed -n 's/^thread - //p')"
+  elif is_shell "$fg"; then
+    waiting="$waiting $p"
+  else
+    say "$p is running ${fg:-nothing}; not sending keys"
+  fi
+done
+[ -z "$waiting" ] || screen_settled
+
+# A pane labelled with a topic reopens that topic's file; thread-show finds
+# the pane by that label. The rest take the newest files not on screen, each
+# pane first labelled with its file's topic so that thread-show finds it the
+# same way.
+pending=
+for p in $waiting; do
+  topic=$(herdr pane get "$p" | jq -r '.result.pane.label // ""' | sed -n 's/^thread - //p')
+  file=
+  if [ -n "$topic" ] && ! printf '%s\n' "$shown" | grep -qxF -- "$topic"; then
+    for f in "$threads"/*.md; do
+      [ -f "$f" ] && [ "$(heading "$f")" = "$topic" ] && { file=$f; break; }
+    done
+  fi
+  if [ -n "$file" ]; then
+    shown="$shown
+$topic"
+    "$bin/thread-show" "$file" >/dev/null || say "thread-show $file failed"
+  else
+    pending="$pending $p"
+  fi
+done
+for p in $pending; do
+  file=
+  # ls -t gives the newest first; names outside the safe set are skipped.
+  # shellcheck disable=SC2045
+  for f in $(ls -t "$threads" 2>/dev/null); do
+    case "$f" in template.md | memo.md | *[!A-Za-z0-9._-]*) continue ;; *.md) ;; *) continue ;; esac
+    t=$(heading "$threads/$f")
+    printf '%s\n' "$shown" | grep -qxF -- "$t" && continue
+    file=$threads/$f
+    break
+  done
+  [ -n "$file" ] || { say "no thread file left for $p"; continue; }
+  shown="$shown
+$t"
+  herdr pane rename "$p" "thread - $t" >/dev/null || say "could not rename $p"
+  "$bin/thread-show" "$file" >/dev/null || say "thread-show $file failed"
+done
+
+herdr agent focus cos >/dev/null 2>&1
+exit 0

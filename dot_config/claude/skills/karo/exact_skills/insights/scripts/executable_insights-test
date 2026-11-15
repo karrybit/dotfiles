@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+# Show what insights counts from small transcripts and a journal in a temporary config folder:
+# a known day gives known counts, and changed copies of it (a third counted tool call, a
+# dialog-free approval, a script listed in uncounted: of rules/karo.yaml) change exactly the
+# counts they should.
+# usage: insights-test
+set -uo pipefail
+bin=$(cd "$(dirname "$0")" && pwd)
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/insights-test.XXXXXX") || exit 2
+trap 'rm -rf "$tmp"' EXIT
+failed=0
+fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
+pass() { printf 'ok\t%s\n' "$1"; }
+export TZ=Asia/Tokyo COS_DIR=$tmp/cos CLAUDE_CONFIG_DIR=$tmp/claude
+mkdir -p "$tmp/cos/journal" "$tmp/cos/rules"
+cosproj=$tmp/claude/projects/$(cd "$tmp/cos" && printf '%s' "$(pwd -P)" | tr -c 'A-Za-z0-9' '-')
+mkdir -p "$cosproj/s1/subagents" "$tmp/claude/projects/-work-t9"
+
+# One owner turn at 10:00 JST with fifteen calls, two of which count: the runs of the
+# skill steps' bin scripts and a scratchpad brief do not. The ls was approved in a
+# dialog after 30 s, the Read was refused by auto mode. The API message m1 is split over two records and counts once;
+# the record from the day before counts nowhere.
+day() {
+  printf '%s\n' \
+    '{"type":"user","uuid":"u0","timestamp":"2026-11-08T01:00:00.000Z","sessionId":"s1","origin":{"kind":"human"},"message":{"content":"yesterday"}}' \
+    '{"type":"assistant","uuid":"a0","timestamp":"2026-11-08T01:00:01.000Z","sessionId":"s1","message":{"id":"m0","model":"claude-opus-5-5","usage":{"input_tokens":1000,"output_tokens":1000},"content":[{"type":"tool_use","id":"x0","name":"Bash","input":{"command":"ls"}}]}}' \
+    '{"type":"user","uuid":"u1","timestamp":"2026-11-09T01:00:00.000Z","sessionId":"s1","origin":{"kind":"human"},"message":{"content":"hello"}}' \
+    '{"type":"assistant","uuid":"a1","timestamp":"2026-11-09T01:00:10.000Z","sessionId":"s1","message":{"id":"m1","model":"claude-opus-5-5","usage":{"input_tokens":10,"output_tokens":5,"cache_read_input_tokens":100,"cache_creation_input_tokens":7},"content":[{"type":"tool_use","id":"b1","name":"Bash","input":{"command":"ls"}}]}}' \
+    '{"type":"assistant","uuid":"a2","timestamp":"2026-11-09T01:00:10.000Z","sessionId":"s1","message":{"id":"m1","model":"claude-opus-5-5","usage":{"input_tokens":10,"output_tokens":5,"cache_read_input_tokens":100,"cache_creation_input_tokens":7},"content":[{"type":"tool_use","id":"b2","name":"Bash","input":{"command":"~/cos/bin/record --detach i.md"}},{"type":"tool_use","id":"b7","name":"Bash","input":{"command":"~/cos/bin/land feat/agent/x --rebase"}},{"type":"tool_use","id":"b22","name":"Bash","input":{"command":"~/cos/.claude/skills/cos/skills/land/scripts/land feat/agent/x"}},{"type":"tool_use","id":"b8","name":"Bash","input":{"command":"~/cos/bin/delegate close t-ex0009"}},{"type":"tool_use","id":"b9","name":"Bash","input":{"command":"~/cos/bin/agent-report --wait t-ex0009"}},{"type":"tool_use","id":"b10","name":"Bash","input":{"command":"~/cos/bin/okf-check"}},{"type":"tool_use","id":"b11","name":"Bash","input":{"command":"~/cos/bin/insights 2026-11-09"}},{"type":"tool_use","id":"b12","name":"Bash","input":{"command":"~/.config/claude/skills/karrybit/skills/crit/scripts/crit-open 3000"}},{"type":"tool_use","id":"b17","name":"Bash","input":{"command":"~/.config/claude/skills/karrybit/skills/herdr-agent/scripts/agent-ctl start t-ex0009 /p/brief.md tab t-ex0008"}},{"type":"tool_use","id":"b18","name":"Bash","input":{"command":"~/.config/claude/skills/karrybit/skills/herdr-agent/scripts/agent-ctl close t-ex0009"}},{"type":"tool_use","id":"b19","name":"Bash","input":{"command":"~/.config/claude/skills/karrybit/skills/herdr-agent/scripts/agent-report --wait t-ex0009"}},{"type":"tool_use","id":"b3","name":"Write","input":{"file_path":"/p/scratchpad/brief.md"}},{"type":"tool_use","id":"b4","name":"Read","input":{"file_path":"/x"}},{"type":"tool_use","id":"b5","name":"AskUserQuestion","input":{}}]}}' \
+    "{\"type\":\"user\",\"uuid\":\"r1\",\"timestamp\":\"2026-11-09T01:00:40.000Z\",\"sessionId\":\"s1\",\"permissionDecision\":{\"decision\":\"accept\",\"source\":\"$1\"},\"message\":{\"content\":[{\"type\":\"tool_result\",\"tool_use_id\":\"b1\",\"content\":\"out\"}]}}" \
+    '{"type":"user","uuid":"r4","timestamp":"2026-11-09T01:00:41.000Z","sessionId":"s1","permissionDecision":{"decision":"reject","source":"config","reasonCode":"classifier:auto-mode"},"message":{"content":[{"type":"tool_result","tool_use_id":"b4","is_error":true,"content":"Permission for this action was denied by the Claude Code auto mode classifier."}]}}' \
+    '{"type":"user","uuid":"r5","timestamp":"2026-11-09T01:02:00.000Z","sessionId":"s1","permissionDecision":{"decision":"accept","source":"user_temporary"},"message":{"content":[{"type":"tool_result","tool_use_id":"b5","content":"answered"}]}}'
+  [ "${2:-}" != extra ] || printf '%s\n' '{"type":"assistant","uuid":"a3","timestamp":"2026-11-09T01:02:10.000Z","sessionId":"s1","message":{"id":"m2","model":"claude-opus-5-5","usage":{"input_tokens":1,"output_tokens":1},"content":[{"type":"tool_use","id":"b6","name":"Bash","input":{"command":"pwd"}}]}}'
+  # Calls that read a step script, or run a bin script that is no skill step, count.
+  [ "${2:-}" != reads ] || printf '%s\n' '{"type":"assistant","uuid":"a3","timestamp":"2026-11-09T01:02:10.000Z","sessionId":"s1","message":{"id":"m2","model":"claude-opus-5-5","usage":{"input_tokens":1,"output_tokens":1},"content":[{"type":"tool_use","id":"b6","name":"Bash","input":{"command":"rg foo ~/cos/bin/delegate"}},{"type":"tool_use","id":"b13","name":"Bash","input":{"command":"sed -n 1,20p .claude/skills/cos/skills/land/scripts/land"}},{"type":"tool_use","id":"b14","name":"Bash","input":{"command":"git diff main -- bin/insights"}},{"type":"tool_use","id":"b15","name":"Bash","input":{"command":"~/cos/bin/delegate-test"}},{"type":"tool_use","id":"b16","name":"Bash","input":{"command":"~/cos/bin/thread-show t-ex0009"}},{"type":"tool_use","id":"b20","name":"Bash","input":{"command":"rg foo ~/.config/claude/skills/karrybit/skills/herdr-agent/scripts/agent-ctl"}},{"type":"tool_use","id":"b21","name":"Bash","input":{"command":"~/.config/claude/skills/karrybit/skills/herdr-agent/scripts/agent-ctl-test"}},{"type":"tool_use","id":"b23","name":"Bash","input":{"command":"rg foo ~/.config/claude/skills/karo/scripts/record"}},{"type":"tool_use","id":"b24","name":"Bash","input":{"command":"~/.config/claude/skills/karo/scripts/thread-show t-ex0009"}}]}}'
+  # Runs of karo's step scripts do not count; ~/bin/mine and ~/bin/other count unless uncounted: lists them.
+  [ "${2:-}" != karo ] || printf '%s\n' '{"type":"assistant","uuid":"a3","timestamp":"2026-11-09T01:02:10.000Z","sessionId":"s1","message":{"id":"m2","model":"claude-opus-5-5","usage":{"input_tokens":1,"output_tokens":1},"content":[{"type":"tool_use","id":"k1","name":"Bash","input":{"command":"~/.config/claude/skills/karo/scripts/record --detach i.md"}},{"type":"tool_use","id":"k2","name":"Bash","input":{"command":"~/.config/claude/skills/karo/scripts/karo-check"}},{"type":"tool_use","id":"k3","name":"Bash","input":{"command":"~/.config/claude/skills/karo/skills/land/scripts/land feat/agent/x --rebase"}},{"type":"tool_use","id":"k4","name":"Bash","input":{"command":"~/.config/claude/skills/karo/skills/insights/scripts/insights 2026-11-09"}},{"type":"tool_use","id":"k5","name":"Bash","input":{"command":"~/bin/mine x"}},{"type":"tool_use","id":"k6","name":"Bash","input":{"command":"~/bin/other"}}]}}'
+  printf '%s\n' \
+    '{"type":"system","subtype":"turn_duration","uuid":"d1","timestamp":"2026-11-09T01:02:30.000Z","sessionId":"s1","durationMs":150500}' \
+    '{"type":"cost-state","sessionId":"s1","startTime":1793758497968,"totalCostUSD":1.234}'
+}
+
+write() { # <approval source> [extra call]
+  day "$@" > "$cosproj/s1.jsonl"
+  # A continued session's new file repeats the earlier records under the same uuids.
+  head -n 6 "$cosproj/s1.jsonl" > "$cosproj/s2.jsonl"
+  printf '%s\n' '{"type":"user","uuid":"q1","timestamp":"2026-11-09T02:00:00.000Z","sessionId":"q","message":{"content":[{"type":"tool_result","tool_use_id":"z","is_error":true,"content":"Permission for this action was denied by the Claude Code auto mode classifier. Reason: x"}]}}' \
+    > "$cosproj/s1/subagents/agent-q.jsonl"
+  printf '%s\n' '{"type":"agent-name","agentName":"t-ex0009","sessionId":"g1"}' \
+    '{"type":"assistant","uuid":"g2","timestamp":"2026-11-09T03:00:00.000Z","sessionId":"g1","message":{"id":"n1","model":"claude-sonnet-5-5","usage":{"input_tokens":3,"output_tokens":4},"content":[{"type":"tool_use","id":"c1","name":"Bash","input":{"command":"git push"}}]}}' \
+    '{"type":"user","uuid":"g3","timestamp":"2026-11-09T03:00:20.000Z","sessionId":"g1","message":{"content":[{"type":"tool_result","tool_use_id":"c1","is_error":true,"content":"The user doesn'"'"'t want to proceed with this tool use."}]}}' \
+    > "$tmp/claude/projects/-work-t9/g1.jsonl"
+  printf '%s\n' '---' 'type: Journal' '---' '' '- 10:00 [delegate] t-ex0009,t-ex0010,t-ex0011,t-ex0012: start (x)' '- 10:05 [report] t-ex0010: half (x)' \
+    '- 10:08 [review] t-ex0011: rv (x)' '- 10:12 [report] t-ex0009: done (x)' '- 10:20 [close] t-ex0012: end (x)' '- 10:30 [report] t-ex0011: late (x)' \
+    > "$tmp/cos/journal/2026-11-09.md"
+}
+
+run() { out=$("$bin/insights" 2026-11-09 2>&1); code=$?; }
+check() { # <name> <jq expression that must be true>
+  if [[ $code -eq 0 ]] && jq -e "$2" <<<"$out" >/dev/null 2>&1; then pass "$1"; else fail "$1: $code $out"; fi
+}
+
+write user_temporary
+run
+check "one CoS turn, two counted calls (skill steps and scratchpad brief left out)" \
+  '.turns == 1 and .over_limit == []'
+check "dialog approval, auto mode refusal and AskUserQuestion are told apart, and the copied records count once" \
+  '.approvals.cos == {prompted: 1, rejected_user: 0, rejected_classifier: 1, prompt_wait_s: 30}'
+check "subagent refusal is counted in its own group" '.approvals.subagents.rejected_classifier == 1'
+check "a Herdr agent the owner refused is listed with its wait" \
+  '.agent_prompts == [{agent: "t-ex0009", session: "g1", calls: 1, wait_s: 20}] and .approvals.agents.rejected_user == 1'
+check "turn length comes from turn_duration" '.cos_turn_s == {count: 1, total: 150, max: 150}'
+check "each delegated task ends at its own first report, review or close" \
+  '.delegations == [{task: "t-ex0009", delegated: "10:00", ended: "10:12", minutes: 12}, {task: "t-ex0010", delegated: "10:00", ended: "10:05", minutes: 5}, {task: "t-ex0011", delegated: "10:00", ended: "10:08", minutes: 8}, {task: "t-ex0012", delegated: "10:00", ended: "10:20", minutes: 20}]'
+check "tokens count one API message once and leave out the day before" \
+  '.tokens.cos == {"claude-opus-5-5": {input: 10, output: 5, cache_read: 100, cache_creation: 7}} and .tokens.agents["claude-sonnet-5-5"].output == 4'
+check "session cost is the running total with its start" \
+  '.session_cost == [{group: "cos", session: "s1", name: "", started: "2026-11-04 11:14", total_usd: 1.23}]'
+
+write user_temporary extra
+run
+check "a third counted call puts the turn over the limit" \
+  '.turns == 1 and .over_limit == [{session: "s1", time: "10:00", kind: "human", calls: 3, tools: {Bash: 2, Read: 1}}] and .tokens.cos["claude-opus-5-5"].input == 11'
+
+write user_temporary reads
+run
+check "reading a step script and running a bin script that is no skill step count" \
+  '.over_limit == [{session: "s1", time: "10:00", kind: "human", calls: 11, tools: {Bash: 10, Read: 1}}]'
+
+write user_temporary karo
+run
+check "runs of karo's step scripts are not counted" \
+  '.over_limit == [{session: "s1", time: "10:00", kind: "human", calls: 4, tools: {Bash: 3, Read: 1}}]'
+
+printf '%s\n' 'uncounted:' "  - '^~/bin/mine( |\$)'" > "$tmp/cos/rules/karo.yaml"
+run
+check "a command matching uncounted: in rules/karo.yaml is not counted" \
+  '.over_limit == [{session: "s1", time: "10:00", kind: "human", calls: 3, tools: {Bash: 2, Read: 1}}]'
+rm "$tmp/cos/rules/karo.yaml"
+
+write config
+run
+check "an approval by configuration is not a dialog" '.approvals.cos.prompted == 0 and .approvals.cos.prompt_wait_s == 0'
+
+out=$("$bin/insights" 11/09 2>&1); code=$?
+if [[ $code -eq 2 ]]; then pass "a date not in YYYY-MM-DD is a usage error"; else fail "usage: $code $out"; fi
+
+echo "insights-test: $failed failure(s)"
+[ "$failed" -eq 0 ]
