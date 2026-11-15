@@ -21,3 +21,15 @@ Behavior cases for comparing versions of the `organize` skill. Run them with the
 - `plugin-eval/` cases grant `Bash`, `Write`, and `Edit`: run them with `--scaffold --allow-tools Bash Write Edit`. `plugin-eval-holdout/` grants no gated tool, so its subagent stops at its first write and its graders read only the request.
 - `organize` reads no sibling skill: build the wrapper with `skill-wrap <karrybit>/exact_skills/organize <ref> DIR/kit`.
 - Run `plugin-eval-holdout/` with `--eval-dir evals-holdout` against a wrapper.
+
+## What the Suite Separates
+
+Measured on wrappers holding only this skill, with `karrybit:skill-eval`'s suite command (`--ablation none`, `--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`):
+
+- The canary drops `no-destination/asks-destination`, `no-agent`, and `no-write` to 0/3 in each of three repeats, and `document/rubric-path` to 1/3, 1/3, and 2/3; the skill passes all four 3/3 in each of five repeats.
+- `document/full-hash` does not separate the canary (3/3): the template's input line also asks for the full commit hash.
+- `document/answer-first` passes 0/3 in each repeat of the skill with `brief.md` step 6's count of headings whose next line is a list or a table taken out, and of the canary; with the count, it passed 2/3 and 3/3, and the failing run's subagent skipped step 6.
+- `document/source-lines` fails when the document abbreviates `jobq.py` (`J:61-66`), in 5 of 15 runs of the skill and in no run of the canary.
+- `document/reply-path` passed 1/3 in one of three repeats when step 3 asked only for the absolute path, and 3/3 in the other two and in both repeats of the current step 3.
+- The holdout's graders pass 3/3.
+- The other graders fail at most one run in any repeat of any configuration.
