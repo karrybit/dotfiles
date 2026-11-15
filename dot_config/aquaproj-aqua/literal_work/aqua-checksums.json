@@ -66,6 +66,11 @@
       "algorithm": "sha256"
     },
     {
+      "id": "github_release/github.com/gastownhall/beads/v1.3.4/beads_1.3.4_darwin_arm64.tar.gz",
+      "checksum": "B08A9C15BFF80C42235F32946F94A6566A7D90944FE8AFE45F3FD2F350596CDB",
+      "algorithm": "sha256"
+    },
+    {
       "id": "github_release/github.com/go-delve/delve/v1.27.2/dlv_1.27.2_darwin_arm64.tar.gz",
       "checksum": "C32FC68E11FF3820BA267AB12C96FA68E3804319F807FC5DB4FBA3B9D868DF26",
       "algorithm": "sha256"
