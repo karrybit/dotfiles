@@ -8,12 +8,13 @@ Behavior cases for comparing versions of the `goal` skill. Run them with the `ka
   - `test-goal-condition`: goal 1 gets one line with `bin/parse-test`, its expected output or exit status, and an attempt limit.
   - `vague-goal-asked`: goal 2 gets a question to the user instead of an invented condition.
   - `stall-rule`: the reply carries the stall rule (the condition is not loosened, `緩め`).
-  - `no-edit`, `no-write`: the skill writes conditions only; it changes no file.
+  - `no-edit`, `no-write`: no `Edit` or `Write` call, since the skill writes conditions only. The case grants `Bash`, so these graders do not show that no file changed: a write through `Bash` passes them.
 - `fixtures/csvtool`: `parse.py`, whose `split_row` splits on every comma, and `bin/parse-test`.
 
 ## Settings for This Suite
 
-- Cases grant `Bash`, `Edit`, and `Write`, so that `no-edit` and `no-write` can fail: run them with `--scaffold --allow-tools Bash Edit Write`.
+- Cases grant `Bash`, so that a run can execute `bin/parse-test` to see its output, and `Edit` and `Write`, so that `no-edit` and `no-write` can fail: run them with `--scaffold --allow-tools Bash Edit Write`.
+- Run the suite against a wrapper. chezmoi sets a deployed file's mode from the `executable_` prefix of its source name only, so the deployed `fixtures/csvtool/bin/parse-test` loses its executable bit, and an in-place run gets `Permission denied` from it; a wrapper copies the fixtures from the working tree with their mode.
 - `goal` reads no sibling skill: build the wrapper with `skill-wrap <karrybit>/exact_skills/goal <ref> DIR/kit`.
 
 ## What the Suite Separates

@@ -8,7 +8,7 @@ Behavior cases for comparing versions of the `research` skill. Run them with the
   - `reading-table`: the note ends with `## 読んだ範囲` and its `原文 | 範囲 | 読んだ箇所と理由` table.
   - `unreadable-row`: the URL's row has the range `読めなかった`.
   - `line-citation`: a claim cites `fetcher.py` with a line.
-  - `versioned-source`: the note names a commit hash, the version of the fixture's files.
+  - `versioned-source`: the note names a commit hash after `commit` or `@`, the version of the fixture's files.
   - `facts`: the note gives the code's 3 attempts and `FETCHER_RETRY_LIMIT`, reports that `docs/config.md` contradicts the code, and states nothing from the URL as fact.
   - `no-commit`: no `git commit`.
   - `report-items`: the final reply has the skill's five report items.

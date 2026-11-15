@@ -6,7 +6,7 @@ Behavior cases for comparing versions of the `explore` skill. Run them with the 
 
 - `plugin-eval/no-parts`: the user asks for research and an explanation of a topic without passing the three components the skill requires.
   - `asks-parts`: the reply asks for the components instead of starting.
-  - `no-agent`, `no-write`: no subagent and no file before the components arrive.
+  - `no-agent`, `no-write`: no subagent and no `Write` call before the components arrive. The case grants `Bash`, so `no-write` does not show that no file was written: a write through `Bash` passes it.
 
 ## Settings for This Suite
 
