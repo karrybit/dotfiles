@@ -6,7 +6,7 @@ description: Herdr 上の Agent に仕事を委任する手順。オーナーが
 # 委任
 
 - Agent の起動・指示の送信・待つ・報告の取り出し・閉じるは、`karrybit:herdr-agent` skill を読み込み、その手順と scripts で行う。下の `<scripts>` は `~/.config/claude/skills/karrybit/skills/herdr-agent/scripts` で、この `~/` の形のまま書く。この skill が決めるのは、渡す値（名前はタスク ID、ブリーフ、場所）と、返った JSON から書く記録。
-- タスクは Beads（`bd`）にあり、`bd` を書くのは CoS だけにする。`bd` の環境変数、`--json`、comment の先頭の語は `~/cos/rules/beads.md` に従う。
+- タスクは Beads（`bd`）にあり、`bd` を書くのは CoS だけにする。`bd` の呼び方は `~/cos/rules/beads.md` の「呼び方」、comment の先頭の語は同じファイルの「comment の語」に従う。
 
 ## 作業場所と取り込み
 
@@ -32,7 +32,7 @@ description: Herdr 上の Agent に仕事を委任する手順。オーナーが
 
 ## 新しいタスクを委任する
 
-1. ブリーフを作る。項目は次の 8 つ。`bd show <タスクID> --json` の title・description・acceptance_criteria を元にし、オーナーの発言、`~/cos/investigations`、`~/cos/journal` の MTG の記録、決定（decision の bead と `~/cos/decisions`）、外の情報源から足し、出典を添える。タスクがまだ Beads になければ、`~/cos/rules/beads.md` の手順で `bd create` してから作る。ブリーフの先頭の文字は `/` と `!` にしない（`agent-ctl` が断る）。
+1. ブリーフを作る。項目は次の 8 つ。`bd show <タスクID> --json` の title・description・acceptance_criteria を元にし、オーナーの発言、`~/cos/investigations`、`~/cos/journal` の MTG の記録、決定（decision の bead と `~/cos/decisions`）、外の情報源から足し、出典を添える。タスクがまだ Beads になければ、`~/cos/rules/beads.md` の「タスクを進める」の 1・2 で `bd create` してから作る。ブリーフの先頭の文字は `/` と `!` にしない（`agent-ctl` が断る）。
    - 目的: 何のための変更か
    - 背景: 関連する決定と出典へのリンク
    - 作業する場所: 作業場所とブランチ（「作業場所と取り込み」）。cos では「この worktree のブランチに commit し、`~/cos` の本体には書かない。終える前に main の最新に rebase する」と書く（止められたときは下の制約の行）。プロジェクトの節に「作業する場所の文」があれば、その文を書く
@@ -49,7 +49,7 @@ description: Herdr 上の Agent に仕事を委任する手順。オーナーが
    - 完了時の報告: 「完了の報告は karrybit:completion-report に従う」と書く。そのタスクに固有の項目（受け入れ条件ごとの確かめなど）があれば、続けて、足す見出しとして並べる
    - 外に出す内容: ブランチ名、commit メッセージ、PR のタイトルと本文、コメントには、リポジトリから辿れる事実だけを書く。タスク ID、CoS や Herdr の名前、ブリーフ、手元のパスやマシンの事情は書かない。GitHub の「Update branch」のような merge commit も作らず、main に追従するときは rebase する。PR を作らないリポジトリでは、commit メッセージに同じ規則を当てる
 
-   受け入れ条件が決まらないときは、`~/cos/rules/beads.md` の決定の流れで判断待ちの decision の bead を作ってタスクの blocker にし、オーナーに尋ねて、委任はそこで止める。
+   受け入れ条件が決まらないときは、`~/cos/rules/beads.md` の「判断待ちと決定」の 1 で判断待ちの decision の bead を作ってタスクの blocker にし、オーナーに尋ねて、委任はそこで止める。
 
    sandbox の外で動く道具やコマンド（`claude plugin eval` など）を Agent に使わせる作業では、ブリーフに書く前にオーナーに確かめ、オーナーが認めたものだけを名前でブリーフに書く（Agent が承認のダイアログで止まるため）。
    完了条件: 8 項目がすべて埋まり、受け入れ条件が完了か未完了かを判定できる。
@@ -68,7 +68,7 @@ description: Herdr 上の Agent に仕事を委任する手順。オーナーが
 
 1. `<scripts>/agent-ctl send <名前> "<指示>"` を単独で実行する。Agent が `working` で断られたら、終わるのを待つか、オーナーに割り込んでよいか尋ね、許されたら `--interrupt` を付けて送り直す。`status` が `blocked` なら、`karrybit:herdr-agent` の「止まった Agent に答える」に進む。
    完了条件: JSON の `status` が `working` か、画面の内容を AskUserQuestion でオーナーに尋ねている。
-2. 送った指示の要旨を、`bd comment <タスクID> --file <要旨のファイル> --json` で `メモ:` で始めて書く（修正の依頼は `karo:review` skill の「3」の 3 で `変更依頼:` として書く）。指示が新しい仕事を足したときは、その仕事を `~/cos/rules/beads.md` の手順で `bd create --deps discovered-from:<タスクID>` で作る。
+2. 送った指示の要旨を、`bd comment <タスクID> --file <要旨のファイル> --json` で `メモ:` で始めて書く（修正の依頼は `karo:review` skill の「3」の 3 で `変更依頼:` として書く）。指示が新しい仕事を足したときは、その仕事を `~/cos/rules/beads.md` の「タスクを進める」の 1・2 で `bd create --deps discovered-from:<タスクID>` で作る。
    完了条件: `bd comment` の JSON が出ている。
 3. 下の「終わるのを待つ」に従って待つ。
    完了条件: background の agent-report が走っている。
@@ -87,7 +87,7 @@ description: Herdr 上の Agent に仕事を委任する手順。オーナーが
 
 1. `<scripts>/agent-ctl close <タスクID>` を単独で実行する（`karrybit:herdr-agent` の「閉じる」）。止まったら、その行と `parent_kept` をオーナーに報告する。ignored なファイルで止まったら、CoS は一覧をオーナーに示して消してよいかを尋ね、worktree のファイルは調べも消しもしない。消してよいと答えたら、一覧のパスをリテラルで並べた `rm -rf <place>/<パス> …` の 1 行を示してオーナーのターミナルで実行してもらい、終わったら `close` を走らせ直す。残すと答えたら、閉じずに残したことを報告する。
    完了条件: JSON が出ているか、止まった理由をオーナーに報告している。
-2. JSON をもとに、`assignments.md` の行を終了に移す（移し方は `~/cos/rules/record.md` の「書き込みの指示の形」）指示を、`commit 本文:` に外した worktree の `place` と閉じた workspace を書いて、record で書く。
+2. JSON をもとに、`assignments.md` の行を終了に移し（移し方は `~/cos/rules/record.md` の「書き込みの指示の形」と `~/cos/rules/record-examples.md` の終了の例）、journal に運用の行を 1 つ（`[close]`、対象はタスク ID、本文は閉じた workspace と外した worktree の `place`）書く指示を 1 つにまとめ、record で書く。
    完了条件: record が `queued` を出した。
 3. タスクを閉じずに Agent を終えたとき（取り込まずに止めたとき）は、`bd unclaim <タスクID> --if-assignee <タスクID> --json` を単独で実行する。
    完了条件: JSON の `status` が `open`。取り込んで閉じるタスクでは、この手順はない。

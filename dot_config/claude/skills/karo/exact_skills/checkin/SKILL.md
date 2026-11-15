@@ -6,7 +6,7 @@ description: 一日の始まりに、Daily Standup として CoS から報告す
 # Checkin
 
 - この skill は、`~/cos` の記録、Beads（`bd`）、Herdr から材料を集め、報告し、記録に残す手順を持つ。外の情報源（タスクの管理、チャット、予定表など）の取り方は、`~/cos/rules/checkin.md` の「外の情報源」の節にある。
-- `bd` は、`~/cos/rules/beads.md` に従い、1 つずつ単独のコマンドで実行する。
+- `bd` は、`~/cos/rules/beads.md` の「呼び方」に従い、1 つずつ単独のコマンドで実行する。
 
 ## 手順
 
@@ -16,7 +16,7 @@ description: 一日の始まりに、Daily Standup として CoS から報告す
    - その日付以降の journal と、`~/cos` の `git log --since='<その日付> 00:00'`。
    - その日付以降に動いたタスク: `bd list --all --updated-after <その日付> --limit 0 --json` の ID を、`bd show <ID>... --json --include-comments` に渡して、状態の変化と comment を読む。
    - `herdr agent list` と、`assignments.md` の稼働中の各 Agent への `herdr agent get`。
-   - 開いているタスクは `bd list --status open,in_progress,deferred --limit 0 --json`、判断待ちは `bd human list --status open --json`、7 日以上動いていないタスクは `bd stale --days 7 --limit 0 --json`。
+   - 開いているタスクは `bd list --status open,in_progress,blocked,deferred --limit 0 --json`、判断待ちは `bd human list --status open --json`、7 日以上動いていないタスクは `bd stale --days 7 --limit 0 --json`。
    - 外の情報源: `~/cos/rules/checkin.md` の「外の情報源」の節にある源ごとに、節に書かれた取り方で取る。ファイルか節がなければ、外の情報源は使わない。
 
    完了条件: `assignments.md` の稼働中の Agent すべてについて、Herdr の状態か「不明」が手元にあり、上の `bd` の出力がすべて手元にある（動いたタスクがなければ `bd show` は要らない）。「外の情報源」の節の源のそれぞれについて、結果か「取得できなかった」が手元にある（節がなければ、外の情報源を使わなかったことが手元にある）。

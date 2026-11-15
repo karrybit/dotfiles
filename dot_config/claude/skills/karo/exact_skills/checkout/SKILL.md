@@ -5,7 +5,7 @@ description: 一日の終わりに、CoS が今日を振り返り、明日やる
 
 # Checkout
 
-- 記録の書き込みは、手順 7 の record の指示 1 つにまとめる。タスクは Beads（`bd`）にあり、`bd` は `~/cos/rules/beads.md` に従い、1 つずつ単独のコマンドで実行する。
+- 記録の書き込みは、手順 7 の record の指示 1 つにまとめる。タスクは Beads（`bd`）にあり、`bd` は `~/cos/rules/beads.md` の「呼び方」に従い、1 つずつ単独のコマンドで実行する。
 - 違反した規則を仕組みで塞ぐ Agent（correct）に委任するかと、その依頼の型は、`~/cos/rules/checkout.md` の「correct」の節にある。
 
 ## 手順
@@ -13,7 +13,7 @@ description: 一日の終わりに、CoS が今日を振り返り、明日やる
 1. 材料を集める。
    - 今日の journal と、`~/cos` の `git log --since='<今日の日付> 00:00'`。
    - `assignments.md`。
-   - 開いているタスクは `bd list --status open,in_progress,deferred --limit 0 --json`、判断待ちは `bd human list --status open --json`、今日閉じたタスクは `bd list --all --closed-after <今日の日付> --limit 0 --json`、今日作ったタスクは `bd list --all --created-after <今日の日付> --limit 0 --json`。
+   - 開いているタスクは `bd list --status open,in_progress,blocked,deferred --limit 0 --json`、判断待ちは `bd human list --status open --json`、今日閉じたタスクは `bd list --all --closed-after <今日の日付> --limit 0 --json`、今日作ったタスクは `bd list --all --created-after <今日の日付> --limit 0 --json`。
    - `herdr agent list` と、`assignments.md` の稼働中の各 Agent への `herdr agent get`。
    - 引数なしの `~/.config/claude/skills/karo/scripts/karo-check` を単独のコマンドで実行した出力。
 
@@ -27,7 +27,7 @@ description: 一日の終わりに、CoS が今日を振り返り、明日やる
 5. correct の候補を決め、候補があれば Agent に委任する。
    - `~/cos/rules/checkout.md` の「correct」の節の候補の決め方で、4 で違反とされた規則から候補を選ぶ。
    - ファイルか節がないとき、候補がないとき、`assignments.md` の稼働中に役割が `correct` の行があるときは、委任せず、その理由を Insights の報告に書く。
-   - 候補があれば、すべての候補を 1 つの Agent に渡す。`bd create` でタスクを作り（title は候補の規則、本文に standup のパス。`~/cos/rules/beads.md` の手順）、返った ID をタスク ID にして、節の依頼の型を埋めてブリーフにし、`karo:delegate` skill の「新しいタスクを委任する」の 2・3・4・6 で委任する。ブランチは節の形にする。その 5 の記録は、手順 7 の指示に入れる。
+   - 候補があれば、すべての候補を 1 つの Agent に渡す。`bd create` でタスクを作り（title は候補の規則、本文に standup のパス。`~/cos/rules/beads.md` の「タスクを進める」の 2）、返った ID をタスク ID にして、節の依頼の型を埋めてブリーフにし、`karo:delegate` skill の「新しいタスクを委任する」の 2・3・4・6 で委任する。ブランチは節の形にする。その 5 の記録は、手順 7 の指示に入れる。
 
    完了条件: `agent-ctl start` の JSON の `status` が `working` で、background の agent-report が走っているか、委任しなかった理由が手元にある。
 6. 下の「報告の項目」を短く報告する。各項目にはタスク ID を付ける。
@@ -49,7 +49,7 @@ description: 一日の終わりに、CoS が今日を振り返り、明日やる
 この順に並べる。
 
 - 今日終えたこと（今日 `closed` にしたタスクと取り込んだ作業）
-- 残ったこと（`in_progress` と `open` のタスクと、`working` の Agent。Herdr の状態をそのまま書く）
+- 残ったこと（`in_progress`・`blocked`・`open` のタスクと、`working` の Agent。Herdr の状態をそのまま書く）
 - 判断待ち（`bd human list` の decision の bead ごとに、問いと、本文の選択肢と推奨）
 - 明日やること（翌朝の `karo:checkin` で最初に扱う候補を、優先する順に）
 - 片付け（閉じた Agent、`assignments.md` から外した行、karo-check の問題と stale）
