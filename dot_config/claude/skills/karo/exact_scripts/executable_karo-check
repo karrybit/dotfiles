@@ -156,9 +156,11 @@ done < <(
   if (( ! scoped )); then
     fd -t f -e md -E "investigations/*/sources" -E rules -E AGENTS.md . -x awk "$wiki" {}
   else
+    # record runs this outside the sandbox, so a given path that is a symbolic link is not read through,
+    # as fd -t f leaves links out above
     files=()
     while IFS= read -r f; do
-      [[ -f $f && $f == *.md && $f != investigations/*/sources/* && $f != rules/* && $f != AGENTS.md ]] && files+=("$f")
+      [[ -f $f && ! -L $f && $f == *.md && $f != investigations/*/sources/* && $f != rules/* && $f != AGENTS.md ]] && files+=("$f")
     done < <(printf '%s' "$scope")
     (( ${#files[@]} )) && awk "$wiki" "${files[@]}"
   fi)

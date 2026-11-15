@@ -145,6 +145,7 @@ scoped=(
   'only: removed pending decision checks state.md|q-test0001 not pending in any task file|tasks/t-test0001.md|sed -i.bak "/^## 判断待ち/,\$d" tasks/t-test0001.md'
   'only: state.md change checks state.md|q-test0002 not pending in any task file|state.md|sed -i.bak "s/- q-test0001: 例/- q-test0001: 例 q-test0002/" state.md'
   'only: journal form in a given journal|journal line not normalized|journal/2026-01-01.md|sed -i.bak "s/t-test0001: /t-test0001・t-test0002:/" journal/2026-01-01.md'
+  'only: wiki link in a given file|wiki link, write a path link: \[\[demo\]\]|threads/t-test0001-demo.md|sed -i.bak "s#\[demo\](projects/demo.md)#[[demo]]#" threads/t-test0001-demo.md'
 )
 for c in "${scoped[@]}"; do
   name=${c%%|*}; rest=${c#*|}; want=${rest%%|*}; rest=${rest#*|}; paths=${rest%%|*}; cmd=${rest#*|}
@@ -156,6 +157,14 @@ for c in "${scoped[@]}"; do
     if [[ $code -eq 0 ]]; then pass "$name"; else fail "$name: exit $code: $out"; fi
   elif [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -q -- "$want"; then pass "$name"; else fail "$name: exit $code, want /$want/: $out"; fi
 done
+
+# record runs karo-check outside the sandbox, so a given path that is a symbolic link is not read
+# through: the wiki link check does not print a line of the file it points to.
+cp -R "$ok" "$tmp/linked"
+printf '[[secret]]\n' > "$tmp/outside.md"
+ln -s "$tmp/outside.md" "$tmp/linked/docs/link.md"
+out=$("$bin/karo-check" --only docs/link.md "$tmp/linked" 2>&1)
+if printf '%s\n' "$out" | rg -qF '[[secret]]'; then fail "only: a symbolic link is read through: $out"; else pass "only: a symbolic link is not read through"; fi
 
 # A copy of the real vault with one note's type broken must fail on that note and on nothing else.
 # cp keeps the file names byte for byte; tar on macOS rewrites them to NFD, which breaks the link paths.
