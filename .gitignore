@@ -1,2 +1,5 @@
 # Claude Code local permission settings
 .claude/settings.local.json
+
+# Python bytecode, written when a fixture or script is imported
+__pycache__/
