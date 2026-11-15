@@ -23,6 +23,13 @@ for each in "$name" "$@"; do
   git -C "$skill/../$each" archive "$ref" . \
     | tar -x -C "$out/skills/$each" --exclude=PROVENANCE.md
 done
+# A chezmoi source file executable_<name> deploys as an executable <name>.
+find "$out/skills" -type f -name 'executable_*' | while IFS= read -r file; do
+  base=$(basename "$file")
+  to=$(dirname "$file")/${base#executable_}
+  mv "$file" "$to"
+  chmod +x "$to"
+done
 commit=$(git -C "$skill" rev-parse --short "$ref")
 printf '{"name":"kit","version":"0.0.0+%s","description":"Tools"}\n' "$commit" \
   > "$out/.claude-plugin/plugin.json"
