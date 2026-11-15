@@ -1,0 +1,233 @@
+#!/usr/bin/env bash
+# Check the CoS records: first the general checks of karrybit's okf-lint against the schema (frontmatter,
+# place, lineage, path links, stale_after), then the checks that belong to the CoS structure (the forms of
+# dates, task IDs, task states, journal lines, and pending decisions; project and task vocabularies;
+# derived_from anchors; wiki links; old IDs; and state.md agreeing with the task files it is derived from).
+# usage: karo-check [--only <path>]... [<cos dir>]
+# Default: ~/cos (only its record folders get the CoS checks). The schema is <cos dir>/rules/frontmatter-schema.yaml.
+# --only limits the check to the given vault-relative paths (changed, added, or removed files; for a rename, both
+# paths). okf-lint gets the same paths; the CoS checks also read the notes naming a given path (derived_from),
+# and for a removed file, the notes listing it as a project or, for a task file, as a task. A changed state.md
+# or task file brings in the state.md checks. A file brought in is checked in full.
+# Prints "<path><TAB><problem>" per problem, okf-lint's and its own, and exits 1 when any is found, or stops
+# with okf-lint's code when okf-lint finds an argument or schema error.
+# Notes past their stale_after are printed as "<path><TAB>stale since ...", and task IDs in a thread's body that its
+# tasks lacks as "<path><TAB>task in body not in tasks: ..."; neither fails the check.
+set -uo pipefail
+only=()
+while [[ ${1:-} == --only ]]; do only+=("${2#./}"); shift 2; done
+vault=${1:-$HOME/cos}
+lint=$HOME/.config/claude/skills/karrybit/skills/okf-schema-check/scripts/okf-lint
+[[ -x $lint ]] || { echo "karo-check: okf-lint not found at $lint; install the karrybit okf-schema-check skill" >&2; exit 2; }
+cd "$vault" || exit 2
+SCHEMA=$PWD/rules/frontmatter-schema.yaml
+[[ -f $SCHEMA ]] || { echo "karo-check: no schema at $SCHEMA" >&2; exit 2; }
+problems=0
+stale=0
+untracked=0
+report() { printf '%s\t%s\n' "$1" "$2"; problems=$((problems+1)); }
+
+# The general checks. okf-lint's lines are passed on and counted with the CoS checks' lines; its own count
+# lines are dropped, and on an argument or schema error its output goes to stderr and nothing is counted.
+lint_args=()
+for p in ${only[@]+"${only[@]}"}; do lint_args+=(--only "$p"); done
+lint_out=$("$lint" ${lint_args[@]+"${lint_args[@]}"} "$SCHEMA" . 2>&1); code=$?
+(( code > 1 )) && { printf '%s\n' "$lint_out" >&2; exit "$code"; }
+while IFS= read -r l; do
+  if [[ $l == *$'\t'* ]]; then
+    printf '%s\n' "$l"
+    if [[ ${l#*$'\t'} == "stale since "* ]]; then stale=$((stale+1)); else problems=$((problems+1)); fi
+  elif [[ -n $l && ! $l =~ ^okf-lint:\ [0-9]+\ (stale\ note|problem)\(s\)$ ]]; then
+    printf '%s\n' "$l" >&2
+  fi
+done < <(printf '%s\n' "$lint_out")
+
+# The CoS checks.
+# Frontmatter values are split on these two control characters, which yq replaces in every value it
+# prints; values never reach arithmetic, word splitting, or globbing.
+FS=$'\x1f' LS=$'\x1e'
+export FS LS
+excl=$(yq '.exclude | join("|")' "$SCHEMA")
+types=$'\n'$(yq '.types | keys | .[]' "$SCHEMA")$'\n'
+folders=(journal decisions projects investigations docs threads tasks)
+existing=()
+for d in "${folders[@]}"; do [[ -d $d ]] && existing+=("$d"); done
+vocab=" $(fd -d 1 -t f -e md . projects | sed 's#.*/##; s#\.md$##' | sort -u | tr '\n' ' ')"
+known_tasks=" $(fd -d 1 -t f -e md . tasks 2>/dev/null | sed 's#.*/##; s#\.md$##' | sort -u | tr '\n' ' ')"
+
+# With --only, $scope holds the files to check and $changed the given paths, one per line between newlines.
+scoped=0; scope=$'\n'; changed=$'\n'
+add_scope() { local f; while IFS= read -r f; do scope+="${f#./}"$'\n'; done; }
+in_scope() { (( ! scoped )) || [[ $scope == *$'\n'"${1#./}"$'\n'* ]]; }
+is_changed() { local p; for p in "$@"; do [[ $changed == *$'\n'"$p"$'\n'* ]] && return 0; done; return 1; }
+if (( ${#only[@]} )); then
+  scoped=1
+  listed=()
+  for p in "${only[@]}"; do
+    changed+="$p"$'\n'; scope+="$p"$'\n'
+    [[ -e $p ]] && continue
+    b=${p##*/}; b=${b%.md}
+    [[ $p == projects/*.md || $p == tasks/*.md ]] && listed+=(-e "  - $b")
+  done
+  # notes listing a given path as a derived_from item (a list item anywhere in the file: a superset)
+  alt=$(printf '%s\n' "${only[@]}" | sed 's/[][\.*^$+?(){}|]/\\&/g' | paste -sd '|' -)
+  # add_scope reads a process substitution, not a pipe, so that it runs in this shell and keeps $scope
+  add_scope < <(rg -l -- "^\s*- ['\"]?($alt)(#.*)?['\"]?\s*$" ${existing[@]+"${existing[@]}"} 2>/dev/null)
+  # for a removed project or task file, notes listing it as a project or as a task
+  (( ${#listed[@]} )) && add_scope < <(rg -l -F -x "${listed[@]}" ${existing[@]+"${existing[@]}"} 2>/dev/null)
+fi
+
+# Per note, one yq call prints the CoS frontmatter problems, then one "@info" line with the fields the later
+# checks need ($FS between fields, $LS between list items; control characters in values become spaces).
+# yq emits a string literal even after a failing select, so each check is an if/else-null.
+expr='
+  . as $d
+  | ([
+      (if ($d | has("date")) and (($d.date | tostring | test("^\d{4}-\d{2}-\d{2}$")) | not) then "date is not YYYY-MM-DD" else null end),
+      (($d.tasks // [])[] | (if (tostring | test("^(t-[a-z0-9]{8}|[A-Z][A-Z0-9]+-\d+)$")) | not then "bad task id: " + tostring else null end)),
+      (if ($d | has("state")) and (($d.state | tostring | test("^(backlog|ready|delegated|in-review|changes-requested|approved|done|dropped)$")) | not) then "bad state" else null end)
+    ] | map(select(. != null)) | .[] | sub("[[:cntrl:]]"; " ")),
+    ("@info" + strenv(FS) + ([
+      ((.type // "") | tostring | sub("[[:cntrl:]]"; " ")),
+      ((.projects // []) | map(tostring | sub("[[:cntrl:]]"; " ")) | join(strenv(LS))),
+      ((.tasks // []) | map(tostring | sub("[[:cntrl:]]"; " ")) | join(strenv(LS))),
+      ((.derived_from // []) | map(tostring | sub("[[:cntrl:]]"; " ")) | join(strenv(LS)))
+    ] | join(strenv(FS))))'
+lint_out=$'\n'$lint_out$'\n'
+while IFS= read -r f; do
+  # okf-lint reports frontmatter it cannot read; every .md in a record folder is a note, which okf-lint
+  # leaves out when it has no frontmatter and sits where no type lives
+  first=; IFS= read -r first < "$f"
+  if [[ $first != --- ]]; then
+    [[ $lint_out == *$'\n'"$f"$'\tno frontmatter\n'* ]] || report "$f" "no frontmatter"
+    continue
+  fi
+  out=$(yq --front-matter=extract "$expr" "$f" 2>/dev/null) || continue
+  # Process substitution, not a here-string: a here-string needs a temporary file, and when the
+  # sandbox refuses it the loop is skipped silently and the problems go uncounted.
+  info=
+  while IFS= read -r p; do
+    [[ -z $p ]] && continue
+    if [[ $p == "@info$FS"* ]]; then info=${p#"@info$FS"}; else report "$f" "$p"; fi
+  done < <(printf '%s\n' "$out")
+  [[ -z $info ]] && continue
+  IFS=$FS read -r ty projects tasks derived < <(printf '%s\n' "$info")
+  # okf-lint reports a missing or unknown type
+  [[ -n $ty && $types == *$'\n'"$ty"$'\n'* ]] || continue
+  # projects come from the project vocabulary (projects/<name>.md) or are 'all'
+  IFS=$LS read -r -a ps < <(printf '%s\n' "$projects")
+  for p in ${ps[@]+"${ps[@]}"}; do
+    [[ $p == all || $vocab == *" $p "* ]] || report "$f" "unknown project: $p"
+  done
+  # task IDs have their task files
+  IFS=$LS read -r -a ts < <(printf '%s\n' "$tasks")
+  for t in ${ts[@]+"${ts[@]}"}; do
+    [[ $t =~ ^t-[a-z0-9]{8}$ ]] || continue
+    [[ $known_tasks == *" $t "* ]] || report "$f" "task without tasks/$t.md: $t"
+  done
+  # a task file is named after its own task, the first of its tasks
+  [[ $ty == Task && ${ts[0]-} != "$(basename "$f" .md)" ]] && report "$f" "file name is not its first task: ${ts[0]-}"
+  # a derived_from anchor is a journal line's HH:MM or a thread heading's time (okf-lint reports a missing file)
+  IFS=$LS read -r -a ds < <(printf '%s\n' "$derived")
+  for d in ${ds[@]+"${ds[@]}"}; do
+    path=${d%%#*}; anchor=${d#"$path"}; anchor=${anchor#\#}
+    [[ -n $anchor && -f $path ]] || continue
+    anchor=$(printf '%s' "$anchor" | sed 's/[][\.*^$+?(){}|]/\\&/g')
+    rg -q -- "^(- |### .* · (\d{4}-\d{2}-\d{2} )?)${anchor}( |$)" "$path" || report "$f" "derived_from anchor not found: $d"
+  done
+  # a thread's body names only its own tasks; another ID is a derived task missing from tasks, a mention, or a mixed topic
+  if [[ $ty == Thread ]]; then
+    for t in $(awk 'NR == 1 && /^---$/ {fm = 1; next} fm && /^---$/ {fm = 0; next} !fm' "$f" | rg -o '\bt-[a-z0-9]{8}\b' | sort -u); do
+      [[ $LS$tasks$LS == *"$LS$t$LS"* ]] && continue
+      printf '%s\ttask in body not in tasks: %s\n' "$f" "$t"; untracked=$((untracked+1))
+    done
+  fi
+done < <(fd -t f -e md . ${existing[@]+"${existing[@]}"} | rg -v "$excl" | sort | while IFS= read -r f; do in_scope "$f" && printf '%s\n' "$f"; done)
+
+# A link to a note is a path link, [label](<folder>/<file>.md) with the path from the vault (okf-lint checks
+# that it resolves); a [[...]] wiki link is reported (fenced code and inline code are skipped)
+while IFS=: read -r f l; do
+  f=${f#./}
+  while IFS= read -r w; do
+    [[ -n $w ]] && report "$f" "wiki link, write a path link: $w"
+  done < <(printf '%s' "$l" | rg -o '\[\[[^]]*\]\]')
+done < <(
+  wiki='FNR == 1 {f = 0} /^```/{f=!f; next} !f{gsub(/`[^`]*`/, ""); if (/\[\[/) print FILENAME ":" $0}'
+  if (( ! scoped )); then
+    fd -t f -e md -E "investigations/*/sources" -E rules -E AGENTS.md . -x awk "$wiki" {}
+  else
+    files=()
+    while IFS= read -r f; do
+      [[ -f $f && $f == *.md && $f != investigations/*/sources/* && $f != rules/* && $f != AGENTS.md ]] && files+=("$f")
+    done < <(printf '%s' "$scope")
+    (( ${#files[@]} )) && awk "$wiki" "${files[@]}"
+  fi)
+
+# The per-file checks below read every task, day journal (journal/YYYY-MM-DD.md; the standups and meeting
+# notes beside them are not journal lines), and state file, or with --only the given ones that exist.
+day='^journal/[0-9]{4}-[0-9]{2}-[0-9]{2}\.md$'
+journal=(); ids=(); task_files=()
+if (( ! scoped )); then
+  [[ -d journal ]] && while IFS= read -r p; do journal+=("$p"); done < <(fd -d 1 -t f -e md . journal | rg "$day" | sort)
+  [[ -d tasks ]] && while IFS= read -r p; do task_files+=("$p"); done < <(fd -d 1 -t f -e md . tasks | sort)
+  ids=(tasks state.md ${journal[@]+"${journal[@]}"})
+else
+  for p in "${only[@]}"; do
+    [[ -f $p ]] || continue
+    [[ $p =~ $day ]] && { journal+=("$p"); ids+=("$p"); continue; }
+    case $p in tasks/*.md) task_files+=("$p"); ids+=("$p") ;; state.md) ids+=("$p") ;; esac
+  done
+fi
+
+# A task file's pending decisions sit in its last section, "## 判断待ち", one line each in the form below;
+# the section is left out when there are none, and a done or dropped task has none.
+# awk runs with LC_ALL=C: under the locale collation it compares by, two different Japanese headings can be equal.
+pending='^- q-[a-z0-9]{8}（起票 [0-9]{4}-[0-9]{2}-[0-9]{2}）: .+ 選択肢と推奨: .+$'
+(( ${#task_files[@]} )) && while IFS= read -r l; do report "${l%%$'\t'*}" "${l#*$'\t'}"; done < <(
+  LC_ALL=C awk -v re="$pending" '
+    function done_file() {
+      if (sec && !n) print FILENAME_ "\t" "empty 判断待ち section"
+      if (n && closed) print FILENAME_ "\t" "done or dropped task with pending decisions"
+    }
+    FNR == 1 { if (NR > 1) done_file(); FILENAME_ = FILENAME; fm = ($0 == "---"); sec = 0; seen = 0; n = 0; closed = 0; next }
+    fm && /^---$/ { fm = 0; next }
+    fm { if ($0 ~ /^state: (done|dropped)$/) closed = 1; next }
+    /^## / {
+      if (sec) print FILENAME "\t" "判断待ち is not the last section"
+      sec = ($0 == "## 判断待ち")
+      if (sec && seen++) print FILENAME "\t" "two 判断待ち sections"
+      next
+    }
+    sec && NF { if ($0 ~ re) n++; else print FILENAME "\t" "pending decision not in the form - q-ID（起票 YYYY-MM-DD）: 問い 選択肢と推奨: …: " $0 }
+    END { if (NR) done_file() }' "${task_files[@]}")
+
+# journal lines keep the normalized form: time, kind, comma-separated targets
+if (( ${#journal[@]} )); then
+  while IFS= read -r l; do report "${l%%:*}" "journal line not normalized: ${l#*:*:}"; done < <(rg -n --with-filename --no-heading '^- ' "${journal[@]}" | rg -v '^[^:]+:\d+:- \d{2}:\d{2} \[(delegate|report|review|decision|ask|close|note)\] [^:/・]+: ')
+fi
+
+# state.md is derived: its q-IDs are pending in task files, every pending q-ID is in state.md,
+# its task IDs are not done or dropped, and every pending item carries its q-ID
+if [[ -f state.md ]] && { (( ! scoped )) || is_changed state.md || [[ $changed == *$'\n'tasks/* ]]; }; then
+  open_q=" $(rg -o --no-filename '^- (q-[a-z0-9]{8})（' -r '$1' tasks 2>/dev/null | sort | tr '\n' ' ')"
+  for q in $(printf '%s\n' $open_q | uniq -d); do report state.md "$q pending in two task files"; done
+  for q in $(rg -o '\bq-[a-z0-9]{8}\b' state.md | sort -u); do [[ $open_q == *" $q "* ]] || report state.md "$q not pending in any task file"; done
+  state=$(<state.md)
+  for q in $(printf '%s\n' $open_q | uniq); do [[ $state == *"$q"* ]] || report state.md "pending $q missing from state.md"; done
+  closed=" $(rg -l '^state: (done|dropped)$' tasks 2>/dev/null | sed 's#.*/##; s#\.md$##' | tr '\n' ' ')"
+  for t in $(rg -o '\bt-[a-z0-9]{8}\b' state.md | sort -u); do
+    [[ $closed == *" $t "* ]] && report state.md "$t is done or dropped in tasks/$t.md"
+  done
+  while IFS= read -r l; do report state.md "pending item without q-ID: $l"; done < <(sed -n '/^## 判断待ち/,/^## /p' state.md | rg '^- ' | rg -v '\bq-[a-z0-9]{8}\b')
+fi
+
+# task and pending IDs are t- or q- and eight letters or digits; t or q with three digits, or with 0 and
+# five more, is an old form. assignments.md is left out because running agents keep their old Herdr
+# names, and cos/ and an old ID name an old branch.
+(( ${#ids[@]} )) && while IFS= read -r l; do report "${l%%:*}" "old ID, use t- or q- and eight letters or digits: ${l##*:}"; done < <(
+  rg -n -o --with-filename --pcre2 '(?<![A-Za-z0-9-])(?<!cos/)[tq](0\d{5}|\d{3})(?![0-9])' "${ids[@]}" 2>/dev/null | sort -u)
+
+echo "karo-check: $stale stale note(s)" >&2
+echo "karo-check: $untracked task(s) in thread bodies not in tasks" >&2
+echo "karo-check: $problems problem(s)" >&2
+[[ $problems -eq 0 ]]
