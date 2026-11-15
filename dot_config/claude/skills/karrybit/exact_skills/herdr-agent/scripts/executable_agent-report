@@ -3,14 +3,22 @@
 # agent. Reading the transcript instead of the screen returns the report
 # alone, without the rest of the terminal output.
 #
-# --wait first waits with "herdr agent wait" until the agent is idle, done,
-# blocked or unknown (an agent whose pane someone is watching ends idle, not
-# done; one whose pane is gone is unknown), then prints "status: <state>" and,
-# for idle or done, the report. When herdr agent get fails or the transcript
-# cannot be read it prints "status: error" and exits 1; a wait that fails
-# returns at once and shows the state as it is (working). Run in the
-# background after the agent is seen working, it hands the caller the outcome
-# in the one completion notice.
+# --wait waits until the agent has finished: it is idle or done and its last
+# message holds a "## 変更の要約" line, the first heading of a
+# karrybit:completion-report report. It then prints "status: <state>" and the
+# report. An idle or done agent without that line has only paused (waiting on
+# its own background work, or asking something), so --wait waits for it to
+# work again and then for its next stop. When it does not work again within
+# AGENT_REPORT_NO_REPORT_MS milliseconds (default 30 minutes), --wait reads
+# the last message once more and, still without the heading, prints
+# "status: no-report" and that message.
+#
+# A blocked or unknown agent (one whose pane is gone) prints the state alone;
+# an agent whose pane someone is watching ends idle, not done. When herdr
+# agent get fails or the transcript cannot be read it prints "status: error"
+# and exits 1; a wait that fails returns at once and shows the state as it is
+# (working). Run in the background after the agent is seen working, it hands
+# the caller the outcome in the one completion notice.
 set -eu
 
 usage() {
@@ -43,21 +51,34 @@ if [ -z "$wait" ]; then
   report
   exit 0
 fi
-herdr agent wait "$1" --until idle --until 'done' --until blocked --until unknown >/dev/null || true
-if ! agent=$(herdr agent get "$1"); then
-  echo "status: error"
-  exit 1
-fi
-status=$(printf '%s' "$agent" | jq -r .result.agent.agent_status)
-case $status in
-  idle | done)
-    # The report is read first, so a missing transcript is an error line, not a report.
-    if ! text=$(report 2>&1); then
-      echo "status: error"
-      printf '%s\n' "$text"
-      exit 1
-    fi
+stalled=
+while :; do
+  herdr agent wait "$1" --until idle --until 'done' --until blocked --until unknown >/dev/null || true
+  if ! agent=$(herdr agent get "$1"); then
+    echo "status: error"
+    exit 1
+  fi
+  status=$(printf '%s' "$agent" | jq -r .result.agent.agent_status)
+  case $status in
+    idle | done) ;;
+    *) echo "status: $status"; exit 0 ;;
+  esac
+  # The report is read first, so a missing transcript is an error line, not a report.
+  if ! text=$(report 2>&1); then
+    echo "status: error"
+    printf '%s\n' "$text"
+    exit 1
+  fi
+  if printf '%s\n' "$text" | grep -qxF '## 変更の要約'; then
     printf 'status: %s\n%s\n' "$status" "$text"
-    ;;
-  *) echo "status: $status" ;;
-esac
+    exit 0
+  fi
+  if [ -n "$stalled" ]; then
+    printf 'status: no-report\n%s\n' "$text"
+    exit 0
+  fi
+  # A resume that ends before this wait starts is never seen as working, so
+  # a failed wait leads to one more read rather than straight to no-report.
+  herdr agent wait "$1" --until working --until blocked --until unknown \
+    --timeout "${AGENT_REPORT_NO_REPORT_MS:-1800000}" >/dev/null || stalled=1
+done
