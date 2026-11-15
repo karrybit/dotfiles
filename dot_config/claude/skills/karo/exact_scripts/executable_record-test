@@ -280,6 +280,63 @@ EOF
 git -C "$v" config --unset core.alternateRefsCommand
 if [[ $code -eq 1 && $last == *"core.alternaterefscommand"* ]] && clean; then pass "a key outside the allowed set is refused"; else fail "allowlist: exit $code: $out"; fi
 
+# extensions.worktreeConfig would make git read .git/config.worktree, which the sandbox can write.
+git -C "$v" config extensions.worktreeConfig true
+run <<'EOF'
+書き込み指示
+commit 件名: t-test0001: blocked by worktree config
+commit 本文:
+~~~~
+why
+~~~~
+追記: projects/demo.md
+~~~~
+x
+~~~~
+EOF
+git -C "$v" config --unset extensions.worktreeConfig
+if [[ $code -eq 1 && $last == *"extensions.worktreeconfig"* ]] && clean; then pass "extensions.worktreeConfig is refused"; else fail "worktreeConfig: exit $code: $out"; fi
+
+# Every git record runs names the common folder, so a commondir file planted after the config check
+# (here with the check bypassed, as if the file came between the check and the git) is not followed.
+toctou=$(PYTHONDONTWRITEBYTECODE=1 python3 - "$bin/record" "$v/.git/commondir" "$tmp/other-git" "$tmp/pwned" <<'PY'
+import importlib.machinery, importlib.util, os, sys
+loader = importlib.machinery.SourceFileLoader("record", sys.argv[1])
+record = importlib.util.module_from_spec(importlib.util.spec_from_loader("record", loader))
+loader.exec_module(record)
+record.check_git_config()
+record.check_git_config = lambda: None
+with open(sys.argv[2], "w") as f:
+    f.write(sys.argv[3] + "\n")
+record.git("hash-object", "projects/demo.md")
+print("followed" if os.path.exists(sys.argv[4]) else "not followed")
+PY
+)
+rm "$v/.git/commondir"
+if [[ $toctou == "not followed" ]]; then pass "a commondir file planted after the check is not followed"; else fail "commondir after the check: $toctou"; fi
+rm -f "$tmp/pwned"
+
+# crit's daemon outlives record and runs git long after the check, so it gets the same environment: a
+# stub crit whose daemon plants a commondir file once it is up, then runs git, does not reach the filter.
+mkdir -p "$tmp/fakecrit"
+cat > "$tmp/fakecrit/crit" <<EOF
+#!/bin/sh
+case \$1 in
+  status) echo '{"daemon": {"running": true}, "sessions": [{"args": ["."]}]}' ;;
+  .) printf '%s\n' "$tmp/other-git" > .git/commondir; git hash-object projects/demo.md >/dev/null 2>&1; : > "$tmp/fakecrit/done" ;;
+esac
+EOF
+chmod +x "$tmp/fakecrit/crit"
+out=$(PATH=$tmp/fakecrit:$PATH "$bin/record" --restart-crit 2>&1)
+for _ in $(seq 50); do [[ -e $tmp/fakecrit/done ]] && break; sleep 0.1; done
+ran=no; [[ -e $tmp/pwned ]] && ran=yes
+rm -f "$v/.git/commondir" "$tmp/pwned"
+if [[ $out == "OK crit: 起動し直した" && -e $tmp/fakecrit/done && $ran == no ]]; then
+  pass "crit's daemon does not follow a commondir file planted after it started"
+else
+  fail "crit daemon env: $out, daemon ran: $([[ -e $tmp/fakecrit/done ]] && echo yes || echo no), filter ran: $ran"
+fi
+
 # The new-then-append ordering inside one instruction: the diff --check case above fails only on the
 # trailing space, so the same items without it must succeed. Its 解決 lines, naming the copies of the
 # failed instructions, clear those entries.
@@ -446,6 +503,25 @@ else
   fail "hard link: exit $code: $last / $hard / elsewhere: $(cat "$tmp/elsewhere/h.md")"
 fi
 rm "$v/journal/h.md"
+
+# git add reads what 取り込み stages, so a hard link to a file elsewhere, given or under a given folder,
+# and a symbolic link under a given folder are NGs, and nothing is committed.
+take_in() { printf '書き込み指示\ncommit 件名: t-test0001: take in %s\ncommit 本文:\n~~~~\nwhy\n~~~~\n取り込み: %s\n' "$1" "$1"; }
+printf 'secret\n' > "$tmp/elsewhere/t.md"
+before=$(head_sha)
+ln "$tmp/elsewhere/t.md" "$v/investigations/demo/sources/hard.md"
+run < <(take_in investigations/demo/sources/hard.md); code1=$code; last1=$last
+run < <(take_in investigations/demo/sources); code2=$code; last2=$last
+rm "$v/investigations/demo/sources/hard.md"
+ln -s "$tmp/elsewhere/t.md" "$v/investigations/demo/sources/link.md"
+run < <(take_in investigations/demo/sources); code3=$code; last3=$last
+rm "$v/investigations/demo/sources/link.md"
+if [[ $code1 -eq 1 && $last1 == *"ハードリンクがある"*"sources/hard.md" && $code2 -eq 1 && $last2 == *"ハードリンクがある"*"sources/hard.md" \
+      && $code3 -eq 1 && $last3 == *"シンボリックリンクを通る"*"sources/link.md" && $(head_sha) == "$before" ]] && clean; then
+  pass "取り込み refuses a hard link and a symbolic link"
+else
+  fail "取り込み links: $last1 / $last2 / $last3"
+fi
 
 # rumdl tidies what record wrote: trailing spaces would otherwise fail diff --check.
 printf '書き込み指示\ncommit 件名: t-test0001: trailing spaces\ncommit 本文:\n~~~~\nwhy\n~~~~\n追記: journal/2026-01-01.md\n~~~~\n- 13:00 [ask] t-test0001: 行末に空白（会話 2026-01-01 13:00）  \n~~~~\n' > "$tmp/instr"
