@@ -5,7 +5,7 @@ Behavior cases for comparing versions of the `skill-eval` skill. Run them with t
 ## Files
 
 - `plugin-eval/version-commands`: the user asks for the commands that compare a skill at `abc1234` with `HEAD`, without running them.
-  - `wrap-both`: a `skill-wrap` per ref.
+  - `wrap-both`: a `skill-wrap` per ref, with any form of the skill directory.
   - `ablation-none-each`: at least two `claude plugin eval` lines with `--ablation none`.
   - `cost-ceiling-each`: no `claude plugin eval` line without `--max-cost-usd`.
   - `dir-outside`: wrapper and result paths are outside the repository and avoid `eval`, `test`, and `scratchpad`.
