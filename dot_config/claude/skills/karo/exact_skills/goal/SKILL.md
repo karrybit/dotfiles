@@ -1,6 +1,6 @@
 ---
-name: delegate-goal
-description: 'オーナーが渡した goal を Agent に委任して、goal ごとに別の Agent のセッションの /goal を動かす手順。完了の条件は karrybit:goal に書かせる。オーナーが /karo:delegate-goal を打ったとき、「goal: 〇〇」の形で完了まで続けてほしい作業を渡したときに、karrybit:goal の代わりに使う（この skill が karrybit:goal を呼ぶ）。'
+name: goal
+description: 'オーナーが渡した goal を Agent に委任して、goal ごとに別の Agent のセッションの /goal を動かす手順。完了の条件は karrybit:goal に書かせる。オーナーが /karo:goal を打ったとき、「goal: 〇〇」の形で完了まで続けてほしい作業を渡したときに、karrybit:goal の代わりに使う（この skill が karrybit:goal を呼ぶ）。'
 ---
 
 # goal を Agent に渡す

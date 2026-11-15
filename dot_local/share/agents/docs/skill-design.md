@@ -53,8 +53,6 @@ a skill at all is in `instruction-maintenance.md`.
   `${CLAUDE_SKILL_DIR}`, since permission rules and `sandbox.excludedCommands`
   match the command text as written (`crit-open` in the `crit` skill); call
   any other script there as `${CLAUDE_SKILL_DIR}/scripts/<name>`.
-- Give a skill a name that no other skill or script shares, including the
-  scripts that will move into its `scripts/`.
 
 ## Placement
 

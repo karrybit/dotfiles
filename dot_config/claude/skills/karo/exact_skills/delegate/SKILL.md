@@ -53,7 +53,7 @@ description: Herdr 上の Agent に仕事を委任する手順。オーナーが
    完了条件: 8 項目がすべて埋まり、受け入れ条件が完了か未完了かを判定できる。
 2. ブリーフを、このセッションの scratchpad（環境の説明にあるフォルダ）の `briefs/<タスクID>-brief.md` に書く。
    完了条件: ブリーフのファイルがある。
-3. `<scripts>/agent-ctl start <タスクID> <ブリーフ> <場所>` を単独で実行する（`<場所>` は「作業場所と取り込み」）。goal を渡すとき（`karo:delegate-goal` skill）は、`start` のすぐあとに `--goal "<完了の条件>"` を付ける。`status` が `working` でなければ、`karrybit:herdr-agent` の「止まった Agent に答える」に進み、答えてよいかは AGENTS.md の「Herdr の操作」で決める。
+3. `<scripts>/agent-ctl start <タスクID> <ブリーフ> <場所>` を単独で実行する（`<場所>` は「作業場所と取り込み」）。goal を渡すとき（`karo:goal` skill）は、`start` のすぐあとに `--goal "<完了の条件>"` を付ける。`status` が `working` でなければ、`karrybit:herdr-agent` の「止まった Agent に答える」に進み、答えてよいかは AGENTS.md の「Herdr の操作」で決める。
    完了条件: JSON の `status` が `working`。goal を渡したときは、`goal` も `sent`。
 4. 記録の指示を 1 つにまとめて record で書く。タスクのファイル（依頼を受けたときに作ったファイル。なければ作る）の `state` を `delegated` に、`agent` を JSON の `name` にし、`assignments.md` の稼働中に `行を足す` で行（Agent 名、タスク、役割、Herdr workspace、pane、worktree は JSON の `place`、branch、開始日）を足し、journal に `[delegate]` の行（workspace と、ブランチか、ブランチを作らないときは作業するチェックアウトとそのブランチ）を書く。
    完了条件: record が `queued` を出した。

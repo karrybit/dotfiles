@@ -1,5 +1,5 @@
 ---
-name: okf-schema-check
+name: okf-lint
 description: OKF（Open Knowledge Format）のフロントマターを持つ Markdown のノートのフォルダを、呼び出し側が渡す schema（YAML）に照らして確かめる scripts/okf-lint と手順。ノートを書いた・動かした・消したあとに確かめるとき、schema に合わないノートやぶら下がった参照の一覧がほしいときに使う。
 ---
 

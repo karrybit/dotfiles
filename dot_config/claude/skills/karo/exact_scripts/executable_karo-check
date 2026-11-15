@@ -17,8 +17,8 @@ set -uo pipefail
 only=()
 while [[ ${1:-} == --only ]]; do only+=("${2#./}"); shift 2; done
 vault=${1:-$HOME/cos}
-lint=$HOME/.config/claude/skills/karrybit/skills/okf-schema-check/scripts/okf-lint
-[[ -x $lint ]] || { echo "karo-check: okf-lint not found at $lint; install the karrybit okf-schema-check skill" >&2; exit 2; }
+lint=$HOME/.config/claude/skills/karrybit/skills/okf-lint/scripts/okf-lint
+[[ -x $lint ]] || { echo "karo-check: okf-lint not found at $lint; install the karrybit okf-lint skill" >&2; exit 2; }
 cd "$vault" || exit 2
 SCHEMA=$PWD/rules/frontmatter-schema.yaml
 [[ -f $SCHEMA ]] || { echo "karo-check: no schema at $SCHEMA" >&2; exit 2; }

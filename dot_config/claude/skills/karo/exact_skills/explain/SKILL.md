@@ -1,5 +1,5 @@
 ---
-name: docs-explain
+name: explain
 description: '~/cos/docs/ に控える HTML の解説の手順。版を探して決め、作る部分は karrybit:explain に cos の書き先と控えの規則を渡して任せ、record で控える。オーナーが資料・リポジトリ・仕組みの解説を HTML で頼んだとき、前の解説を開きたいとき、作り直しを頼んだときに、karrybit:explain の代わりに使う（この skill が karrybit:explain を呼ぶ）。'
 ---
 
