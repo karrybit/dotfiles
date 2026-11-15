@@ -563,9 +563,9 @@ jq -n --argjson shell "$idle_shell" '{own: "wO", workspaces: [{workspace_id: "wO
 state() { jq "$@" "$FAKE_STATE" > "$FAKE_STATE.new" && mv "$FAKE_STATE.new" "$FAKE_STATE"; }
 pl=$tmp/ledger-pr
 pr_env=(PATH="$tmp/fakepr:$PATH" FAKE_HERDR_WORKTREES="$hw" HERDR_AGENT_TEST_LEDGER="$pl" HERDR_PANE_ID=wO:p1)
-# pr_repo <name>: a repository with a remote, main pushed, and *.local and .claude/.cc-writes/ ignored.
+# pr_repo <name>: a repository with a remote, main pushed, and *.local and **/.claude/.cc-writes/ ignored.
 pr_repo() {
-  g init -q --bare "$tmp/$1-remote.git" && g init -q -b main "$tmp/$1" && printf '*.local\n.claude/.cc-writes/\n' > "$tmp/$1/.gitignore" &&
+  g init -q --bare "$tmp/$1-remote.git" && g init -q -b main "$tmp/$1" && printf '*.local\n**/.claude/.cc-writes/\n' > "$tmp/$1/.gitignore" &&
     g -C "$tmp/$1" add -A && g -C "$tmp/$1" commit -q -m init && g -C "$tmp/$1" remote add origin "$tmp/$1-remote.git" &&
     g -C "$tmp/$1" push -q origin main || exit 2
 }
@@ -679,6 +679,44 @@ if pr_start pr-cc-writes ac0210-test; then
     pass "herdr-worktree: with other ignored files, only those are listed, not .claude/.cc-writes/"
   else
     fail "herdr-worktree .cc-writes: exit $code: $out: $(cat "$FAKE_LOG")"
+  fi
+fi
+
+# An empty .cc-writes/ deeper in does not stop close; one with a file, or another ignored file beside
+# an empty one, still stops it.
+nested=.claude/skills/demo/skills/.claude/.cc-writes
+pr_repo pr-nested-empty
+if pr_start pr-nested-empty ac0211-test; then
+  g -C "$wt" push -q origin feat/pr-nested-empty
+  mkdir -p "$wt/$nested"
+  pr_close ac0211-test
+  if [[ $code -eq 0 && ! -d $wt ]]; then
+    pass "herdr-worktree: an empty .cc-writes/ deeper in does not stop it"
+  else
+    fail "herdr-worktree empty nested .cc-writes: exit $code: $out: $(cat "$FAKE_LOG")"
+  fi
+fi
+pr_repo pr-nested-file
+if pr_start pr-nested-file ac0212-test; then
+  g -C "$wt" push -q origin feat/pr-nested-file
+  mkdir -p "$wt/$nested" && touch "$wt/$nested/a"
+  pr_close ac0212-test
+  if [[ $code -eq 1 && $out == *"has ignored files that removing it would delete: .claude/" && -f $wt/$nested/a && ! -s $FAKE_LOG ]]; then
+    pass "herdr-worktree: a file in a .cc-writes/ deeper in stops it"
+  else
+    fail "herdr-worktree nested .cc-writes with a file: exit $code: $out: $(cat "$FAKE_LOG")"
+  fi
+fi
+pr_repo pr-nested-other
+if pr_start pr-nested-other ac0213-test; then
+  g -C "$wt" push -q origin feat/pr-nested-other
+  printf 'secret\n' > "$wt/.env.local"
+  mkdir -p "$wt/$nested"
+  pr_close ac0213-test
+  if [[ $code -eq 1 && $out == *"has ignored files that removing it would delete: .env.local" && -f $wt/.env.local && ! -s $FAKE_LOG ]]; then
+    pass "herdr-worktree: another ignored file beside an empty .cc-writes/ deeper in stops it"
+  else
+    fail "herdr-worktree nested .cc-writes and another file: exit $code: $out: $(cat "$FAKE_LOG")"
   fi
 fi
 

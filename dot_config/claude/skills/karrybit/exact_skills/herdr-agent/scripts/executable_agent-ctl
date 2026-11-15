@@ -378,6 +378,9 @@ close_workspace() {
     if [ -d "$place/.claude" ] && [ ! -L "$place/.claude" ]; then
       rm -rf -- "$place/.claude/.cc-writes"
     fi
+    # One deeper in, such as under a skill's own .claude/, goes only when it
+    # is empty. The folder it leaves empty is not ignored, so it is not listed.
+    find "$place" -type d -name .cc-writes -empty -exec rmdir -- {} +
     ignored=$(safe_git "$place" -c core.quotePath=false ls-files --others --ignored --exclude-standard --directory)
     [ -z "$ignored" ] || stop "$place has ignored files that removing it would delete: $(printf '%s\n' "$ignored" |
       awk 'd != "" && index($0, d) == 1 { next } /\/$/ { d = $0 } { print }' | paste -sd ' ' -)"
