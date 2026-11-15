@@ -28,6 +28,13 @@ directory.
 | `--output-dir` | Writes `aggregate-result.json` and the HTML report there instead of into the plugin's eval directory, or the current directory for a target named by id |
 | `--json <path>` | Writes the full result: prompts, graders, per-run scores, `costUsd` |
 
+## A Plugin's Real MCP Server
+
+- When a plugin's real MCP server fails to start under the eval, check
+  whether its command needs an environment variable outside the list the eval
+  passes to its child processes; such a server fails to start, as an aqua
+  `npx` shim does without `AQUA_*`.
+
 ## Selecting Cases
 
 - `--case <glob>` keeps only its last value when repeated; select several
