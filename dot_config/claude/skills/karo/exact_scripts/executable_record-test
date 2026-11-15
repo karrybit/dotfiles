@@ -615,7 +615,7 @@ row='新規: tasks/t-test0123.md\n~~~~\n---\ntype: Task\ndescription: 例の作�
 body='### オーナー · 2026-01-01 09:00\n\n例の作業の残りを見てほしい。\n\n***\n\n### CoS · 2026-01-01 09:00\n\n残りを一覧にした。\n'
 before=$(head_sha)
 out=$(printf "書き込み指示\ncommit 件名: t-test0123: record the example request\ncommit 本文:\n~~~~\nwhy\n~~~~\n$row\n新規: threads/t-test0123-example.md\nタスク: t-test0123\n~~~~\n$body~~~~\n" | "$bin/record" 2>&1); code=$?; last=${out##*$'\n'}
-if [[ $code -eq 1 && $last == *"新規: threads/t-test0123-example.md: フロントマターがない（まだないファイルに 追記: で書くと"* && $(head_sha) == "$before" ]] && clean; then
+if [[ $code -eq 1 && $last == *"新規: threads/t-test0123-example.md: フロントマターがない（standup と t- のタスクの threads は、まだないファイルに 追記: で書くと"* && $(head_sha) == "$before" ]] && clean; then
   pass "新規: of a thread without frontmatter is an NG naming 追記"
 else
   fail "thread without frontmatter: exit $code: $out"
@@ -703,6 +703,32 @@ out=$(thread 'new other task' "新規: threads/t-test0001-second.md\nタスク: 
 if [[ $code -eq 1 && $out == *"threads/t-test0001-second.md: t-test0002 がフロントマターの tasks にない"* && $(head_sha) == "$before" ]] && clean; then pass "新規: a declared task not in the body's tasks is an NG"; else fail "new other task: exit $code: $out"; fi
 out=$(thread 'new declared' "新規: threads/t-test0001-second.md\nタスク: t-test0001\n~~~~\n$second~~~~\n"); code=$?
 if [[ $code -eq 0 ]] && ! rg -qF 'タスク:' "$v/threads/t-test0001-second.md"; then pass "新規: a declared task in the body's tasks is written"; else fail "new declared: exit $code: $out"; fi
+
+# A task ID is a t- ID or a bd ID: cos- and three to eight lowercase letters or digits, a child with
+# ".<n>" added. A bd ID in the form reaches the check of the thread's tasks; one out of it does not.
+before=$(head_sha)
+for id in cos-a2v cos-abcd1234 cos-5q5.1 cos-5q5.1.12; do
+  out=$(thread "bd id $id" "追記: threads/t-test0001-demo.md\nタスク: $id\n~~~~\n\nbd の ID\n~~~~\n"); code=$?
+  if [[ $code -eq 1 && $out == *"threads/t-test0001-demo.md: $id がフロントマターの tasks にない"* && $(head_sha) == "$before" ]] && clean; then pass "a bd ID $id is a task ID"; else fail "bd id $id: exit $code: $out"; fi
+done
+for id in cos-ab cos-abcd12345 cos-A2V cos-a2v. cos-a2v.x bd-a2v t-test001; do
+  out=$(thread "bad id $id" "追記: threads/t-test0001-demo.md\nタスク: $id\n~~~~\n\n壊れた ID\n~~~~\n"); code=$?
+  if [[ $code -eq 1 && $out == *"「タスク:」はタスク ID 1 つ（話題が 2 つなら項目を分ける）: $id"* && $(head_sha) == "$before" ]] && clean; then pass "$id is not a task ID"; else fail "bad id $id: exit $code: $out"; fi
+done
+# A bd task has no task file: an append to its missing thread is an NG naming 新規:, and reads no tasks/.
+out=$(thread 'bd thread by 追記' '追記: threads/cos-a2v-demo.md\nタスク: cos-a2v\n~~~~\n\nx\n~~~~\n'); code=$?
+if [[ $code -eq 1 && $out == *"追記: threads/cos-a2v-demo.md: ファイルがない（cos-a2v の threads は 新規: でフロントマターを付けて作る）"* && $out != *tasks/* && $(head_sha) == "$before" ]] && clean; then
+  pass "追記: to a missing thread of a bd task is an NG naming 新規:"
+else
+  fail "bd thread by 追記: exit $code: $out"
+fi
+# A thread whose tasks hold a bd ID takes an append declaring it, and karo-check passes it.
+out=$(thread 'bd id in tasks' '置き換え: threads/t-test0001-demo.md\n~~~~\ntasks:\n  - t-test0001\n~~~~\n~~~~\ntasks:\n  - t-test0001\n  - cos-5q5.1\n~~~~\n追記: threads/t-test0001-demo.md\nタスク: cos-5q5.1\n~~~~\n\nbd のタスクの話\n~~~~\n'); code=$?
+if [[ $code -eq 0 && $(tail -n 1 "$v/threads/t-test0001-demo.md") == 'bd のタスクの話' ]] && rg -qx '  - cos-5q5.1' "$v/threads/t-test0001-demo.md" && clean; then
+  pass "a declared bd ID in the thread's tasks is appended"
+else
+  fail "bd id in tasks: exit $code: $out"
+fi
 
 # Two NGs with one subject are cleared one by one: 解決 with one copy's name leaves the other, and a 解決
 # with the subject alone clears neither. A malformed instruction is refused by --detach on the spot.

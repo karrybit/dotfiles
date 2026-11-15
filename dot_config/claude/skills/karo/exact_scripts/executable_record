@@ -8,11 +8,14 @@ usage: record [<instruction file>]   (reads standard input when no file is given
 The instruction has the form described in rules/record.md ("書き込みの指示の形"). Without a commit
 body, the commit body is the instruction's journal lines (the "- " lines it appends to or creates in a
 day's journal, journal/YYYY-MM-DD.md), and an instruction with neither is an NG. An append to a day's
-journal that does not exist yet creates it with its frontmatter and heading; an append to a thread or
-a day's standup (journal/YYYY-MM-DD-standup.md) that does not exist creates it with its frontmatter (a
-thread's from its task's file, tasks/<ID>.md, a standup's deriving from the latest day's journal up to
-its day), and a "新規:" of either without frontmatter is an NG. A "行:" item sets named cells of the one table
-row whose first cell is the given ID, from "<column>: <value>" lines under the table's header. A
+journal that does not exist yet creates it with its frontmatter and heading; an append to a day's
+standup (journal/YYYY-MM-DD-standup.md) that does not exist creates it with its frontmatter, deriving
+from the latest day's journal up to its day, and so does an append to a thread of a task with a t- ID,
+taking the frontmatter from the task's file, tasks/<ID>.md. A thread of a task with a bd ID (cos- and
+three to eight letters or digits, a child with ".<n>" added) starts with a "新規:" that carries its
+frontmatter. A "新規:" of a thread or a standup without frontmatter is an NG. A "行:" item sets
+named cells of the one table row whose first cell is the given ID, from "<column>: <value>" lines
+under the table's header. A
 "行を足す:" item adds a row, from the same lines, to the end of the table under the given heading (or
 the file's only table); a first cell already in that table is an NG. An
 "追記:" or "新規:" item for a thread file (threads/, except threads/memo.md) carries a "タスク:" line
@@ -76,6 +79,9 @@ FENCE = "~~~~"
 PROBLEMS_HEADING = "## record からの問題"
 RECORD_FILES = {"state.md", "assignments.md"}
 RECORD_DIRS = {"journal", "decisions", "investigations", "projects", "threads", "docs", "tasks"}
+# A task ID is a bd ID or a t- ID; only a t- task has a file, tasks/<ID>.md.
+OLD_TASK_ID = r"t-[a-z0-9]{8}"
+TASK_ID = rf"{OLD_TASK_ID}|cos-[a-z0-9]{{3,8}}(\.[0-9]+)*"
 
 
 class Bad(Exception):
@@ -189,7 +195,7 @@ def check_thread_task(kind, path, task, text):
         return
     if task is None:
         raise Bad(f"{kind}: {path}: 「タスク:」の行がない（項目の行の下に、どのタスクの話かを書く）")
-    if not re.fullmatch(r"t-[a-z0-9]{8}", task):
+    if not re.fullmatch(TASK_ID, task):
         raise Bad(f"{kind}: {path}: 「タスク:」はタスク ID 1 つ（話題が 2 つなら項目を分ける）: {task}")
     p = subprocess.run(["yq", "--front-matter=extract", ".tasks // [] | .[]", "-"],
                        input=text, capture_output=True, text=True)
@@ -473,13 +479,15 @@ def planned(path, state):
 
 def new_note(path, task, state):
     """The frontmatter that starts a thread or a standup an 追記 creates, or None for other paths.
-    A thread takes its topic and description from the description of the declared task's file,
-    tasks/<ID>.md, and its project from that file's first project; a standup derives from the latest
-    journal up to its day."""
+    A thread of a t- task takes its topic and description from the description of the declared task's
+    file, tasks/<ID>.md, and its project from that file's first project; a thread of a bd task has no
+    file to take them from. A standup derives from the latest journal up to its day."""
     if path.startswith("threads/") and path != "threads/memo.md":
         if not task:
             raise Bad(f"追記: {path}: 「タスク:」の行がない（項目の行の下に、どのタスクの話かを書く）")
-        text = planned(f"tasks/{task}.md", state) if re.fullmatch(r"t-[a-z0-9]{8}", task) else None
+        if not re.fullmatch(OLD_TASK_ID, task):
+            raise Bad(f"追記: {path}: ファイルがない（{task} の threads は 新規: でフロントマターを付けて作る）")
+        text = planned(f"tasks/{task}.md", state)
         if text is None:
             raise Bad(f"追記: {path}: ファイルがなく、tasks/{task}.md もない（同じ指示の前の項目で 新規: tasks/{task}.md を書くと作れる）")
         p = subprocess.run(["yq", "-o=json", "--front-matter=extract", "[.description // \"\", (.projects // [])[0] // \"\"]", "-"],
@@ -564,7 +572,7 @@ def plan(items):
             if cur is not None:
                 raise Bad(f"新規: {path}: ファイルがもうある")
             if re.fullmatch(r"(threads/(?!memo\.md$)[^/]+|journal/\d{4}-\d{2}-\d{2}-standup)\.md", path) and not texts[0].startswith("---\n"):
-                raise Bad(f"新規: {path}: フロントマターがない（まだないファイルに 追記: で書くと、record がフロントマターを付けて作る）")
+                raise Bad(f"新規: {path}: フロントマターがない（standup と t- のタスクの threads は、まだないファイルに 追記: で書くと、record がフロントマターを付けて作る）")
             check_thread_task(kind, path, texts[1], texts[0])
             state[path] = texts[0] + "\n"
         elif kind == "行":
