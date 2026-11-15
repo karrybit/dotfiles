@@ -33,4 +33,4 @@ done
 if [ -d "$evals/fixtures" ]; then
   cp -R "$evals/fixtures" "$out/fixtures"
 fi
-echo "$out <- $name $*@$commit"
+echo "$out <- $name${*:+ $*}@$commit"
