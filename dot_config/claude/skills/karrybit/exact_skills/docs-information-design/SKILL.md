@@ -34,7 +34,8 @@ and recovering from mistakes.
    Completion: every piece in scope has one finding from the table.
 3. Decide document boundaries (section 3).
    Completion: each boundary in question has been compared as split, merge, and
-   leave-as-is against the questions in section 3.
+   leave-as-is against the questions in section 3, and every document that
+   links to or names the documents in question has been found and read.
 4. Ground every fact (section 4).
    Completion: every command, flag, default, path, configuration key, and
    described behavior in scope is verified or marked unconfirmed.
@@ -68,9 +69,10 @@ Then:
   and the document would be built around it.
 - Scale the investigation to the request: for a local edit, read the
   surrounding section and whatever it links to or is linked from.
-- For a boundary decision (split, merge, move, retire), also read every
-  document that links to or names the documents in question, since their links
-  and the facts they repeat change with the boundary.
+- For a boundary decision (split, merge, move, retire), also find every
+  document that links to or names the documents in question by searching the
+  repository for their file names, and read them, since their links and the
+  facts they repeat change with the boundary.
 - For work across a doc set, first inventory it: for each file, its reader, its
   job, what it owns, and what links to it.
 
