@@ -194,6 +194,33 @@ else
   fail "pushed dir: exit $code: $out (want $want)"
 fi
 
+# close asks origin for its branches now, so a push that left the remote-tracking ref behind still
+# counts. After each push and pull, origin/main is set back to the first commit, as a push that
+# failed to update it would leave it.
+stale=$tmp/stale
+g init -q --bare "$tmp/stale-remote.git" && g clone -q "$tmp/stale-remote.git" "$stale" 2>/dev/null &&
+  g -C "$stale" checkout -q -b main && g -C "$stale" commit -q --allow-empty -m init &&
+  g -C "$stale" push -q origin main && g -C "$stale" commit -q --allow-empty -m pushed &&
+  g -C "$stale" push -q origin main || exit 2
+behind=$(g -C "$stale" rev-parse HEAD~1)
+g -C "$stale" update-ref refs/remotes/origin/main "$behind"
+workspace ac0129-test "$stale"
+note_dir ac0129-test "$id" "$stale" main
+g -C "$stale" remote set-url origin "$tmp/missing.git"
+refuses "a dir whose origin cannot be reached" "git ls-remote in .* failed: .*does not appear to be a git repository" "$id" "$stale" ac0129-test
+g -C "$stale" remote set-url origin "$tmp/stale-remote.git"
+# origin's head moved on to a commit that is not here, so it cannot vouch for HEAD.
+g clone -q "$tmp/stale-remote.git" "$tmp/stale-other" 2>/dev/null && g -C "$tmp/stale-other" commit -q --allow-empty -m other &&
+  g -C "$tmp/stale-other" push -q origin main || exit 2
+refuses "a dir whose origin head is not here" "main in .* has [0-9]+ commit\(s\) not pushed" "$id" "$stale" ac0129-test
+g -C "$stale" pull -q --ff-only origin main && g -C "$stale" update-ref refs/remotes/origin/main "$behind" || exit 2
+run ac0129-test
+if [[ $code -eq 0 ]] && ! exists "$id" && [[ -d $stale ]]; then
+  pass "a dir whose remote-tracking ref is behind origin is closed"
+else
+  fail "dir with a stale remote-tracking ref: exit $code: $out"
+fi
+
 # A done worktree closed under a global config whose fsmonitor would leave a mark: agent-ctl's
 # command-line config must keep it from running.
 dir=$(worktree fsmonitor)
@@ -608,6 +635,31 @@ if pr_start pr-done ac0201-test; then
     pass "herdr-worktree: the ledger keeps its file and drops the closed and the stale parent"
   else
     fail "ledger after close: $(cat "$pl" 2>&1)"
+  fi
+fi
+
+# A pushed branch whose push left no remote-tracking ref is on origin.
+pr_repo pr-stale
+if pr_start pr-stale ac0214-test; then
+  g -C "$wt" commit -q --allow-empty -m pushed
+  g -C "$wt" push -q origin feat/pr-stale
+  g -C "$wt" update-ref -d refs/remotes/origin/feat/pr-stale
+  pr_close ac0214-test
+  if [[ $code -eq 0 && ! -d $wt ]]; then
+    pass "herdr-worktree: a pushed branch with no remote-tracking ref is closed"
+  else
+    fail "herdr-worktree stale remote-tracking ref: exit $code: $out: $(cat "$FAKE_LOG")"
+  fi
+fi
+
+# A branch with no commit of its own needs no push: its HEAD is on origin's main.
+pr_repo pr-untouched
+if pr_start pr-untouched ac0215-test; then
+  pr_close ac0215-test
+  if [[ $code -eq 0 && ! -d $wt ]]; then
+    pass "herdr-worktree: a branch with no commit of its own is closed"
+  else
+    fail "herdr-worktree untouched: exit $code: $out: $(cat "$FAKE_LOG")"
   fi
 fi
 

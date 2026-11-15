@@ -385,11 +385,22 @@ close_workspace() {
     [ -z "$ignored" ] || stop "$place has ignored files that removing it would delete: $(printf '%s\n' "$ignored" |
       awk 'd != "" && index($0, d) == 1 { next } /\/$/ { d = $0 } { print }' | paste -sd ' ' -)"
   fi
+  # What is pushed is read from origin's branch heads now, not from the
+  # remote-tracking refs, which a push can leave behind. A head whose commit
+  # is not here cannot be compared, so it is skipped and its commits count as
+  # not pushed.
+  case $kind in
+    dir | herdr-worktree)
+      heads=$(safe_git "$place" ls-remote --heads origin)
+      heads=$(printf '%s\n' "$heads" | cut -f 1)
+      ;;
+  esac
   case $kind in
     dir)
       ref=HEAD
       [ -z "$branch" ] || ref=refs/heads/$branch
-      ahead=$(safe_git "$place" rev-list --count "$ref" --not --remotes)
+      # shellcheck disable=SC2086  # one argument per head
+      ahead=$(safe_git "$place" rev-list --count --ignore-missing "$ref" --not $heads)
       [ "$ahead" -eq 0 ] || stop "${branch:-HEAD} in $place has $ahead commit(s) not pushed"
       ;;
     worktree)
@@ -398,7 +409,8 @@ close_workspace() {
       [ "$ahead" -eq 0 ] || stop "the branch in $place has $ahead commit(s) not in $base of $repo"
       ;;
     herdr-worktree)
-      ahead=$(safe_git "$place" rev-list --count HEAD --not --remotes)
+      # shellcheck disable=SC2086  # one argument per head
+      ahead=$(safe_git "$place" rev-list --count --ignore-missing HEAD --not $heads)
       [ "$ahead" -eq 0 ] || stop "the branch in $place has $ahead commit(s) not on a remote"
       ;;
   esac

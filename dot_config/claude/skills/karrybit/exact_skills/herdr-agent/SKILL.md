@@ -56,9 +56,9 @@ agent-ctl start [--goal <条件>] [--permission-mode <mode>] <名前> <ブリー
 
 | `<場所>` | 用意すること | `close` が取り込み済みとみなす条件 | `close` が片付けるもの |
 | --- | --- | --- | --- |
-| `dir <パス> [<ブランチ>]` | 既存の main checkout をそのまま使う。`<ブランチ>` を渡すと、その上にいることを確かめる | `<ブランチ>`（渡さなければ HEAD）に remote にない commit がない | workspace（checkout は残る） |
+| `dir <パス> [<ブランチ>]` | 既存の main checkout をそのまま使う。`<ブランチ>` を渡すと、その上にいることを確かめる | `<ブランチ>`（渡さなければ HEAD）の commit が、どれも origin のどれかのブランチに入っている | workspace（checkout は残る） |
 | `worktree <repo> <base> <ブランチ> <パス>` | `<repo>` の `<base>` から `git worktree add -b <ブランチ> <パス>` で作る | worktree の HEAD が `<base>` に入っている | worktree（ブランチは残る）と workspace |
-| `herdr-worktree <repo> <ブランチ>` | `herdr worktree create` で作る | HEAD が remote にある | worktree、workspace、`start` が開いた親の workspace |
+| `herdr-worktree <repo> <ブランチ>` | `herdr worktree create` で作る | HEAD が origin のどれかのブランチに入っている | worktree、workspace、`start` が開いた親の workspace |
 | `tab <Agent の名前>` | その Agent の workspace に tab を足し、その Agent と同じ cwd で起動する | なし | tab |
 
 - パスと `<repo>` は絶対パスで渡す。
@@ -99,6 +99,8 @@ agent-ctl send --goal <条件> <名前>
 - 片付けるときは、`<scripts>/agent-ctl close <名前>` を単独で走らせる。`close` は `start` が控え（`~/.local/state/herdr-agent/ledger`）に書いた Agent だけを片付け、控えにない名前は 1 行で断る。断られた Agent は、人が手で片付ける。
 - `close` は、控えにある workspace（`tab` では tab）の label が名前であること、呼び出し側の workspace（`tab` では tab）でないこと、`working`・`blocked` の Agent がいないことを確かめる。`tab` のほかは、さらに submodule がないこと、未 commit の変更がないこと、場所の種類ごとの取り込み済みの条件（「起動する」の表）を確かめ、worktree を消す場所では ignored なファイルがないことも確かめる。
 - JSON は `{name, kind, workspace, place, parent}` で、`tab` と `parent_kept`（閉じなかった親の workspace と理由）が付くことがある。`parent_kept` があれば、それも人に伝える。
+- origin のブランチは、`close` が `git ls-remote` で origin にいまの先頭を尋ねて確かめる。手元の `origin/<ブランチ>` は使わないので、push のあとに fetch は要らない。origin に届かなければ、`close` はその理由の 1 行で止まる。
+- origin の先頭の commit が手元にないブランチ（ほかから push された）とは比べないので、そのブランチにだけ入っている commit で止まったら、fetch してから呼び直す。
 - 取り込まれていない commit で止まったら、取り込んでから呼び直す。
 - ignored なファイルで止まったら、行に消す候補のパスがすべて並ぶ（ignored なフォルダは 1 つにまとまる）。この一覧を人に示して、消すかを決めてもらう。消したら `close` を呼び直す。
 
