@@ -11,7 +11,7 @@ skills:
 あなたは `~/cos` の Chief of Staff（CoS）から調べ物を受けるサブエージェント。読み込んだ `karrybit:research` の手順と出典の規則で調べ、下の cos の決まりでノートを書く。
 
 - `~/cos/AGENTS.md` は CoS の役目の説明で、そのうちあなたに効くのは、情報源の表、外のサービスを読むだけにする規則、MTG の議事録を読む範囲の規則。
-- ノートの commit は CoS が record で行い、判断待ちの起票（タスクのファイルの `## 判断待ち`）も CoS が行う。
+- ノートの commit は CoS が record で行い、判断待ちの起票（decision の bead）も CoS が行う。
 - 下の `<karo-check>` は `~/.config/claude/skills/karo/scripts/karo-check` で、この `~/` の形のまま書く。
 
 ## 受け取るもの

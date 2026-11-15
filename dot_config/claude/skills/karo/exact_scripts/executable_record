@@ -10,9 +10,7 @@ body, the commit body is the instruction's journal lines (the "- " lines it appe
 day's journal, journal/YYYY-MM-DD.md), and an instruction with neither is an NG. An append to a day's
 journal that does not exist yet creates it with its frontmatter and heading; an append to a day's
 standup (journal/YYYY-MM-DD-standup.md) that does not exist creates it with its frontmatter, deriving
-from the latest day's journal up to its day, and so does an append to a thread of a task with a t- ID,
-taking the frontmatter from the task's file, tasks/<ID>.md. A thread of a task with a bd ID (cos- and
-three to eight letters or digits, a child with ".<n>" added) starts with a "新規:" that carries its
+from the latest day's journal up to its day. A thread starts with a "新規:" that carries its
 frontmatter. A "新規:" of a thread or a standup without frontmatter is an NG. A "行:" item sets
 named cells of the one table row whose first cell is the given ID, from "<column>: <value>" lines
 under the table's header. A
@@ -78,10 +76,9 @@ THREAD_SHOW = os.environ.get("COS_THREAD_SHOW", os.path.join(BIN, "thread-show")
 FENCE = "~~~~"
 PROBLEMS_HEADING = "## record からの問題"
 RECORD_FILES = {"state.md", "assignments.md"}
-RECORD_DIRS = {"journal", "decisions", "investigations", "projects", "threads", "docs", "tasks"}
-# A task ID is a bd ID or a t- ID; only a t- task has a file, tasks/<ID>.md.
-OLD_TASK_ID = r"t-[a-z0-9]{8}"
-TASK_ID = rf"{OLD_TASK_ID}|cos-[a-z0-9]{{3,8}}(\.[0-9]+)*"
+RECORD_DIRS = {"journal", "investigations", "projects", "threads", "docs"}
+# A task ID is a bd ID or an older t- ID.
+TASK_ID = r"t-[a-z0-9]{8}|cos-[a-z0-9]{3,8}(\.[0-9]+)*"
 
 
 class Bad(Exception):
@@ -469,36 +466,13 @@ def add_row(path, text, heading, changes):
     return "\n".join(lines)
 
 
-def planned(path, state):
-    """The text of a vault file after the items so far, or None when there is none."""
-    if path in state:
-        return state[path]
-    data = read_file(path)
-    return None if data is None else data.decode("utf-8")
-
-
 def new_note(path, task, state):
-    """The frontmatter that starts a thread or a standup an 追記 creates, or None for other paths.
-    A thread of a t- task takes its topic and description from the description of the declared task's
-    file, tasks/<ID>.md, and its project from that file's first project; a thread of a bd task has no
-    file to take them from. A standup derives from the latest journal up to its day."""
+    """The frontmatter that starts a standup an 追記 creates, or None for other paths. A standup derives
+    from the latest journal up to its day; a thread starts with a 新規: that carries its frontmatter."""
     if path.startswith("threads/") and path != "threads/memo.md":
         if not task:
             raise Bad(f"追記: {path}: 「タスク:」の行がない（項目の行の下に、どのタスクの話かを書く）")
-        if not re.fullmatch(OLD_TASK_ID, task):
-            raise Bad(f"追記: {path}: ファイルがない（{task} の threads は 新規: でフロントマターを付けて作る）")
-        text = planned(f"tasks/{task}.md", state)
-        if text is None:
-            raise Bad(f"追記: {path}: ファイルがなく、tasks/{task}.md もない（同じ指示の前の項目で 新規: tasks/{task}.md を書くと作れる）")
-        p = subprocess.run(["yq", "-o=json", "--front-matter=extract", "[.description // \"\", (.projects // [])[0] // \"\"]", "-"],
-                           input=text, capture_output=True, text=True)
-        fields = json.loads(p.stdout) if p.returncode == 0 else None
-        if not fields or not all(isinstance(v, str) and v for v in fields):
-            raise Bad(f"追記: {path}: tasks/{task}.md のフロントマターに description か projects がない",
-                      (p.stderr or p.stdout).strip().splitlines())
-        title, project = json.dumps(fields[0], ensure_ascii=False), fields[1]
-        return (f"---\ntype: Thread\ndescription: {title}\ntopic: {title}\ndate: {datetime.date.today()}\n"
-                f"tasks:\n  - {task}\nprojects:\n  - {project}\n---\n\n")
+        raise Bad(f"追記: {path}: ファイルがない（{task} の threads は 新規: でフロントマターを付けて作る）")
     if m := re.fullmatch(r"journal/(\d{4}-\d{2}-\d{2})-standup\.md", path):
         jdir = os.path.join(COS, "journal")
         days = {p for p in state if state[p] is not None} | {f"journal/{n}" for n in (os.listdir(jdir) if os.path.isdir(jdir) else [])}
@@ -572,7 +546,7 @@ def plan(items):
             if cur is not None:
                 raise Bad(f"新規: {path}: ファイルがもうある")
             if re.fullmatch(r"(threads/(?!memo\.md$)[^/]+|journal/\d{4}-\d{2}-\d{2}-standup)\.md", path) and not texts[0].startswith("---\n"):
-                raise Bad(f"新規: {path}: フロントマターがない（standup と t- のタスクの threads は、まだないファイルに 追記: で書くと、record がフロントマターを付けて作る）")
+                raise Bad(f"新規: {path}: フロントマターがない（threads は本文の先頭にフロントマターを書く。standup は、まだないファイルに 追記: で書くと、record がフロントマターを付けて作る）")
             check_thread_task(kind, path, texts[1], texts[0])
             state[path] = texts[0] + "\n"
         elif kind == "行":

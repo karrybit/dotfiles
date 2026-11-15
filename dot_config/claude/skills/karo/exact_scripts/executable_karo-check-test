@@ -16,15 +16,13 @@ fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
 pass() { printf 'ok\t%s\n' "$1"; }
 
 ok=$tmp/ok
-mkdir -p "$ok"/{journal,decisions,projects,threads,tasks,docs/a1b2c3d4/abc1234,rules}
+mkdir -p "$ok"/{journal,projects,threads,investigations,docs/a1b2c3d4/abc1234,rules}
 cp "$vault/rules/frontmatter-schema.yaml" "$ok/rules/" || exit 2
-printf -- '---\ntype: Task\ndescription: 例\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - demo\nstate: delegated\n---\n\n## 依頼\n\n- 例\n\n## 判断待ち\n\n- q-test0001（起票 2026-01-01）: 例 選択肢と推奨: 例\n' > "$ok/tasks/t-test0001.md"
-printf '# 現在の状況\n\n## 焦点\n\n- t-test0001: 例\n\n## 判断待ち\n\n- q-test0001: 例\n' > "$ok/state.md"
+printf '# 現在の状況\n\n## 焦点\n\n- t-test0001: 例\n' > "$ok/state.md"
 printf -- '---\ntype: Journal\ndate: 2026-01-01\n---\n\n- 09:00 [decision] t-test0001: 例（thread 2026-01-01 09:00）\n' > "$ok/journal/2026-01-01.md"
 printf -- '---\ntype: Project\ndescription: 例のプロジェクト。\nprojects:\n  - demo\n---\n\n## demo\n' > "$ok/projects/demo.md"
 printf -- '---\ntype: Thread\ndescription: 例の会話\ntopic: 例\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - demo\n---\n\n### オーナー · 2026-01-01 09:00\n\nt-test0001 の [demo](projects/demo.md)\n' > "$ok/threads/t-test0001-demo.md"
-printf -- '---\ntype: Decision\ndescription: 例の決定。\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - all\nderived_from:\n  - journal/2026-01-01.md#09:00\n  - threads/t-test0001-demo.md#2026-01-01 09:00\nsupersedes: decisions/test0002-old.md\n---\n\n## 例\n' > "$ok/decisions/test0001-demo.md"
-printf -- '---\ntype: Decision\ndescription: 例の古い決定。\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - all\nderived_from:\n  - journal/2026-01-01.md#09:00\n---\n\n## 例\n' > "$ok/decisions/test0002-old.md"
+printf -- '---\ntype: Investigation\ndescription: 例の調べ物。\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - all\nderived_from:\n  - journal/2026-01-01.md#09:00\n  - threads/t-test0001-demo.md#2026-01-01 09:00\n---\n\n## 例\n' > "$ok/investigations/2026-01-01-example.md"
 # A day's standup and a meeting's notes sit beside the day's journal; their "- " lines are not journal lines.
 printf -- '---\ntype: Standup\ndate: 2026-01-01\nderived_from:\n  - journal/2026-01-01.md\n---\n\n## Checkin（2026-01-01）\n\n- 例\n' > "$ok/journal/2026-01-01-standup.md"
 printf -- '---\ntype: Meeting Notes\ndescription: 例の MTG。\ndate: 2026-01-01\nprojects:\n  - demo\nsources:\n  - { id: notes, resource: https://example.invalid/notes, title: 例の議事録 }\n---\n\n## 例の MTG\n\n- 決定: 例\n' > "$ok/journal/2026-01-01-demo.md"
@@ -48,33 +46,17 @@ fi
 # <name>|<expected problem>|<shell command run inside the copy>
 cases=(
   'unknown project|unknown project: nope|sed -i.bak "s/  - demo/  - nope/" threads/t-test0001-demo.md'
-  'unknown task|task without tasks/t-test0999.md|sed -i.bak "s/  - t-test0001/  - t-test0999/" threads/t-test0001-demo.md'
-  'missing anchor|derived_from anchor not found|sed -i.bak "s/#09:00/#10:00/" decisions/test0001-demo.md'
+  'missing anchor|derived_from anchor not found|sed -i.bak "s/#09:00/#10:00/" investigations/2026-01-01-example.md'
   'wiki link|wiki link, write a path link: \[\[demo\]\]|sed -i.bak "s#\[demo\](projects/demo.md)#[[demo]]#" threads/t-test0001-demo.md'
   'no frontmatter where no type lives|investigations/2026-01-01-demo/notes.md	no frontmatter|mkdir -p investigations/2026-01-01-demo && printf "## no frontmatter\\n" > investigations/2026-01-01-demo/notes.md'
   'journal form|journal line not normalized|sed -i.bak "s/t-test0001: /t-test0001・t-test0002:/" journal/2026-01-01.md'
-  'q-ID left out of state.md|pending q-test0001 missing from state.md|sed -i.bak "s/- q-test0001: 例/- 例/" state.md'
-  'q-ID in state.md not pending|q-test0002 not pending in any task file|sed -i.bak "s/- q-test0001: 例/- q-test0001: 例 q-test0002/" state.md'
-  'q-ID pending in two task files|q-test0001 pending in two task files|sed "s/  - t-test0001/  - t-test0002/" tasks/t-test0001.md > tasks/t-test0002.md'
-  'done task in state.md|t-test0001 is done or dropped in tasks/t-test0001.md|sed -i.bak "s/^state: delegated/state: done/" tasks/t-test0001.md'
-  'done task with a pending decision|tasks/t-test0001.md	done or dropped task with pending decisions|sed -i.bak "s/^state: delegated/state: dropped/" tasks/t-test0001.md'
-  'unknown task state|tasks/t-test0001.md	bad state|sed -i.bak "s/^state: delegated/state: doing/" tasks/t-test0001.md'
-  'task file named after another task|tasks/t-test0002.md	file name is not its first task: t-test0001|mv tasks/t-test0001.md tasks/t-test0002.md'
-  'pending decision in another form|pending decision not in the form|sed -i.bak "s/ 選択肢と推奨: 例//" tasks/t-test0001.md'
-  'section after the pending decisions|判断待ち is not the last section|printf "\\n## 成果物\\n\\n- x\\n" >> tasks/t-test0001.md'
-  'empty pending section|empty 判断待ち section|sed -i.bak "/^- q-test0001/d" tasks/t-test0001.md'
-  'two pending sections|two 判断待ち sections|printf "\\n## 判断待ち\\n\\n- q-test0002（起票 2026-01-01）: 例 選択肢と推奨: 例\\n" >> tasks/t-test0001.md'
-  '3-digit task in a task file|tasks/t-test0001.md	old ID, use a bd ID or t- or q- and eight letters or digits: t999|sed -i.bak "s/: 例 選択肢/: t999 の例 選択肢/" tasks/t-test0001.md'
+  '3-digit task in state.md|state.md	old ID, use a bd ID or t- or q- and eight letters or digits: t999|sed -i.bak "s/t-test0001: 例/t999: 例/" state.md'
   '6-digit task in journal|journal/2026-01-01.md	old ID, use a bd ID or t- or q- and eight letters or digits: t000999|sed -i.bak "s/t-test0001: /t000999: /" journal/2026-01-01.md'
-  '6-digit q-ID|tasks/t-test0001.md	old ID, use a bd ID or t- or q- and eight letters or digits: q000999|sed -i.bak "s/q-test0001/q000999/" tasks/t-test0001.md state.md'
+  '6-digit q-ID|state.md	old ID, use a bd ID or t- or q- and eight letters or digits: q000999|sed -i.bak "s/t-test0001: 例/q000999: 例/" state.md'
   '6-digit task in frontmatter|bad task id: t000999|sed -i.bak "s/  - t-test0001/  - t000999/" threads/t-test0001-demo.md'
-  'Decision note dated after the last day of decisions/|decisions/test0001-demo.md	Decision note dated after 2026-11-14, record it as a decision bead|sed -i.bak "s/^date: 2026-01-01/date: 2026-11-15/" decisions/test0001-demo.md'
   # The required fields and paths in the CoS schema, which okf-lint checks
   'misplaced standup|path does not match Standup|mv journal/2026-01-01-standup.md journal/2026-01-01-checkin.md'
-  'task without state|tasks/t-test0001.md	missing state|sed -i.bak "/^state:/d" tasks/t-test0001.md'
-  'task file with a topic in its name|path does not match Task|mv tasks/t-test0001.md tasks/t-test0001-demo.md'
   '6-digit thread name|path does not match Thread|mv threads/t-test0001-demo.md threads/t000999-demo.md'
-  '4-digit decision name|path does not match Decision|mv decisions/test0001-demo.md decisions/9999-demo.md'
   'thread without topic|missing topic|sed -i.bak "/^topic:/d" threads/t-test0001-demo.md'
   'explanation without resource|missing resource|sed -i.bak "/^resource:/d" docs/a1b2c3d4/abc1234/index.md'
   'explanation outside a version folder|path does not match Explain|mv docs/a1b2c3d4/abc1234/index.md docs/a1b2c3d4/index.md'
@@ -112,13 +94,13 @@ if [[ $code -eq 2 && $out == *"has no types map"* && $out != *"karo-check: "* ]]
 
 # Frontmatter values are data: a value holding "|", a newline, a glob, or shell syntax is reported as the
 # problems it is and nothing more, and no command in it runs.
-# hostile <name> <expected problem count> <expected problem (fixed string)> <line in decisions/test0001-demo.md> <replacement> [<--only path>]
+# hostile <name> <expected problem count> <expected problem (fixed string)> <line in investigations/2026-01-01-example.md> <replacement> [<--only path>]
 hostile() {
   local name=$1 n=$2 want=$3 old=$4 new=$5 c out code args=()
   copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"
-  c=$(<"$copy/decisions/test0001-demo.md")
+  c=$(<"$copy/investigations/2026-01-01-example.md")
   [[ $c == *"$old"* ]] || { fail "$name: could not break the copy"; return; }
-  printf '%s%s%s\n' "${c%%"$old"*}" "$new" "${c#*"$old"}" > "$copy/decisions/test0001-demo.md"
+  printf '%s%s%s\n' "${c%%"$old"*}" "$new" "${c#*"$old"}" > "$copy/investigations/2026-01-01-example.md"
   [[ -n ${6:-} ]] && args=(--only "$6")
   out=$("$bin/karo-check" ${args[@]+"${args[@]}"} "$copy" 2>&1); code=$?
   if [[ -e $copy/pwned ]]; then fail "$name: a command in a value ran"
@@ -129,7 +111,7 @@ hostile 'status with a newline and a forged @info' 2 'unknown project: nope' '  
 hostile 'project that is a glob' 1 'unknown project: *' '  - all' '  - "*"'
 hostile 'project with a command substitution' 1 'unknown project: $(touch pwned)' '  - all' '  - "$(touch pwned)"'
 hostile 'derived_from with "|"' 1 'derived_from anchor not found: journal/2026-01-01.md#09:00|x' '  - journal/2026-01-01.md#09:00' '  - "journal/2026-01-01.md#09:00|x"'
-hostile 'only: derived_from with "|"' 1 'derived_from anchor not found: journal/2026-01-01.md#09:00|x' '  - journal/2026-01-01.md#09:00' '  - "journal/2026-01-01.md#09:00|x"' decisions/test0001-demo.md
+hostile 'only: derived_from with "|"' 1 'derived_from anchor not found: journal/2026-01-01.md#09:00|x' '  - journal/2026-01-01.md#09:00' '  - "journal/2026-01-01.md#09:00|x"' investigations/2026-01-01-example.md
 
 # --only: a problem in a given file or in a file that depends on it is found; one elsewhere is not.
 # <name>|<expected problem, or "pass">|<--only paths, space-separated>|<shell command run inside the copy>
@@ -140,15 +122,9 @@ scoped=(
   'only: removed anchor of a derived_from|derived_from anchor not found|journal/2026-01-01.md|sed -i.bak "s/- 09:00 /- 10:00 /" journal/2026-01-01.md'
   'only: renamed project still listed|threads/t-test0001-demo.md	unknown project: demo|projects/demo.md projects/demo2.md|sed -i.bak "s#\[demo\](projects/demo.md)#demo#" threads/t-test0001-demo.md && mv projects/demo.md projects/demo2.md'
   'only: journal form is not checked in a standup|pass|journal/2026-01-01-standup.md|printf "\\n- 例の行\\n" >> journal/2026-01-01-standup.md'
-  'only: removed task file|threads/t-test0001-demo.md	task without tasks/t-test0001.md|tasks/t-test0001.md|rm tasks/t-test0001.md'
-  'only: task file change checks state.md|t-test0001 is done or dropped|tasks/t-test0001.md|sed -i.bak "s/^state: delegated/state: done/" tasks/t-test0001.md'
-  'only: pending form in a given task file|pending decision not in the form|tasks/t-test0001.md|sed -i.bak "s/（起票 2026-01-01）//" tasks/t-test0001.md'
-  'only: removed pending decision checks state.md|q-test0001 not pending in any task file|tasks/t-test0001.md|sed -i.bak "/^## 判断待ち/,\$d" tasks/t-test0001.md'
-  'only: state.md change checks state.md|q-test0002 not pending in any task file|state.md|sed -i.bak "s/- q-test0001: 例/- q-test0001: 例 q-test0002/" state.md'
+  'only: old ID in a given state.md|state.md	old ID|state.md|sed -i.bak "s/t-test0001: 例/t999: 例/" state.md'
   'only: journal form in a given journal|journal line not normalized|journal/2026-01-01.md|sed -i.bak "s/t-test0001: /t-test0001・t-test0002:/" journal/2026-01-01.md'
   'only: wiki link in a given file|wiki link, write a path link: \[\[demo\]\]|threads/t-test0001-demo.md|sed -i.bak "s#\[demo\](projects/demo.md)#[[demo]]#" threads/t-test0001-demo.md'
-  'only: Decision note dated on the last day of decisions/|pass|decisions/test0001-demo.md|sed -i.bak "s/^date: 2026-01-01/date: 2026-11-14/" decisions/test0001-demo.md'
-  'only: new Decision note|Decision note dated after 2026-11-14|decisions/test0003-new.md|sed "s/^date: 2026-01-01/date: 2026-11-15/" decisions/test0002-old.md > decisions/test0003-new.md'
 )
 for c in "${scoped[@]}"; do
   name=${c%%|*}; rest=${c#*|}; want=${rest%%|*}; rest=${rest#*|}; paths=${rest%%|*}; cmd=${rest#*|}
@@ -170,7 +146,7 @@ out=$("$bin/karo-check" --only docs/link.md "$tmp/linked" 2>&1)
 if printf '%s\n' "$out" | rg -qF '[[secret]]'; then fail "only: a symbolic link is read through: $out"; else pass "only: a symbolic link is not read through"; fi
 
 # A task ID is a t- ID or a bd ID: cos- and three to eight lowercase letters or digits, a child with
-# ".<n>" added. A bd task lives in the task database and has no task file; an ID out of both forms fails.
+# ".<n>" added; an ID out of both forms fails.
 with_task() { # <task ID>: a copy whose thread lists the ID after t-test0001
   copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"
   c=$(<"$copy/threads/t-test0001-demo.md")
@@ -208,8 +184,8 @@ real=$tmp/real
 count() { "$bin/karo-check" "$1" 2>&1 | rg -c -v '^karo-check: |	stale since |	task in body not in tasks: '; }
 if cp -R "$vault/." "$real" && rm -rf "$real/.git"; then
   before=$(count "$real")
-  target=$(cd "$real" && fd -t f -e md . decisions | sort | head -n 1)
-  sed -i.bak 's/^type: Decision$/type: Bogus/' "$real/$target" && rm -f "$real/$target.bak"
+  target=$(cd "$real" && fd -t f -e md . projects | sort | head -n 1)
+  sed -i.bak 's/^type: Project$/type: Bogus/' "$real/$target" && rm -f "$real/$target.bak"
   out=$("$bin/karo-check" "$real" 2>&1); code=$?
   after=$(count "$real")
   if [[ $code -eq 1 && $after -eq $((before+1)) ]] && printf '%s\n' "$out" | rg -qF -- "$target	unknown type: Bogus"; then

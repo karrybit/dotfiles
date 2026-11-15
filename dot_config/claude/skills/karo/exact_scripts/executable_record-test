@@ -26,8 +26,6 @@ chmod +x "$tmp/thread-show"
 export COS_THREAD_SHOW=$tmp/thread-show
 mkdir -p "$v"/{journal,projects,threads,investigations,rules}
 cp "$cos/.rumdl.toml" "$v/" && cp "$cos/rules/frontmatter-schema.yaml" "$v/rules/" || exit 2
-mkdir -p "$v/tasks"
-printf -- '---\ntype: Task\ndescription: 例\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - demo\nstate: delegated\n---\n' > "$v/tasks/t-test0001.md"
 printf -- '---\ntype: Journal\ndate: 2026-01-01\n---\n\n- 09:00 [note] t-test0001: 例（thread 2026-01-01 09:00）\n' > "$v/journal/2026-01-01.md"
 # The project note also holds a table for the 行: cases and takes the appends whose target does not matter.
 printf -- '---\ntype: Project\ndescription: 例のプロジェクト。\nprojects:\n  - demo\n---\n\n## demo\n\n| ID | 状態 |\n| --- | --- |\n| t-test0001 | delegated |\n' > "$v/projects/demo.md"
@@ -74,12 +72,12 @@ projects:
 本文
 ~~~~
 
-置き換え: tasks/t-test0001.md
+置き換え: projects/demo.md
 ~~~~
-state: delegated
+| t-test0001 | delegated |
 ~~~~
 ~~~~
-state: in-review
+| t-test0001 | in-review |
 ~~~~
 
 取り込み: investigations/2026-01-01-demo.md
@@ -88,7 +86,7 @@ now=$(date '+%Y-%m-%d')
 if [[ $code -eq 0 && $last == "OK $(head_sha) t-test0001: record the demo" ]] && clean; then pass "applies and commits"; else fail "applies and commits: exit $code: $out"; fi
 if [[ $(tail -n 1 "$v/journal/2026-01-01.md") =~ ^-\ [0-9]{2}:[0-9]{2}\ \[note\]\ t-test0001:\ 追記した（会話\ $now\ [0-9]{2}:[0-9]{2}）$ ]]; then pass "appends with {日付} and {時刻} filled"; else fail "append: $(tail -n 2 "$v/journal/2026-01-01.md")"; fi
 if [[ $(tail -c 1 "$v/threads/t-test0001-demo.md" | od -An -c | tr -d ' ') == '\n' && $(tail -n 1 "$v/threads/t-test0001-demo.md") == 本文 ]] && rg -q "^date: $now$" "$v/threads/t-test0001-demo.md"; then pass "creates the new file with one final newline"; else fail "new file: $(cat "$v/threads/t-test0001-demo.md")"; fi
-if rg -qx 'state: in-review' "$v/tasks/t-test0001.md" && ! rg -qF 'delegated' "$v/tasks/t-test0001.md"; then pass "replaces"; else fail "replace: $(cat "$v/tasks/t-test0001.md")"; fi
+if rg -qxF '| t-test0001 | in-review |' "$v/projects/demo.md" && ! rg -qF 'delegated' "$v/projects/demo.md"; then pass "replaces"; else fail "replace: $(cat "$v/projects/demo.md")"; fi
 if git -C "$v" show --name-only --format= HEAD | rg -qx 'investigations/2026-01-01-demo.md'; then pass "takes in the file written elsewhere"; else fail "take in: $(git -C "$v" show --stat HEAD)"; fi
 if git -C "$v" log -1 --format=%b | rg -qF "Because the test says so ($now)."; then pass "commit body as given"; else fail "commit body: $(git -C "$v" log -1 --format=%B)"; fi
 if [[ $(fd -t f -e txt . "$tmp/state" | wc -l | tr -d ' ') -eq 1 ]] && rg -qF '{日付}' "$tmp/state"/*.txt && rg -q '^# OK ' "$tmp/state"/*.txt; then pass "keeps the instruction and its result"; else fail "instruction log: $(ls "$tmp/state")"; fi
@@ -157,9 +155,11 @@ fi
 # A bad item anywhere writes nothing, leaves HEAD alone, and is reported in the problems file.
 # <name>|<expected reason>|<items>
 cases=(
-  'replace matching nothing|置き換え: tasks/t-test0001.md: 一致が 0 か所|追記: journal/2026-01-01.md\n~~~~\n- 10:00 [note] t-test0001: 書かれない（会話 2026-01-01 10:00）\n~~~~\n置き換え: tasks/t-test0001.md\n~~~~\nない行\n~~~~\n~~~~\n新しい行\n~~~~'
+  'replace matching nothing|置き換え: projects/demo.md: 一致が 0 か所|追記: journal/2026-01-01.md\n~~~~\n- 10:00 [note] t-test0001: 書かれない（会話 2026-01-01 10:00）\n~~~~\n置き換え: projects/demo.md\n~~~~\nない行\n~~~~\n~~~~\n新しい行\n~~~~'
   'replace matching twice|置き換え: journal/2026-01-01.md: 一致が 2 か所|置き換え: journal/2026-01-01.md\n~~~~\n[note] t-test0001\n~~~~\n~~~~\n[note] t-test0002\n~~~~'
-  'new over an existing file|新規: tasks/t-test0001.md: ファイルがもうある|新規: tasks/t-test0001.md\n~~~~\nx\n~~~~'
+  'new over an existing file|新規: projects/demo.md: ファイルがもうある|新規: projects/demo.md\n~~~~\nx\n~~~~'
+  'task file|記録の書き先でない: tasks/t-test0002.md|新規: tasks/t-test0002.md\n~~~~\nx\n~~~~'
+  'decision file|記録の書き先でない: decisions/test0001-demo.md|新規: decisions/test0001-demo.md\n~~~~\nx\n~~~~'
   'append to a missing file|追記: investigations/2026-01-09-missing.md: ファイルがない|追記: investigations/2026-01-09-missing.md\n~~~~\nx\n~~~~'
   'path outside the record|記録の書き先でない: AGENTS.md|新規: AGENTS.md\n~~~~\nx\n~~~~'
   'task ledger file|記録の書き先でない: tasks.md|追記: tasks.md\n~~~~\nx\n~~~~'
@@ -573,7 +573,7 @@ before=$(head_sha)
 out=$(printf '書き込み指示\ncommit 件名: t-test0001: no body no journal\n\n追記: projects/demo.md\n~~~~\nz\n~~~~\n' | "$bin/record" 2>&1); code=$?; last=${out##*$'\n'}
 if [[ $code -eq 1 && $last == "NG t-test0001: no body no journal: 「commit 本文:」がなく、journal の行もない" && $(head_sha) == "$before" ]] && clean; then pass "no body and no journal line is an NG"; else fail "no body no journal: exit $code: $out"; fi
 
-# An instruction that changes nothing (state.md rewritten from unchanged task files) is an OK without a commit.
+# An instruction that changes nothing (a row replaced with itself) is an OK without a commit.
 before=$(head_sha)
 row=$(rg '^\| t-test0001 ' "$v/projects/demo.md")
 out=$(printf '書き込み指示\ncommit 件名: t-test0001: nothing changes\ncommit 本文:\n~~~~\nwhy\n~~~~\n置き換え: projects/demo.md\n~~~~\n%s\n~~~~\n~~~~\n%s\n~~~~\n' "$row" "$row" | "$bin/record" 2>&1); code=$?; last=${out##*$'\n'}
@@ -618,24 +618,22 @@ else
   fail "unknown column: exit $code: $out"
 fi
 
-# An append to a thread that does not exist creates it with frontmatter from its task's file. The items
-# add a task and make its thread with 新規: and no frontmatter; that 新規: is an NG naming the fix, and
-# the same body through 追記: lands.
-row='新規: tasks/t-test0123.md\n~~~~\n---\ntype: Task\ndescription: 例の作業の残りを洗い出す\ndate: 2026-01-01\ntasks:\n  - t-test0123\nprojects:\n  - demo\nstate: delegated\n---\n~~~~\n'
-body='### オーナー · 2026-01-01 09:00\n\n例の作業の残りを見てほしい。\n\n***\n\n### CoS · 2026-01-01 09:00\n\n残りを一覧にした。\n'
+# A thread starts with a 新規: that carries its frontmatter: a 新規: without it, and an append to a thread
+# that does not exist, are NGs naming the fix.
+body='### オーナー · 2026-01-01 09:00\n\n例の作業の残りを見てほしい。\n'
 before=$(head_sha)
-out=$(printf "書き込み指示\ncommit 件名: t-test0123: record the example request\ncommit 本文:\n~~~~\nwhy\n~~~~\n$row\n新規: threads/t-test0123-example.md\nタスク: t-test0123\n~~~~\n$body~~~~\n" | "$bin/record" 2>&1); code=$?; last=${out##*$'\n'}
-if [[ $code -eq 1 && $last == *"新規: threads/t-test0123-example.md: フロントマターがない（standup と t- のタスクの threads は、まだないファイルに 追記: で書くと"* && $(head_sha) == "$before" ]] && clean; then
-  pass "新規: of a thread without frontmatter is an NG naming 追記"
+out=$(printf "書き込み指示\ncommit 件名: t-test0123: record the example request\ncommit 本文:\n~~~~\nwhy\n~~~~\n新規: threads/t-test0123-example.md\nタスク: t-test0123\n~~~~\n$body~~~~\n" | "$bin/record" 2>&1); code=$?; last=${out##*$'\n'}
+if [[ $code -eq 1 && $last == *"新規: threads/t-test0123-example.md: フロントマターがない（threads は本文の先頭にフロントマターを書く"* && $(head_sha) == "$before" ]] && clean; then
+  pass "新規: of a thread without frontmatter is an NG naming the fix"
 else
   fail "thread without frontmatter: exit $code: $out"
 fi
-out=$(printf "書き込み指示\ncommit 件名: t-test0123: record the example request\ncommit 本文:\n~~~~\nwhy\n~~~~\n$row\n追記: threads/t-test0123-example.md\nタスク: t-test0123\n~~~~\n$body~~~~\n" | "$bin/record" 2>&1); code=$?
-want=$'---\ntype: Thread\ndescription: "例の作業の残りを洗い出す"\ntopic: "例の作業の残りを洗い出す"\ndate: '"$(date +%F)"$'\ntasks:\n  - t-test0123\nprojects:\n  - demo\n---\n\n### オーナー · 2026-01-01 09:00'
-if [[ $code -eq 0 && $(cat "$v/threads/t-test0123-example.md") == "$want"* ]] && clean; then pass "追記: creates a thread with frontmatter from its task's file"; else fail "thread by 追記: exit $code: $out: $(cat "$v/threads/t-test0123-example.md" 2>/dev/null)"; fi
-before=$(head_sha)
-out=$(printf '書き込み指示\ncommit 件名: t-test0001: no row\ncommit 本文:\n~~~~\nwhy\n~~~~\n追記: threads/t-test0999-none.md\nタスク: t-test0999\n~~~~\nx\n~~~~\n' | "$bin/record" 2>&1); code=$?; last=${out##*$'\n'}
-if [[ $code -eq 1 && $last == *"ファイルがなく、tasks/t-test0999.md もない"* && $(head_sha) == "$before" ]] && clean; then pass "追記: to a missing thread needs the task's file"; else fail "thread without row: exit $code: $out"; fi
+out=$(printf "書き込み指示\ncommit 件名: t-test0123: record the example request\ncommit 本文:\n~~~~\nwhy\n~~~~\n追記: threads/t-test0123-example.md\nタスク: t-test0123\n~~~~\n$body~~~~\n" | "$bin/record" 2>&1); code=$?; last=${out##*$'\n'}
+if [[ $code -eq 1 && $last == *"追記: threads/t-test0123-example.md: ファイルがない（t-test0123 の threads は 新規: でフロントマターを付けて作る）"* && $(head_sha) == "$before" ]] && clean; then
+  pass "追記: to a missing thread of a t- task is an NG naming 新規:"
+else
+  fail "thread by 追記: exit $code: $out"
+fi
 
 # An append to a day's standup that does not exist creates it deriving from the latest journal. A
 # checkin's 新規: with frontmatter that has no derived_from is an NG; the same report through 追記: lands.
@@ -725,9 +723,9 @@ for id in cos-ab cos-abcd12345 cos-A2V cos-a2v. cos-a2v.x bd-a2v t-test001; do
   out=$(thread "bad id $id" "追記: threads/t-test0001-demo.md\nタスク: $id\n~~~~\n\n壊れた ID\n~~~~\n"); code=$?
   if [[ $code -eq 1 && $out == *"「タスク:」はタスク ID 1 つ（話題が 2 つなら項目を分ける）: $id"* && $(head_sha) == "$before" ]] && clean; then pass "$id is not a task ID"; else fail "bad id $id: exit $code: $out"; fi
 done
-# A bd task has no task file: an append to its missing thread is an NG naming 新規:, and reads no tasks/.
+# An append to the missing thread of a bd task is an NG naming 新規:.
 out=$(thread 'bd thread by 追記' '追記: threads/cos-a2v-demo.md\nタスク: cos-a2v\n~~~~\n\nx\n~~~~\n'); code=$?
-if [[ $code -eq 1 && $out == *"追記: threads/cos-a2v-demo.md: ファイルがない（cos-a2v の threads は 新規: でフロントマターを付けて作る）"* && $out != *tasks/* && $(head_sha) == "$before" ]] && clean; then
+if [[ $code -eq 1 && $out == *"追記: threads/cos-a2v-demo.md: ファイルがない（cos-a2v の threads は 新規: でフロントマターを付けて作る）"* && $(head_sha) == "$before" ]] && clean; then
   pass "追記: to a missing thread of a bd task is an NG naming 新規:"
 else
   fail "bd thread by 追記: exit $code: $out"
@@ -836,8 +834,7 @@ else
 fi
 
 # The three instructions of rules/record-examples.md pass in order, as written, in a vault of their own:
-# a new topic's thread written with its frontmatter, a delegation, and the close of the agent. Their task
-# is a bd task, which has no task file.
+# a new topic's thread written with its frontmatter, a delegation, and the close of the agent.
 ex=$tmp/ex
 mkdir -p "$ex/projects" "$ex/rules" "$tmp/examples"
 cp "$cos/.rumdl.toml" "$ex/" && cp "$cos/rules/frontmatter-schema.yaml" "$ex/rules/" || exit 2
@@ -859,7 +856,6 @@ done
 id=$(rg -o -m 1 -r '$1' '^commit 件名: ([^:]+):' "$tmp/examples/1.txt")
 thread=$ex/$(rg -o -m 1 -r '$1' '^新規: (threads/[^ ]+\.md)$' "$tmp/examples/1.txt")
 if [[ $examples -eq 3 && $id =~ ^cos-[a-z0-9]{3,8}(\.[0-9]+)*$ && $(printf '%s' "$results" | rg -c "^OK [0-9a-f]+ $id: ") -eq 3 ]] \
-   && [[ ! -e $ex/tasks ]] \
    && rg -qx "\\| $id \\| $id \\| 実装 \\| dotfiles の main \\| main \\| [0-9-]+ \\| [0-9-]+ \\|" "$ex/assignments.md" \
    && [[ $(rg -c "^\\| $id \\|" "$ex/assignments.md") -eq 1 ]] \
    && rg -q "^- [0-9]{2}:[0-9]{2} \\[close\\] $id: " "$ex/journal/$(date +%F).md" \

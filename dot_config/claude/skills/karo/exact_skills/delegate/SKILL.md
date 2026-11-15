@@ -32,7 +32,7 @@ description: Herdr 上の Agent に仕事を委任する手順。オーナーが
 
 ## 新しいタスクを委任する
 
-1. ブリーフを作る。項目は次の 8 つ。`bd show <タスクID> --json` の title・description・acceptance_criteria を元にし、オーナーの発言、`~/cos/investigations`、`~/cos/journal` の MTG の記録、決定（decision の bead と `~/cos/decisions`）、外の情報源から足し、出典を添える。タスクがまだ Beads になければ、`~/cos/rules/beads.md` の「タスクを進める」の 1・2 で `bd create` してから作る。ブリーフの先頭の文字は `/` と `!` にしない（`agent-ctl` が断る）。
+1. ブリーフを作る。項目は次の 8 つ。`bd show <タスクID> --json` の title・description・acceptance_criteria を元にし、オーナーの発言、`~/cos/investigations`、`~/cos/journal` の MTG の記録、決定（decision の bead）、外の情報源から足し、出典を添える。タスクがまだ Beads になければ、`~/cos/rules/beads.md` の「タスクを進める」の 1・2 で `bd create` してから作る。ブリーフの先頭の文字は `/` と `!` にしない（`agent-ctl` が断る）。
    - 目的: 何のための変更か
    - 背景: 関連する決定と出典へのリンク
    - 作業する場所: 作業場所とブランチ（「作業場所と取り込み」）。cos では「この worktree のブランチに commit し、`~/cos` の本体には書かない。終える前に main の最新に rebase する」と書く（止められたときは下の制約の行）。プロジェクトの節に「作業する場所の文」があれば、その文を書く
