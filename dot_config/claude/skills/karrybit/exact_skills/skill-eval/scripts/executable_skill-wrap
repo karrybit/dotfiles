@@ -1,22 +1,28 @@
 #!/bin/sh
-# Usage: skill-wrap SKILL_DIR REF OUT_DIR
+# Usage: skill-wrap SKILL_DIR REF OUT_DIR [SIBLING...]
 # Builds a plugin directory at OUT_DIR (which must not exist yet) holding the
 # skill in SKILL_DIR as committed at git REF, and the suites and fixtures from
 # the skill's eval directory in the working tree, so one suite can be run
 # against several skill versions. SKILL_DIR is a plugin's skills/<name>, and
 # its eval directory is evals/<name> at that plugin's root. Each
-# plugin-eval* directory there becomes evals* in OUT_DIR.
+# plugin-eval* directory there becomes evals* in OUT_DIR. Each SIBLING names
+# another skill directory beside SKILL_DIR, added at the same REF for a skill
+# that reads its siblings' files.
 set -eu
 skill=$(cd "$1" && pwd)
 ref=$2
 out=$3
+shift 3
 name=$(basename "$skill")
 evals=$(cd "$skill/../.." && pwd)/evals/$name
 
 mkdir "$out"
-mkdir -p "$out/.claude-plugin" "$out/skills/$name"
-git -C "$skill" archive "$ref" . \
-  | tar -x -C "$out/skills/$name" --exclude=PROVENANCE.md
+mkdir -p "$out/.claude-plugin"
+for each in "$name" "$@"; do
+  mkdir -p "$out/skills/$each"
+  git -C "$skill/../$each" archive "$ref" . \
+    | tar -x -C "$out/skills/$each" --exclude=PROVENANCE.md
+done
 commit=$(git -C "$skill" rev-parse --short "$ref")
 printf '{"name":"kit","version":"0.0.0+%s","description":"Tools"}\n' "$commit" \
   > "$out/.claude-plugin/plugin.json"
@@ -27,4 +33,4 @@ done
 if [ -d "$evals/fixtures" ]; then
   cp -R "$evals/fixtures" "$out/fixtures"
 fi
-echo "$out <- $name@$commit"
+echo "$out <- $name $*@$commit"

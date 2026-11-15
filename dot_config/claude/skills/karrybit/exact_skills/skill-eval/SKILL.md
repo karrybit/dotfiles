@@ -22,8 +22,8 @@ skill's base directory.
 - Run each `claude plugin eval` as one plain command without variables, `cd`,
   or redirects, so one approval covers exactly one run.
 - Keep `DIR`, the directory for wrappers and results, outside the repository
-  and on a path without words such as `eval` or `test`, since each run sees
-  the plugin path.
+  and on a path without words such as `eval`, `test`, or `scratchpad`, since
+  each run sees the plugin path.
 - Decide from repeated runs: repeating one command has moved an `llm` grader's
   pass count by one run in three.
 - Commit suite changes separately from skill changes, and commit the suite
@@ -61,8 +61,8 @@ wrapper, so `plugin-eval-holdout/` runs with `--eval-dir evals-holdout`.
 | Canary | `DIR/kit` at `HEAD`, and `DIR/kit-c`: a second `HEAD` wrapper with `canary.patch` applied | `--ablation none` on each |
 
 An in-place run loads every skill in the plugin, and a wrapper holds only the
-evaluated skill at one commit, so a version or canary comparison uses wrappers
-on both sides.
+evaluated skill and the siblings named to `scripts/skill-wrap` at one commit,
+so a version or canary comparison uses wrappers on both sides.
 
 Compare configurations by per-grader pass counts, not by case scores: with two
 arms the `tool_used: Skill` grader is left out of the score, and with
@@ -71,7 +71,9 @@ arms the `tool_used: Skill` grader is left out of the score, and with
 ## Steps
 
 1. For a comparison that uses wrappers, build them:
-   `scripts/skill-wrap <skill dir> HEAD DIR/kit`, one per ref. For the canary, build `DIR/kit-c` the same way and
+   `scripts/skill-wrap <skill dir> HEAD DIR/kit`, one per ref, followed by
+   the name of each sibling skill directory the skill reads, which the
+   skill's eval `README.md` lists. For the canary, build `DIR/kit-c` the same way and
    run `patch -p1 -d DIR/kit-c/skills/<skill name> -i <absolute path of canary.patch>`.
    Completion: `claude plugin validate DIR/kit` reports `Validation passed`
    for each wrapper; warnings about author, README, LICENSE, and icon are

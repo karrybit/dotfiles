@@ -17,8 +17,7 @@ Behavior cases for comparing versions of the `explain` skill. Run them with the 
 ## Settings for This Suite
 
 - Cases grant `Read`, `Glob`, `Grep`, `Skill`, and `Agent`, and no gated tool: run them with `--scaffold` and without `--allow-tools`. Without `Write`, the subagent of `brief` and `from-doc` stops at its first write, which keeps the runs short; the graders read only the request it was given.
-- `explain` reads `organize` and `visualize` as sibling skill directories, so a wrapper needs them too. After `skill-wrap <karrybit>/exact_skills/explain <ref> DIR/kit`, add each at the same ref:
-  `mkdir DIR/kit/skills/organize && git -C <karrybit>/exact_skills/organize archive <ref> . | tar -x -C DIR/kit/skills/organize`, and the same for `visualize`.
+- `explain` reads `organize` and `visualize` as sibling skill directories, so a wrapper needs them too: build it with `skill-wrap <karrybit>/exact_skills/explain <ref> DIR/kit organize visualize`.
 - Run `plugin-eval-holdout/` with `--eval-dir evals-holdout` against a wrapper.
 
 ## What the Suite Separates
