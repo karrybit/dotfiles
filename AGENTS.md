@@ -70,7 +70,9 @@
   loaded the same way as `karo@skills-dir`. Its manifest sets
   `defaultEnabled: false`, so it loads only where a project's settings enable
   it; keep owner-specific values out of it and read them from the caller's
-  arguments or `~/cos/rules/karo.yaml`.
+  arguments or from `~/cos/rules/karo.yaml`, `~/cos/rules/<skill>.md`, and
+  `~/cos/projects/<name>.md`, each with a default for when the file is
+  missing. Its subagents are in its `exact_agents/`, called `karo:<agent>`.
 - `run_onchange_04_prune-skills.sh.tmpl` removes skills deployed directly
   under `~/.config/claude/skills/` whose source entry is gone, which chezmoi
   does not do on its own. It only removes skills recorded in its own manifest,

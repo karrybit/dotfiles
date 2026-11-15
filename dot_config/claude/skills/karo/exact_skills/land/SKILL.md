@@ -1,0 +1,30 @@
+---
+name: land
+description: cos の Agent のブランチを `~/cos` の main に取り込む手順（rebase、fast-forward、crit の一覧の更新、記録全体の確かめ）。cos の Agent の作業を main に取り込むとき、Agent に頼まれて cos のブランチを main に載せ替えるときに使う。
+argument-hint: <branch> [--rebase]
+---
+
+# cos の取り込み
+
+- 引数は、取り込むブランチの名前（`<semantics>/agent/<title>`）と、任意の `--rebase` だけを受け取る。
+- 引数に `--rebase` があれば、手順の 1 だけを行って返す。なければ、手順の 1〜4 を行う。
+- 取り込みは、この skill の `scripts/land` を `~/.config/claude/skills/karo/skills/land/scripts/land` の `~` の形で書き、`~/cos` から単独のコマンドで実行する。
+- land は、`scripts/land` の冒頭にある確かめをすべて通ってから、hook と fsmonitor を止めた git だけを sandbox の外で動かす（`sandbox.excludedCommands` と `allow` に入れてあり、確認は出ない）。
+- land は、確かめが 1 つでも合わなければ、何もせずに理由を 1 行出して止まる。land は record の lock を取ってから動くので、record の待ち行列と重ならない。
+- land が止まったら、そこで手順を止め、land の出した 1 行を返す。
+
+## 手順
+
+1. ブランチが main より遅れていれば、`~/.config/claude/skills/karo/skills/land/scripts/land <branch> --rebase` で、worktree の中でブランチを main に載せ替える。競合したら land が rebase を戻し、競合したファイルを出すので、Agent に直させる。
+   完了条件: ブランチが main より遅れていない。
+2. `~/.config/claude/skills/karo/skills/land/scripts/land <branch>` で、main をブランチに fast-forward する。
+   完了条件: `~/cos` の main がブランチの先頭を指している。
+3. `~/.config/claude/skills/karo/scripts/record --restart-crit` を単独のコマンドで実行し、crit の一覧に増えたファイルと消えたファイルを反映させる。最後の行が `NG crit:` ならオーナーに伝える。
+   完了条件: 最後の行を読み、`NG crit:` ならオーナーに伝えている。
+4. 引数なしの `~/.config/claude/skills/karo/scripts/karo-check` を単独のコマンドで実行し、記録全体を確かめる。record の検査の範囲（`~/cos/rules/record.md` の冒頭）の外にある、取り込みが持ち込んだ問題はここで見つける。問題が出たら、record で直す。あわせて `~/.local/state/cos/record/problems.md` を読み、オーナーの発言を待たずに届いていない record の NG があれば、`~/cos/rules/record.md` の「走らせる」に従って直す。
+   完了条件: `karo-check: 0 problem(s)` が出たか、直しの指示に record が `queued` を出した。
+
+## 返すもの
+
+- 取り込めたときは、land が出した `main fast-forwarded to <commit>` の commit を返す。`--rebase` のときは、`rebased onto main at <commit>` の commit を返す。
+- 止まったときは、止まった手順の番号と、land が出した 1 行（競合したファイルの一覧を含む）を返す。
