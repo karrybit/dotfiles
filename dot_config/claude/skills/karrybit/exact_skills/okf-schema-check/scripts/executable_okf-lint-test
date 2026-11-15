@@ -1,0 +1,171 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2016  # fixtures and hostile values are single-quoted on purpose
+# Show that okf-lint can tell a valid folder from a broken one: a small valid folder must pass, each broken
+# note in a copy of it must be reported, and with --only a problem is found in the given files and in the
+# files whose checks read them, and left out elsewhere. The schema and the folder are made up for the test.
+# usage: okf-lint-test   (tests the okf-lint beside this script; its files go to a temporary directory
+#        that is removed)
+set -uo pipefail
+exec </dev/null
+bin=$(cd "$(dirname "$0")" && pwd)
+lint=$bin/okf-lint
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/okf-lint-test.XXXXXX") || exit 2
+trap 'rm -rf "$tmp"' EXIT
+failed=0
+fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
+pass() { printf 'ok\t%s\n' "$1"; }
+
+schema=$tmp/schema.yaml
+cat > "$schema" <<'EOF'
+exclude:
+  - '^logs/raw/'
+types:
+  Log: [date]
+  Area: [description]
+  Note: [date, description, owner]
+  Guide: [description]
+  Sketch: []
+layers:
+  Log: bronze
+  Area: silver
+  Note: silver
+  Guide: gold
+  Sketch: none
+paths:
+  Log: '^logs/[0-9]{4}-[0-9]{2}-[0-9]{2}\.md$'
+  Area: '^areas/[^/]+\.md$'
+  Note: '^notes/[a-z][0-9]-[^/]+\.md$'
+  Guide: '^guides/[^/]+\.md$'
+lineage: [Note, Guide]
+files:
+  summary.md: gold
+EOF
+
+ok=$tmp/ok
+mkdir -p "$ok"/{logs/raw,areas,notes,guides,sketches}
+printf -- '---\ntype: Log\ndate: 2030-01-01\n---\n\n## 2030-01-01\n\n- 09:00 [beds](areas/beds.md) were watered\n' > "$ok/logs/2030-01-01.md"
+printf -- '---\ntype: Area\ndescription: The raised beds.\n---\n\n## Beds\n\n- [the log](logs/2030-01-01.md#09:00), [a page](https://example.invalid/beds), [the page beside](index.html), [a name](time)\n- `[in code](notes/x9-gone.md)`\n\n```\n[in a fence](notes/x9-gone.md)\n```\n' > "$ok/areas/beds.md"
+printf -- '---\ntype: Note\ndescription: Water the beds every two days.\ndate: 2030-01-02\nowner: gardener\nstale_after: "2099-01-01T00:00:00+09:00"\nderived_from:\n  - logs/2030-01-01.md#09:00\n  - areas/beds.md\nsupersedes: notes/a0-watering.md\n---\n\n## Watering\n' > "$ok/notes/a1-watering.md"
+# A deprecated note past its stale_after is not stale.
+printf -- '---\ntype: Note\ndescription: Water the beds every day.\ndate: 2030-01-01\nowner: gardener\nstatus: deprecated\nstale_after: 2020-01-01T00:00:00Z\nderived_from:\n  - logs/2030-01-01.md\n---\n\n## Watering\n' > "$ok/notes/a0-watering.md"
+printf -- '---\ntype: Guide\ndescription: How to water the beds.\nsources:\n  - { id: manual, resource: https://example.invalid/manual, title: The manual }\nderived_from:\n  - notes/a1-watering.md\n---\n\n## Watering guide\n\nSee [the note](notes/a1-watering.md).\n' > "$ok/guides/watering.md"
+# A type without paths may sit anywhere.
+printf -- '---\ntype: Sketch\n---\n\n## Sketch\n' > "$ok/sketches/plan.md"
+# A file the schema lists carries no frontmatter, and its links are read.
+printf '# Summary\n\n- [watering](guides/watering.md)\n' > "$ok/summary.md"
+# A file without frontmatter where no type lives is not a note, and an excluded file is not read.
+printf '# About\n\n- [a draft](notes/x9-gone.md)\n' > "$ok/README.md"
+printf 'raw\n' > "$ok/logs/raw/2030-01-01.md"
+
+n=0
+# run [<okf-lint arguments>...] -> $out, $code, on the copy $copy
+fresh() { n=$((n+1)); copy=$tmp/case$n; cp -R "$ok" "$copy"; }
+run() { out=$("$lint" "$@" 2>&1); code=$?; }
+
+fresh; run "$schema" "$copy"
+if [[ $code -eq 0 ]] && printf '%s\n' "$out" | rg -qxF 'okf-lint: 0 stale note(s)'; then pass "valid folder passes"; else fail "valid folder: exit $code: $out"; fi
+
+for a in "" "$schema" "$schema $tmp/none" "--only"; do
+  read -ra argv <<< "$a"
+  run ${argv[@]+"${argv[@]}"}
+  if [[ $code -eq 2 ]]; then pass "usage error: okf-lint $a"; else fail "usage error: okf-lint $a: exit $code: $out"; fi
+done
+printf 'exclude: []\n' > "$tmp/no-types.yaml"
+fresh; run "$tmp/no-types.yaml" "$copy"
+if [[ $code -eq 2 ]]; then pass "schema without types is an error"; else fail "schema without types: exit $code: $out"; fi
+
+# A note past its stale_after is reported, counted, and not failed.
+for v in '"2020-01-01T00:00:00+09:00"' '2020-01-01T00:00:00Z'; do
+  fresh; sed -i.bak "s/^stale_after: .*/stale_after: $v/" "$copy/notes/a1-watering.md"
+  run "$schema" "$copy"
+  if [[ $code -eq 0 ]] && printf '%s\n' "$out" | rg -qF $'notes/a1-watering.md\tstale since 2020-01-01T00:00:00' && printf '%s\n' "$out" | rg -qxF 'okf-lint: 1 stale note(s)'; then
+    pass "stale note warns: $v"
+  else
+    fail "stale note $v: exit $code: $out"
+  fi
+done
+fresh; sed -i.bak '/^status: deprecated/d' "$copy/notes/a0-watering.md"
+run "$schema" "$copy"
+if [[ $code -eq 0 ]] && printf '%s\n' "$out" | rg -qF $'notes/a0-watering.md\tstale since 2020-01-01T00:00:00Z'; then pass "past stale_after without deprecated warns"; else fail "past stale_after without deprecated: exit $code: $out"; fi
+
+# <name>|<expected problem>|<shell command run inside the copy>
+cases=(
+  'no frontmatter where a type lives|logs/2030-01-02.md	no frontmatter|printf "## 2030-01-02\\n" > logs/2030-01-02.md'
+  'unparseable frontmatter|logs/2030-01-02.md	unparseable frontmatter|printf -- "---\\ntype: [Log\\n---\\n" > logs/2030-01-02.md'
+  'missing type|areas/beds.md	missing type|sed -i.bak "/^type:/d" areas/beds.md'
+  'unknown type|areas/beds.md	unknown type: Bogus|sed -i.bak "s/^type: Area/type: Bogus/" areas/beds.md'
+  'missing required field|notes/a1-watering.md	missing owner|sed -i.bak "/^owner:/d" notes/a1-watering.md'
+  'empty required field|notes/a1-watering.md	missing owner|sed -i.bak "s/^owner: .*/owner: \"\"/" notes/a1-watering.md'
+  'bad status|notes/a1-watering.md	bad status|sed -i.bak "s/^owner: gardener/owner: gardener\\nstatus: old/" notes/a1-watering.md'
+  'stale_after without a time|notes/a1-watering.md	stale_after needs an offset datetime|sed -i.bak "s/^stale_after: .*/stale_after: 2099-01-01/" notes/a1-watering.md'
+  'stale_after without an offset|notes/a1-watering.md	stale_after needs an offset datetime|sed -i.bak "s/^stale_after: .*/stale_after: \"2099-01-01T00:00:00\"/" notes/a1-watering.md'
+  'note in the folder of another type|areas/a1-watering.md	path does not match Note|mv notes/a1-watering.md areas/a1-watering.md'
+  'note where no type lives|misc/a1-watering.md	path does not match Note|mkdir misc && mv notes/a1-watering.md misc/a1-watering.md'
+  'note with a bad name|notes/watering.md	path does not match Note|mv notes/a1-watering.md notes/watering.md'
+  'no lineage|guides/watering.md	no sources or derived_from|sed -i.bak "/^sources:/,/^  - notes/d" guides/watering.md'
+  'derived_from to a missing file|notes/a1-watering.md	derived_from missing: areas/plots.md|sed -i.bak "s#  - areas/beds.md#  - areas/plots.md#" notes/a1-watering.md'
+  'derived_from to a higher layer|notes/a1-watering.md	derived_from points to a higher layer: guides/watering.md|sed -i.bak "s#  - areas/beds.md#  - guides/watering.md#" notes/a1-watering.md'
+  'derived_from to a higher listed file|notes/a1-watering.md	derived_from points to a higher layer: summary.md|sed -i.bak "s#  - areas/beds.md#  - summary.md#" notes/a1-watering.md'
+  'supersedes a missing note|notes/a1-watering.md	supersedes missing: notes/a9-gone.md|sed -i.bak "s#a0-watering#a9-gone#" notes/a1-watering.md'
+  'link to a missing file|areas/beds.md	link target missing: logs/2030-01-09.md|sed -i.bak "s#(logs/2030-01-01.md#(logs/2030-01-09.md#" areas/beds.md'
+  'link in a listed file to a missing file|summary.md	link target missing: guides/pruning.md|sed -i.bak "s#guides/watering.md#guides/pruning.md#" summary.md'
+  'removed note still named|guides/watering.md	link target missing: notes/a1-watering.md|rm notes/a1-watering.md'
+)
+for c in "${cases[@]}"; do
+  name=${c%%|*}; rest=${c#*|}; want=${rest%%|*}; cmd=${rest#*|}
+  fresh
+  (cd "$copy" && eval "$cmd" && rm -f ./*.bak ./*/*.bak) || { fail "$name: could not break the copy"; continue; }
+  run "$schema" "$copy"
+  if [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -qF -- "$want"; then pass "$name"; else fail "$name: exit $code, want '$want': $out"; fi
+done
+
+# Frontmatter values are data: a value holding "|", a newline, a glob, or shell syntax is reported as the
+# problems it is and nothing more, and no command in it runs.
+# hostile <name> <expected problem (fixed string)> <line in notes/a1-watering.md> <replacement> [<--only path>]
+hostile() {
+  local name=$1 want=$2 old=$3 new=$4 c args=()
+  fresh
+  c=$(<"$copy/notes/a1-watering.md")
+  [[ $c == *"$old"* ]] || { fail "$name: could not break the copy"; return; }
+  printf '%s%s%s\n' "${c%%"$old"*}" "$new" "${c#*"$old"}" > "$copy/notes/a1-watering.md"
+  [[ -n ${5:-} ]] && args=(--only "$5")
+  run ${args[@]+"${args[@]}"} "$schema" "$copy"
+  if [[ -e $copy/pwned ]]; then fail "$name: a command in a value ran"
+  elif [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -qF -- "$want" && printf '%s\n' "$out" | rg -qxF "okf-lint: 1 problem(s)"; then pass "$name"
+  else fail "$name: exit $code, want 1 problem with '$want': $out"; fi
+}
+hostile 'status with "|" and an arithmetic subscript of an unset name' 'bad status' 'type: Note' $'type: Note\nstatus: "x|y|a[$(touch pwned)]"'
+hostile 'status with "|" and an arithmetic subscript of a set name' 'bad status' 'type: Note' $'type: Note\nstatus: "x|y|i[$(touch pwned)]"'
+hostile 'stale_after with "|"' 'stale_after needs an offset datetime' 'stale_after: "2099-01-01T00:00:00+09:00"' 'stale_after: "2099-01-01T00:00:00+09:00|x"'
+hostile 'status with a newline and a forged @info' 'bad status' 'type: Note' $'type: Note\nstatus: "x\\n@info|Bogus"'
+hostile 'derived_from that is a glob' 'derived_from missing: *' '  - areas/beds.md' '  - "*"'
+hostile 'derived_from with a command substitution' 'derived_from missing: $(touch pwned)' '  - areas/beds.md' '  - "$(touch pwned)"'
+hostile 'derived_from with "|"' 'derived_from missing: areas/beds.md|x' '  - areas/beds.md' '  - "areas/beds.md|x"'
+hostile 'only: derived_from with "|"' 'derived_from missing: areas/beds.md|x' '  - areas/beds.md' '  - "areas/beds.md|x"' notes/a1-watering.md
+
+# --only: a problem in a given file or in a file that depends on it is found; one elsewhere is not.
+# <name>|<expected problem, or "pass">|<--only paths, space-separated>|<shell command run inside the copy>
+scoped=(
+  'only: problem in a given file|areas/beds.md	unknown type: Bogus|areas/beds.md|sed -i.bak "s/^type: Area/type: Bogus/" areas/beds.md'
+  'only: problem in another file is left out|pass|logs/2030-01-01.md|sed -i.bak "s/^type: Area/type: Bogus/" areas/beds.md'
+  'only: removed file named by derived_from|notes/a1-watering.md	derived_from missing: logs/2030-01-01.md#09:00|logs/2030-01-01.md|rm logs/2030-01-01.md'
+  'only: removed file linked|summary.md	link target missing: guides/watering.md|guides/watering.md|rm guides/watering.md'
+  'only: renamed file still linked|logs/2030-01-01.md	link target missing: areas/beds.md|areas/beds.md areas/plots.md|mv areas/beds.md areas/plots.md'
+  'only: removed note named by supersedes|notes/a1-watering.md	supersedes missing: notes/a0-watering.md|notes/a0-watering.md|rm notes/a0-watering.md'
+  'only: derived_from to a higher note outside the scope|notes/a1-watering.md	derived_from points to a higher layer: guides/watering.md|notes/a1-watering.md|sed -i.bak "s#  - areas/beds.md#  - guides/watering.md#" notes/a1-watering.md'
+  'only: added note in the wrong place|misc/a2-mulch.md	path does not match Note|misc/a2-mulch.md|mkdir misc && cp notes/a1-watering.md misc/a2-mulch.md'
+  'only: a file that is not a note|pass|README.md|printf "\\n- [gone](notes/x8-gone.md)\\n" >> README.md'
+)
+for c in "${scoped[@]}"; do
+  name=${c%%|*}; rest=${c#*|}; want=${rest%%|*}; rest=${rest#*|}; paths=${rest%%|*}; cmd=${rest#*|}
+  fresh
+  (cd "$copy" && eval "$cmd" && rm -f ./*.bak ./*/*.bak) || { fail "$name: could not break the copy"; continue; }
+  args=(); for p in $paths; do args+=(--only "$p"); done
+  run "${args[@]}" "$schema" "$copy"
+  if [[ $want == pass ]]; then
+    if [[ $code -eq 0 ]]; then pass "$name"; else fail "$name: exit $code: $out"; fi
+  elif [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -qF -- "$want"; then pass "$name"; else fail "$name: exit $code, want '$want': $out"; fi
+done
+
+echo "okf-lint-test: $failed failure(s)" >&2
+[[ $failed -eq 0 ]]

@@ -1,0 +1,173 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2016  # yq, awk, and rg programs are single-quoted on purpose
+# Check the Markdown notes in a folder against a frontmatter schema: each note carries the fields its type
+# requires, sits where its type lives, and keeps its lineage and its path links resolvable. Notes past their
+# stale_after are reported without failing. The schema keys, what counts as a note, and how paths are read
+# are in the SKILL.md beside scripts/.
+# usage: okf-lint [--only <path>]... <schema.yaml> <folder>
+# --only limits the check to the given paths from <folder> (changed, added, or removed files; for a rename,
+# both paths) and to the files whose checks read them: notes listing a given path as a derived_from item, and
+# for a removed file, files linking to it and notes whose supersedes names it. A file brought in is checked in full.
+# Prints "<path><TAB><problem>" per problem and "<path><TAB>stale since <stale_after>" per stale note on
+# stdout, the counts on stderr, and exits 0 when there is no problem, 1 when there is one, and 2 on a usage
+# or schema error.
+set -uo pipefail
+usage() { echo "usage: okf-lint [--only <path>]... <schema.yaml> <folder>" >&2; exit 2; }
+only=(); args=()
+while (( $# )); do
+  case $1 in
+    --only) [[ $# -ge 2 ]] || usage; only+=("${2#./}"); shift 2 ;;
+    -*) usage ;;
+    *) args+=("$1"); shift ;;
+  esac
+done
+[[ ${#args[@]} -eq 2 && -f ${args[0]} && -d ${args[1]} ]] || usage
+SCHEMA=$(cd "$(dirname "${args[0]}")" && pwd)/$(basename "${args[0]}")
+cd "${args[1]}" || exit 2
+[[ $(yq '.types | tag' "$SCHEMA" 2>/dev/null) == '!!map' ]] || { echo "okf-lint: $SCHEMA has no types map" >&2; exit 2; }
+# Frontmatter values are split on these two control characters, which yq replaces in every value it
+# prints; values never reach arithmetic, word splitting, or globbing.
+FS=$'\x1f' LS=$'\x1e'
+export SCHEMA FS LS
+problems=0
+stale=0
+report() { printf '%s\t%s\n' "$1" "$2"; problems=$((problems+1)); }
+
+# Schema maps, read once into parallel arrays (bash 3.2 has no associative arrays). The path regex comes
+# last because it may contain "|", which read leaves in the last field.
+excl=$(yq '(.exclude // []) | join("|")' "$SCHEMA")
+s_type=(); s_layer=(); s_path=(); s_lineage=()
+while IFS='|' read -r k l n p; do
+  s_type+=("$k"); s_layer+=("$l"); s_lineage+=("$n"); s_path+=("$p")
+done < <(yq '. as $s | (.types | keys)[] as $k | [$k, ($s.layers[$k] // ""), (($s.lineage // []) | contains([$k]) | tostring), ($s.paths[$k] // "")] | join("|")' "$SCHEMA")
+f_name=(); f_layer=()
+while IFS='|' read -r k l; do f_name+=("$k"); f_layer+=("$l"); done < <(yq '.files // {} | to_entries | .[] | .key + "|" + .value' "$SCHEMA")
+type_layer() { local i; for i in "${!s_type[@]}"; do [[ ${s_type[$i]} == "$1" ]] && { echo "${s_layer[$i]}"; return; }; done; }
+type_index() { local i; for i in "${!s_type[@]}"; do [[ ${s_type[$i]} == "$1" ]] && { echo "$i"; return; }; done; echo -1; }
+rank() { case $1 in bronze) echo 1 ;; silver) echo 2 ;; gold) echo 3 ;; *) echo 0 ;; esac; }
+excluded() { [[ -n $excl && $1 =~ $excl ]]; }
+typed_place() { local p; for p in "${s_path[@]}"; do [[ -n $p && $1 =~ $p ]] && return 0; done; return 1; }
+has_frontmatter() { local first=; IFS= read -r first < "$1"; [[ $first == --- ]]; }
+
+# With --only, $scope holds the files to check, one per line between newlines.
+scoped=0; scope=$'\n'
+add_scope() { local f; while IFS= read -r f; do scope+="${f#./}"$'\n'; done; }
+in_scope() { (( ! scoped )) || [[ $scope == *$'\n'"$1"$'\n'* ]]; }
+if (( ${#only[@]} )); then
+  scoped=1
+  removed=()
+  for p in "${only[@]}"; do
+    scope+="$p"$'\n'
+    [[ -e $p ]] || removed+=(-e "]($p" -e "supersedes: $p")
+  done
+  # notes listing a given path as a derived_from item (a list item anywhere in the file: a superset)
+  alt=$(printf '%s\n' "${only[@]}" | sed 's/[][\.*^$+?(){}|]/\\&/g' | paste -sd '|' -)
+  # add_scope reads a process substitution, not a pipe, so that it runs in this shell and keeps $scope
+  add_scope < <(rg -l -g '*.md' -- "^\s*- ['\"]?($alt)(#.*)?['\"]?\s*$" . 2>/dev/null)
+  # for a removed file, files linking to its path and notes whose supersedes names it
+  (( ${#removed[@]} )) && add_scope < <(rg -l -F -g '*.md' "${removed[@]}" . 2>/dev/null)
+fi
+
+# A note is a .md file outside exclude that starts with a frontmatter line, or that sits where a type lives.
+notes=()
+while IFS= read -r f; do
+  excluded "$f" && continue
+  in_scope "$f" || continue
+  if has_frontmatter "$f" || typed_place "$f"; then notes+=("$f"); fi
+done < <(fd -t f -e md . | sort)
+
+# Per note, one yq call prints the frontmatter problems, then one "@info" line with the fields the later
+# checks need ($FS between fields, $LS between list items; control characters in values become spaces).
+# yq emits a string literal even after a failing select, so each check is an if/else-null, and it binds a
+# variable only over the first branch of a comma, so the two branches sit in one group.
+export DT='^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$'
+expr='
+  load(strenv(SCHEMA)).types as $t
+  | . as $d
+  | (.type // "") as $ty
+  | ((.stale_after // "") | tostring) as $sa
+  | ($sa | test(strenv(DT))) as $sa_ok
+  | (([
+      (if $ty == "" then "missing type" else null end),
+      (if $ty != "" and ($t | has($ty) | not) then "unknown type: " + $ty else null end),
+      (($t[$ty] // [])[] | (if ($d[.] == null or $d[.] == "" or $d[.] == []) then "missing " + . else null end)),
+      (if ($d | has("status")) and (($d.status | tostring | test("^(draft|stable|deprecated)$")) | not) then "bad status" else null end),
+      (if ($d | has("stale_after")) and ($sa_ok | not) then "stale_after needs an offset datetime: YYYY-MM-DDTHH:MM:SS and Z or +HH:MM" else null end)
+    ] | map(select(. != null)) | .[] | sub("[[:cntrl:]]"; " ")),
+    ("@info" + strenv(FS) + ([
+      ([(.type // ""), $sa][] | tostring | sub("[[:cntrl:]]"; " ")),
+      (if $sa_ok and ((.status // "") != "deprecated") then (if ($d.stale_after | to_unix) <= (now | to_unix) then "1" else "" end) else "" end),
+      (((.sources // []) + (.derived_from // [])) | length | tostring),
+      ((.derived_from // []) | map(tostring | sub("[[:cntrl:]]"; " ")) | join(strenv(LS))),
+      ((.supersedes // "") | tostring | sub("[[:cntrl:]]"; " "))
+    ] | join(strenv(FS)))))'
+n_path=(); n_type=(); n_stale=(); n_is_stale=(); n_lin=(); n_derived=(); n_super=()
+for f in ${notes[@]+"${notes[@]}"}; do
+  if ! has_frontmatter "$f"; then report "$f" "no frontmatter"; continue; fi
+  if ! out=$(yq --front-matter=extract "$expr" "$f" 2>&1); then
+    report "$f" "unparseable frontmatter: ${out%%$'\n'*}"; continue
+  fi
+  # Process substitution, not a here-string: a here-string needs a temporary file, and when the
+  # sandbox refuses it the loop is skipped silently and the problems go uncounted.
+  info=
+  while IFS= read -r p; do
+    [[ -z $p ]] && continue
+    if [[ $p == "@info$FS"* ]]; then info=${p#"@info$FS"}; else report "$f" "$p"; fi
+  done < <(printf '%s\n' "$out")
+  [[ -z $info ]] && { report "$f" "okf-lint could not read the fields"; continue; }
+  IFS=$FS read -r ty sa is_stale nlin derived super < <(printf '%s\n' "$info")
+  n_path+=("$f"); n_type+=("$ty"); n_stale+=("$sa"); n_is_stale+=("$is_stale"); n_lin+=("$nlin")
+  n_derived+=("$derived"); n_super+=("$super")
+done
+
+layer_of() { # <path> -> layer of the note or of the file the schema lists
+  local i
+  for i in "${!n_path[@]}"; do [[ ${n_path[$i]} == "$1" ]] && { type_layer "${n_type[$i]}"; return; }; done
+  for i in "${!f_name[@]}"; do [[ ${f_name[$i]} == "$1" ]] && { echo "${f_layer[$i]}"; return; }; done
+  # with --only, a note outside the scope was not read above
+  if (( scoped )) && [[ $1 == *.md ]] && ! excluded "$1" && has_frontmatter "$1"; then
+    type_layer "$(yq --front-matter=extract '.type // "" | tostring | sub("[[:cntrl:]]"; " ")' "$1" 2>/dev/null)"
+  fi
+}
+
+for i in "${!n_path[@]}"; do
+  f=${n_path[$i]}; ty=${n_type[$i]}
+  ti=$(type_index "$ty")
+  (( ti < 0 )) && continue
+  # place and name follow the type
+  pat=${s_path[$ti]}
+  [[ -n $pat && ! $f =~ $pat ]] && report "$f" "path does not match $ty: $pat"
+  # lineage is present where the type needs it, resolves, and never points to a higher layer
+  [[ ${s_lineage[$ti]} == true && ${n_lin[$i]} == 0 ]] && report "$f" "no sources or derived_from"
+  mine=$(rank "${s_layer[$ti]}")
+  IFS=$LS read -r -a ds < <(printf '%s\n' "${n_derived[$i]}")
+  for d in ${ds[@]+"${ds[@]}"}; do
+    path=${d%%#*}
+    if [[ ! -f $path ]]; then report "$f" "derived_from missing: $d"; continue; fi
+    theirs=$(rank "$(layer_of "$path")")
+    (( theirs > mine && mine > 0 )) && report "$f" "derived_from points to a higher layer: $d"
+  done
+  # supersedes is the path of the note it replaces
+  [[ -n ${n_super[$i]} && ! -f ${n_super[$i]} ]] && report "$f" "supersedes missing: ${n_super[$i]}"
+  # freshness: past stale_after is reported, not failed
+  if [[ -n ${n_is_stale[$i]} ]]; then printf '%s\tstale since %s\n' "$f" "${n_stale[$i]}"; stale=$((stale+1)); fi
+done
+
+# A path link, [label](<folder>/<file>) whose first segment is a folder at the top of <folder>, resolves from
+# <folder>. Links in the notes and in the files the schema lists are read; fenced and inline code are skipped.
+link_files=(${notes[@]+"${notes[@]}"})
+for i in "${!f_name[@]}"; do
+  f=${f_name[$i]}
+  [[ -f $f ]] && in_scope "$f" && link_files+=("$f")
+done
+link_re='\]\(([^).#/[:space:]][^)#[:space:]]*/[^)#[:space:]]*)(#[^)]*)?\)'
+link_lines='FNR == 1 {f = 0} /^```/{f=!f; next} !f{gsub(/`[^`]*`/, ""); if (/\]\(/) print FILENAME ":" $0}'
+(( ${#link_files[@]} )) && while IFS=: read -r f l; do
+  while IFS= read -r t; do
+    [[ -n $t && -d ${t%%/*} && ! -e $t ]] && report "$f" "link target missing: $t"
+  done < <(printf '%s' "$l" | rg -o -r '$1' -- "$link_re")
+done < <(awk "$link_lines" "${link_files[@]}")
+
+echo "okf-lint: $stale stale note(s)" >&2
+echo "okf-lint: $problems problem(s)" >&2
+[[ $problems -eq 0 ]]
