@@ -279,6 +279,16 @@ x
 EOF
 git -C "$v" config --unset core.alternateRefsCommand
 if [[ $code -eq 1 && $last == *"core.alternaterefscommand"* ]] && clean; then pass "a key outside the allowed set is refused"; else fail "allowlist: exit $code: $out"; fi
+# bd reads beads.role from the git config; that one key is allowed, not the rest of beads.*.
+git -C "$v" config beads.role maintainer
+out=$(printf '書き込み指示\ncommit 件名: t-test0001: with beads.role\ncommit 本文:\n~~~~\nwhy\n~~~~\n追記: projects/demo.md\n~~~~\nx\n~~~~\n' | "$bin/record" 2>&1); code=$?; last=${out##*$'\n'}
+git -C "$v" config --unset beads.role
+if [[ $code -eq 0 && $last == "OK $(head_sha) t-test0001: with beads.role" ]] && clean; then pass "beads.role is allowed"; else fail "beads.role: exit $code: $out"; fi
+git -C "$v" config beads.foo x
+before=$(head_sha)
+out=$(printf '書き込み指示\ncommit 件名: t-test0001: with beads.foo\ncommit 本文:\n~~~~\nwhy\n~~~~\n追記: projects/demo.md\n~~~~\nx\n~~~~\n' | "$bin/record" 2>&1); code=$?; last=${out##*$'\n'}
+git -C "$v" config --unset beads.foo
+if [[ $code -eq 1 && $last == *"許していない項目がある"*": beads.foo" && $(head_sha) == "$before" ]] && clean; then pass "another beads.* key is refused"; else fail "beads.foo: exit $code: $out"; fi
 
 # extensions.worktreeConfig would make git read .git/config.worktree, which the sandbox can write.
 git -C "$v" config extensions.worktreeConfig true

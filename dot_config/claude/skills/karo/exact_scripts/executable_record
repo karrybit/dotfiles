@@ -365,7 +365,7 @@ GIT_ENV = {**os.environ, "GIT_DIR": GIT_DIR, "GIT_COMMON_DIR": GIT_DIR, "GIT_WOR
            **{f"GIT_CONFIG_VALUE_{i}": v for i, (_, v) in enumerate(OVERRIDES)}}
 GIT = ["git", "-C", COS]
 SAFE_KEY = re.compile(r"^core\.(repositoryformatversion|filemode|bare|logallrefupdates|ignorecase|precomposeunicode|symlinks)$|"
-                      r"^user\.(name|email)$|^branch\.[^.]+\.(remote|merge)$")
+                      r"^user\.(name|email)$|^branch\.[^.]+\.(remote|merge)$|^beads\.role$")
 
 
 def check_git_config():
