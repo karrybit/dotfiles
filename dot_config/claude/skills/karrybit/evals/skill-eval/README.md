@@ -14,3 +14,9 @@ Behavior cases for comparing versions of the `skill-eval` skill. Run them with t
 
 - Cases grant no gated tool and have no scaffold: run them without `--scaffold` and `--allow-tools`.
 - `skill-eval` reads no sibling skill: build the wrapper with `skill-wrap <karrybit>/exact_skills/skill-eval <ref> DIR/kit`.
+
+## What the Suite Separates
+
+Measured on a wrapper holding only this skill, with `karrybit:skill-eval`'s suite command (`--ablation none`, `--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`): every grader passes 3/3. The graders guard against regressions; no other configuration has been measured against them.
+
+`scripts/skill-wrap` is measured through `install-agent-extension`'s suite instead: its `vet-output-seen` grader separates wrappers whose scripts keep their chezmoi source names.

@@ -14,3 +14,10 @@ Behavior cases for comparing versions of the `completion-report` skill. Run them
 
 - Cases grant `Bash` and `Edit`: run them with `--scaffold --allow-tools Bash Edit`.
 - `completion-report` reads no sibling skill: build the wrapper with `skill-wrap <karrybit>/exact_skills/completion-report <ref> DIR/kit`.
+
+## What the Suite Separates
+
+Measured on wrappers holding only this skill, with `karrybit:skill-eval`'s suite command (`--ablation none`, `--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`), three repeats per configuration:
+
+- `no-commit-is-none` passes 3/3 in each repeat of the skill, and 0/3 in each repeat of a version without the template line saying that no commit is the one word `なし` and without the rule naming where such an explanation goes: those runs write `なし（commit していません）`.
+- The other graders fail at most one run in any repeat. They guard against regressions and do not separate versions.

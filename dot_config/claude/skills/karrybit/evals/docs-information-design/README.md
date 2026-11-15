@@ -28,6 +28,6 @@ Measured on a wrapper holding only this skill, with `karrybit:skill-eval`'s suit
 
 - `good-docs-audit/no-change-verdict` scores the skill above both the canary and no skill (skill 3/3 in both repeats, canary 1/3, no skill 1/3).
 - `good-docs-audit/no-fabricated-issues` scores the skill above no skill (3/3 against 1/3 and 2/3); the canary keeps the rule it checks and scores like the skill.
-- `splittable-but-cohesive/runbook-mismatch-reported` passes less often with the skill (5 of 15 runs) than without it (7 of 15) or with the canary (11 of 15): runs that never open `docs/runbook.md` miss the mismatch.
+- `splittable-but-cohesive/runbook-mismatch-reported` passes exactly in the runs that open `docs/runbook.md`. The skill passes it in 9 of 9 runs (three repeats of `--case splittable-but-cohesive`); a version without the rule to find and read the documents that link to one whose boundary is in question, and without that rule in step 3's completion, passed it in 3 of 9.
 - The other graders fail at most one run in any repeat of any configuration. They guard against regressions and do not separate configurations.
 - `local-paragraph-edit` never fires the skill, since its description excludes local wording fixes, so the case measures the model alone.

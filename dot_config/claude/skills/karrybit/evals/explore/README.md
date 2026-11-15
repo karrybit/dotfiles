@@ -12,3 +12,7 @@ Behavior cases for comparing versions of the `explore` skill. Run them with the 
 
 - Cases grant `Agent`, `Bash`, `Write`, and `Edit`, so that `no-agent` and `no-write` can fail, and have no scaffold: run them with `--allow-tools Bash Write Edit`.
 - `explore` reads no sibling skill: build the wrapper with `skill-wrap <karrybit>/exact_skills/explore <ref> DIR/kit`.
+
+## What the Suite Separates
+
+Measured on a wrapper holding only this skill, with `karrybit:skill-eval`'s suite command (`--ablation none`, `--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`): every grader passes 3/3. The graders guard against regressions; no other configuration has been measured against them.

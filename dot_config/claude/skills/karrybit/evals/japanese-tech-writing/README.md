@@ -16,3 +16,7 @@ Behavior cases for comparing versions of the `japanese-tech-writing` skill. Run 
 
 - Cases edit files and grant no Bash: run them with `--scaffold --allow-tools Write Edit`.
 - `japanese-tech-writing` reads only its own `references/`: build the wrapper with `skill-wrap <karrybit>/exact_skills/japanese-tech-writing <ref> DIR/kit`.
+
+## What the Suite Separates
+
+Measured on a wrapper holding only this skill, with `karrybit:skill-eval`'s suite command (`--ablation none`, `--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`): every grader passes 3/3. The graders guard against regressions; no other configuration has been measured against them.

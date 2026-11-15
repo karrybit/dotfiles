@@ -16,3 +16,7 @@ Behavior cases for comparing versions of the `size-github-issues` skill. Run the
 
 - Cases grant no gated tool: run them with `--scaffold` and without `--allow-tools`.
 - `size-github-issues` reads no sibling skill: build the wrapper with `skill-wrap <karrybit>/exact_skills/size-github-issues <ref> DIR/kit`.
+
+## What the Suite Separates
+
+Measured on a wrapper holding only this skill, with `karrybit:skill-eval`'s suite command (`--ablation none`, `--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`): every grader passes 3/3. The graders guard against regressions; no other configuration has been measured against them.

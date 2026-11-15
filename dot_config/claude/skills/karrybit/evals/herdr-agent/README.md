@@ -17,3 +17,7 @@ The cases grant no `Bash`, so a run cannot reach a real Herdr server or start an
 
 - Cases grant no gated tool and have no scaffold: run them without `--scaffold` and `--allow-tools`.
 - `herdr-agent` reads no sibling skill: build the wrapper with `skill-wrap <karrybit>/exact_skills/herdr-agent <ref> DIR/kit`.
+
+## What the Suite Separates
+
+Measured on a wrapper holding only this skill, with `karrybit:skill-eval`'s suite command (`--ablation none`, `--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`): every grader passes 3/3. The graders guard against regressions; no other configuration has been measured against them.
