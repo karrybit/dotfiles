@@ -20,3 +20,13 @@ Behavior cases for comparing versions of the `explain` skill. Run them with the 
 - `explain` reads `organize` and `visualize` as sibling skill directories, so a wrapper needs them too. After `skill-wrap <karrybit>/exact_skills/explain <ref> DIR/kit`, add each at the same ref:
   `mkdir DIR/kit/skills/organize && git -C <karrybit>/exact_skills/organize archive <ref> . | tar -x -C DIR/kit/skills/organize`, and the same for `visualize`.
 - Run `plugin-eval-holdout/` with `--eval-dir evals-holdout` against a wrapper.
+
+## What the Suite Separates
+
+Measured on wrappers holding `explain`, `organize`, and `visualize` at one commit, with `karrybit:skill-eval`'s suite command (`--ablation none`, `--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`):
+
+- The canary drops `no-destination/asks-destination` and `no-destination/no-agent` to 0/3 (skill 6/6 over two runs) and `evaluate/one-evaluator` to 0/3.
+- `brief/absolute-html-path` does not separate the canary (3/3): the request template's `<HTML の絶対パス>` and step 2's completion condition ask for absolute paths too.
+- `evaluate/no-unrendered-pass` passes 6/6 over two runs; with the `visualize` rubric's rule that a rendering gate passes only after rendering taken out, it passed 2/3.
+- `evaluate/attempt-count-error`, `diagram-error`, and `color-only-marker` fail at most one run in any configuration; the evaluator finds the planted defects with or without the canary.
+- The holdout's `skill-fired` fails one run in three in both versions, when the model loads `visualize` directly for an input that is already an explanation document; its other graders pass.
