@@ -99,6 +99,10 @@ Reference files named below live in `~/.local/share/agents/docs/`.
   session-only context; treat findings as blockers and prefer placeholders over
   real local values. A hook may block high-confidence secret patterns; it does
   not replace this inspection.
+- Before `git push`, list the outgoing files with `git log --stat` and the
+  binaries among them (lines counted as `-`) with `git log --numstat`, since a
+  diff shows a binary only as "Binary files differ" and hides an absolute path
+  embedded in it.
 - Session-only context is anything a reader outside this session could not
   resolve: labels invented to organize this session's work ("Tier2", "wave 3"),
   progress framed against a private artifact, and the agent harness's own
