@@ -2,7 +2,12 @@
 # Check the CoS records: first the general checks of karrybit's okf-lint against the schema (frontmatter,
 # place, lineage, path links, stale_after), then the checks that belong to the CoS structure (the forms of
 # dates, task IDs, task states, journal lines, and pending decisions; project and task vocabularies;
-# derived_from anchors; wiki links; old IDs; and state.md agreeing with the task files it is derived from).
+# derived_from anchors; wiki links; old IDs; state.md agreeing with the task files it is derived from;
+# no Decision note dated after the last day of decisions/, since a decision is a decision bead in the task
+# database; and the task database, .beads, kept out of git).
+# A task ID is a bd ID (cos- and three to eight letters or digits, a child with ".<n>" added), whose task
+# lives in the task database, which karo-check does not read, so only its form is checked; or a t- ID, the
+# form of the tasks with a file, tasks/<ID>.md.
 # usage: karo-check [--only <path>]... [<cos dir>]
 # Default: ~/cos (only its record folders get the CoS checks). The schema is <cos dir>/rules/frontmatter-schema.yaml.
 # --only limits the check to the given vault-relative paths (changed, added, or removed files; for a rename, both
@@ -46,7 +51,10 @@ done < <(printf '%s\n' "$lint_out")
 # Frontmatter values are split on these two control characters, which yq replaces in every value it
 # prints; values never reach arithmetic, word splitting, or globbing.
 FS=$'\x1f' LS=$'\x1e'
-export FS LS
+# A decision is a decision bead in the task database; the Decision notes in decisions/ are the ones dated
+# up to this day.
+DECISIONS_UNTIL=2026-11-14
+export FS LS DECISIONS_UNTIL
 excl=$(yq '.exclude | join("|")' "$SCHEMA")
 types=$'\n'$(yq '.types | keys | .[]' "$SCHEMA")$'\n'
 folders=(journal decisions projects investigations docs threads tasks)
@@ -84,7 +92,8 @@ expr='
   . as $d
   | ([
       (if ($d | has("date")) and (($d.date | tostring | test("^\d{4}-\d{2}-\d{2}$")) | not) then "date is not YYYY-MM-DD" else null end),
-      (($d.tasks // [])[] | (if (tostring | test("^(t-[a-z0-9]{8}|[A-Z][A-Z0-9]+-\d+)$")) | not then "bad task id: " + tostring else null end)),
+      (($d.tasks // [])[] | (if (tostring | test("^(t-[a-z0-9]{8}|cos-[a-z0-9]{3,8}(\.[0-9]+)*|[A-Z][A-Z0-9]+-\d+)$")) | not then "bad task id: " + tostring else null end)),
+      (if ($d.type // "") == "Decision" and ($d | has("date")) and ($d.date | tostring) > strenv(DECISIONS_UNTIL) then "Decision note dated after " + strenv(DECISIONS_UNTIL) + ", record it as a decision bead" else null end),
       (if ($d | has("state")) and (($d.state | tostring | test("^(backlog|ready|delegated|in-review|changes-requested|approved|done|dropped)$")) | not) then "bad state" else null end)
     ] | map(select(. != null)) | .[] | sub("[[:cntrl:]]"; " ")),
     ("@info" + strenv(FS) + ([
@@ -119,7 +128,7 @@ while IFS= read -r f; do
   for p in ${ps[@]+"${ps[@]}"}; do
     [[ $p == all || $vocab == *" $p "* ]] || report "$f" "unknown project: $p"
   done
-  # task IDs have their task files
+  # t- task IDs have their task files (a bd ID has none)
   IFS=$LS read -r -a ts < <(printf '%s\n' "$tasks")
   for t in ${ts[@]+"${ts[@]}"}; do
     [[ $t =~ ^t-[a-z0-9]{8}$ ]] || continue
@@ -135,7 +144,8 @@ while IFS= read -r f; do
     anchor=$(printf '%s' "$anchor" | sed 's/[][\.*^$+?(){}|]/\\&/g')
     rg -q -- "^(- |### .* · (\d{4}-\d{2}-\d{2} )?)${anchor}( |$)" "$path" || report "$f" "derived_from anchor not found: $d"
   done
-  # a thread's body names only its own tasks; another ID is a derived task missing from tasks, a mention, or a mixed topic
+  # a thread's body names only its own tasks; another ID is a derived task missing from tasks, a mention, or a mixed topic.
+  # Only t- IDs are looked for: a bd ID has the form of a hyphenated word such as cos-setup.
   if [[ $ty == Thread ]]; then
     for t in $(awk 'NR == 1 && /^---$/ {fm = 1; next} fm && /^---$/ {fm = 0; next} !fm' "$f" | rg -o '\bt-[a-z0-9]{8}\b' | sort -u); do
       [[ $LS$tasks$LS == *"$LS$t$LS"* ]] && continue
@@ -223,10 +233,17 @@ if [[ -f state.md ]] && { (( ! scoped )) || is_changed state.md || [[ $changed =
   while IFS= read -r l; do report state.md "pending item without q-ID: $l"; done < <(sed -n '/^## 判断待ち/,/^## /p' state.md | rg '^- ' | rg -v '\bq-[a-z0-9]{8}\b')
 fi
 
-# task and pending IDs are t- or q- and eight letters or digits; t or q with three digits, or with 0 and
-# five more, is an old form. assignments.md is left out because running agents keep their old Herdr
-# names, and cos/ and an old ID name an old branch.
-(( ${#ids[@]} )) && while IFS= read -r l; do report "${l%%:*}" "old ID, use t- or q- and eight letters or digits: ${l##*:}"; done < <(
+# The task database, .beads, stays out of the vault's git: ignored when it is there, and nothing under
+# it tracked. Checked on a whole run in a git work tree; record's runs with --only leave git alone.
+if (( ! scoped )) && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  [[ -e .beads ]] && ! git check-ignore -q .beads && report .beads "task database not ignored by git"
+  [[ -n $(git ls-files -- .beads) ]] && report .beads "task database tracked by git"
+fi
+
+# task and pending IDs are bd IDs, or t- or q- and eight letters or digits; t or q with three digits, or
+# with 0 and five more, is an old form. assignments.md is left out because running agents keep their old
+# Herdr names, and cos/ and an old ID name an old branch.
+(( ${#ids[@]} )) && while IFS= read -r l; do report "${l%%:*}" "old ID, use a bd ID or t- or q- and eight letters or digits: ${l##*:}"; done < <(
   rg -n -o --with-filename --pcre2 '(?<![A-Za-z0-9-])(?<!cos/)[tq](0\d{5}|\d{3})(?![0-9])' "${ids[@]}" 2>/dev/null | sort -u)
 
 echo "karo-check: $stale stale note(s)" >&2

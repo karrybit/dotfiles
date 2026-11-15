@@ -64,10 +64,11 @@ cases=(
   'section after the pending decisions|判断待ち is not the last section|printf "\\n## 成果物\\n\\n- x\\n" >> tasks/t-test0001.md'
   'empty pending section|empty 判断待ち section|sed -i.bak "/^- q-test0001/d" tasks/t-test0001.md'
   'two pending sections|two 判断待ち sections|printf "\\n## 判断待ち\\n\\n- q-test0002（起票 2026-01-01）: 例 選択肢と推奨: 例\\n" >> tasks/t-test0001.md'
-  '3-digit task in a task file|tasks/t-test0001.md	old ID, use t- or q- and eight letters or digits: t999|sed -i.bak "s/: 例 選択肢/: t999 の例 選択肢/" tasks/t-test0001.md'
-  '6-digit task in journal|journal/2026-01-01.md	old ID, use t- or q- and eight letters or digits: t000999|sed -i.bak "s/t-test0001: /t000999: /" journal/2026-01-01.md'
-  '6-digit q-ID|tasks/t-test0001.md	old ID, use t- or q- and eight letters or digits: q000999|sed -i.bak "s/q-test0001/q000999/" tasks/t-test0001.md state.md'
+  '3-digit task in a task file|tasks/t-test0001.md	old ID, use a bd ID or t- or q- and eight letters or digits: t999|sed -i.bak "s/: 例 選択肢/: t999 の例 選択肢/" tasks/t-test0001.md'
+  '6-digit task in journal|journal/2026-01-01.md	old ID, use a bd ID or t- or q- and eight letters or digits: t000999|sed -i.bak "s/t-test0001: /t000999: /" journal/2026-01-01.md'
+  '6-digit q-ID|tasks/t-test0001.md	old ID, use a bd ID or t- or q- and eight letters or digits: q000999|sed -i.bak "s/q-test0001/q000999/" tasks/t-test0001.md state.md'
   '6-digit task in frontmatter|bad task id: t000999|sed -i.bak "s/  - t-test0001/  - t000999/" threads/t-test0001-demo.md'
+  'Decision note dated after the last day of decisions/|decisions/test0001-demo.md	Decision note dated after 2026-11-14, record it as a decision bead|sed -i.bak "s/^date: 2026-01-01/date: 2026-11-15/" decisions/test0001-demo.md'
   # The required fields and paths in the CoS schema, which okf-lint checks
   'misplaced standup|path does not match Standup|mv journal/2026-01-01-standup.md journal/2026-01-01-checkin.md'
   'task without state|tasks/t-test0001.md	missing state|sed -i.bak "/^state:/d" tasks/t-test0001.md'
@@ -146,6 +147,8 @@ scoped=(
   'only: state.md change checks state.md|q-test0002 not pending in any task file|state.md|sed -i.bak "s/- q-test0001: 例/- q-test0001: 例 q-test0002/" state.md'
   'only: journal form in a given journal|journal line not normalized|journal/2026-01-01.md|sed -i.bak "s/t-test0001: /t-test0001・t-test0002:/" journal/2026-01-01.md'
   'only: wiki link in a given file|wiki link, write a path link: \[\[demo\]\]|threads/t-test0001-demo.md|sed -i.bak "s#\[demo\](projects/demo.md)#[[demo]]#" threads/t-test0001-demo.md'
+  'only: Decision note dated on the last day of decisions/|pass|decisions/test0001-demo.md|sed -i.bak "s/^date: 2026-01-01/date: 2026-11-14/" decisions/test0001-demo.md'
+  'only: new Decision note|Decision note dated after 2026-11-14|decisions/test0003-new.md|sed "s/^date: 2026-01-01/date: 2026-11-15/" decisions/test0002-old.md > decisions/test0003-new.md'
 )
 for c in "${scoped[@]}"; do
   name=${c%%|*}; rest=${c#*|}; want=${rest%%|*}; rest=${rest#*|}; paths=${rest%%|*}; cmd=${rest#*|}
@@ -165,6 +168,39 @@ printf '[[secret]]\n' > "$tmp/outside.md"
 ln -s "$tmp/outside.md" "$tmp/linked/docs/link.md"
 out=$("$bin/karo-check" --only docs/link.md "$tmp/linked" 2>&1)
 if printf '%s\n' "$out" | rg -qF '[[secret]]'; then fail "only: a symbolic link is read through: $out"; else pass "only: a symbolic link is not read through"; fi
+
+# A task ID is a t- ID or a bd ID: cos- and three to eight lowercase letters or digits, a child with
+# ".<n>" added. A bd task lives in the task database and has no task file; an ID out of both forms fails.
+with_task() { # <task ID>: a copy whose thread lists the ID after t-test0001
+  copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"
+  c=$(<"$copy/threads/t-test0001-demo.md")
+  printf '%s\n' "${c/  - t-test0001/  - t-test0001$'\n'  - $1}" > "$copy/threads/t-test0001-demo.md"
+}
+for id in cos-a2v cos-abcd1234 cos-5q5.1 cos-5q5.1.12; do
+  with_task "$id"
+  out=$("$bin/karo-check" "$copy" 2>&1); code=$?
+  if [[ $code -eq 0 ]] && rg -qx -- "  - $id" "$copy/threads/t-test0001-demo.md"; then pass "bd ID $id passes"; else fail "bd ID $id: exit $code: $out"; fi
+done
+for id in cos-ab cos-abcd12345 cos-A2V cos-a2v. cos-a2v.x bd-a2v t-test001; do
+  with_task "$id"
+  out=$("$bin/karo-check" "$copy" 2>&1); code=$?
+  if [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -qxF -- "threads/t-test0001-demo.md	bad task id: $id"; then pass "$id is not a task ID"; else fail "bad ID $id: exit $code: $out"; fi
+done
+
+# In a git work tree, the task database, .beads, is ignored and nothing under it is tracked; a run with
+# --only leaves git alone.
+copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"
+if ! (git -C "$copy" init -q && mkdir "$copy/.beads" && printf 'x\n' > "$copy/.beads/db"); then fail "could not make the git copy"; fi
+out=$("$bin/karo-check" "$copy" 2>&1); code=$?
+if [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -qxF $'.beads\ttask database not ignored by git'; then pass ".beads not ignored fails"; else fail ".beads not ignored: exit $code: $out"; fi
+out=$("$bin/karo-check" --only projects/demo.md "$copy" 2>&1); code=$?
+if [[ $code -eq 0 ]]; then pass "only: .beads is left alone"; else fail "only: .beads: exit $code: $out"; fi
+printf '.beads/\n' >> "$copy/.git/info/exclude"
+out=$("$bin/karo-check" "$copy" 2>&1); code=$?
+if [[ $code -eq 0 ]]; then pass ".beads ignored passes"; else fail ".beads ignored: exit $code: $out"; fi
+git -C "$copy" add -f .beads/db
+out=$("$bin/karo-check" "$copy" 2>&1); code=$?
+if [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -qxF $'.beads\ttask database tracked by git'; then pass ".beads tracked fails"; else fail ".beads tracked: exit $code: $out"; fi
 
 # A copy of the real vault with one note's type broken must fail on that note and on nothing else.
 # cp keeps the file names byte for byte; tar on macOS rewrites them to NFD, which breaks the link paths.
