@@ -729,6 +729,16 @@ if [[ $code -eq 0 && $(tail -n 1 "$v/threads/t-test0001-demo.md") == 'bd のタ�
 else
   fail "bd id in tasks: exit $code: $out"
 fi
+# A thread named after a bd task starts with a 新規: carrying its frontmatter, and takes appends after it.
+bd_thread='---\ntype: Thread\ndescription: bd のタスクの会話\ntopic: bd のタスク\ndate: 2026-01-01\ntasks:\n  - cos-a2v.1\nprojects:\n  - demo\n---\n\n### オーナー · 2026-01-01 09:00\n\n本文\n'
+out=$(thread 'bd thread by 新規' "新規: threads/cos-a2v.1-bd.md\nタスク: cos-a2v.1\n~~~~\n$bd_thread~~~~\n"); code=$?
+if [[ $code -eq 0 ]] && rg -qx '  - cos-a2v.1' "$v/threads/cos-a2v.1-bd.md" && ! rg -qF 'タスク:' "$v/threads/cos-a2v.1-bd.md" && clean; then
+  pass "新規: of a thread named after a bd task is written"
+else
+  fail "bd thread by 新規: exit $code: $out"
+fi
+out=$(thread 'bd thread append' '追記: threads/cos-a2v.1-bd.md\nタスク: cos-a2v.1\n~~~~\n\n続き\n~~~~\n'); code=$?
+if [[ $code -eq 0 && $(tail -n 1 "$v/threads/cos-a2v.1-bd.md") == 続き ]] && clean; then pass "追記: to a thread named after a bd task lands"; else fail "bd thread append: exit $code: $out"; fi
 
 # Two NGs with one subject are cleared one by one: 解決 with one copy's name leaves the other, and a 解決
 # with the subject alone clears neither. A malformed instruction is refused by --detach on the spot.
@@ -815,8 +825,9 @@ else
   fail "detached NG: exit $code: $out: $(cat "$COS_RECORD_PROBLEMS" 2>/dev/null)"
 fi
 
-# The five instructions of rules/record-examples.md pass in order, as written, in a vault
-# of their own: a new task with its thread, a delegation, a pending decision added, the decision, and the close.
+# The three instructions of rules/record-examples.md pass in order, as written, in a vault of their own:
+# a new topic's thread written with its frontmatter, a delegation, and the close of the agent. Their task
+# is a bd task, which has no task file.
 ex=$tmp/ex
 mkdir -p "$ex/projects" "$ex/rules" "$tmp/examples"
 cp "$cos/.rumdl.toml" "$ex/" && cp "$cos/rules/frontmatter-schema.yaml" "$ex/rules/" || exit 2
@@ -834,27 +845,25 @@ for n in $(seq "$examples"); do
   out=$(COS_DIR=$ex "$bin/record" < "$tmp/examples/$n.txt" 2>&1)
   results+="${out##*$'\n'}"$'\n'
 done
-# The examples name one task and one pending decision.
-id=$(rg -o -m 1 -r '$1' '^commit 件名: (t-[a-z0-9]{8}):' "$tmp/examples/1.txt")
-q=$(cat "$tmp/examples"/*.txt | rg -o -m 1 'q-[a-z0-9]{8}')
-task=$ex/tasks/$id.md
-thread=$ex/threads/$id-fb-sort.md
-if [[ $examples -eq 5 && -n $id && -n $q && $(printf '%s' "$results" | rg -c "^OK [0-9a-f]+ $id: ") -eq 5 ]] && rg -qx 'state: done' "$task" && rg -qx "agent: $id" "$task" \
-   && rg -qx -e '- 決定: 並び順の基準は更新日にする（会話 [0-9-]+ [0-9:]+）' "$task" && ! rg -q "判断待ち|$q" "$task" \
-   && [[ $(sed -n '/^## 判断待ち/,$p' "$ex/state.md") == $'## 判断待ち\n\nなし' ]] \
+# The examples name one task, by its bd ID, and its thread.
+id=$(rg -o -m 1 -r '$1' '^commit 件名: ([^:]+):' "$tmp/examples/1.txt")
+thread=$ex/$(rg -o -m 1 -r '$1' '^新規: (threads/[^ ]+\.md)$' "$tmp/examples/1.txt")
+if [[ $examples -eq 3 && $id =~ ^cos-[a-z0-9]{3,8}(\.[0-9]+)*$ && $(printf '%s' "$results" | rg -c "^OK [0-9a-f]+ $id: ") -eq 3 ]] \
+   && [[ ! -e $ex/tasks ]] \
    && rg -qx "\\| $id \\| $id \\| 実装 \\| dotfiles の main \\| main \\| [0-9-]+ \\| [0-9-]+ \\|" "$ex/assignments.md" \
+   && [[ $(rg -c "^\\| $id \\|" "$ex/assignments.md") -eq 1 ]] \
+   && rg -q "^- [0-9]{2}:[0-9]{2} \\[close\\] $id: " "$ex/journal/$(date +%F).md" \
    && [[ -z $(git -C "$ex" status --porcelain) ]] && "$bin/karo-check" "$ex" >/dev/null 2>&1; then
-  pass "the five instructions in rules/record-examples.md pass in order"
+  pass "the three instructions in rules/record-examples.md pass in order"
 else
-  fail "rules/record-examples.md instructions: $examples found: $results$(cat "$task" 2>/dev/null)"
+  fail "rules/record-examples.md instructions: $examples found: $results$(cat "$ex/assignments.md" 2>/dev/null)"
 fi
-# The first one's thread takes its topic, description, and project from the task file it added.
-want=$'---\ntype: Thread\ndescription: "fb の一覧を更新日の新しい順にする"\ntopic: "fb の一覧を更新日の新しい順にする"\ndate: '"$(date +%F)"$'\ntasks:\n  - '"$id"$'\nprojects:\n  - dotfiles\n---\n\n### オーナー · '
-if [[ $(cat "$thread" 2>/dev/null) == "$want"* ]]; then pass "a thread made by 追記: takes its frontmatter from the task file"; else fail "thread from task file: $(head -n 12 "$thread" 2>/dev/null)"; fi
-# With a pending decision, state.md and the task files must agree: a state.md left without its q-ID is an NG.
-before=$(git -C "$ex" rev-parse --short HEAD)
-out=$(printf '書き込み指示\ncommit 件名: %s: pending without state.md\n\n追記: tasks/%s.md\n~~~~\n\n## 判断待ち\n\n- q-test0003（起票 2026-01-01）: 例 選択肢と推奨: 例\n~~~~\n追記: journal/2026-01-01.md\n~~~~\n- 10:00 [ask] q-test0003: 例（会話 2026-01-01 10:00）\n~~~~\n' "$id" "$id" | COS_DIR=$ex "$bin/record" 2>&1); last=${out##*$'\n'}
-if [[ $last == *"pending q-test0003 missing from state.md"* && $(git -C "$ex" rev-parse --short HEAD) == "$before" ]]; then pass "a pending decision missing from state.md is an NG"; else fail "pending without state.md: $out"; fi
+# The first one's thread, named after the bd task, is written as given, without the タスク: line.
+if [[ $thread == "$ex/threads/$id-"*.md ]] && [[ $(head -n 1 "$thread" 2>/dev/null) == --- ]] && rg -qx "  - $id" "$thread" && ! rg -qF 'タスク:' "$thread"; then
+  pass "the example's thread of a bd task is written with its frontmatter"
+else
+  fail "example thread: $(head -n 12 "$thread" 2>/dev/null)"
+fi
 
 # Without crit on PATH, a commit that adds a file says nothing about crit.
 mkdir -p "$tmp/nocrit"
