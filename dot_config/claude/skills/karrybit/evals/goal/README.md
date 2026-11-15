@@ -21,5 +21,6 @@ Behavior cases for comparing versions of the `goal` skill. Run them with the `ka
 
 Measured on wrappers holding only this skill, with `karrybit:skill-eval`'s suite command (`--ablation none`, `--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`), three repeats per configuration:
 
-- `test-goal-condition` passes 9 of 9 runs of the skill, and 8 of 9 of a version without the rule to build the predicate from the workspace's existing checks; the failing run wrote its own one-line check instead of `bin/parse-test`. The difference rests on one run.
+- `test-goal-condition` passes 9 of 9 and 8 of 9 runs of the skill in two measurements, and 8 of 9 in each of a version without the rule to build the predicate from the workspace's existing checks. The differences rest on one run: one failing run wrote its own one-line check instead of `bin/parse-test`, another joined a second condition to it.
+- The case runs in a known workspace, so the rule that stops a goal whose workspace is unknown is not exercised.
 - The other graders pass every run of both versions. They guard against regressions and do not separate versions.
