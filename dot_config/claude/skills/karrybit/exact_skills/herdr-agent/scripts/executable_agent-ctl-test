@@ -375,6 +375,14 @@ test_repo dir-alias
 g -C "$tmp/dir-alias" config alias.st status
 start "a dir with an alias in its config" "does not allow: alias.st" ac0119-test "$b" dir "$tmp/dir-alias" main
 
+# bd reads beads.role from the git config; that one key is allowed, not the rest of beads.*.
+test_repo dir-beads-role
+g -C "$tmp/dir-beads-role" config beads.role maintainer
+start "a dir with beads.role in its config" ok ac0132-test "$b" dir "$tmp/dir-beads-role" main
+test_repo dir-beads-foo
+g -C "$tmp/dir-beads-foo" config beads.foo x
+start "a dir with another beads.* key in its config" "does not allow: beads.foo" ac0133-test "$b" dir "$tmp/dir-beads-foo" main
+
 test_repo dir-plain
 start "a dir on another branch" "is on 'main', not other" ac0125-test "$b" dir "$tmp/dir-plain" other
 start "a dir on its branch" ok ac0126-test "$b" dir "$tmp/dir-plain" main

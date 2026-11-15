@@ -202,6 +202,20 @@ fresh
 git -C "$cos" config filter.x.clean 'touch pwned'
 refused "a ~/cos whose config runs a command" "does not allow: filter.x.clean" -- "$branch"
 
+# bd reads beads.role from the git config; that one key is allowed, not the rest of beads.*.
+fresh
+git -C "$cos" config beads.role maintainer
+run -- "$branch"
+if [[ -z $err && $(git -C "$cos" rev-parse main) == "$(git -C "$cos" rev-parse "$branch")" ]]; then
+  pass "a ~/cos with beads.role in its config lands the branch"
+else
+  fail "beads.role: $err"
+fi
+
+fresh
+git -C "$cos" config beads.foo x
+refused "a ~/cos with another beads.* key in its config" "does not allow: beads.foo" -- "$branch"
+
 fresh
 other=$root/other
 git init -q -b main "$other" && git -C "$other" -c user.name=test -c user.email=test@example.invalid commit -q --allow-empty -m other

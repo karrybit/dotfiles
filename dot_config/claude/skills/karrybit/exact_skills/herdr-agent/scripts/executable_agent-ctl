@@ -239,7 +239,7 @@ safe_git() {
   }
   bad=$(printf '%s\n' "$listing" |
     awk -F '\t' '$1 == "local" || $1 == "worktree" { print tolower($2) }' |
-    grep -Ev '^core\.(repositoryformatversion|filemode|bare|logallrefupdates|ignorecase|precomposeunicode|symlinks)$|^extensions\.worktreeconfig$|^user\.(name|email)$|^submodule\.active$|^remote\..+\.(url|pushurl|fetch|push|prune|tagopt)$|^branch\..+\.[a-z0-9-]+$' |
+    grep -Ev '^core\.(repositoryformatversion|filemode|bare|logallrefupdates|ignorecase|precomposeunicode|symlinks)$|^extensions\.worktreeconfig$|^user\.(name|email)$|^submodule\.active$|^remote\..+\.(url|pushurl|fetch|push|prune|tagopt)$|^branch\..+\.[a-z0-9-]+$|^beads\.role$' |
     sort -u | paste -sd ' ' -) || true
   [ -z "$bad" ] || stop "the git config of $repo_dir has keys this command does not allow: $bad"
   # git's stdout goes on to the caller through descriptor 3 while its stderr
