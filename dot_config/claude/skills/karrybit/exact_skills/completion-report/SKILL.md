@@ -25,7 +25,7 @@ description: '任された作業を終え、自分を作ったセッション（
 ## 変更の要約
 
 ## commit と PR
-commit の hash。PR を作ったときは、その URL も。
+commit の hash。PR を作ったときは、その URL も。どちらもなければ「なし」の 1 語だけ。
 
 ## 実行した確かめ
 
