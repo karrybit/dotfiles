@@ -76,7 +76,7 @@ description: Herdr 上の Agent に仕事を委任する手順。オーナーが
 ## 終わるのを待つ
 
 - `karrybit:herdr-agent` の「終わるのを待つ」の手順で、`<scripts>/agent-report --wait <名前>` を background で走らせ、foreground ではオーナーの次の依頼を受ける。
-- 通知の 1 行目が `idle` か `done` なら、2 行目からの完了報告を持って `karo:review` skill に進む。`blocked` なら、答えてよいかを AGENTS.md の「Herdr の操作」で決める。そのほかの状態は herdr-agent の手順で扱い、そこで人に伝えるとある結果はオーナーに報告する。
+- 通知の 1 行目が `idle` か `done` なら、2 行目からの完了報告を持って `karo:review` skill に進む。`blocked` なら、答えてよいかを AGENTS.md の「Herdr の操作」で決める。`no-report` なら、2 行目からの Agent の最後の発言を読み、Agent の質問のうち、答えが依頼とブリーフから決まらないものはオーナーに尋ねてから送る。そのほかの状態と `no-report` の送り方は herdr-agent の手順で扱い、そこで人に伝えるとある結果はオーナーに報告する。
 
 完了条件: 指示を送ったすべての Agent について、background の agent-report が走っているか、終わったことを確かめている。
 
