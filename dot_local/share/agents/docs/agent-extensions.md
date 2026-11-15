@@ -7,9 +7,11 @@ recorded.
 - Treat skills, plugins, MCP servers, hooks, and subagents installed by Claude
   Code commands as runtime state, not chezmoi-managed source, unless the
   corresponding source artifact or setting is added to the dotfiles repository.
-- Give every managed user-global skill a `PROVENANCE.md` recording origin,
-  source, license, and review date, plus the upstream version or ref for any
-  vendored artifact.
+- When a managed user-global skill is vendored or derived from an external
+  source, give it a `PROVENANCE.md` recording origin, source, license, review
+  date, and the upstream version or ref.
+- Leave `PROVENANCE.md` out of a skill or plugin written in this repository,
+  since its plugin namespace and git history already record its origin.
 - Keep `PROVENANCE.md` current across updates and re-reviews.
 - Keep provenance per item, beside the artifact, instead of in a registry of the
   collection.
