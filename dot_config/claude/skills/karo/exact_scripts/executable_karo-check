@@ -67,7 +67,6 @@ for d in "${folders[@]}"; do [[ -d $d ]] && existing+=("$d"); done
 # folder and says so on stderr, which is dropped.
 vocab=" $({ fd --exact-depth 3 -t f -e md . projects/repos
             fd -d 1 -t f -e md . projects/misc
-            fd -d 1 -t f -e md . projects/repos  # the old layout, projects/repos/<repo>.md, while the notes move
           } 2>/dev/null | sed -E 's#^projects/(repos|misc)/##; s#\.md$##' | sort -u | tr '\n' ' ')"
 
 # With --only, $scope holds the files to check, one per line between newlines.
@@ -82,8 +81,6 @@ if (( ${#only[@]} )); then
     [[ -e $p ]] && continue
     n=${p#projects/*/}; n=${n%.md}
     [[ $p =~ ^projects/(repos/[^/]+/[^/]+/[^/]+|misc/[^/]+)\.md$ ]] && listed+=(-e "  - $n")
-    # the old layout, projects/repos/<repo>.md, while the notes move
-    [[ $p =~ ^projects/repos/[^/]+\.md$ ]] && listed+=(-e "  - $n")
   done
   # notes listing a given path as a derived_from item (a list item anywhere in the file: a superset)
   alt=$(printf '%s\n' "${only[@]}" | sed 's/[][\.*^$+?(){}|]/\\&/g' | paste -sd '|' -)
