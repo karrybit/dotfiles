@@ -36,6 +36,10 @@
 
 - Verify changes with `chezmoi apply --dry-run --verbose` and a fresh login
   shell. This repository deliberately has no test suite.
+- When working in a git worktree, verify what would be applied with
+  `chezmoi apply --dry-run --verbose -S <worktree>`, and run tests and
+  evaluations that read deployed target files only after the change has merged
+  and been applied.
 - After changing chezmoi-managed paths or `.chezmoiignore`, verify that the
   intended files are managed or ignored as expected.
 - Interpret unrelated existing live differences separately and report them
