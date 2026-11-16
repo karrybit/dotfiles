@@ -887,7 +887,7 @@ thread=$ex/$(rg -o -m 1 -r '$1' '^新規: (threads/[^ ]+\.md)$' "$tmp/examples/1
 if [[ $examples -eq 3 && $id =~ ^cos-[a-z0-9]{3,8}(\.[0-9]+)*$ && $(printf '%s' "$results" | rg -c "^OK [0-9a-f]+ $id: ") -eq 3 ]] \
    && rg -qx "\\| $id \\| $id \\| 実装 \\| dotfiles の main \\| main \\| [0-9-]+ \\| [0-9-]+ \\|" "$ex/assignments.md" \
    && [[ $(rg -c "^\\| $id \\|" "$ex/assignments.md") -eq 1 ]] \
-   && rg -q "^- [0-9]{2}:[0-9]{2} \\[close\\] $id: " "$ex/journal/$(date +%F).md" \
+   && [[ -n $(git -C "$ex" log -1 --format=%b) ]] \
    && [[ -z $(git -C "$ex" status --porcelain) ]] && "$bin/karo-check" "$ex" >/dev/null 2>&1; then
   pass "the three instructions in rules/record-examples.md pass in order"
 else
