@@ -35,7 +35,7 @@ description: Agent の成果物をレビューに回す手順。実装 Agent の
    完了条件: 依頼のファイルがある。
 2. `<scripts>/agent-ctl start --permission-mode plan <タスクID>-rv <依頼のファイル> tab <タスクID>` を単独で実行し、実装 Agent の workspace の別 tab で、読み取り専用の Agent を起動する（`<scripts>` と JSON の扱いは `karo:delegate` skill の冒頭と「新しいタスクを委任する」の 4。Review Agent は claim しない）。`working` になったら、`karo:delegate` skill の「終わるのを待つ」に従って `<タスクID>-rv` を待つ。
    完了条件: background の agent-report が走っている。
-3. 終わったら、agent-report の通知の出力の 2 行目からの結果を、`~/cos/projects/repos/<repo>/reviews/<タスクID>-agent-<n>.md` に record の `新規:` で保存し（フロントマターは `rules/frontmatter.md` に従い、`commit 本文:` に指摘の数を書く）、保存したパスを添えた `レビュー依頼:` の comment を書く。
+3. 終わったら、agent-report の通知の出力の 2 行目からの結果を、`~/cos/projects/repos/<名前>/reviews/<タスクID>-agent-<n>.md` に record の `新規:` で保存し（`<名前>` はリポジトリのプロジェクトの名前で、そのノート `projects/repos/<名前>.md` のパスから決まる。フロントマターは `rules/frontmatter.md` に従い、`commit 本文:` に指摘の数を書く）、保存したパスを添えた `レビュー依頼:` の comment を書く。
    完了条件: record が `queued` を出し、`レビュー依頼:` の comment の JSON が出ている。
 4. `<scripts>/agent-ctl close <タスクID>-rv` を単独で実行して Review Agent の tab を閉じ、`karo:delegate` skill の「Agent を終了する」の 2 の指示（Agent 名は実装 Agent の名前に `-rv` を付けた形）を record で書く。終わったら「1」の 3 に戻る。
    完了条件: `close` の JSON が出て、record が `queued` を出した。
@@ -50,7 +50,7 @@ description: Agent の成果物をレビューに回す手順。実装 Agent の
 
    `<base>` は、PR を作るリポジトリでは PR の base ブランチ、cos では `main`、PR を作らないほかのリポジトリではプロジェクトの節の「レビューの差分の base」。差分の前に、対象の worktree、範囲、`HEAD` の commit を書く。オーナーが差分の外のファイルを見たいと言ったら、その箇所も貼る。
    完了条件: 範囲のすべてのファイルの差分が会話にある。
-2. オーナーのコメントと結論（承認か修正の依頼）を、`~/cos/projects/repos/<repo>/reviews/<タスクID>-<n>.md` に record で保存する（`commit 本文:` に結論を書く）。`<n>` はそのタスクのレビュー回数。フロントマターは `rules/frontmatter.md` に従い、本文に対象（worktree、範囲、`HEAD` の commit）、コメント（ファイルと行、オーナーの言葉）、結論を書く。結論が言われていなければ、オーナーに尋ねてから record を走らせる。
+2. オーナーのコメントと結論（承認か修正の依頼）を、`~/cos/projects/repos/<名前>/reviews/<タスクID>-<n>.md` に record で保存する（`commit 本文:` に結論を書く）。`<名前>` は「2」の 3 と同じプロジェクトの名前で、`<n>` はそのタスクのレビュー回数。フロントマターは `rules/frontmatter.md` に従い、本文に対象（worktree、範囲、`HEAD` の commit）、コメント（ファイルと行、オーナーの言葉）、結論を書く。結論が言われていなければ、オーナーに尋ねてから record を走らせる。
    完了条件: record に渡した指示の結論が、オーナーの言った承認か修正の依頼のどちらかになっている。
 3. 結論に従って進める。
    - 修正の依頼: 2 で保存したレビューのパスを添えた `変更依頼:` の comment を書き、コメントを `karo:delegate` skill の「既存の Agent に追加指示を出す」で元の Agent に渡す。修正の完了報告を受けたら、この skill の「1. 完了報告を受け取る」に戻る。

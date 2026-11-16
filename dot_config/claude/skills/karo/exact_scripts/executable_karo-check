@@ -53,9 +53,13 @@ types=$'\n'$(yq '.types | keys | .[]' "$SCHEMA")$'\n'
 folders=(journal projects investigations docs threads)
 existing=()
 for d in "${folders[@]}"; do [[ -d $d ]] && existing+=("$d"); done
-# The project vocabulary: the basenames of the .md files right under these folders. fd skips a missing
+# The project vocabulary: the path names of the project notes, <vcs>/<org>/<repo> for
+# projects/repos/<vcs>/<org>/<repo>.md and <theme> for projects/misc/<theme>.md. fd skips a missing
 # folder and says so on stderr, which is dropped.
-vocab=" $(fd -d 1 -t f -e md . projects projects/repos projects/misc 2>/dev/null | sed 's#.*/##; s#\.md$##' | sort -u | tr '\n' ' ')"
+vocab=" $({ fd --exact-depth 3 -t f -e md . projects/repos
+            fd -d 1 -t f -e md . projects/misc
+            fd -d 1 -t f -e md . projects/repos  # the old layout, projects/repos/<repo>.md, while the notes move
+          } 2>/dev/null | sed -E 's#^projects/(repos|misc)/##; s#\.md$##' | sort -u | tr '\n' ' ')"
 
 # With --only, $scope holds the files to check, one per line between newlines.
 scoped=0; scope=$'\n'
@@ -67,8 +71,10 @@ if (( ${#only[@]} )); then
   for p in "${only[@]}"; do
     scope+="$p"$'\n'
     [[ -e $p ]] && continue
-    b=${p##*/}; b=${b%.md}
-    [[ $p =~ ^projects/((repos|misc)/)?[^/]+\.md$ ]] && listed+=(-e "  - $b")
+    n=${p#projects/*/}; n=${n%.md}
+    [[ $p =~ ^projects/(repos/[^/]+/[^/]+/[^/]+|misc/[^/]+)\.md$ ]] && listed+=(-e "  - $n")
+    # the old layout, projects/repos/<repo>.md, while the notes move
+    [[ $p =~ ^projects/repos/[^/]+\.md$ ]] && listed+=(-e "  - $n")
   done
   # notes listing a given path as a derived_from item (a list item anywhere in the file: a superset)
   alt=$(printf '%s\n' "${only[@]}" | sed 's/[][\.*^$+?(){}|]/\\&/g' | paste -sd '|' -)
@@ -114,8 +120,7 @@ while IFS= read -r f; do
   IFS=$FS read -r ty projects tasks derived < <(printf '%s\n' "$info")
   # okf-lint reports a missing or unknown type
   [[ -n $ty && $types == *$'\n'"$ty"$'\n'* ]] || continue
-  # projects come from the project vocabulary (projects/repos/<repo>.md, projects/misc/<theme>.md, or
-  # projects/<name>.md) or are 'all'
+  # projects come from the project vocabulary or are 'all'
   IFS=$LS read -r -a ps < <(printf '%s\n' "$projects")
   for p in ${ps[@]+"${ps[@]}"}; do
     [[ $p == all || $vocab == *" $p "* ]] || report "$f" "unknown project: $p"
