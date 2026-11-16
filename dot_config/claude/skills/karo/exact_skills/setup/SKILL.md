@@ -20,7 +20,7 @@ description: 別のマシンで、karo と ~/cos の仕組みが動くかを確�
    完了条件: 出力が空か、`missing:` の行の一覧をオーナーに示している。
 2. `claude plugin list` を実行し、`karrybit@skills-dir` と `karo@skills-dir` が読み込まれているか、`imozuru` の plugin（`karo:researcher` が使う）が入っているかを確かめる。`~/cos/rules/checkin.md` と `~/cos/rules/checkout.md` があれば、そこで使う plugin と外のサービスの接続も確かめる（ファイルがなければ確かめない）。
    完了条件: 確かめた plugin と接続のそれぞれについて、読み込まれているか、足りないことをオーナーに示している。
-3. `~/.config/claude/skills/karo/scripts/settings-test ~/cos/.claude/settings.json` を単独で実行する。`FAIL` の行は、オーナーが `~/cos/.claude/settings.json` を直す（sandbox はその場所を書かせない）。
+3. `~/.config/claude/skills/karo/scripts/settings-test ~/cos/.claude/settings.json` を単独で実行する。karo の hook は karo の `hooks/hooks.json` が登録するので、settings に同じ hook があると `FAIL` になる（hook が 2 回走る）。`FAIL` の行は、オーナーが `~/cos/.claude/settings.json` を直す（sandbox はその場所を書かせない）。
    完了条件: `settings-test: 0 failure(s)` が出たか、`FAIL` の行の一覧をオーナーに示している。
 4. `git -C ~/cos branch --show-current` が `main` を出すかと、引数なしの `~/.config/claude/skills/karo/scripts/karo-check` を単独で実行した結果を確かめる。
    完了条件: `main` と `karo-check: 0 problem(s)` が出たか、違いをオーナーに示している。
@@ -34,7 +34,7 @@ description: 別のマシンで、karo と ~/cos の仕組みが動くかを確�
 - pane を操作するのは CoS だけにする。pane に文字を送る前に手前のプロセスを確かめるのは、ほかの pane でも同じ。
 - オーナーに確かめてほしいファイルは、チャットでパスを伝える（ファイルの pane で開いてもらう）。
 - pane の ID は `herdr pane layout --current` で確かめる。
-- 右の列は、セッションの開始と再開のときに SessionStart の hook が `~/.config/claude/skills/karo/scripts/right-pane` で作り直す（herdr の再起動で shell に戻った pane にファイルの pane と thread-show を起動し、復元できなかった pane は閉じて作り直す）。right-pane は、`files` か `thread` の label の pane で shell と pager 以外が動いていると、列を変えずに `right-pane: <pane> is running <名前>; leaving the column as it is` を出して終わる。
+- 右の列は、セッションの開始と再開のときに karo の `hooks/hooks.json` の SessionStart の hook が `~/.config/claude/skills/karo/scripts/right-pane` で作り直す（herdr の再起動で shell に戻った pane にファイルの pane と thread-show を起動し、復元できなかった pane は閉じて作り直す）。right-pane は、`files` か `thread` の label の pane で shell と pager 以外が動いていると、列を変えずに `right-pane: <pane> is running <名前>; leaving the column as it is` を出して終わる。
 - 会話の途中で右の列の pane が欠けたら、`~/.config/claude/skills/karo/scripts/right-pane` を単独で実行する（確認なしで動く）。それでも戻らなければ、下の「pane が戻らないとき」に進む。
 
 ## pane が戻らないとき

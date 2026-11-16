@@ -3,7 +3,7 @@
 # Show that call-check stops a ~/.config/claude/skills/karo path written without ~ and a git rebase
 # that asks to leave the sandbox, while it lets through ~ calls, git rebase --abort, a rebase inside
 # the sandbox, and quoted text and heredoc bodies that mention git rebase. settings-test checks that
-# the settings run it.
+# karo's hooks/hooks.json runs it.
 # usage: call-check-test [<call-check>]   (default: the one beside this script)
 set -uo pipefail
 exec </dev/null

@@ -77,6 +77,9 @@
   arguments or from `~/cos/rules/karo.yaml`, `~/cos/rules/<skill>.md`, and
   `~/cos/projects/repos/<name>.md`, each with a default for when the file is
   missing. Its subagents are in its `exact_agents/`, called `karo:<agent>`.
+  Its hooks are in its `exact_hooks/hooks.json`, which Claude Code merges
+  with the project's settings hooks, so keep them out of the project's
+  settings: a hook in both runs twice.
 - `run_onchange_04_prune-skills.sh.tmpl` removes skills deployed directly
   under `~/.config/claude/skills/` whose source entry is gone, which chezmoi
   does not do on its own. It only removes skills recorded in its own manifest,

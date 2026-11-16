@@ -9,7 +9,7 @@
 # does nothing outside herdr or outside the workspace labelled cos. The panes: map in
 # rules/karo.yaml changes the workspace, the files pane's command and the number of thread panes,
 # and COS_WORKSPACE_LABEL wins over its workspace. The real thread-show beside it opens the threads.
-# settings-test checks that the settings run it.
+# settings-test checks that karo's hooks/hooks.json runs it.
 # usage: right-pane-test [<right-pane>]   (default: the one beside this script; its files go to a
 #        temporary directory that is removed)
 set -uo pipefail

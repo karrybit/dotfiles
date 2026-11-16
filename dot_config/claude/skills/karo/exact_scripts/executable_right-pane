@@ -2,8 +2,8 @@
 # Brings back the CoS right column: a files pane running fb over ~/cos above
 # a row of thread panes showing conversations with glow's pager. A herdr server
 # restart restores panes as fresh shells, and a pane whose saved directory is
-# gone comes back unusable (restore_error), so the SessionStart hook runs this
-# on startup and resume. Only panes labelled files or thread... are closed,
+# gone comes back unusable (restore_error), so the SessionStart hook in karo's
+# hooks/hooks.json runs this on startup and resume. Only panes labelled files or thread... are closed,
 # thread panes beyond the row's count among them, and only missing ones are made; keys go
 # only to a pane at a shell prompt, so a second run, or a run with fb and the pagers already up, changes nothing. It
 # acts only in the workspace labelled cos, does nothing outside herdr, and

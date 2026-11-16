@@ -1,45 +1,53 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2016,SC2088  # the filters are jq, and the ~ paths are rule text, not paths to expand
 # Show that a project's settings.json holds what karo's scripts need from it: karo enabled, the scripts
-# a skill runs as one call allowed and kept out of ask and deny, the ones that must leave the sandbox in
-# sandbox.excludedCommands, right-pane run by a SessionStart hook on startup and resume, and call-check
-# run by a PreToolUse hook on Bash. Each missing value is a FAIL line of its own. The rules use the ~
-# form, since permission rules and sandbox.excludedCommands match the command text as written; a hook
-# command may name the script with ~ or $HOME, since it is not such a call.
+# a skill runs as one call allowed and kept out of ask and deny, and the ones that must leave the sandbox
+# in sandbox.excludedCommands. The hooks are karo's own hooks/hooks.json, which Claude Code merges with
+# the settings' hooks: it must run right-pane by a SessionStart hook on startup and resume and call-check
+# by a PreToolUse hook on Bash, and no settings hook may name a karo script or repeat one of its commands,
+# since that hook would run twice. Each missing value is a FAIL line of its own. The rules use the ~
+# form, since permission rules and sandbox.excludedCommands match the command text as written.
 # usage: settings-test <settings.json>
 set -uo pipefail
 exec </dev/null
 [[ $# -eq 1 ]] || { echo "usage: settings-test <settings.json>" >&2; exit 2; }
 settings=$1
-jq -e 'type == "object"' "$settings" >/dev/null 2>&1 || { echo "settings-test: $settings is not a JSON object" >&2; exit 2; }
+hooks=$(cd "$(dirname "$0")/.." && pwd)/hooks/hooks.json
+for f in "$settings" "$hooks"; do
+  jq -e 'type == "object"' "$f" >/dev/null 2>&1 || { echo "settings-test: $f is not a JSON object" >&2; exit 2; }
+done
 failed=0
 fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
 pass() { printf 'ok\t%s\n' "$1"; }
 
-# check <name> <jq filter that must give true> [<jq options>...]
-check() { if jq -e "${@:3}" "$2" "$settings" >/dev/null 2>&1; then pass "$1"; else fail "$1"; fi; }
+# check <name> <file> <jq filter that must give true> [<jq options>...]
+check() { if jq -e "${@:4}" "$3" "$2" >/dev/null 2>&1; then pass "$1"; else fail "$1"; fi; }
 karo='~/.config/claude/skills/karo'
-# hook <event> <matcher wanted> <script>: a hook of the event whose matcher covers the wanted one runs
-# the script.
+# hook <event> <matcher wanted> <script>: a hook of the event in hooks.json whose matcher covers the
+# wanted one runs the script.
 hook() {
-  check "a $1 hook on $2 runs $3" '
+  check "a $1 hook on $2 in hooks.json runs $3" "$hooks" '
     any(.hooks[$event][]?; (.matcher // "" | split("|")) as $m | all($want | split("|")[]; . as $w | $m | index($w))
-      and any(.hooks[]?; .command // "" | test("(~|\\$HOME)/\\.config/claude/skills/karo/scripts/" + $script + "( |\"|$)")))' \
+      and any(.hooks[]?; .command // "" | test("\"\\$\\{CLAUDE_PLUGIN_ROOT\\}\"/scripts/" + $script + "( |$)")))' \
     --arg event "$1" --arg want "$2" --arg script "$3"
 }
 
-check "karo@skills-dir is enabled" '.enabledPlugins["karo@skills-dir"] == true'
+check "karo@skills-dir is enabled" "$settings" '.enabledPlugins["karo@skills-dir"] == true'
 for rule in "scripts/record *" "scripts/thread-show *" "scripts/thread-index *" "scripts/right-pane" "skills/land/scripts/land *" "scripts/karo-check"; do
-  check "Bash($karo/$rule) is allowed and in neither ask nor deny" '
+  check "Bash($karo/$rule) is allowed and in neither ask nor deny" "$settings" '
     any(.permissions.allow[]?; . == "Bash(\($r))")
       and ([.permissions.ask[]?, .permissions.deny[]?] | any(startswith("Bash(" + ($r | rtrimstr(" *")))) | not)' \
     --arg r "$karo/$rule"
 done
 for command in "scripts/record *" "scripts/thread-show *" "scripts/right-pane" "skills/land/scripts/land *"; do
-  check "$karo/$command is in sandbox.excludedCommands" 'any(.sandbox.excludedCommands[]?; . == $c)' --arg c "$karo/$command"
+  check "$karo/$command is in sandbox.excludedCommands" "$settings" 'any(.sandbox.excludedCommands[]?; . == $c)' --arg c "$karo/$command"
 done
 hook SessionStart 'startup|resume' right-pane
 hook PreToolUse Bash call-check
+check "no settings hook names a karo script or repeats a hooks.json command" "$settings" '
+  [$plugin[0].hooks[][].hooks[].command] as $p
+  | all(.hooks[]?[]?.hooks[]?.command // ""; (test("skills/karo/scripts/") or IN($p[])) | not)' \
+  --slurpfile plugin "$hooks"
 
 echo "settings-test: $failed failure(s)" >&2
 [ "$failed" -eq 0 ]
