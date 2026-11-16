@@ -4,9 +4,11 @@
 # lands in the problems file, only a later success naming it in 解決 clears it, and two calls at once both commit.
 # After a commit that wrote a thread file it runs thread-show (a stub here) on it, and --detach queues
 # instructions that a worker applies in order, reporting only through the problems file.
+# The instructions of the karo:record skill's examples.md (skills/record/examples.md beside this
+# folder) are run in order.
 # usage: record-test [<cos dir>]   (default ~/cos, read only: the small vaults take its .rumdl.toml and
-#        rules/frontmatter-schema.yaml, and the instructions of its rules/record-examples.md are run; the
-#        vaults, state, and problems file go to a temporary directory and are removed)
+#        rules/frontmatter-schema.yaml; the vaults, state, and problems file go to a temporary
+#        directory and are removed)
 set -uo pipefail
 # Each record call gets its instruction through an explicit redirect; nothing else reads the caller's stdin.
 exec </dev/null
@@ -29,6 +31,9 @@ cp "$cos/.rumdl.toml" "$v/" && cp "$cos/rules/frontmatter-schema.yaml" "$v/rules
 printf -- '---\ntype: Journal\ndate: 2026-01-01\n---\n\n- 09:00 [note] t-test0001: 例（thread 2026-01-01 09:00）\n' > "$v/journal/2026-01-01.md"
 # The project note also holds a table for the 行: cases and takes the appends whose target does not matter.
 printf -- '---\ntype: Project\ndescription: 例のプロジェクト。\nprojects:\n  - github.com/acme/demo\n---\n\n## demo\n\n| ID | 状態 |\n| --- | --- |\n| t-test0001 | delegated |\n' > "$v/projects/repos/github.com/acme/demo.md"
+# The theme note takes the appends of "- " lines whose content the cases check.
+mkdir -p "$v/projects/misc"
+printf -- '---\ntype: Project\ndescription: 例のテーマ。\nprojects:\n  - log\n---\n\n## log\n\n- 09:00 [note] t-test0001: 例（thread 2026-01-01 09:00）\n' > "$v/projects/misc/log.md"
 git -C "$v" init -q && git -C "$v" config user.name test && git -C "$v" config user.email test@example.invalid
 git -C "$v" add -A && git -C "$v" commit -q -m init || exit 2
 
@@ -48,7 +53,7 @@ commit 本文:
 Because the test says so ({日付}).
 ~~~~
 
-追記: journal/2026-01-01.md
+追記: projects/misc/log.md
 ~~~~
 - {時刻} [note] t-test0001: 追記した（会話 {日付} {時刻}）
 ~~~~
@@ -84,7 +89,7 @@ projects:
 EOF
 now=$(date '+%Y-%m-%d')
 if [[ $code -eq 0 && $last == "OK $(head_sha) t-test0001: record the demo" ]] && clean; then pass "applies and commits"; else fail "applies and commits: exit $code: $out"; fi
-if [[ $(tail -n 1 "$v/journal/2026-01-01.md") =~ ^-\ [0-9]{2}:[0-9]{2}\ \[note\]\ t-test0001:\ 追記した（会話\ $now\ [0-9]{2}:[0-9]{2}）$ ]]; then pass "appends with {日付} and {時刻} filled"; else fail "append: $(tail -n 2 "$v/journal/2026-01-01.md")"; fi
+if [[ $(tail -n 1 "$v/projects/misc/log.md") =~ ^-\ [0-9]{2}:[0-9]{2}\ \[note\]\ t-test0001:\ 追記した（会話\ $now\ [0-9]{2}:[0-9]{2}）$ ]]; then pass "appends with {日付} and {時刻} filled"; else fail "append: $(tail -n 2 "$v/projects/misc/log.md")"; fi
 if [[ $(tail -c 1 "$v/threads/t-test0001-demo.md" | od -An -c | tr -d ' ') == '\n' && $(tail -n 1 "$v/threads/t-test0001-demo.md") == 本文 ]] && rg -q "^date: $now$" "$v/threads/t-test0001-demo.md"; then pass "creates the new file with one final newline"; else fail "new file: $(cat "$v/threads/t-test0001-demo.md")"; fi
 if rg -qxF '| t-test0001 | in-review |' "$v/projects/repos/github.com/acme/demo.md" && ! rg -qF 'delegated' "$v/projects/repos/github.com/acme/demo.md"; then pass "replaces"; else fail "replace: $(cat "$v/projects/repos/github.com/acme/demo.md")"; fi
 if git -C "$v" show --name-only --format= HEAD | rg -qx 'investigations/2026-01-01-demo.md'; then pass "takes in the file written elsewhere"; else fail "take in: $(git -C "$v" show --stat HEAD)"; fi
@@ -106,7 +111,7 @@ commit 本文:
 ~~~~
 why
 ~~~~
-追記: journal/2026-01-01.md
+追記: projects/misc/log.md
 ~~~~
 - 12:00 [ask] t-test0001: 壊れたノートの横で書いた（会話 2026-01-01 12:00）
 ~~~~
@@ -155,8 +160,8 @@ fi
 # A bad item anywhere writes nothing, leaves HEAD alone, and is reported in the problems file.
 # <name>|<expected reason>|<items>
 cases=(
-  'replace matching nothing|置き換え: projects/repos/github.com/acme/demo.md: 一致が 0 か所|追記: journal/2026-01-01.md\n~~~~\n- 10:00 [note] t-test0001: 書かれない（会話 2026-01-01 10:00）\n~~~~\n置き換え: projects/repos/github.com/acme/demo.md\n~~~~\nない行\n~~~~\n~~~~\n新しい行\n~~~~'
-  'replace matching twice|置き換え: journal/2026-01-01.md: 一致が 2 か所|置き換え: journal/2026-01-01.md\n~~~~\n[note] t-test0001\n~~~~\n~~~~\n[note] t-test0002\n~~~~'
+  'replace matching nothing|置き換え: projects/repos/github.com/acme/demo.md: 一致が 0 か所|追記: projects/misc/log.md\n~~~~\n- 10:00 [note] t-test0001: 書かれない（会話 2026-01-01 10:00）\n~~~~\n置き換え: projects/repos/github.com/acme/demo.md\n~~~~\nない行\n~~~~\n~~~~\n新しい行\n~~~~'
+  'replace matching twice|置き換え: projects/misc/log.md: 一致が 2 か所|置き換え: projects/misc/log.md\n~~~~\n[note] t-test0001\n~~~~\n~~~~\n[note] t-test0002\n~~~~'
   'new over an existing file|新規: projects/repos/github.com/acme/demo.md: ファイルがもうある|新規: projects/repos/github.com/acme/demo.md\n~~~~\nx\n~~~~'
   'task file|記録の書き先でない: tasks/t-test0002.md|新規: tasks/t-test0002.md\n~~~~\nx\n~~~~'
   'decision file|記録の書き先でない: decisions/test0001-demo.md|新規: decisions/test0001-demo.md\n~~~~\nx\n~~~~'
@@ -167,14 +172,14 @@ cases=(
   'take in with nothing to commit|取り込み: projects/repos/github.com/acme/demo.md: 未 commit の変更がない|取り込み: projects/repos/github.com/acme/demo.md'
   'take in outside the record|記録の書き先でない: notes/a.html|取り込み: notes/a.html'
   'unclosed body|本文を閉じる ~~~~ の行がない|追記: projects/repos/github.com/acme/demo.md\n~~~~\nx'
-  'karo-check problem rolls back|karo-check: journal/2026-01-02.md	no frontmatter|追記: projects/repos/github.com/acme/demo.md\n~~~~\n\nx\n~~~~\n新規: journal/2026-01-02.md\n~~~~\n## no frontmatter\n~~~~'
+  'karo-check problem rolls back|karo-check: investigations/2026-01-06-a.md	no frontmatter|追記: projects/repos/github.com/acme/demo.md\n~~~~\n\nx\n~~~~\n新規: investigations/2026-01-06-a.md\n~~~~\n## no frontmatter\n~~~~'
   'diff --check problem rolls back|git diff --cached --check|新規: investigations/demo/sources/a.md\n~~~~\ntrailing \n~~~~'
 )
 for c in "${cases[@]}"; do
   name=${c%%|*}; rest=${c#*|}; want=${rest%%|*}; items=${rest#*|}
   before=$(head_sha)
   run < <(printf '書き込み指示\ncommit 件名: t-test0001: bad %s\ncommit 本文:\n~~~~\nwhy\n~~~~\n%b\n' "$name" "$items")
-  if [[ $code -eq 1 && $last == "NG t-test0001: bad $name: "*"$want"* && $(head_sha) == "$before" ]] && clean && [[ ! -e $v/journal/2026-01-02.md ]] \
+  if [[ $code -eq 1 && $last == "NG t-test0001: bad $name: "*"$want"* && $(head_sha) == "$before" ]] && clean && [[ ! -e $v/investigations/2026-01-06-a.md ]] \
      && rg -qF -- "t-test0001: bad $name: " "$COS_RECORD_PROBLEMS"; then
     pass "$name"
   else
@@ -191,17 +196,17 @@ commit 本文:
 ~~~~
 why
 ~~~~
-新規: journal/2026-01-02.md
+新規: investigations/2026-01-06-a.md
 ~~~~
 ## no frontmatter
 ~~~~
-新規: journal/2026-01-03.md
+新規: investigations/2026-01-07-b.md
 ~~~~
 ## no frontmatter either
 ~~~~
 EOF
 if [[ $code -eq 1 && $last == "NG t-test0001: two karo-check problems: karo-check: "* ]] \
-   && printf '%s\n' "$out" | rg -qx $'journal/2026-01-02.md\tno frontmatter' && printf '%s\n' "$out" | rg -qx $'journal/2026-01-03.md\tno frontmatter'; then
+   && printf '%s\n' "$out" | rg -qx $'investigations/2026-01-06-a.md\tno frontmatter' && printf '%s\n' "$out" | rg -qx $'investigations/2026-01-07-b.md\tno frontmatter'; then
   pass "karo-check lines printed verbatim above the NG"
 else
   fail "karo-check lines: exit $code: $out"
@@ -381,7 +386,7 @@ fi
 # Two calls at once both commit, one after the other.
 before=$(git -C "$v" rev-list --count HEAD)
 for n in 1 2; do
-  printf '書き込み指示\ncommit 件名: parallel %s\ncommit 本文:\n~~~~\nwhy\n~~~~\n追記: journal/2026-01-01.md\n~~~~\n- 11:0%s [note] t-test0001: 並べた（会話 2026-01-01 11:00）\n~~~~\n' "$n" "$n" |
+  printf '書き込み指示\ncommit 件名: parallel %s\ncommit 本文:\n~~~~\nwhy\n~~~~\n追記: projects/misc/log.md\n~~~~\n- 11:0%s [note] t-test0001: 並べた（会話 2026-01-01 11:00）\n~~~~\n' "$n" "$n" |
     "$bin/record" > "$tmp/par$n" 2>&1 &
 done
 wait
@@ -534,12 +539,12 @@ else
 fi
 
 # rumdl tidies what record wrote: trailing spaces would otherwise fail diff --check.
-printf '書き込み指示\ncommit 件名: t-test0001: trailing spaces\ncommit 本文:\n~~~~\nwhy\n~~~~\n追記: journal/2026-01-01.md\n~~~~\n- 13:00 [ask] t-test0001: 行末に空白（会話 2026-01-01 13:00）  \n~~~~\n' > "$tmp/instr"
+printf '書き込み指示\ncommit 件名: t-test0001: trailing spaces\ncommit 本文:\n~~~~\nwhy\n~~~~\n追記: projects/misc/log.md\n~~~~\n- 13:00 [ask] t-test0001: 行末に空白（会話 2026-01-01 13:00）  \n~~~~\n' > "$tmp/instr"
 run < "$tmp/instr"
-if [[ $code -eq 0 && $(tail -n 1 "$v/journal/2026-01-01.md") == "- 13:00 [ask] t-test0001: 行末に空白（会話 2026-01-01 13:00）" ]] && clean; then
+if [[ $code -eq 0 && $(tail -n 1 "$v/projects/misc/log.md") == "- 13:00 [ask] t-test0001: 行末に空白（会話 2026-01-01 13:00）" ]] && clean; then
   pass "rumdl formats the written files"
 else
-  fail "rumdl: exit $code: $out: $(tail -n 1 "$v/journal/2026-01-01.md" | od -c | tail -n 3)"
+  fail "rumdl: exit $code: $out: $(tail -n 1 "$v/projects/misc/log.md" | od -c | tail -n 3)"
 fi
 
 # A multi-line failure (git's author-identity message) still ends with the NG line, and the problems
@@ -566,12 +571,29 @@ else
   fail "after commit: exit $code: $out"
 fi
 
-# Without a commit body the journal lines become the body; with neither the instruction is an NG.
-out=$(printf '書き込み指示\ncommit 件名: t-test0001: no body\n\n追記: journal/2026-01-01.md\n~~~~\n- 14:00 [note] t-test0001: 本文なし（会話 2026-01-01 14:00）\n~~~~\n' | "$bin/record" 2>&1); code=$?
-if [[ $code -eq 0 && $(git -C "$v" log -1 --format=%b) == "- 14:00 [note] t-test0001: 本文なし（会話 2026-01-01 14:00）" ]]; then pass "the journal line becomes the body"; else fail "no body: exit $code: $out: $(git -C "$v" log -1 --format=%B)"; fi
+# Every instruction carries a commit body: one without the "commit 本文:" block, or with an empty one, is
+# an NG, even when its items hold journal lines.
 before=$(head_sha)
-out=$(printf '書き込み指示\ncommit 件名: t-test0001: no body no journal\n\n追記: projects/repos/github.com/acme/demo.md\n~~~~\nz\n~~~~\n' | "$bin/record" 2>&1); code=$?; last=${out##*$'\n'}
-if [[ $code -eq 1 && $last == "NG t-test0001: no body no journal: 「commit 本文:」がなく、journal の行もない" && $(head_sha) == "$before" ]] && clean; then pass "no body and no journal line is an NG"; else fail "no body no journal: exit $code: $out"; fi
+out=$(printf '書き込み指示\ncommit 件名: t-test0001: no body\n\n追記: journal/2026-01-01.md\n~~~~\n- 14:00 [note] t-test0001: 本文なし（会話 2026-01-01 14:00）\n~~~~\n' | "$bin/record" 2>&1); code=$?; last=${out##*$'\n'}
+if [[ $code -eq 1 && $last == "NG t-test0001: no body: 「commit 本文:」の行がない"* && $(head_sha) == "$before" ]] && clean; then pass "an instruction without a commit body is an NG"; else fail "no body: exit $code: $out"; fi
+out=$(printf '書き込み指示\ncommit 件名: t-test0001: empty body\ncommit 本文:\n~~~~\n\n~~~~\n追記: projects/misc/log.md\n~~~~\nz\n~~~~\n' | "$bin/record" 2>&1); code=$?; last=${out##*$'\n'}
+if [[ $code -eq 1 && $last == "NG t-test0001: empty body: 「commit 本文:」の本文が空"* && $(head_sha) == "$before" ]] && clean; then pass "an instruction with an empty commit body is an NG"; else fail "empty body: exit $code: $out"; fi
+
+# A day's journal (journal/YYYY-MM-DD.md) holds past days only: an append to one, whether it exists or
+# not, and a 新規: of one are NGs that write nothing; a 置き換え in a past day still passes.
+line='- 14:30 [note] t-test0001: 日次の行（会話 2026-01-01 14:30）'
+for c in "追記: journal/2026-01-01.md|$line" "追記: journal/2026-01-05.md|$line" "新規: journal/2026-01-08.md|---\ntype: Journal\ndate: 2026-01-08\n---\n\n$line"; do
+  item=${c%%|*}
+  out=$(printf '書き込み指示\ncommit 件名: t-test0001: day journal\ncommit 本文:\n~~~~\nwhy\n~~~~\n%s\n~~~~\n%b\n~~~~\n' "$item" "${c#*|}" | "$bin/record" 2>&1); code=$?; last=${out##*$'\n'}
+  if [[ $code -eq 1 && $last == "NG t-test0001: day journal: ${item}: 日次の journal は過去分だけで"* && $(head_sha) == "$before" ]] && clean \
+     && [[ ! -e $v/journal/2026-01-05.md && ! -e $v/journal/2026-01-08.md ]]; then
+    pass "a write to a day's journal is an NG: $item"
+  else
+    fail "day journal ($item): exit $code: $out"
+  fi
+done
+out=$(printf '書き込み指示\ncommit 件名: t-test0001: fix a past day\ncommit 本文:\n~~~~\nwhy\n~~~~\n置き換え: journal/2026-01-01.md\n~~~~\n例（thread\n~~~~\n~~~~\n例の直し（thread\n~~~~\n' | "$bin/record" 2>&1); code=$?
+if [[ $code -eq 0 ]] && rg -qF '例の直し（thread' "$v/journal/2026-01-01.md" && clean; then pass "a 置き換え in a past day's journal passes"; else fail "past day fix: exit $code: $out"; fi
 
 # An instruction that changes nothing (a row replaced with itself) is an OK without a commit.
 before=$(head_sha)
@@ -579,12 +601,8 @@ row=$(rg '^\| t-test0001 ' "$v/projects/repos/github.com/acme/demo.md")
 out=$(printf '書き込み指示\ncommit 件名: t-test0001: nothing changes\ncommit 本文:\n~~~~\nwhy\n~~~~\n置き換え: projects/repos/github.com/acme/demo.md\n~~~~\n%s\n~~~~\n~~~~\n%s\n~~~~\n' "$row" "$row" | "$bin/record" 2>&1); code=$?; last=${out##*$'\n'}
 if [[ $code -eq 0 && $last == "OK - t-test0001: nothing changes（変更なし）" && $(head_sha) == "$before" ]] && clean; then pass "an instruction that changes nothing is an OK without a commit"; else fail "no change: exit $code: $out"; fi
 
-# An append to a day's journal that does not exist yet creates it with its frontmatter and heading.
-out=$(printf '書き込み指示\ncommit 件名: t-test0001: new day\n\n追記: journal/2026-01-05.md\n~~~~\n- 09:00 [note] t-test0001: 新しい日（会話 2026-01-05 09:00）\n~~~~\n' | "$bin/record" 2>&1); code=$?
-if [[ $code -eq 0 && $(cat "$v/journal/2026-01-05.md") == $'---\ntype: Journal\ndate: 2026-01-05\n---\n\n## 2026-01-05\n\n- 09:00 [note] t-test0001: 新しい日（会話 2026-01-05 09:00）' ]] && clean; then pass "an append creates a missing day's journal"; else fail "new day: exit $code: $out: $(cat "$v/journal/2026-01-05.md" 2>/dev/null)"; fi
-
 # 行: sets named cells of the one row whose first cell is the ID, and refuses what it cannot place.
-out=$(printf '書き込み指示\ncommit 件名: t-test0001: set a cell\n\n行: projects/repos/github.com/acme/demo.md t-test0001\n~~~~\n状態: done\n~~~~\n追記: journal/2026-01-01.md\n~~~~\n- 15:00 [close] t-test0001: 閉じた（会話 2026-01-01 15:00）\n~~~~\n' | "$bin/record" 2>&1); code=$?
+out=$(printf '書き込み指示\ncommit 件名: t-test0001: set a cell\ncommit 本文:\n~~~~\nwhy\n~~~~\n行: projects/repos/github.com/acme/demo.md t-test0001\n~~~~\n状態: done\n~~~~\n' | "$bin/record" 2>&1); code=$?
 row=$(rg '^\| t-test0001 ' "$v/projects/repos/github.com/acme/demo.md")
 if [[ $code -eq 0 && $row == "| t-test0001 | done |" ]] && clean; then pass "行: sets the named cell"; else fail "row update: exit $code: $out: $row"; fi
 for bad in '行: projects/repos/github.com/acme/demo.md t-test0001\n~~~~\n期限: x\n~~~~@@見出しにない列: 期限' '行: projects/repos/github.com/acme/demo.md t-test0009\n~~~~\n状態: done\n~~~~@@1 列目が t-test0009 の行が 0 行' '行: projects/repos/github.com/acme/demo.md t-test0001\n~~~~\n状態: a | b\n~~~~@@値に | がある'; do
@@ -599,13 +617,12 @@ before=$(head_sha)
 out=$(printf '書き込み指示\ncommit 件名: t-test0001: two rows\ncommit 本文:\n~~~~\nwhy\n~~~~\n新規: assignments.md\n~~~~\n## 稼働中\n\n| Agent 名 | 開始日 |\n| --- | --- |\n| t-test0001 | 2026-01-01 |\n\n## 終了\n\n| Agent 名 | 終了日 |\n| --- | --- |\n| t-test0001 | 2026-01-02 |\n~~~~\n行: assignments.md t-test0001\n~~~~\n開始日: 2026-01-03\n~~~~\n' | "$bin/record" 2>&1); code=$?; last=${out##*$'\n'}
 if [[ $code -eq 1 && $last == *"1 列目が t-test0001 の行が 2 行"* && $(head_sha) == "$before" ]] && clean; then pass "行: refuses an ID on two rows"; else fail "two rows: exit $code: $out"; fi
 
-# 行: on the second table of a file uses that table's headings; the body is the journal lines alone,
-# even when another item holds "- " lines.
-out=$(printf '書き込み指示\ncommit 件名: t-test0001: second table\n\n新規: investigations/demo/sources/tables.md\n~~~~\n## 開いている\n\n| ID | 問い |\n| --- | --- |\n| q-test0001 | 例 |\n\n## 閉じた\n\n| ID | 決まった日 | 問い |\n| --- | --- | --- |\n| q-test0002 | 2026-01-01 | 例 |\n~~~~\n行: investigations/demo/sources/tables.md q-test0002\n~~~~\n決まった日: 2026-01-02\n~~~~\n追記: projects/repos/github.com/acme/demo.md\n~~~~\n- ノートの箇条\n~~~~\n追記: journal/2026-01-01.md\n~~~~\n- 16:00 [note] t-test0001: 2 つ目の表（会話 2026-01-01 16:00）\n~~~~\n' | "$bin/record" 2>&1); code=$?
-if [[ $code -eq 0 ]] && rg -qxF '| q-test0002 | 2026-01-02 | 例 |' "$v/investigations/demo/sources/tables.md" && [[ $(git -C "$v" log -1 --format=%b) == "- 16:00 [note] t-test0001: 2 つ目の表（会話 2026-01-01 16:00）" ]]; then
-  pass "行: on a second table, and a body of journal lines only"
+# 行: on the second table of a file uses that table's headings.
+out=$(printf '書き込み指示\ncommit 件名: t-test0001: second table\ncommit 本文:\n~~~~\nwhy\n~~~~\n新規: investigations/demo/sources/tables.md\n~~~~\n## 開いている\n\n| ID | 問い |\n| --- | --- |\n| q-test0001 | 例 |\n\n## 閉じた\n\n| ID | 決まった日 | 問い |\n| --- | --- | --- |\n| q-test0002 | 2026-01-01 | 例 |\n~~~~\n行: investigations/demo/sources/tables.md q-test0002\n~~~~\n決まった日: 2026-01-02\n~~~~\n' | "$bin/record" 2>&1); code=$?
+if [[ $code -eq 0 ]] && rg -qxF '| q-test0002 | 2026-01-02 | 例 |' "$v/investigations/demo/sources/tables.md"; then
+  pass "行: on a second table"
 else
-  fail "second table: exit $code: $out: $(cat "$v/investigations/demo/sources/tables.md" 2>/dev/null): $(git -C "$v" log -1 --format=%b)"
+  fail "second table: exit $code: $out: $(cat "$v/investigations/demo/sources/tables.md" 2>/dev/null)"
 fi
 
 # A column the table lacks is an NG that lists the table's columns. The item names 担当 for the
@@ -639,26 +656,6 @@ fi
 # derived_from.
 out=$(printf '書き込み指示\ncommit 件名: t-test0001: checkin\ncommit 本文:\n~~~~\nwhy\n~~~~\n追記: journal/2026-01-06-standup.md\n~~~~\n## Checkin（2026-01-06）\n~~~~\n' | "$bin/record" 2>&1); code=$?
 if [[ $code -eq 0 && $(cat "$v/journal/2026-01-06-standup.md") == $'---\ntype: Standup\ndate: 2026-01-06\n---\n\n## Checkin（2026-01-06）' ]] && clean; then pass "追記: creates a standup without derived_from"; else fail "standup by 追記: exit $code: $out: $(cat "$v/journal/2026-01-06-standup.md" 2>/dev/null)"; fi
-# Only a day's journal gives the commit body: a "- " line in a standup beside it does not.
-before=$(head_sha)
-out=$(printf '書き込み指示\ncommit 件名: t-test0001: standup line\n\n追記: journal/2026-01-06-standup.md\n~~~~\n- 10:00 [note] t-test0001: standup の行（会話 2026-01-06 10:00）\n~~~~\n' | "$bin/record" 2>&1); code=$?; last=${out##*$'\n'}
-if [[ $code -eq 1 && $last == *"「commit 本文:」がなく、journal の行もない" && $(head_sha) == "$before" ]] && clean; then pass "a standup line is not a commit body"; else fail "standup line as body: exit $code: $out"; fi
-
-# A [note] line saying an Agent or a subagent was stopped is an NG: a stopped delegation ends with
-# [close].
-for l in '- 10:00 [note] t-test0001: 例の作業の worktree が別の場所にできた。Agent を止め、worktree と branch を片付けた（会話 2026-01-01 10:00）' \
-         '- 10:10 [note] t-test0001: 例のサブエージェントを止めた（会話 2026-01-01 10:10）' \
-         '- 10:20 [note] t-test0001: 例のサブエージェントを止めた。作業は t-test0002 に含めた（会話 2026-01-01 10:20）'; do
-  before=$(head_sha)
-  out=$(printf '書き込み指示\ncommit 件名: t-test0001: stopped\n\n追記: journal/2026-01-01.md\n~~~~\n%s\n~~~~\n' "$l" | "$bin/record" 2>&1); code=$?; last=${out##*$'\n'}
-  if [[ $code -eq 1 && $last == *"途中で止めた Agent やサブエージェントは [note] でなく [close] で書く"* && $(head_sha) == "$before" ]] && clean; then pass "a stopped delegation as [note] is an NG: ${l:0:40}"; else fail "stopped note: exit $code: $out"; fi
-done
-for l in '- 10:30 [close] t-test0001: 例のサブエージェントを止めた（会話 2026-01-01 10:30）' \
-         '- 10:40 [note] t-test0001: 例の通信を止めた worktree で試した（会話 2026-01-01 10:40）' \
-         '- 10:50 [note] t-test0001: 例の返信を止めて先に報告する（会話 2026-01-01 10:50）'; do
-  out=$(printf '書き込み指示\ncommit 件名: t-test0001: not stopped\n\n追記: journal/2026-01-01.md\n~~~~\n%s\n~~~~\n' "$l" | "$bin/record" 2>&1); code=$?
-  if [[ $code -eq 0 ]] && clean; then pass "a line that is not a stopped delegation as [note] passes: ${l:0:40}"; else fail "not stopped: exit $code: $out"; fi
-done
 
 # 行を足す: adds a row by column name to the table under a heading. A 置き換え anchored on another
 # row's first cell, adding a running Agent to assignments.md, matches 0 or 2 places; the same intent
@@ -795,7 +792,7 @@ if [[ $code -eq 0 && $last == "OK $(head_sha) t-test0001: show fails" ]] && prin
 else
   fail "thread-show fails: exit $code: $out: $(cat "$COS_RECORD_PROBLEMS" 2>/dev/null)"
 fi
-out=$(printf '書き込み指示\ncommit 件名: t-test0001: no thread\n\n追記: journal/2026-01-01.md\n~~~~\n- 12:30 [note] t-test0001: threads なし（会話 2026-01-01 12:30）\n~~~~\n' | "$bin/record" 2>&1); code=$?
+out=$(printf '書き込み指示\ncommit 件名: t-test0001: no thread\ncommit 本文:\n~~~~\nwhy\n~~~~\n追記: projects/misc/log.md\n~~~~\n- 12:30 [note] t-test0001: threads なし（会話 2026-01-01 12:30）\n~~~~\n' | "$bin/record" 2>&1); code=$?
 if [[ $code -eq 0 ]] && rg -q 'thread-show: ' "$COS_RECORD_PROBLEMS"; then pass "a commit without threads keeps the thread-show problem"; else fail "no thread: exit $code: $out: $(cat "$COS_RECORD_PROBLEMS")"; fi
 out=$(printf "書き込み指示\ncommit 件名: t-test0001: show works\ncommit 本文:\n~~~~\nwhy\n~~~~\n$thread_item" | "$bin/record" 2>&1); code=$?
 if [[ $code -eq 0 ]] && ! rg -q 'thread-show: ' "$COS_RECORD_PROBLEMS" 2>/dev/null; then pass "a later thread-show clears the problem"; else fail "thread-show clears: exit $code: $out: $(cat "$COS_RECORD_PROBLEMS")"; fi
@@ -811,7 +808,7 @@ wait_queue() {
   return 1
 }
 for n in first second third; do
-  printf '書き込み指示\ncommit 件名: t-test0001: detached %s\ncommit 本文:\n~~~~\nwhy\n~~~~\n追記: journal/2026-01-01.md\n~~~~\n- 13:00 [note] t-test0001: detached %s（会話 2026-01-01 13:00）\n~~~~\n' "$n" "$n" > "$tmp/detach-$n.txt"
+  printf '書き込み指示\ncommit 件名: t-test0001: detached %s\ncommit 本文:\n~~~~\nwhy\n~~~~\n追記: projects/misc/log.md\n~~~~\n- 13:00 [note] t-test0001: detached %s（会話 2026-01-01 13:00）\n~~~~\n' "$n" "$n" > "$tmp/detach-$n.txt"
 done
 before=$(git -C "$v" rev-list --count HEAD)
 # A holder of the drain lock keeps every worker away until all three are queued, so the order checked
@@ -828,7 +825,7 @@ wait "$holder"
 # The workers started while the lock was held left the queue to its holder; a worker takes it from here.
 "$bin/record" --drain >/dev/null
 wait_queue
-order=$(rg -o 'detached (first|second|third)' -r '$1' "$v/journal/2026-01-01.md" | tr '\n' ' ')
+order=$(rg -o 'detached (first|second|third)' -r '$1' "$v/projects/misc/log.md" | tr '\n' ' ')
 if [[ $(printf '%s\n' "$outs" | rg -c '^queued [0-9]+-[0-9]+\.txt$') -eq 3 && $mid -eq $before && $(git -C "$v" rev-list --count HEAD) -eq $((before+3)) \
    && $order == "first second third " ]] && python3 -c "import sys; sys.exit(0 if $t1 - $t0 < 3 else 1)" && clean; then
   pass "--detach returns at once and applies the queue in order"
@@ -840,7 +837,7 @@ fi
 printf '#!/bin/sh\nsleep 1\n' > "$tmp/slow-show"; chmod +x "$tmp/slow-show"
 before=$(git -C "$v" rev-list --count HEAD)
 printf "書き込み指示\ncommit 件名: t-test0001: slow first\ncommit 本文:\n~~~~\nwhy\n~~~~\n$thread_item" > "$tmp/slow1.txt"
-printf '書き込み指示\ncommit 件名: t-test0001: queued meanwhile\n\n追記: journal/2026-01-01.md\n~~~~\n- 13:30 [note] t-test0001: 待つ間に入れた（会話 2026-01-01 13:30）\n~~~~\n' > "$tmp/slow2.txt"
+printf '書き込み指示\ncommit 件名: t-test0001: queued meanwhile\ncommit 本文:\n~~~~\nwhy\n~~~~\n追記: projects/misc/log.md\n~~~~\n- 13:30 [note] t-test0001: 待つ間に入れた（会話 2026-01-01 13:30）\n~~~~\n' > "$tmp/slow2.txt"
 COS_THREAD_SHOW=$tmp/slow-show "$bin/record" --detach "$tmp/slow1.txt" >/dev/null
 sleep 0.5
 COS_THREAD_SHOW=$tmp/slow-show "$bin/record" --detach "$tmp/slow2.txt" >/dev/null
@@ -860,7 +857,7 @@ else
   fail "detached NG: exit $code: $out: $(cat "$COS_RECORD_PROBLEMS" 2>/dev/null)"
 fi
 
-# The three instructions of rules/record-examples.md pass in order, as written, in a vault of their own:
+# The three instructions of the karo:record skill's examples.md pass in order, as written, in a vault of their own:
 # a new topic's thread written with its frontmatter, a delegation, and the close of the agent.
 ex=$tmp/ex
 mkdir -p "$ex/projects/repos/github.com/acme" "$ex/projects/misc" "$ex/rules" "$tmp/examples"
@@ -874,7 +871,7 @@ git -C "$ex" init -q && git -C "$ex" config user.name test && git -C "$ex" confi
 git -C "$ex" add -A && git -C "$ex" commit -q -m init || exit 2
 awk -v dir="$tmp/examples" '/^<example>$/ {inex = 1; next} /^<\/example>$/ {inex = 0; next}
   inex && /^```$/ {if (code) {code = 0; close(f)} else {code = 1; f = sprintf("%s/%d.txt", dir, ++n)}; next}
-  inex && code {print > f}' "$cos/rules/record-examples.md"
+  inex && code {print > f}' "$bin/../skills/record/examples.md"
 examples=$(fd -t f . "$tmp/examples" | wc -l | tr -d ' ')
 results=
 for n in $(seq "$examples"); do
@@ -889,9 +886,9 @@ if [[ $examples -eq 3 && $id =~ ^cos-[a-z0-9]{3,8}(\.[0-9]+)*$ && $(printf '%s' 
    && [[ $(rg -c "^\\| $id \\|" "$ex/assignments.md") -eq 1 ]] \
    && [[ -n $(git -C "$ex" log -1 --format=%b) ]] \
    && [[ -z $(git -C "$ex" status --porcelain) ]] && "$bin/karo-check" "$ex" >/dev/null 2>&1; then
-  pass "the three instructions in rules/record-examples.md pass in order"
+  pass "the three instructions in skills/record/examples.md pass in order"
 else
-  fail "rules/record-examples.md instructions: $examples found: $results$(cat "$ex/assignments.md" 2>/dev/null)"
+  fail "skills/record/examples.md instructions: $examples found: $results$(cat "$ex/assignments.md" 2>/dev/null)"
 fi
 # The first one's thread, named after the bd task, is written as given, without the タスク: line.
 if [[ $thread == "$ex/threads/$id-"*.md ]] && [[ $(head -n 1 "$thread" 2>/dev/null) == --- ]] && rg -qx "  - $id" "$thread" && ! rg -qF 'タスク:' "$thread"; then

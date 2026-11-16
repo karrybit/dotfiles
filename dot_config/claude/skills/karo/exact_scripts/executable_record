@@ -5,11 +5,10 @@ usage: record [<instruction file>]   (reads standard input when no file is given
        record --detach <instruction file>
        record --restart-crit
 
-The instruction has the form described in rules/record.md ("書き込みの指示の形"). Without a commit
-body, the commit body is the instruction's journal lines (the "- " lines it appends to or creates in a
-day's journal, journal/YYYY-MM-DD.md), and an instruction with neither is an NG. An append to a day's
-journal that does not exist yet creates it with its frontmatter and heading; an append to a day's
-standup (journal/YYYY-MM-DD-standup.md) that does not exist creates it with its frontmatter (type and
+The instruction has the form described in the karo:record skill (skills/record/SKILL.md,
+"書き込みの指示の形"). An instruction without a commit body, or with an empty one, is an NG. A day's
+journal (journal/YYYY-MM-DD.md) holds past days only, so an "追記:" or "新規:" of one is an NG. An
+append to a day's standup (journal/YYYY-MM-DD-standup.md) that does not exist creates it with its frontmatter (type and
 date). A thread starts with a "新規:" that carries its frontmatter. A "新規:" of a thread or a
 standup without frontmatter is an NG. A "行:" item sets
 named cells of the one table row whose first cell is the given ID, from "<column>: <value>" lines
@@ -175,11 +174,9 @@ def parse(text):
     if not items:
         raise Bad("書き込みの項目がない")
     if body is None:
-        # Without a body the commit carries the journal lines, whose sources say why.
-        body = "\n".join(l for kind, path, texts in items if kind in ("追記", "新規") and re.search(r"(^|/)journal/\d{4}-\d{2}-\d{2}\.md$", path)
-                         for l in texts[0].split("\n") if l.startswith("- "))
-        if not body:
-            raise Bad("「commit 本文:」がなく、journal の行もない")
+        raise Bad("「commit 本文:」の行がない（なぜ変えたかを本文に書く）")
+    if not body.strip():
+        raise Bad("「commit 本文:」の本文が空（なぜ変えたかを書く）")
     return subject, body, resolves, items
 
 
@@ -482,18 +479,6 @@ def new_note(path, task):
     return None
 
 
-STOPPED_NOTE = re.compile(r"^- \d{2}:\d{2} \[note\] .*(サブエージェント|Agent) ?を(途中で)?止め[たて、]")
-
-
-def check_journal_lines(kind, path, text):
-    """A delegation stopped part way ends with a [close] line, which insights counts as its end."""
-    if not re.fullmatch(r"journal/\d{4}-\d{2}-\d{2}\.md", path):
-        return
-    for line in text.split("\n"):
-        if STOPPED_NOTE.match(line):
-            raise Bad(f"{kind}: {path}: 途中で止めた Agent やサブエージェントは [note] でなく [close] で書く: {line}")
-
-
 def check_taken(full):
     """git add reads what it stages itself, so a 取り込み file, and every entry under a 取り込み folder, is
     neither a symbolic link nor a hard link, which could bring a file from outside the record into the commit."""
@@ -513,8 +498,8 @@ def plan(items):
     for kind, raw, texts in items:
         path = record_path(raw)
         full = os.path.join(COS, path)
-        if kind in ("追記", "新規"):
-            check_journal_lines(kind, path, texts[0])
+        if kind in ("追記", "新規") and re.fullmatch(r"journal/\d{4}-\d{2}-\d{2}\.md", path):
+            raise Bad(f"{kind}: {path}: 日次の journal は過去分だけで、書き足さない（運用の出来事は「commit 本文:」に書く）")
         if kind == "取り込み":
             if not os.path.lexists(full) or os.path.islink(full):
                 raise Bad(f"取り込み: {path}: ファイルがない")
@@ -530,9 +515,6 @@ def plan(items):
             state[path] = None if data is None else data.decode("utf-8")
         cur = state[path]
         if kind == "追記":
-            if cur is None and (m := re.fullmatch(r"journal/(\d{4}-\d{2}-\d{2})\.md", path)):
-                # A day's journal starts with the first line written to it, whichever instruction that is.
-                cur = f"---\ntype: Journal\ndate: {m.group(1)}\n---\n\n## {m.group(1)}\n\n"
             if cur is None:
                 cur = new_note(path, texts[1])
             if cur is None:
