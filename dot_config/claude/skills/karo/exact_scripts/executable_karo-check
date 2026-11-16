@@ -15,6 +15,15 @@
 # Notes past their stale_after are printed as "<path><TAB>stale since ...", and task IDs in a thread's body that its
 # tasks lacks as "<path><TAB>task in body not in tasks: ..."; neither fails the check.
 set -uo pipefail
+# Where aqua installs yq, rg, and fd, each call goes through aqua's proxy, which adds a start-up cost, and a
+# whole run makes hundreds of calls. Call the binaries that aqua which names instead, in this script and in
+# okf-lint, through exported functions: a binary's file name may differ from the command's (yq_darwin_arm64),
+# so adding its folder to PATH would not do.
+if command -v aqua >/dev/null; then
+  yq_bin=$(aqua which yq 2>/dev/null) && [[ -x $yq_bin ]] && { yq() { "$yq_bin" "$@"; }; export yq_bin; export -f yq; }
+  rg_bin=$(aqua which rg 2>/dev/null) && [[ -x $rg_bin ]] && { rg() { "$rg_bin" "$@"; }; export rg_bin; export -f rg; }
+  fd_bin=$(aqua which fd 2>/dev/null) && [[ -x $fd_bin ]] && { fd() { "$fd_bin" "$@"; }; export fd_bin; export -f fd; }
+fi
 only=()
 while [[ ${1:-} == --only ]]; do only+=("${2#./}"); shift 2; done
 vault=${1:-$HOME/cos}
@@ -153,7 +162,7 @@ while IFS=: read -r f l; do
 done < <(
   wiki='FNR == 1 {f = 0} /^```/{f=!f; next} !f{gsub(/`[^`]*`/, ""); if (/\[\[/) print FILENAME ":" $0}'
   if (( ! scoped )); then
-    fd -t f -e md -E "investigations/*/sources" -E rules -E AGENTS.md . -x awk "$wiki" {}
+    fd -t f -e md -E "investigations/*/sources" -E rules -E AGENTS.md . -X awk "$wiki"
   else
     # record runs this outside the sandbox, so a given path that is a symbolic link is not read through,
     # as fd -t f leaves links out above
