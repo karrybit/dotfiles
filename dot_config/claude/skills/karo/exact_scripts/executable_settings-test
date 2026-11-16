@@ -29,7 +29,7 @@ hook() {
 }
 
 check "karo@skills-dir is enabled" '.enabledPlugins["karo@skills-dir"] == true'
-for rule in "scripts/record *" "scripts/thread-show *" "scripts/right-pane" "skills/land/scripts/land *" "scripts/karo-check"; do
+for rule in "scripts/record *" "scripts/thread-show *" "scripts/thread-index *" "scripts/right-pane" "skills/land/scripts/land *" "scripts/karo-check"; do
   check "Bash($karo/$rule) is allowed and in neither ask nor deny" '
     any(.permissions.allow[]?; . == "Bash(\($r))")
       and ([.permissions.ask[]?, .permissions.deny[]?] | any(startswith("Bash(" + ($r | rtrimstr(" *")))) | not)' \
