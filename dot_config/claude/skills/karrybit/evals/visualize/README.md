@@ -24,11 +24,11 @@ Three roles keep the answers from leaking out of the source or the answer key:
 
 1. Fill `setter.md` for the source and version and hand it to a new subagent; keep `questions.md` and `key.md` outside every folder given to an answerer. Have the owner read the question list once and replace one or two questions, then freeze both files.
    Completion: `questions.md` and `key.md` hold the same ids in the same order.
-2. For each HTML, run `node shoot.mjs <page.html> <dir>/view`, copy `questions.md` into `<dir>/view`, and run `bash ask.sh <dir>/view answerer.md answerer.schema.json claude-sonnet-5-5 1.5`. For the explanation-document control, put the Markdown in `<dir>/view` as `document.md` instead of the screenshots.
+2. For each HTML, run `node shoot.mjs <page.html> <dir>/view`, copy `questions.md` into `<dir>/view`, and run `bash ask.sh <dir>/view answerer.md answerer.schema.json claude-sonnet-5-5 1.5` three times, each in its own `<dir>` holding the same screenshots. For the explanation-document control, put the Markdown in `<dir>/view` as `document.md` instead of the screenshots.
    Completion: `<dir>/view/out.json` holds one answer per question, and the summary shows 0 denied calls.
 3. For each answer set, copy `key.md` and `<dir>/view/out.json` (as `answers.json`) into `<dir>/match`, and run `bash ask.sh <dir>/match matcher.md matcher.schema.json claude-opus-5-5 0.5`.
    Completion: `<dir>/match/out.json` holds one verdict per question.
-4. Record per HTML: key points hit, verdict counts (score = `正答` 1, `部分` 0.5), misconceptions and the figure-borne ones, questions not found, questions answered from a figure, and the answerer's `Read` count. Compare versions only on the same questions, and treat a difference within the noise in "What It Separates" as no difference.
+4. Record per HTML the mean and the range over its three runs of: key points hit, verdict counts (score = `正答` 1, `部分` 0.5), misconceptions and the figure-borne ones, questions not found, questions answered from a figure, and the answerer's `Read` count. Compare versions only on the same questions, and treat a difference within the noise in "What It Separates" as no difference.
    Completion: a table with these values for every HTML compared.
 
 ## What It Separates
@@ -41,7 +41,7 @@ Measured on one figure-rich HTML explanation of an operations runbook (13 sectio
 | The page with every `<svg>` removed | 20 | 5.5 | 0 | 17 |
 | The page with its last 6 of 13 sections removed | 18 | 4.5 | 4 | 13 |
 
-- Treat a difference of 2 key points or fewer on 29 as noise: the same page spread over 23–25 in seven runs of these and earlier drafts of the prompts.
+- Treat a difference of means smaller than the range of either page's three runs as noise. The range depends on the page: on 8 explanations of 4 sources (27–32 key points each), the three runs of one page spread by 1 to 7 key points, against 2 on the page in the table above.
 - Removing the second half of the sections drops 5–6 key points and leaves one question unanswered, so the key points separate pages that do and do not carry an answer.
 - Removing every figure is weaker: one run lost the question whose answer is a decision order drawn as a flow (4 key points), and an earlier-draft run lost none, because this page also states most of its figures' relations in text. The answerer's correctness mostly measures what a page says; figure use shows in "answers taken from a figure", which drops to 0.
 - No run had a denied read. One answerer run cost 0.13–0.19 USD and one matcher run 0.11–0.14 USD.
