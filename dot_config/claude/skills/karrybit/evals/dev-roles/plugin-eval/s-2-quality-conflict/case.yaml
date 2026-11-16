@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: s-2-quality-conflict
+context:
+  scaffold_script: fixture.sh
