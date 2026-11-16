@@ -6,7 +6,7 @@ description: 一日の始まりに、Daily Standup として CoS から報告す
 # Checkin
 
 - この skill は、`~/cos` の記録、Beads（`bd`）、Herdr から材料を集め、報告し、記録に残す手順を持つ。外の情報源（タスクの管理、チャット、予定表など）の取り方は、`~/cos/rules/checkin.md` の「外の情報源」の節にある。
-- `bd` は、`~/cos/rules/beads.md` の「呼び方」に従い、1 つずつ単独のコマンドで実行する。
+- `bd` は、`karo:beads` skill の「呼び方」に従い、1 つずつ単独のコマンドで実行する。
 
 ## 手順
 

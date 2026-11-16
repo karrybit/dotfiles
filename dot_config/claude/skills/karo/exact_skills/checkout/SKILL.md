@@ -5,7 +5,7 @@ description: 一日の終わりに、CoS が今日を振り返り、明日やる
 
 # Checkout
 
-- 記録の書き込みは、手順 7 の record の指示 1 つにまとめる。タスクは Beads（`bd`）にあり、`bd` は `~/cos/rules/beads.md` の「呼び方」に従い、1 つずつ単独のコマンドで実行する。
+- 記録の書き込みは、手順 7 の record の指示 1 つにまとめる。タスクは Beads（`bd`）にあり、`bd` は `karo:beads` skill の「呼び方」に従い、1 つずつ単独のコマンドで実行する。
 - 違反した規則を仕組みで塞ぐ Agent（correct）に委任するかと、その依頼の型は、`~/cos/rules/checkout.md` の「correct」の節にある。
 
 ## 手順
@@ -27,7 +27,7 @@ description: 一日の終わりに、CoS が今日を振り返り、明日やる
 5. correct の候補を決め、候補があれば Agent に委任する。
    - `~/cos/rules/checkout.md` の「correct」の節の候補の決め方で、4 で違反とされた規則から候補を選ぶ。
    - ファイルか節がないとき、候補がないとき、`assignments.md` の稼働中に役割が `correct` の行があるときは、委任せず、その理由を Insights の報告に書く。
-   - 候補があれば、すべての候補を 1 つの Agent に渡す。`bd create` でタスクを作り（title は候補の規則、本文に standup のパス。`~/cos/rules/beads.md` の「タスクを進める」の 2）、返った ID をタスク ID にして、節の依頼の型を埋めてブリーフにし、`karo:delegate` skill の「新しいタスクを委任する」の 2・3・4・6 で委任する。ブランチは節の形にする。その 5 の記録は、手順 7 の指示に入れる。
+   - 候補があれば、すべての候補を 1 つの Agent に渡す。`bd create` でタスクを作り（title は候補の規則、本文に standup のパス。`karo:beads` skill の「タスクを進める」の 2）、返った ID をタスク ID にして、節の依頼の型を埋めてブリーフにし、`karo:delegate` skill の「新しいタスクを委任する」の 2・3・4・6 で委任する。ブランチは節の形にする。その 5 の記録は、手順 7 の指示に入れる。
 
    完了条件: `agent-ctl start` の JSON の `status` が `working` で、background の agent-report が走っているか、委任しなかった理由が手元にある。
 6. 下の「報告の項目」を短く報告する。各項目にはタスク ID を付ける。

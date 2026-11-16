@@ -1,6 +1,6 @@
 ---
 name: setup
-description: 別のマシンで、karo と ~/cos の仕組みが動くかを確かめ、人がする段で止まる手順。オーナーが /karo:setup を打ったとき、別のマシンで cos を使い始めるとき、右の列の pane（files・thread）が戻らないときに使う。
+description: 別のマシンで、karo と ~/cos の仕組みが動くかを確かめ、人がする段で止まる手順と、右の列の pane（files・thread）の形と扱い。オーナーが /karo:setup を打ったとき、別のマシンで cos を使い始めるとき、右の列の pane が欠けた・戻らないときに使う。
 ---
 
 # karo の仕組みを確かめる
@@ -27,9 +27,17 @@ description: 別のマシンで、karo と ~/cos の仕組みが動くかを確�
 5. 人がする段をオーナーに頼む。Claude Code のログイン、`~/cos` のフォルダの信頼のダイアログ、外のサービスの接続の認証、そしてオーナーのターミナルで `cos` を実行して CoS の会話を開き直すこと（`cos` は herdr の server をオーナーのターミナルから起こす）。
    完了条件: オーナーが、頼んだ段を終えたと答えた。
 
-## pane が戻らないとき
+## 右の列
 
-- 右の列（`files` の pane と `thread` の pane）は、SessionStart の hook が `scripts/right-pane` で作り直す。right-pane は、`files` か `thread` の label の pane で shell と pager 以外が動いていると、列を変えずに `right-pane: <pane> is running <名前>; leaving the column as it is` を出して終わる。
+- CoS の右の列は、上がファイルの pane（label `files`。既定は fzf の関数 fb）で、下が thread の pane の行（label `thread`。既定は 2 つ）。thread の pane は、会話のファイルを glow のページャで出し、見るだけに使う。列の形は `~/cos/rules/karo.yaml` の `panes` で変わる（キーは karo の `scripts/right-pane` の冒頭にある）。
+- オーナーは herdr の pane の拡大で 1 つを広げて切り替える。
+- pane を操作するのは CoS だけにする。pane に文字を送る前に手前のプロセスを確かめるのは、ほかの pane でも同じ。
+- オーナーに確かめてほしいファイルは、チャットでパスを伝える（ファイルの pane で開いてもらう）。
+- pane の ID は `herdr pane layout --current` で確かめる。
+- 右の列は、セッションの開始と再開のときに SessionStart の hook が `~/.config/claude/skills/karo/scripts/right-pane` で作り直す（herdr の再起動で shell に戻った pane にファイルの pane と thread-show を起動し、復元できなかった pane は閉じて作り直す）。right-pane は、`files` か `thread` の label の pane で shell と pager 以外が動いていると、列を変えずに `right-pane: <pane> is running <名前>; leaving the column as it is` を出して終わる。
+- 会話の途中で右の列の pane が欠けたら、`~/.config/claude/skills/karo/scripts/right-pane` を単独で実行する（確認なしで動く）。それでも戻らなければ、下の「pane が戻らないとき」に進む。
+
+## pane が戻らないとき
 
 1. `herdr pane list --workspace "$HERDR_WORKSPACE_ID"` を実行し、label が `files` か `thread` で始まる pane の `pane_id` と、right-pane の出力にある pane を見比べる。
    完了条件: 動いているものを止めないと列が戻らない pane の一覧が手元にある。

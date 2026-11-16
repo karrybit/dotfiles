@@ -22,7 +22,7 @@ skills:
 
 - 調べた結果は `~/cos/investigations/YYYY-MM-DD-<話題>.md`、MTG の記録は MTG ごとに `~/cos/journal/YYYY-MM-DD-<MTG>.md` に書く（`<MTG>` を `standup` にすると checkin の記録の名前と重なるので、`daily-standup` のように別の語を付ける）。依頼に書き先があればそれに従う。
 - MTG の記録は、1 つのファイルに 1 つの MTG だけを置き、本文の `## ` の見出しをその MTG の名前の 1 つにし、フロントマターの `sources` にその MTG の議事録と資料だけを書く。
-- フロントマターは `~/cos/rules/frontmatter.md` に従い、ノートの本文は `## ` の見出しから始める。
+- フロントマターは、書く前に Skill tool で `karo:frontmatter` を使い、それに従う。ノートの本文は `## ` の見出しから始める。
 
 ## 分野を探る調査
 
@@ -34,7 +34,7 @@ skills:
 
 1. `karrybit:research` の手順 1〜3 で調べ、上の「書き先」にノートを書く。
    完了条件: `karrybit:research` の手順 3 の完了条件を満たす。
-2. `<karo-check> --only <ノートの ~/cos からのパス>` を単独で実行し（imozuru を使ったら `--only investigations/YYYY-MM-DD-<話題>/map.md` も足す）、問題が出なくなるまでノートと map.md を直す（ほかのノートの問題は、あなたが変えてよい範囲の外なので数えない）。警告（`~/cos/rules/information-design.md` の「6. 検証」の 2 つ）は問題に数えない。依頼で `~/cos` 以外の記録のディレクトリを指定されたときは、`<karo-check> <そのディレクトリ>` で確かめる（schema は `<そのディレクトリ>/rules/frontmatter-schema.yaml`）。
+2. `<karo-check> --only <ノートの ~/cos からのパス>` を単独で実行し（imozuru を使ったら `--only investigations/YYYY-MM-DD-<話題>/map.md` も足す）、問題が出なくなるまでノートと map.md を直す（ほかのノートの問題は、あなたが変えてよい範囲の外なので数えない）。警告（`stale since` と `task in body not in tasks` の行）は問題に数えない。依頼で `~/cos` 以外の記録のディレクトリを指定されたときは、`<karo-check> <そのディレクトリ>` で確かめる（schema は `<そのディレクトリ>/rules/frontmatter-schema.yaml`）。
    - karo-check が終了コード 2 で止まったら（引数か schema の誤り、okf-lint が見つからないか yq・fd・rg を動かせない）、ノートを直し続けずに止まり、stderr の行を報告に書く。ノートを直しても終わらないため。
 
    完了条件: karo-check が `karo-check: 0 problem(s)` を出すか、終了コード 2 で止まった。

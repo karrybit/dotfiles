@@ -21,7 +21,7 @@ argument-hint: <branch> [--rebase]
    完了条件: `~/cos` の main がブランチの先頭を指している。
 3. `~/.config/claude/skills/karo/scripts/record --restart-crit` を単独のコマンドで実行し、crit の一覧に増えたファイルと消えたファイルを反映させる。最後の行が `NG crit:` ならオーナーに伝える。
    完了条件: 最後の行を読み、`NG crit:` ならオーナーに伝えている。
-4. 引数なしの `~/.config/claude/skills/karo/scripts/karo-check` を単独のコマンドで実行し、記録全体を確かめる。record の検査の範囲（`~/cos/rules/record.md` の冒頭）の外にある、取り込みが持ち込んだ問題はここで見つける。問題が出たら、record で直す。あわせて `~/.local/state/cos/record/problems.md` を読み、オーナーの発言を待たずに届いていない record の NG があれば、`~/cos/rules/record.md` の「走らせる」に従って直す。
+4. 引数なしの `~/.config/claude/skills/karo/scripts/karo-check` を単独のコマンドで実行し、記録全体を確かめる。record の検査の範囲（`karo:record` skill の冒頭）の外にある、取り込みが持ち込んだ問題はここで見つける。問題が出たら、record で直す。あわせて `~/.local/state/cos/record/problems.md` を読み、オーナーの発言を待たずに届いていない record の NG があれば、`karo:record` skill の「走らせる」に従って直す。
    完了条件: `karo-check: 0 problem(s)` が出たか、直しの指示に record が `queued` を出した。
 
 ## 返すもの
