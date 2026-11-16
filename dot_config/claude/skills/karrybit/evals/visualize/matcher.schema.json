@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "properties": {
+    "verdicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "verdict": { "enum": ["正答", "部分", "誤り", "答えなし"] },
+          "points_hit": { "type": "integer" },
+          "points_total": { "type": "integer" },
+          "misconception": { "type": "string" },
+          "from_figure": { "type": "boolean" },
+          "note": { "type": "string" }
+        },
+        "required": ["id", "verdict", "points_hit", "points_total", "misconception", "from_figure", "note"]
+      }
+    }
+  },
+  "required": ["verdicts"]
+}
