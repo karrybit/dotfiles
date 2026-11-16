@@ -10,7 +10,7 @@ Each case asks the main session to hand the task to one role agent by its namesp
 | --- | --- | --- |
 | with | `DIR/with/.config/claude/skills/karrybit`, the plugin as `chezmoi archive` renders it from one checkout | the with-arm of a two-arm run |
 | baseline | none | the without-arm of the same run; the `Agent` call fails with `Agent type 'karrybit:<role>' not found`, and the session does the task itself |
-| canary | `DIR/canary/.config/claude/skills/karrybit`, a second copy with `canary.patch` applied | `--ablation none` |
+| canary | `DIR/canary/.config/claude/skills/karrybit`, a second copy with `canary.patch` applied, so each agent keeps only its frontmatter, its role paragraph, and `## 出典` | `--ablation none` |
 
 Both plugin copies hold the whole `karrybit` plugin, so the agents' `skills:` resolve `karrybit:dev-handoff` and `karrybit:completion-report`; `scripts/skill-wrap` is not used, since it wraps one skill under the plugin name `kit`.
 
@@ -18,15 +18,15 @@ Both plugin copies hold the whole `karrybit` plugin, so the agents' `skills:` re
 
 | ID | Case | Role | Passes when |
 | --- | --- | --- | --- |
-| R-1 | `r-1-vague-request` | requirements | `questions-scope`: at most four questions covering at least three of synchronous or asynchronous, the period, another tenant's ID, and failure notice. `acceptance-examples`: at least three acceptance criteria, one with another tenant's ID. `assumptions-marked`: guesses are marked. `no-implementation-in-ac`: no table, column, function, or API shape in an acceptance criterion |
+| R-1 | `r-1-vague-request` | requirements | `questions-scope`: at most four questions, covering at least two of synchronous or asynchronous, the export's period limit, and failure notice, each with a recommendation and what the answer changes, and none that the repository answers (another tenant's ID, the list API's 7 days). `acceptance-examples`: at least three acceptance criteria, one with another tenant's ID. `assumptions-marked`: guesses are marked, and nothing read from the repository or guessed is labeled as confirmed. `no-implementation-in-ac`: no table, column, function, or API shape in an acceptance criterion |
 | R-2 | `r-2-answered-in-records` | requirements | `answered-not-asked`: the 7-day limit recorded in `docs/notes/` is stated with its source, not asked |
 | S-1 | `s-1-cross-component` | design | `reuses-authz` (regex): the design names `authorize_tenant_access`. `invariants`: tenant isolation and no failure reported as success. `async-states`: states and failure transitions. `decision-tradeoff`: a costly decision with a rejected alternative and what gets worse. `no-new-service` |
 | S-2 | `s-2-quality-conflict` | design | `conflict-keeps-isolation`: the performance and isolation conflict is written as scenarios, and the decision keeps per-tenant isolation |
 | D-1 | `d-1-csv-export-plan` | delivery | `environment-first`, `call-before-job`, `fixed-csv-stub`, `second-tenant`, `separate-gates`, `parallel-disjoint`, and `owner-plan` (a `baseline` grader in `case.yaml` against `owner-plan.jsonl`, a plan staged by a person) |
 | D-2 | `d-2-one-file-bug` | delivery | `single-increment`: no uncertainties listed, one increment |
-| I-1 | `i-1-tenant-api` | implementation | `new-test-file` (file_exists), `report-test-command` (regex), `other-tenant-test`; `grade.py`: `tests-pass`, `catches-other-tenant` and `catches-missing` (the run's tests fail against a broken `get_export`), `in-scope` |
+| I-1 | `i-1-tenant-api` | implementation | `new-test-file` (file_exists), `report-test-command` (regex), `other-tenant-test` (a test derived from INV-1, which the request states without an acceptance criterion), `failing-test-first` (a failing run reported before the passing one); `grade.py`: `tests-pass`, `catches-other-tenant` and `catches-missing` (the run's tests fail against a broken `get_export`), `in-scope` |
 | I-2 | `i-2-wrong-looking-test` | implementation | `kept-expectation`; `grade.py`: `test-unchanged`, `tests-pass`, `code-fixed` |
-| V-1 | `v-1-missing-tenant-check` | verification | `verdict-not-pass` (regex: `FAIL`, `NOT VERIFIED`, or `不合格`), `tenant-gap-located`, `returns-to-implementation`; `grade.py`: `worktree-unchanged` |
+| V-1 | `v-1-missing-tenant-check` | verification | `verdict-not-pass` (regex: `判定` followed by `FAIL`, `NOT VERIFIED`, or `不合格`), `tenant-gap-located` (the missing tenant comparison, and that the test the implementer names for AC-3 does not cover it), `returns-to-implementation`; `grade.py`: `worktree-unchanged` |
 | V-2 | `v-2-clean-change` | verification | `pass-brief`, `no-blocking-findings`; `grade.py`: `worktree-unchanged` |
 
 - Every case also has `role-fired`, a `tool_used` grader on `Agent` with the role's name, marked `arm: with-only`; it shows that the with-arm dispatched the role and is left out of the two-arm score.
@@ -38,9 +38,9 @@ Both plugin copies hold the whole `karrybit` plugin, so the agents' `skills:` re
 - `fixtures/audit-console`: an admin console API server with tenants, audit logs, an existing `authorize_tenant_access`, a job platform client, an object storage client, and a report feature that uses both (R-1, R-2, S-1, S-2).
 - `fixtures/export-design-docs`: three design documents for a CSV export of audit logs built from a console screen, an API server, an asynchronous job, object storage, and per-tenant tables, with two verification tenants and a fixed CSV and signed URL in their contracts (D-1).
 - `fixtures/slug`: a one-file library whose `slugify` drops digits (D-2).
-- `fixtures/export-api`: export functions without `get_export` (I-1, and the `base` commit of V-1 and V-2). `fixtures/export-api-v1` adds a `get_export` without the tenant comparison and tests without another tenant's case; `fixtures/export-api-v2` adds the correct one. Their `fixture.sh` commits `export-api`, tags it `base`, and commits the v1 or v2 copy on top.
+- `fixtures/export-api`: export functions without `get_export` (I-1, and the `base` commit of V-1 and V-2). `fixtures/export-api-v1` adds a `get_export` without the tenant comparison and a test named `test_other_tenant_is_denied` that passes another tenant's `tenant_id`, so it looks like AC-3 coverage while only the authorization check runs; `fixtures/export-api-v2` adds the correct one. Their `fixture.sh` commits `export-api`, tags it `base`, and commits the v1 or v2 copy on top.
 - `fixtures/period-filter`: a period filter whose code and docstring include the end, while `docs/spec.md` and the failing test exclude it (I-2).
-- `canary.patch`: removes the `## 信条` section from each of the five agents; apply it with `patch -p1 -d <plugin copy>/agents`.
+- `canary.patch`: removes every `## ` section except `## 出典` from each of the five agents, keeping the frontmatter and the role paragraph; apply it with `patch -p1 -d <plugin copy>/agents`. Each belief's action is restated in the steps, the report items, and the completion gates, so a canary that removes only `## 信条` keeps those rules.
 - `evals.json`, `grade.py`: the script assertions above, run by `scripts/grade-kept`. `evals.json` lists every case so `grade-kept` finds a fixture for each; `grade.py` grades the four cases that have assertions.
 
 ## Settings for This Suite
@@ -53,7 +53,7 @@ Both plugin copies hold the whole `karrybit` plugin, so the agents' `skills:` re
 
 1. Build the two plugin copies from the checkout to evaluate, in a `DIR` outside the repository whose path has no `eval`, `test`, or `scratchpad`:
    `chezmoi archive -S <checkout> --format tar ~/.config/claude/skills/karrybit | tar -x -C DIR/with`, then `cp -R DIR/with DIR/canary` and `patch -p1 -d DIR/canary/.config/claude/skills/karrybit/agents -i <checkout>/dot_config/claude/skills/karrybit/evals/dev-roles/canary.patch`.
-   Completion: `rg -c '^## 信条' DIR/canary/.config/claude/skills/karrybit/agents` prints nothing, and the same command on `DIR/with` prints five files.
+   Completion: `rg -c '^## ' DIR/canary/.config/claude/skills/karrybit/agents` prints a count of 1 (`## 出典`) for each of the five agents.
 2. Run `v-1-missing-tenant-check` once with `--runs 1 --ablation none` against `DIR/with`.
    Completion: the run's `error` is `null`, and its trace shows the verifier ran the tests with exit code 0.
 3. For each role, run its first case (R-1, S-1, D-1, I-1, V-1) three times against `DIR/with` (two arms) and against `DIR/canary` (`--ablation none`), select it with `--case`, and run `grade-kept` for I-1 and V-1. Read the result against the table below before running that role's other cases with `--tag`.
@@ -62,7 +62,7 @@ Both plugin copies hold the whole `karrybit` plugin, so the agents' `skills:` re
 | Result | Reconsider |
 | --- | --- |
 | The with and baseline arms both pass 3/3, or both fail 3/3, on a case | The case and its graders; audit them with `eval-auditor` |
-| The canary passes as often as the with-arm | The agent definition: its beliefs do not move the judgment |
+| The canary passes as often as the with-arm | The agent definition: its body does not move the judgment |
 | An `llm` grader disagrees with a person reading the transcript | The grader's rubric |
 | A run fails on the environment (time limit, permission, runner error) | The environment; leave that run out of the counts |
 | Two cases in a row have one arm split across its three runs | The case's prompt and fixture |

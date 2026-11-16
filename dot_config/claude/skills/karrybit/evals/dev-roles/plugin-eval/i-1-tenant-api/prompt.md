@@ -11,7 +11,6 @@ tags: [implementation]
 - 関わる要求:
   - AC-1: 自分のテナントの `export_id` を指定すると、その export が返る。
   - AC-2: 存在しない `export_id` を指定すると `NotFound` になる。
-  - AC-3: 自分のテナントで呼び（`session` と `tenant_id` はどちらも自分のテナント）、他のテナントの export の `export_id` を指定すると、`NotFound` になる。他のテナントに export があることを漏らさないため、存在しないときと同じにする。
 - 設計の制約: INV-1 他のテナントの export を、存在も含めて見せない。関数は `app/exports.py` の `get_export(store, session, tenant_id, export_id)` で、最初に `authorize_tenant_access` を呼ぶ。
 - 今回の範囲: 触ってよいのは `app/exports.py` と `tests/` だけ。
 - 確かめる条件: `python3 -m unittest discover -s tests -t .` が通る。
