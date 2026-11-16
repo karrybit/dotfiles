@@ -1,6 +1,6 @@
 ---
 name: delegate
-description: Herdr 上の Agent に仕事を委任する手順。オーナーが実装・修正・調査を頼んだとき、既存 Agent に追加指示を出すとき、Agent を終了するときに使う。
+description: Herdr 上の Agent に仕事を委任する手順。オーナーが実装・修正・調査を頼んだとき、goal を Agent ごとの /goal で進めるとき、既存 Agent に追加指示を出すとき、Agent を終了するときに使う。
 ---
 
 # 委任
@@ -58,12 +58,27 @@ description: Herdr 上の Agent に仕事を委任する手順。オーナーが
    完了条件: ブリーフのファイルがある。
 3. `bd update <タスクID> --claim --actor <Agent 名> --json` を単独で実行し、Agent 名でタスクを claim する。claim が断られたら（ほかの名前が持っている）、委任せずにオーナーに伝える。
    完了条件: JSON の `status` が `in_progress`、`assignee` が Agent 名。
-4. `<scripts>/agent-ctl start <タスクID> <ブリーフ> <場所>` を単独で実行する（`<場所>` は「作業場所と取り込み」）。goal を渡すとき（`karo:goal` skill）は、`start` のすぐあとに `--goal "<完了の条件>"` を付ける。`status` が `working` でなければ、`karrybit:herdr-agent` の「止まった Agent に答える」に進み、答えてよいかは AGENTS.md の「Herdr の操作」で決める。Agent を起動できなかったときは、`bd unclaim <タスクID> --if-assignee <Agent 名> --json` で claim を戻す。
-   完了条件: JSON の `status` が `working`。goal を渡したときは、`goal` も `sent`。
+4. `<scripts>/agent-ctl start <タスクID> <ブリーフ> <場所>` を単独で実行する（`<場所>` は「作業場所と取り込み」）。`status` が `working` でなければ、`karrybit:herdr-agent` の「止まった Agent に答える」に進み、答えてよいかは AGENTS.md の「Herdr の操作」で決める。Agent を起動できなかったときは、`bd unclaim <タスクID> --if-assignee <Agent 名> --json` で claim を戻す。
+   完了条件: JSON の `status` が `working`。
 5. `assignments.md` の稼働中に `行を足す` で行（Agent 名、タスク、役割、Herdr workspace、pane、worktree は JSON の `place`、branch、開始日）を足す指示を、`commit 本文:` に workspace と、ブランチか、ブランチを作らないときは作業するチェックアウトとそのブランチを書いて、record で書く。
    完了条件: record が `queued` を出した。
 6. 下の「終わるのを待つ」に従って待ち、その場でオーナーに返す。
    完了条件: background の agent-report が走っている。
+
+## goal を渡す
+
+- goal は、完了の条件を満たすまで Agent が自律でターンを続ける作業。
+- Claude Code の `/goal` は、条件を満たすまでそのセッションをふさぎ、1 セッションに 1 つしか持てない（https://code.claude.com/docs/en/goal.md）。そのため、1 つの goal を 1 つの Agent に渡し、その Agent のセッションで `/goal` を動かす。
+
+1. `karrybit:goal` skill を Skill tool で呼び、オーナーの依頼の原文を渡して、その手順を最後まで進める。返った goal ごとに、完了の条件は 2 の `--goal` とブリーフの受け入れ条件に、行き詰まりの扱いはブリーフの制約に使う。止めた goal は、その goal の委任を止めて、確かめることを AskUserQuestion でオーナーに尋ねる（ほかの goal は進めてよい）。
+   完了条件: 委任する goal のすべてに、`karrybit:goal` が返した完了の条件と行き詰まりの扱いがあり、止めた goal のすべてをオーナーに尋ねている。
+2. goal ごとに、「新しいタスクを委任する」の手順で委任する。手順との違いは次の 4 つ。
+   - タスク ID は goal ごとに 1 つ作る。
+   - ブリーフの受け入れ条件は、この節の 1 の完了の条件にする。
+   - 4 の `agent-ctl start` のすぐあとに `--goal "<完了の条件>"` を付ける（`<scripts>/agent-ctl start --goal "<完了の条件>" <タスクID> <ブリーフ> <場所>`。受け付ける条件の形は `karrybit:herdr-agent` の「起動する」にある）。
+   - 4 で JSON の `goal` が `not_sent` なら（ブリーフで承認のダイアログが出たときなど）、4 のとおりに答えたあと、Agent が `blocked` でなくなったら `<scripts>/agent-ctl send --goal "<完了の条件>" <タスクID>` を単独で送る。
+
+   完了条件: どの goal も「新しいタスクを委任する」の 6 まで進み、`start` か `send` の JSON の `goal` が `sent` か、画面の内容を AskUserQuestion でオーナーに尋ねている。
 
 ## 既存の Agent に追加指示を出す
 
