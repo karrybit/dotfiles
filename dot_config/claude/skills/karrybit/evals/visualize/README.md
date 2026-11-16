@@ -41,7 +41,7 @@ Measured on one figure-rich HTML explanation of an operations runbook (13 sectio
 | The page with every `<svg>` removed | 20 | 5.5 | 0 | 17 |
 | The page with its last 6 of 13 sections removed | 18 | 4.5 | 4 | 13 |
 
-- Treat a difference of means smaller than the range of either page's three runs as noise. The range depends on the page: on 8 explanations of 4 sources (27–32 key points each), the three runs of one page spread by 1 to 7 key points, against 2 on the page in the table above.
+- Treat a difference of means smaller than the range of either page's three runs as noise. The range depends on the page: on 12 explanations of 6 sources (27–32 key points each), the three runs of one page spread by 0 to 6 key points, against 2 on the page in the table above.
 - Removing the second half of the sections drops 5–6 key points and leaves one question unanswered, so the key points separate pages that do and do not carry an answer.
 - Removing every figure is weaker: one run lost the question whose answer is a decision order drawn as a flow (4 key points), and an earlier-draft run lost none, because this page also states most of its figures' relations in text. The answerer's correctness mostly measures what a page says; figure use shows in "answers taken from a figure", which drops to 0.
 - No run had a denied read. One answerer run cost 0.13–0.19 USD and one matcher run 0.11–0.14 USD.
