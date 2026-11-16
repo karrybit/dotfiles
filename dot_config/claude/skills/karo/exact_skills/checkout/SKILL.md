@@ -11,7 +11,7 @@ description: 一日の終わりに、CoS が今日を振り返り、明日やる
 ## 手順
 
 1. 材料を集める。
-   - 今日の journal と、`~/cos` の `git log --since='<今日の日付> 00:00'`。
+   - `~/cos` の `git log --since='<今日の日付> 00:00'` の件名と本文。
    - `assignments.md`。
    - 開いているタスクは `bd list --status open,in_progress,blocked,deferred --limit 0 --json`、判断待ちは `bd human list --status open --json`、今日閉じたタスクは `bd list --all --closed-after <今日の日付> --limit 0 --json`、今日作ったタスクは `bd list --all --created-after <今日の日付> --limit 0 --json`。
    - `herdr agent list` と、`assignments.md` の稼働中の各 Agent への `herdr agent get`。
@@ -33,11 +33,11 @@ description: 一日の終わりに、CoS が今日を振り返り、明日やる
 6. 下の「報告の項目」を短く報告する。各項目にはタスク ID を付ける。
    完了条件: 6 つの項目がすべて報告にある。
 7. 次をすべて 1 つの指示にまとめて record で書く。
-   - 報告: `~/cos/journal/YYYY-MM-DD-standup.md`（今日の日付）の末尾に `## Checkout（YYYY-MM-DD）` の節を `追記:` で足す。節の下の `### 今日の振り返り` に「報告の項目」の「明日やること」と「Insights」のほかの項目を、`### 明日やること` に「明日やること」を、`### Insights` に「Insights」を書く。今日のファイルがなければ `新規:` で作り、フロントマターは `rules/frontmatter.md` の `journal/YYYY-MM-DD-standup.md` の行に従う。報告で挙げたタスクがフロントマターの `tasks` になければ、`置き換え:` で足す。
+   - 報告: `~/cos/journal/YYYY-MM-DD-standup.md`（今日の日付）の末尾に `## Checkout（YYYY-MM-DD）` の節を `追記:` で足す。節の下の `### 今日の振り返り` に「報告の項目」の「明日やること」と「Insights」のほかの項目を、`### 明日やること` に「明日やること」を、`### Insights` に「Insights」を書く。今日のファイルがなくても `追記:` で書く（フロントマターは record が付ける）。報告で挙げたタスクがフロントマターの `tasks` になければ、`置き換え:` で足す。
    - 3 の `assignments.md` の行: `置き換え:` で消す。
    - 2 で閉じた Agent: `karo:delegate` skill の「Agent を終了する」の 2 の中身。
    - 5 で委任したとき: `assignments.md` の稼働中に `行を足す` で行（役割は `correct`、ほかの列は `karo:delegate` skill の「新しいタスクを委任する」の 5）。
-   - journal: `[note]` の行を 1 つ（対象は `cos`、出典は standup のパス）。
+   - `commit 本文:`: Checkout の記録であることと standup のパス、2 で閉じた Agent の本文。
    - `state.md`: 1 の `bd` の出力と `assignments.md` から書き直す。
 
    完了条件: record が `queued` を出した。

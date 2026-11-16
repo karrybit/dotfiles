@@ -88,7 +88,7 @@ description: Herdr 上の Agent に仕事を委任する手順。オーナーが
 
 1. `<scripts>/agent-ctl close <タスクID>` を単独で実行する（`karrybit:herdr-agent` の「閉じる」）。止まったら、その行と `parent_kept` をオーナーに報告する。ignored なファイルで止まったら、CoS は一覧をオーナーに示して消してよいかを尋ね、worktree のファイルは調べも消しもしない。消してよいと答えたら、一覧のパスをリテラルで並べた `rm -rf <place>/<パス> …` の 1 行を示してオーナーのターミナルで実行してもらい、終わったら `close` を走らせ直す。残すと答えたら、閉じずに残したことを報告する。
    完了条件: JSON が出ているか、止まった理由をオーナーに報告している。
-2. JSON をもとに、`assignments.md` の行を終了に移し（移し方は `~/cos/rules/record.md` の「書き込みの指示の形」と `~/cos/rules/record-examples.md` の終了の例）、journal に運用の行を 1 つ（`[close]`、対象はタスク ID、本文は閉じた workspace と外した worktree の `place`）書く指示を 1 つにまとめ、record で書く。
+2. JSON をもとに、`assignments.md` の行を終了に移し（移し方は `~/cos/rules/record.md` の「書き込みの指示の形」と `~/cos/rules/record-examples.md` の終了の例）、`commit 本文:` にタスク ID、閉じた workspace、外した worktree の `place` を書いた指示を 1 つ作り、record で書く。
    完了条件: record が `queued` を出した。
 3. タスクを閉じずに Agent を終えたとき（取り込まずに止めたとき）は、`bd unclaim <タスクID> --if-assignee <Agent 名> --json` を単独で実行する。
    完了条件: JSON の `status` が `open`。取り込んで閉じるタスクでは、この手順はない。

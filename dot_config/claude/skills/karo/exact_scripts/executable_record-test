@@ -635,12 +635,10 @@ else
   fail "thread by 追記: exit $code: $out"
 fi
 
-# An append to a day's standup that does not exist creates it deriving from the latest journal. A
-# checkin's 新規: with frontmatter that has no derived_from is an NG; the same report through 追記: lands.
-out=$(printf '書き込み指示\ncommit 件名: t-test0001: checkin\ncommit 本文:\n~~~~\nwhy\n~~~~\n新規: journal/2026-01-06-standup.md\n~~~~\n---\ntype: Standup\ndescription: 2026-01-06 の checkin\ndate: 2026-01-06\n---\n\n## Checkin（2026-01-06）\n~~~~\n' | "$bin/record" 2>&1); code=$?; last=${out##*$'\n'}
-if [[ $code -eq 1 && $last == *"no sources or derived_from"* ]]; then pass "a standup by 新規: without derived_from is an NG"; else fail "standup by 新規: exit $code: $out"; fi
+# An append to a day's standup that does not exist creates it with a type and a date, and no
+# derived_from.
 out=$(printf '書き込み指示\ncommit 件名: t-test0001: checkin\ncommit 本文:\n~~~~\nwhy\n~~~~\n追記: journal/2026-01-06-standup.md\n~~~~\n## Checkin（2026-01-06）\n~~~~\n' | "$bin/record" 2>&1); code=$?
-if [[ $code -eq 0 && $(cat "$v/journal/2026-01-06-standup.md") == $'---\ntype: Standup\ndate: 2026-01-06\nderived_from:\n  - journal/2026-01-05.md\n---\n\n## Checkin（2026-01-06）' ]] && clean; then pass "追記: creates a standup deriving from the latest journal"; else fail "standup by 追記: exit $code: $out: $(cat "$v/journal/2026-01-06-standup.md" 2>/dev/null)"; fi
+if [[ $code -eq 0 && $(cat "$v/journal/2026-01-06-standup.md") == $'---\ntype: Standup\ndate: 2026-01-06\n---\n\n## Checkin（2026-01-06）' ]] && clean; then pass "追記: creates a standup without derived_from"; else fail "standup by 追記: exit $code: $out: $(cat "$v/journal/2026-01-06-standup.md" 2>/dev/null)"; fi
 # Only a day's journal gives the commit body: a "- " line in a standup beside it does not.
 before=$(head_sha)
 out=$(printf '書き込み指示\ncommit 件名: t-test0001: standup line\n\n追記: journal/2026-01-06-standup.md\n~~~~\n- 10:00 [note] t-test0001: standup の行（会話 2026-01-06 10:00）\n~~~~\n' | "$bin/record" 2>&1); code=$?; last=${out##*$'\n'}

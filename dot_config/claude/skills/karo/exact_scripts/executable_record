@@ -9,9 +9,9 @@ The instruction has the form described in rules/record.md ("書き込みの指�
 body, the commit body is the instruction's journal lines (the "- " lines it appends to or creates in a
 day's journal, journal/YYYY-MM-DD.md), and an instruction with neither is an NG. An append to a day's
 journal that does not exist yet creates it with its frontmatter and heading; an append to a day's
-standup (journal/YYYY-MM-DD-standup.md) that does not exist creates it with its frontmatter, deriving
-from the latest day's journal up to its day. A thread starts with a "新規:" that carries its
-frontmatter. A "新規:" of a thread or a standup without frontmatter is an NG. A "行:" item sets
+standup (journal/YYYY-MM-DD-standup.md) that does not exist creates it with its frontmatter (type and
+date). A thread starts with a "新規:" that carries its frontmatter. A "新規:" of a thread or a
+standup without frontmatter is an NG. A "行:" item sets
 named cells of the one table row whose first cell is the given ID, from "<column>: <value>" lines
 under the table's header. A
 "行を足す:" item adds a row, from the same lines, to the end of the table under the given heading (or
@@ -470,20 +470,15 @@ def add_row(path, text, heading, changes):
     return "\n".join(lines)
 
 
-def new_note(path, task, state):
-    """The frontmatter that starts a standup an 追記 creates, or None for other paths. A standup derives
-    from the latest journal up to its day; a thread starts with a 新規: that carries its frontmatter."""
+def new_note(path, task):
+    """The frontmatter that starts a standup an 追記 creates, or None for other paths. A thread starts
+    with a 新規: that carries its frontmatter."""
     if path.startswith("threads/") and path != "threads/memo.md":
         if not task:
             raise Bad(f"追記: {path}: 「タスク:」の行がない（項目の行の下に、どのタスクの話かを書く）")
         raise Bad(f"追記: {path}: ファイルがない（{task} の threads は 新規: でフロントマターを付けて作る）")
     if m := re.fullmatch(r"journal/(\d{4}-\d{2}-\d{2})-standup\.md", path):
-        jdir = os.path.join(COS, "journal")
-        days = {p for p in state if state[p] is not None} | {f"journal/{n}" for n in (os.listdir(jdir) if os.path.isdir(jdir) else [])}
-        days = sorted(p for p in days if re.fullmatch(r"journal/\d{4}-\d{2}-\d{2}\.md", p) and p <= f"journal/{m.group(1)}.md")
-        if not days:
-            raise Bad(f"追記: {path}: ファイルがなく、{m.group(1)} までの journal がない")
-        return f"---\ntype: Standup\ndate: {m.group(1)}\nderived_from:\n  - {days[-1]}\n---\n\n"
+        return f"---\ntype: Standup\ndate: {m.group(1)}\n---\n\n"
     return None
 
 
@@ -539,7 +534,7 @@ def plan(items):
                 # A day's journal starts with the first line written to it, whichever instruction that is.
                 cur = f"---\ntype: Journal\ndate: {m.group(1)}\n---\n\n## {m.group(1)}\n\n"
             if cur is None:
-                cur = new_note(path, texts[1], state)
+                cur = new_note(path, texts[1])
             if cur is None:
                 raise Bad(f"追記: {path}: ファイルがない")
             check_thread_task(kind, path, texts[1], cur)

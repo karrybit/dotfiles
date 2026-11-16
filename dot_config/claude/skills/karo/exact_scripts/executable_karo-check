@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Check the CoS records: first the general checks of karrybit's okf-lint against the schema (frontmatter,
 # place, lineage, path links, stale_after), then the checks that belong to the CoS structure (the forms of
-# dates, task IDs, and journal lines; the project vocabulary; derived_from anchors; wiki links; old IDs;
-# and the task database, .beads, kept out of git).
+# dates and task IDs; the project vocabulary; derived_from anchors; wiki links; old IDs; and the task
+# database, .beads, kept out of git).
 # A task ID is a bd ID (cos- and three to eight letters or digits, a child with ".<n>" added) or an older
 # t- ID. Tasks live in the task database, which karo-check does not read, so only the form is checked.
 # usage: karo-check [--only <path>]... [<cos dir>]
@@ -170,24 +170,17 @@ done < <(
     (( ${#files[@]} )) && awk "$wiki" "${files[@]}"
   fi)
 
-# The per-file checks below read every day journal (journal/YYYY-MM-DD.md; the standups and meeting
-# notes beside them are not journal lines) and the state file, or with --only the given ones that exist.
+# The old ID check at the end reads every day journal (journal/YYYY-MM-DD.md; not the standups and
+# meeting notes beside them) and the state file, or with --only the given ones that exist.
 day='^journal/[0-9]{4}-[0-9]{2}-[0-9]{2}\.md$'
-journal=(); ids=()
+ids=()
 if (( ! scoped )); then
-  [[ -d journal ]] && while IFS= read -r p; do journal+=("$p"); done < <(fd -d 1 -t f -e md . journal | rg "$day" | sort)
-  ids=(state.md ${journal[@]+"${journal[@]}"})
+  ids=(state.md)
+  [[ -d journal ]] && while IFS= read -r p; do ids+=("$p"); done < <(fd -d 1 -t f -e md . journal | rg "$day" | sort)
 else
   for p in "${only[@]}"; do
-    [[ -f $p ]] || continue
-    [[ $p =~ $day ]] && { journal+=("$p"); ids+=("$p"); continue; }
-    [[ $p == state.md ]] && ids+=("$p")
+    [[ -f $p ]] && [[ $p =~ $day || $p == state.md ]] && ids+=("$p")
   done
-fi
-
-# journal lines keep the normalized form: time, kind, comma-separated targets
-if (( ${#journal[@]} )); then
-  while IFS= read -r l; do report "${l%%:*}" "journal line not normalized: ${l#*:*:}"; done < <(rg -n --with-filename --no-heading '^- ' "${journal[@]}" | rg -v '^[^:]+:\d+:- \d{2}:\d{2} \[(delegate|report|review|decision|ask|close|note)\] [^:/・]+: ')
 fi
 
 # The task database, .beads, stays out of the vault's git: ignored when it is there, and nothing under

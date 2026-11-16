@@ -7,7 +7,7 @@ description: CoS と Agent の一日の働きを transcript と Beads（bd）か
 
 - 数えるのはこの skill の `scripts/insights`、例を確かめるのはサブエージェント、直すかどうかを決めるのはオーナーにする。
 - 結果には、数、場所（セッション ID の先頭 8 文字、時刻、Agent 名）、規則の名前だけを書き、transcript の会話・コマンド・出力の中身は書き写さない。
-- 結果は `~/cos/journal/YYYY-MM-DD-standup.md` の `## Checkout（YYYY-MM-DD）` の節の下の `### Insights` に置く。transcript から作り直せる、判断のための出力（Gold）なので、Silver には書かない。オーナーが直すと決めた候補は、ふだんの手順（Beads のタスクと決定、journal）で Silver に入る。
+- 結果は `~/cos/journal/YYYY-MM-DD-standup.md` の `## Checkout（YYYY-MM-DD）` の節の下の `### Insights` に置く。transcript から作り直せる、判断のための出力（Gold）なので、Silver には書かない。オーナーが直すと決めた候補は、ふだんの手順（Beads のタスクと決定）で Silver に入る。
 
 ## 手順
 
@@ -17,7 +17,7 @@ description: CoS と Agent の一日の働きを transcript と Beads（bd）か
    完了条件: サブエージェントの報告が手元にあり、選んだ例のすべてに、規則の名前と、直しの候補か「直しは要らない」がある。
 3. 下の「報告の項目」を短く報告する。
    完了条件: 5 つの指標と直しの候補がすべて報告にある（取れなかった指標は理由つき）。
-4. 3 の報告を `### Insights` の節の本文にする。`karo:checkout` から呼んだときは、checkout の手順 7 の指示に入れる。単独で呼ばれたときは、今日の standup に `## Checkout（YYYY-MM-DD）` の節がなければ `追記:` で節の見出しと `### Insights` を足し、journal の `[note]` の行（対象は `cos`、出典は standup のパス）と合わせて 1 つの指示にし、record で書く。
+4. 3 の報告を `### Insights` の節の本文にする。`karo:checkout` から呼んだときは、checkout の手順 7 の指示に入れる。単独で呼ばれたときは、今日の standup に `## Checkout（YYYY-MM-DD）` の節がなければ `追記:` で節の見出しと `### Insights` を足し、`commit 本文:` に Insights の記録であることと standup のパスを書いた 1 つの指示にし、record で書く。
    完了条件: 節の本文が checkout の指示に入ったか、record が `queued` を出した。
 
 ## 指標と数え方
@@ -55,7 +55,8 @@ insights の JSON: <1 の出力>
 
 読む場所:
 - transcript: ${CLAUDE_CONFIG_DIR:-~/.claude}/projects/ の下。CoS は ~/cos のフォルダの <セッション ID>*.jsonl、サブエージェントはその下の subagents/、Herdr の Agent は agent-name の行が Agent 名のセッション。jq で、その時刻の前後の tool_use の name・input と tool_result の is_error を読む。
-- 規則: ~/cos/AGENTS.md、~/cos/rules/、~/.config/claude/skills/karo/skills/、その日の ~/cos/journal/<日付>.md。タスクの出来事は insights の JSON の delegations にあり、bd は実行しない。
+- 規則: ~/cos/AGENTS.md、~/cos/rules/、~/.config/claude/skills/karo/skills/。
+- 出来事: その日の記録の出来事は git -C ~/cos log --since='<日付> 00:00' --until='<翌日> 00:00' の件名と本文に、タスクの出来事は insights の JSON の delegations にあり、bd は実行しない。
 
 制約:
 - 結果に、会話・コマンド・ツールの出力の中身、個人の情報、秘密の値を書き写さない。書くのは、数、場所、ツールの名前、規則の名前、起きたことの分類（1 文）だけにする。

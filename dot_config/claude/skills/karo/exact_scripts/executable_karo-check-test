@@ -26,7 +26,7 @@ printf -- '---\ntype: Review\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects
 printf -- '---\ntype: Design Doc\ndescription: 例の設計。\ndate: 2026-01-01\nprojects:\n  - github.com/acme/demo\nsources:\n  - https://example.invalid/design\n---\n\n## 例\n' > "$ok/projects/repos/github.com/acme/demo/2026-01-01-design-doc-example.md"
 printf -- '---\ntype: Thread\ndescription: 例の会話\ntopic: 例\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - github.com/acme/demo\n---\n\n### オーナー · 2026-01-01 09:00\n\nt-test0001 の [demo](projects/repos/github.com/acme/demo.md)\n' > "$ok/threads/t-test0001-demo.md"
 printf -- '---\ntype: Investigation\ndescription: 例の調べ物。\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - all\nderived_from:\n  - journal/2026-01-01.md#09:00\n  - threads/t-test0001-demo.md#2026-01-01 09:00\n---\n\n## 例\n' > "$ok/investigations/2026-01-01-example.md"
-# A day's standup and a meeting's notes sit beside the day's journal; their "- " lines are not journal lines.
+# A day's standup and a meeting's notes sit beside the day's journal.
 printf -- '---\ntype: Standup\ndate: 2026-01-01\nderived_from:\n  - journal/2026-01-01.md\n---\n\n## Checkin（2026-01-01）\n\n- 例\n' > "$ok/journal/2026-01-01-standup.md"
 printf -- '---\ntype: Meeting Notes\ndescription: 例の MTG。\ndate: 2026-01-01\nprojects:\n  - github.com/acme/demo\nsources:\n  - { id: notes, resource: https://example.invalid/notes, title: 例の議事録 }\n---\n\n## 例の MTG\n\n- 決定: 例\n' > "$ok/journal/2026-01-01-demo.md"
 # An HTML explanation's index.html carries no frontmatter and is not checked.
@@ -35,6 +35,11 @@ printf '<!doctype html>\n<title>例</title>\n' > "$ok/docs/a1b2c3d4/abc1234/inde
 
 if out=$("$bin/karo-check" "$ok" 2>&1); then pass "valid vault passes"; else fail "valid vault fails: $out"; fi
 if printf '%s\n' "$out" | rg -q 'task in body not in tasks'; then fail "thread naming only its own task warns: $out"; else pass "thread naming only its own task does not warn"; fi
+
+# A day's journal line in any form passes.
+copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"
+printf -- '- 例の行\n' >> "$copy/journal/2026-01-01.md"
+if out=$("$bin/karo-check" "$copy" 2>&1); then pass "a journal line in any form passes"; else fail "a journal line in any form: $out"; fi
 
 # A task ID in a thread's body that its tasks lacks is a warning: reported, counted, and not failed.
 copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"
@@ -52,7 +57,6 @@ cases=(
   'missing anchor|derived_from anchor not found|sed -i.bak "s/#09:00/#10:00/" investigations/2026-01-01-example.md'
   'wiki link|wiki link, write a path link: \[\[demo\]\]|sed -i.bak "s#\[demo\](projects/repos/github.com/acme/demo.md)#[[demo]]#" threads/t-test0001-demo.md'
   'no frontmatter where no type lives|investigations/2026-01-01-demo/notes.md	no frontmatter|mkdir -p investigations/2026-01-01-demo && printf "## no frontmatter\\n" > investigations/2026-01-01-demo/notes.md'
-  'journal form|journal line not normalized|sed -i.bak "s/t-test0001: /t-test0001・t-test0002:/" journal/2026-01-01.md'
   '3-digit task in state.md|state.md	old ID, use a bd ID or t- or q- and eight letters or digits: t999|sed -i.bak "s/t-test0001: 例/t999: 例/" state.md'
   '6-digit task in journal|journal/2026-01-01.md	old ID, use a bd ID or t- or q- and eight letters or digits: t000999|sed -i.bak "s/t-test0001: /t000999: /" journal/2026-01-01.md'
   '6-digit q-ID|state.md	old ID, use a bd ID or t- or q- and eight letters or digits: q000999|sed -i.bak "s/t-test0001: 例/q000999: 例/" state.md'
@@ -124,9 +128,8 @@ scoped=(
   'only: okf-lint problem in another file is left out|pass|journal/2026-01-01.md|sed -i.bak "s/^type: Project/type: Bogus/" projects/repos/github.com/acme/demo.md'
   'only: removed anchor of a derived_from|derived_from anchor not found|journal/2026-01-01.md|sed -i.bak "s/- 09:00 /- 10:00 /" journal/2026-01-01.md'
   'only: renamed project still listed|threads/t-test0001-demo.md	unknown project: github.com/acme/demo|projects/repos/github.com/acme/demo.md projects/repos/github.com/acme/demo2.md|sed -i.bak "s#\[demo\](projects/repos/github.com/acme/demo.md)#demo#" threads/t-test0001-demo.md && mv projects/repos/github.com/acme/demo.md projects/repos/github.com/acme/demo2.md'
-  'only: journal form is not checked in a standup|pass|journal/2026-01-01-standup.md|printf "\\n- 例の行\\n" >> journal/2026-01-01-standup.md'
   'only: old ID in a given state.md|state.md	old ID|state.md|sed -i.bak "s/t-test0001: 例/t999: 例/" state.md'
-  'only: journal form in a given journal|journal line not normalized|journal/2026-01-01.md|sed -i.bak "s/t-test0001: /t-test0001・t-test0002:/" journal/2026-01-01.md'
+  'only: a journal line in any form passes|pass|journal/2026-01-01.md|sed -i.bak "s/t-test0001: /t-test0001・t-test0002:/" journal/2026-01-01.md'
   'only: wiki link in a given file|wiki link, write a path link: \[\[demo\]\]|threads/t-test0001-demo.md|sed -i.bak "s#\[demo\](projects/repos/github.com/acme/demo.md)#[[demo]]#" threads/t-test0001-demo.md'
 )
 for c in "${scoped[@]}"; do
