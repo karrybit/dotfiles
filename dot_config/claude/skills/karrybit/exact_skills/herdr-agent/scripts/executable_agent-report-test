@@ -111,6 +111,9 @@ cp "$tmp/stub/report.jsonl" "$tmp/claude/outside.jsonl"
 states d6 "idle report"
 STUB_SESSION=../../outside run --wait d6
 if [[ $code -eq 1 && ${out%%$'\n'*} == "status: error" && $out != *"the report"* ]]; then pass "--wait refuses a session ID that holds a path"; else fail "session path: $code $out"; fi
+states e1-1 "idle report"
+run --wait e1.1
+if [[ $code -eq 0 && $out == "status: idle"$'\n'"$report" && $calls == "agent wait e1-1 $stop;agent get e1-1;" ]]; then pass "a name with a character herdr does not take reaches herdr with it turned into -"; else fail "dotted name: $code $out ($calls)"; fi
 run --wait
 if [[ $code -eq 2 ]]; then pass "no agent name is a usage error"; else fail "usage: $code $out"; fi
 

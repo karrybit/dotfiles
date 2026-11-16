@@ -37,7 +37,7 @@ description: Agent の成果物をレビューに回す手順。実装 Agent の
    完了条件: background の agent-report が走っている。
 3. 終わったら、agent-report の通知の出力の 2 行目からの結果を、`~/cos/projects/repos/<repo>/reviews/<タスクID>-agent-<n>.md` に record の `新規:` で保存し（フロントマターは `rules/frontmatter.md` に従い、`commit 本文:` に指摘の数を書く）、保存したパスを添えた `レビュー依頼:` の comment を書く。
    完了条件: record が `queued` を出し、`レビュー依頼:` の comment の JSON が出ている。
-4. `<scripts>/agent-ctl close <タスクID>-rv` を単独で実行して Review Agent の tab を閉じ、`karo:delegate` skill の「Agent を終了する」の 2 の指示（Agent 名は `<タスクID>-rv`）を record で書く。終わったら「1」の 3 に戻る。
+4. `<scripts>/agent-ctl close <タスクID>-rv` を単独で実行して Review Agent の tab を閉じ、`karo:delegate` skill の「Agent を終了する」の 2 の指示（Agent 名は実装 Agent の名前に `-rv` を付けた形）を record で書く。終わったら「1」の 3 に戻る。
    完了条件: `close` の JSON が出て、record が `queued` を出した。
 
 ## 3. オーナーが差分を読んでレビューする（「1」の 3 で決めた作業）

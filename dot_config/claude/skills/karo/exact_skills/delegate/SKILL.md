@@ -6,6 +6,7 @@ description: Herdr 上の Agent に仕事を委任する手順。オーナーが
 # 委任
 
 - Agent の起動・指示の送信・待つ・報告の取り出し・閉じるは、`karrybit:herdr-agent` skill を読み込み、その手順と scripts で行う。下の `<scripts>` は `~/.config/claude/skills/karrybit/skills/herdr-agent/scripts` で、この `~/` の形のまま書く。この skill が決めるのは、渡す値（名前はタスク ID、ブリーフ、場所）と、返った JSON から書く記録。
+- Agent 名は、タスク ID の `.` を `-` に置き換えた形にする（`cos-a1b2.1` は `cos-a1b2-1`、その Review Agent は `cos-a1b2-1-rv`）。scripts にはタスク ID を渡し、Agent 名は claim の actor、記録、herdr のコマンドに使う。
 - タスクは Beads（`bd`）にあり、`bd` を書くのは CoS だけにする。`bd` の呼び方は `~/cos/rules/beads.md` の「呼び方」、comment の先頭の語は同じファイルの「comment の語」に従う。
 
 ## 作業場所と取り込み
@@ -55,9 +56,9 @@ description: Herdr 上の Agent に仕事を委任する手順。オーナーが
    完了条件: 8 項目がすべて埋まり、受け入れ条件が完了か未完了かを判定できる。
 2. ブリーフを、このセッションの scratchpad（環境の説明にあるフォルダ）の `briefs/<タスクID>-brief.md` に書く。
    完了条件: ブリーフのファイルがある。
-3. `bd update <タスクID> --claim --actor <タスクID> --json` を単独で実行し、Agent 名（タスク ID と同じ）でタスクを claim する。claim が断られたら（ほかの名前が持っている）、委任せずにオーナーに伝える。
-   完了条件: JSON の `status` が `in_progress`、`assignee` がタスク ID。
-4. `<scripts>/agent-ctl start <タスクID> <ブリーフ> <場所>` を単独で実行する（`<場所>` は「作業場所と取り込み」）。goal を渡すとき（`karo:goal` skill）は、`start` のすぐあとに `--goal "<完了の条件>"` を付ける。`status` が `working` でなければ、`karrybit:herdr-agent` の「止まった Agent に答える」に進み、答えてよいかは AGENTS.md の「Herdr の操作」で決める。Agent を起動できなかったときは、`bd unclaim <タスクID> --if-assignee <タスクID> --json` で claim を戻す。
+3. `bd update <タスクID> --claim --actor <Agent 名> --json` を単独で実行し、Agent 名でタスクを claim する。claim が断られたら（ほかの名前が持っている）、委任せずにオーナーに伝える。
+   完了条件: JSON の `status` が `in_progress`、`assignee` が Agent 名。
+4. `<scripts>/agent-ctl start <タスクID> <ブリーフ> <場所>` を単独で実行する（`<場所>` は「作業場所と取り込み」）。goal を渡すとき（`karo:goal` skill）は、`start` のすぐあとに `--goal "<完了の条件>"` を付ける。`status` が `working` でなければ、`karrybit:herdr-agent` の「止まった Agent に答える」に進み、答えてよいかは AGENTS.md の「Herdr の操作」で決める。Agent を起動できなかったときは、`bd unclaim <タスクID> --if-assignee <Agent 名> --json` で claim を戻す。
    完了条件: JSON の `status` が `working`。goal を渡したときは、`goal` も `sent`。
 5. `assignments.md` の稼働中に `行を足す` で行（Agent 名、タスク、役割、Herdr workspace、pane、worktree は JSON の `place`、branch、開始日）を足す指示を、`commit 本文:` に workspace と、ブランチか、ブランチを作らないときは作業するチェックアウトとそのブランチを書いて、record で書く。
    完了条件: record が `queued` を出した。
@@ -89,5 +90,5 @@ description: Herdr 上の Agent に仕事を委任する手順。オーナーが
    完了条件: JSON が出ているか、止まった理由をオーナーに報告している。
 2. JSON をもとに、`assignments.md` の行を終了に移し（移し方は `~/cos/rules/record.md` の「書き込みの指示の形」と `~/cos/rules/record-examples.md` の終了の例）、journal に運用の行を 1 つ（`[close]`、対象はタスク ID、本文は閉じた workspace と外した worktree の `place`）書く指示を 1 つにまとめ、record で書く。
    完了条件: record が `queued` を出した。
-3. タスクを閉じずに Agent を終えたとき（取り込まずに止めたとき）は、`bd unclaim <タスクID> --if-assignee <タスクID> --json` を単独で実行する。
+3. タスクを閉じずに Agent を終えたとき（取り込まずに止めたとき）は、`bd unclaim <タスクID> --if-assignee <Agent 名> --json` を単独で実行する。
    完了条件: JSON の `status` が `open`。取り込んで閉じるタスクでは、この手順はない。

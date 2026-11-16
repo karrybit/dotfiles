@@ -62,7 +62,8 @@ agent-ctl start [--goal <条件>] [--permission-mode <mode>] <名前> <ブリー
 | `tab <Agent の名前>` | その Agent の workspace に tab を足し、その Agent と同じ cwd で起動する | なし | tab |
 
 - パスと `<repo>` は絶対パスで渡す。
-- `start` は、label が `<名前>` の workspace（`tab` では tab）を作り、`claude -n <名前>` を Agent `<名前>` として起動し、ブリーフを送る。
+- `<名前>` は `HERDR_AGENT_NAME_PATTERN` に合う形のまま渡す。Herdr の Agent 名は、`<名前>` の中の herdr が受けない文字（`[a-z0-9_-]` のほか）を `-` に置き換えた形になり（`a1b2.1` は `a1b2-1`、`a1b2.1-rv` は `a1b2-1-rv`）、JSON の `name` に出る。scripts には `start` に渡した `<名前>` を渡し、herdr のコマンド（`herdr agent read` など）には Agent 名を渡す。
+- `start` は、label が Agent 名の workspace（`tab` では tab）を作り、`claude -n <Agent 名>` をその Agent 名で起動し、ブリーフを送る。
 - `--goal <条件>` を付けると、ブリーフのあとに `/goal <条件>` を送る。Agent が `working`・`idle`・`done` のときだけ送り、送れなければ JSON の `goal` が `not_sent` になる。条件は 1 行で、制御文字と見えない書式文字を含まず、clear 系の語（`clear`・`stop` など）でなく、4000 字以内にする。
 - `--permission-mode` は `default`・`plan`・`dontAsk` のどれか。読むだけの Agent（レビューなど）は `plan` で起動する。
 - JSON は `{name, kind, workspace, pane, place, branch, status}` で、`tab`、`goal`、`error` が付くことがある。`kind` は場所の種類の語。
@@ -88,8 +89,8 @@ agent-ctl send --goal <条件> <名前>
   - `idle` か `done`: 2 行目からが Agent の完了の報告なので、呼び出し側に渡す。
   - `no-report`: Agent が見出しのない発言のまま 30 分止まり、作業に戻らなかった。2 行目からが最後の発言なので読む。質問なら、呼び出し側が答えを決めて `agent-ctl send` で送る。完了の報告の書き忘れなら、`karrybit:completion-report` の見出しで報告を書くよう `agent-ctl send` で送る。どちらでも、`working` を確かめてから待ち直す。どちらか決められないときは、最後の発言を人に伝える。
   - `blocked`: 「止まった Agent に答える」に進み、`working` を確かめてから待ち直す。
-  - `working`（待つのに失敗して早く返った）: `agent-report --wait` を走らせ直す。2 回続いたら、`herdr agent get <名前>` の結果を人に伝える。
-  - `unknown` か `error`（pane が閉じた、Herdr が答えない）: `herdr agent get <名前>` の結果を人に伝える。
+  - `working`（待つのに失敗して早く返った）: `agent-report --wait` を走らせ直す。2 回続いたら、`herdr agent get <Agent 名>` の結果を人に伝える。
+  - `unknown` か `error`（pane が閉じた、Herdr が答えない）: `herdr agent get <Agent 名>` の結果を人に伝える。
   - `status:` の行がない（時間の上限で止められた）: `agent-report --wait` を走らせ直す。
 
 ### 報告を取り出す
@@ -108,13 +109,13 @@ agent-ctl send --goal <条件> <名前>
 
 ## 止まった Agent に答える
 
-1. `herdr agent read <名前>` で画面を読む。承認のダイアログは、コマンドの全文を読み、スクリプトを動かすものはそのスクリプトの中身も読む。
+1. `herdr agent read <Agent 名>` で画面を読む。承認のダイアログは、コマンドの全文を読み、スクリプトを動かすものはそのスクリプトの中身も読む。
    完了条件: ダイアログの種類と、承認するコマンドの全文が手元にある。
 2. 答えを決める。呼び出し側が渡した「答えてよいダイアログの一覧」に合う承認のダイアログには、`<scripts>/safe-key enter <名前>` で Yes を送る（`blocked` の Agent にだけ Enter を送る）。一覧にないもの、どれにあたるか迷うものは、人に尋ねる。
    完了条件: `safe-key` を送ったか、人に尋ねている。
-3. 人の答えを送る。起動時の信頼のダイアログ（既定の選択が「No, exit」）で人が信頼すると答えたら、`herdr agent send-keys <名前> Down Enter` で「Yes, I trust this folder」を選ぶ。Enter だけを送ると「No, exit」が選ばれて Claude が終わる。`start` が `not_ready` で終わったときはブリーフが届いていないので、Agent が `idle` になってから、ブリーフの文を `agent-ctl send` で送る。AskUserQuestion の選択肢には、`herdr agent read` で並びとカーソルの位置を読み、`herdr agent send-keys <名前>` で `Down` か `Up` をカーソルが答えに来る回数だけ送ってから `Enter` を送る。
+3. 人の答えを送る。起動時の信頼のダイアログ（既定の選択が「No, exit」）で人が信頼すると答えたら、`herdr agent send-keys <Agent 名> Down Enter` で「Yes, I trust this folder」を選ぶ。Enter だけを送ると「No, exit」が選ばれて Claude が終わる。`start` が `not_ready` で終わったときはブリーフが届いていないので、Agent が `idle` になってから、ブリーフの文を `agent-ctl send` で送る。AskUserQuestion の選択肢には、`herdr agent read` で並びとカーソルの位置を読み、`herdr agent send-keys <Agent 名>` で `Down` か `Up` をカーソルが答えに来る回数だけ送ってから `Enter` を送る。
    完了条件: 人の答えを送ったか、答えが要らなかった。
-4. `herdr agent read <名前>` で画面が次に進んだことを確かめ、「終わるのを待つ」に戻る。
+4. `herdr agent read <Agent 名>` で画面が次に進んだことを確かめ、「終わるのを待つ」に戻る。
    完了条件: background の `agent-report --wait` が走っている。
 
 - foreground がページャ（`less`・`glow`）の pane には、`<scripts>/safe-key quit <pane>` で q を送る。

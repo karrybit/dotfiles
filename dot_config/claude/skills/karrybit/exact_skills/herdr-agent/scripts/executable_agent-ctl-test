@@ -502,6 +502,36 @@ if [[ $code -eq 0 && $(cat "$tmp/log.start") == "$want" ]] &&
 else
   fail "tab: exit $code: $out: $(cat "$tmp/log.start")"
 fi
+# A child ID such as g-kid.1 meets the caller's pattern as it is and names agent g-kid-1, which
+# herdr takes.
+kid_pattern='^g-[a-z]+(\.[0-9]+)*(-rv)?$'
+HERDR_AGENT_NAME_PATTERN=$kid_pattern logged working start g-kid.1 "$b" dir "$tmp/goal-dir"
+if [[ $code -eq 0 && $(cat "$tmp/log.start") == "agent start g-kid-1 --kind claude --pane wG:p1 -- -n g-kid-1" ]] &&
+  printf '%s' "$out" | jq -e '.name == "g-kid-1"' >/dev/null; then
+  pass "start names a child ID's agent with - in place of ."
+else
+  fail "start child ID: exit $code: $out: $(cat "$tmp/log.start")"
+fi
+HERDR_AGENT_NAME_PATTERN=$kid_pattern logged working start --permission-mode plan g-kid.1-rv "$b" tab g-kid.1
+want=$(printf '%s\n' "tab create --workspace wG --cwd /work --label g-kid-1-rv --no-focus" \
+  "agent start g-kid-1-rv --kind claude --pane wG:p2 -- -n g-kid-1-rv --permission-mode plan")
+if [[ $code -eq 0 && $(cat "$tmp/log.start") == "$want" ]] && printf '%s' "$out" | jq -e '.name == "g-kid-1-rv"' >/dev/null; then
+  pass "start names a child ID's review agent with - in place of ., in the tab of the child's agent"
+else
+  fail "start child ID -rv: exit $code: $out: $(cat "$tmp/log.start")"
+fi
+HERDR_AGENT_NAME_PATTERN=$kid_pattern logged idle send g-kid.1 "next step"
+if [[ $code -eq 0 && $log == "prompt next step" ]] && printf '%s' "$out" | jq -e '.name == "g-kid-1"' >/dev/null; then
+  pass "send finds a child ID's agent in the ledger"
+else
+  fail "send child ID: exit $code: $out: $log"
+fi
+HERDR_AGENT_NAME_PATTERN=$kid_pattern logged working start g-kid-1 "$b" dir "$tmp/goal-dir"
+if [[ $code -eq 2 && $out == *"does not match HERDR_AGENT_NAME_PATTERN"* ]]; then
+  pass "the pattern is matched against the name as given"
+else
+  fail "pattern on the given name: exit $code: $out"
+fi
 
 # sends <case> <status> <want: a prompt line, or exit1:/exit2:<message>> <send args...>
 sends() {

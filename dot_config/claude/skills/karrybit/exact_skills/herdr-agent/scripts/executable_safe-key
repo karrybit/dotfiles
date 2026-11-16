@@ -7,7 +7,9 @@
 # herdr send-keys itself still asks. Nothing is sent to the caller's own pane.
 #
 # enter sends only to an agent whose name matches HERDR_AGENT_NAME_PATTERN, an
-# ERE the caller's settings set; when it is unset, enter sends nothing.
+# ERE the caller's settings set; when it is unset, enter sends nothing. As in
+# agent-ctl, the name matches as given and names the Herdr agent with each
+# character herdr does not take in a name turned into "-".
 set -eu
 
 usage() {
@@ -23,13 +25,14 @@ case "$1" in
       *'
 '*) usage ;;
     esac
-    printf '%s\n' "$2" | grep -Eq '^[a-z][a-z0-9_-]{0,31}$' || usage
     if [ -z "${HERDR_AGENT_NAME_PATTERN:-}" ]; then
       echo "safe-key: HERDR_AGENT_NAME_PATTERN is not set; not sending keys" >&2
       exit 1
     fi
     printf '%s\n' "$2" | grep -Eq -- "$HERDR_AGENT_NAME_PATTERN" || usage
-    agent=$(herdr agent get "$2" | jq -c '.result.agent')
+    name=$(printf '%s' "$2" | tr -c 'a-z0-9_-' -)
+    printf '%s\n' "$name" | grep -Eq '^[a-z][a-z0-9_-]{0,31}$' || usage
+    agent=$(herdr agent get "$name" | jq -c '.result.agent')
     pane=$(printf '%s\n' "$agent" | jq -r '.pane_id')
     status=$(printf '%s\n' "$agent" | jq -r '.agent_status')
     if [ "$pane" = "$self" ]; then
@@ -40,7 +43,7 @@ case "$1" in
       echo "safe-key: $2 is $status, not blocked; not sending keys" >&2
       exit 1
     fi
-    herdr agent send-keys "$2" Enter >/dev/null
+    herdr agent send-keys "$name" Enter >/dev/null
     ;;
   quit)
     case "$2" in

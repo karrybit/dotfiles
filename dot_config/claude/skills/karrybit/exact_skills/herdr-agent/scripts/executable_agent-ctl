@@ -35,12 +35,16 @@
 # (the branch stays), and closes the workspace. A herdr worktree's parent
 # workspace is closed only when start noted opening it.
 #
+# A <name> (and the <agent> of tab) stands for the Herdr agent named by it
+# with each character herdr does not take in a name turned into "-", so a
+# task ID such as a1b2.1 names agent a1b2-1.
+#
 # The caller's settings may set three EREs: HERDR_AGENT_NAME_PATTERN, which a
-# name must match, and HERDR_AGENT_BRANCH_PATTERN and HERDR_AGENT_BRANCH_DENY,
-# which a new branch must and must not match. A new branch never holds the
-# name as a word. The ledger is one file at a fixed path;
-# HERDR_AGENT_TEST_LEDGER points it elsewhere only directly inside a folder
-# agent-ctl-test made with mktemp.
+# <name> as given must match, and HERDR_AGENT_BRANCH_PATTERN and
+# HERDR_AGENT_BRANCH_DENY, which a new branch must and must not match. A new
+# branch never holds the agent's name as a word. The ledger is one file at a
+# fixed path; HERDR_AGENT_TEST_LEDGER points it elsewhere only directly
+# inside a folder agent-ctl-test made with mktemp.
 set -eu
 
 usage() {
@@ -101,13 +105,16 @@ bad_arg() {
   exit 2
 }
 
+# herdr_name <name>: the agent's name in Herdr.
+herdr_name() { printf '%s' "$1" | tr -c 'a-z0-9_-' -; }
 name_ok() {
   matches '^[a-z][a-z0-9_-]{0,31}$' "$1" || bad_arg "a name must match [a-z][a-z0-9_-]{0,31}, as herdr requires: $1"
 }
-name_ok "$name"
 if [ -n "${HERDR_AGENT_NAME_PATTERN:-}" ] && ! matches "$HERDR_AGENT_NAME_PATTERN" "$name"; then
   bad_arg "the name does not match HERDR_AGENT_NAME_PATTERN ($HERDR_AGENT_NAME_PATTERN): $name"
 fi
+name=$(herdr_name "$name")
+name_ok "$name"
 
 # goal_ok: the condition can follow /goal on one line and sets a goal.
 goal_ok() {
@@ -177,7 +184,7 @@ if [ "$cmd" = start ]; then
       git check-ref-format "refs/heads/$base" || bad_arg "not a branch name: $base"
       ;;
     herdr-worktree) absolute "the repository" "$repo"; branch_ok "$branch" ;;
-    tab) name_ok "$host" ;;
+    tab) host=$(herdr_name "$host"); name_ok "$host" ;;
   esac
 fi
 [ "$cmd" != send ] || [ -n "$has_goal" ] || prompt_ok "the text" "$text"

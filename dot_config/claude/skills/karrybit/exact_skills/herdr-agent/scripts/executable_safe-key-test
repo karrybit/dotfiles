@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2016  # checks are single-quoted for eval
 # Show that safe-key sends Enter only to a blocked agent whose name matches HERDR_AGENT_NAME_PATTERN,
-# outside the caller's pane, and nothing when the pattern is unset; q only to a pane showing a pager;
+# outside the caller's pane (a "." in the name reaching herdr as "-"), and nothing when the pattern
+# is unset; q only to a pane showing a pager;
 # and refuses any other argument, against a herdr on PATH that logs what it is sent. The rules a
 # caller's settings.json needs for safe-key are checked by agent-ctl-test.
 # usage: safe-key-test   (tests the safe-key beside this script; its files go to a temporary
@@ -49,6 +50,14 @@ check "a blocked agent gets Enter" eval '[[ $code -eq 0 ]] && sent "agent send-k
 
 key blocked w2:p1 zsh enter a10001-rv
 check "a blocked agent whose name has the pattern's suffix gets Enter" eval '[[ $code -eq 0 ]] && sent "agent send-keys a10001-rv Enter"'
+
+# A pattern that takes a child ID, a1 and four digits with .<n> after it.
+pattern='^a1[0-9]{4}(\.[0-9]+)*(-rv)?$'
+key blocked w2:p1 zsh enter a10001.1
+check "a child ID names the agent with - in place of ." eval '[[ $code -eq 0 ]] && sent "agent send-keys a10001-1 Enter"'
+key blocked w2:p1 zsh enter a10001.1-rv
+check "a child ID with the suffix names the agent with - in place of ." eval '[[ $code -eq 0 ]] && sent "agent send-keys a10001-1-rv Enter"'
+pattern='^a1[0-9]{4}(-rv)?$'
 
 for status in idle working "done" unknown; do
   key "$status" w2:p1 zsh enter a10001
