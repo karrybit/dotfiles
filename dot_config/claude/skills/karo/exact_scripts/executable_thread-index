@@ -1,9 +1,10 @@
 #!/bin/sh
 # Lists the threads (files of type Thread under the threads directory) as TSV, newest last message
 # first: the file name, the latest date and time that ends a message heading ("### <speaker> ·
-# YYYY-MM-DD HH:MM", or "## YYYY-MM-DD HH:MM" in older threads), the frontmatter's topic, its tasks (comma-separated, empty for a thread of discussion only), and
-# the counts of "- 決定:" and "- 未決:" lines. The first line names the columns. One awk pass reads
-# every file, so the list costs about as much as one rg over the folder. Read only.
+# YYYY-MM-DD HH:MM"), the frontmatter's topic, its tasks (comma-separated, empty for a thread of
+# discussion only), and the counts of "- 決定:" and "- 未決:" lines. The first line names the
+# columns. One awk pass reads every file, so the list costs about as much as one rg over the folder.
+# Read only.
 #   --since <n>d   only threads whose last message is on or after the day n days ago
 #   --limit <n>    only the first n threads
 #   --task <ID>    only threads whose tasks hold the ID
@@ -64,7 +65,7 @@ awk -v from="$from" -v task="$task" '
     }
     next
   }
-  /^##+ .*[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]$/ {
+  /^### .*[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]$/ {
     t = substr($0, length($0) - 15)
     if (t > last) last = t
     next

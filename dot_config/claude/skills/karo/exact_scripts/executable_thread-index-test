@@ -27,7 +27,7 @@ printf -- '---\ntype: Thread\ndescription: 例の会話\ntopic: "例の話題"\n
   "$recent" "$recent" "$recent" > "$d/t-test0001-demo.md"
 printf -- '---\ntype: Thread\ndescription: 議論だけの会話\ntopic: 議論だけ\ndate: %s\ntasks: []\nprojects:\n  - demo\n---\n\n### オーナー · %s 08:00\n\n本文\n\n- 未決: 方式\n' \
   "$today" "$today" > "$d/$today-talk.md"
-printf -- '---\ntype: Thread\ndescription: 古い会話\ntopic: 古い話題\ndate: %s\ntasks:\n  - t-test0002\nprojects:\n  - demo\n---\n\n## %s 11:00\n\n- オーナー: 古い形\n- 決定: 古い決定\n\n## %s 12:00\n\n- CoS: 続き\n' \
+printf -- '---\ntype: Thread\ndescription: 古い会話\ntopic: 古い話題\ndate: %s\ntasks:\n  - t-test0002\nprojects:\n  - demo\n---\n\n### オーナー · %s 11:00\n\n本文\n\n- 決定: 古い決定\n\n***\n\n### CoS · %s 12:00\n\n続き\n' \
   "$old" "$old" "$old" > "$d/t-test0002-old.md"
 printf -- '---\ntype: Memo\ndescription: メモ\ntopic: メモ\n---\n\n### オーナー · %s 07:00\n' "$today" > "$d/memo.md"
 printf -- "---\ntype: Template\ndescription: 雛形\ntopic: '<話題>'\n---\n\n### オーナー · YYYY-MM-DD HH:MM\n" > "$d/template.md"
