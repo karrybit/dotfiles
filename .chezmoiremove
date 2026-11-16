@@ -19,3 +19,16 @@
 
 # Plannotator was retired.
 .config/zsh/zshenv.d/20_tool_plannotator.zsh
+
+# karo keeps no PROVENANCE.md. Its plugin folder and skill folders are not
+# exact_, so these files stay on a machine after leaving the source.
+.config/claude/skills/karo/PROVENANCE.md
+.config/claude/skills/karo/skills/checkin/PROVENANCE.md
+.config/claude/skills/karo/skills/checkout/PROVENANCE.md
+.config/claude/skills/karo/skills/delegate/PROVENANCE.md
+.config/claude/skills/karo/skills/explain/PROVENANCE.md
+.config/claude/skills/karo/skills/goal/PROVENANCE.md
+.config/claude/skills/karo/skills/insights/PROVENANCE.md
+.config/claude/skills/karo/skills/land/PROVENANCE.md
+.config/claude/skills/karo/skills/review/PROVENANCE.md
+.config/claude/skills/karo/skills/setup/PROVENANCE.md
