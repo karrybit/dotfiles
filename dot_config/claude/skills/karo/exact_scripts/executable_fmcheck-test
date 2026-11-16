@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# Show that fmcheck tells a valid record note from a broken one: in a small vault, the valid notes pass,
+# each broken note is reported with its problem, and a path fmcheck does not check is skipped.
+# usage: fmcheck-test [<cos dir>]   (default ~/cos, read only: the vault takes its
+#        rules/frontmatter-schema.yaml; the vault goes to a temporary directory and is removed)
+set -uo pipefail
+exec </dev/null
+cos=${1:-$HOME/cos}
+bin=$(cd "$(dirname "$0")" && pwd)
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/fmcheck-test.XXXXXX") || exit 2
+trap 'rm -rf "$tmp"' EXIT
+failed=0
+fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
+pass() { printf 'ok\t%s\n' "$1"; }
+
+v=$tmp/cos
+mkdir -p "$v"/{journal,projects/repos/github.com/acme,threads,investigations,rules}
+cp "$cos/rules/frontmatter-schema.yaml" "$v/rules/" || exit 2
+printf -- '---\ntype: Journal\ndate: 2026-01-01\n---\n\n- 09:00 例\n' > "$v/journal/2026-01-01.md"
+printf -- '---\ntype: Project\ndescription: 例のプロジェクト。\nprojects:\n  - github.com/acme/demo\n---\n\n## demo\n' > "$v/projects/repos/github.com/acme/demo.md"
+thread=$'---\ntype: Thread\ndescription: 例の会話\ntopic: 例\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - github.com/acme/demo\n---\n\n### オーナー · 2026-01-01 09:00\n\n[demo](projects/repos/github.com/acme/demo.md)\n'
+printf '%s' "$thread" > "$v/threads/t-test0001-demo.md"
+printf -- '---\ntype: Investigation\ndescription: 例の調べ物。\ndate: 2026-01-01\nprojects:\n  - all\nderived_from:\n  - threads/t-test0001-demo.md#2026-01-01 09:00\n---\n\n## 例\n' > "$v/investigations/2026-01-01-example.md"
+cd "$v" || exit 2
+valid=(journal/2026-01-01.md projects/repos/github.com/acme/demo.md threads/t-test0001-demo.md investigations/2026-01-01-example.md)
+if out=$("$bin/fmcheck" "${valid[@]}" 2>&1) && [[ -z $out ]]; then pass "valid notes pass"; else fail "valid notes: $out"; fi
+
+# expect <name> <path> <content> <problem>...: fmcheck on the note alone exits 1 and prints each problem
+# as "<path><TAB><problem>"; the note is removed afterwards.
+expect() {
+  local name=$1 p=$2 content=$3 out code want; shift 3
+  mkdir -p "$(dirname "$p")" && printf '%s' "$content" > "$p"
+  out=$("$bin/fmcheck" "$p" 2>&1); code=$?
+  rm "$p"
+  [[ $code -eq 1 ]] || { fail "$name: exit $code: $out"; return; }
+  for want; do [[ $'\n'$out$'\n' == *$'\n'"$p"$'\t'"$want"$'\n'* ]] || { fail "$name: want '$want': $out"; return; }; done
+  pass "$name"
+}
+expect "no frontmatter" journal/2026-01-02.md $'## 例\n' "no frontmatter"
+expect "missing date and projects" investigations/2026-01-02-nodate.md $'---\ntype: Investigation\ndescription: 例。\nsources:\n  - https://example.invalid/a\n---\n\n## 例\n' "missing date" "missing projects"
+expect "unparseable frontmatter" investigations/2026-01-02-bad.md $'---\ntype: Investigation\ndescription: a: b\n---\n\n## 例\n' "unparseable frontmatter"
+expect "unknown project" threads/t-test0001-nope.md "${thread/github.com\/acme\/demo$'\n'/nope$'\n'}" "unknown project: nope"
+expect "no sources or derived_from" investigations/2026-01-02-nosrc.md $'---\ntype: Investigation\ndescription: 例。\ndate: 2026-01-02\nprojects:\n  - all\n---\n\n## 例\n' "no sources or derived_from"
+expect "wiki link" threads/t-test0001-wiki.md "${thread}"$'\n[[foo]] の話\n' "wiki link, write a path link"
+expect "derived_from not found" investigations/2026-01-02-gone.md $'---\ntype: Investigation\ndescription: 例。\ndate: 2026-01-02\nprojects:\n  - all\nderived_from:\n  - threads/gone.md#2026-01-01 09:00\n---\n\n## 例\n' "derived_from not found: threads/gone.md"
+expect "thread name without a task ID or date" threads/demo.md "$thread" "path does not match Thread"
+expect "unknown type" threads/t-test0001-type.md "${thread/type: Thread/type: Threads}" "unknown type: Threads"
+expect "date not YYYY-MM-DD" threads/t-test0001-date.md "${thread/date: 2026-01-01/date: 2026-1-1}" "date is not YYYY-MM-DD"
+
+# skip <name> <path> <content>: fmcheck passes the path without a word
+skip() {
+  local name=$1 p=$2 out
+  mkdir -p "$(dirname "$p")" && printf '%s' "$3" > "$p"
+  if out=$("$bin/fmcheck" "$p" 2>&1) && [[ -z $out ]]; then pass "$name"; else fail "$name: $out"; fi
+  rm "$p"
+}
+skip "unclosed [[ and wiki links in code are not links" threads/t-test0001-code.md "${thread}"$'\n[[meet] と `[[a]]`\n\n```\n[[b]]\n```\n'
+skip "a path the schema excludes" investigations/2026-01-01-example/sources/a.md $'## 原文\n'
+skip "a path outside the record folders" README.md $'## 例\n'
+skip "a file that is not .md" threads/t-test0001-demo.txt $'例\n'
+if out=$("$bin/fmcheck" threads/removed.md 2>&1) && [[ -z $out ]]; then pass "a removed path"; else fail "a removed path: $out"; fi
+
+mv rules/frontmatter-schema.yaml rules/schema.yaml
+out=$("$bin/fmcheck" "${valid[@]}" 2>&1); code=$?
+if [[ $code -eq 2 ]]; then pass "missing schema stops with 2"; else fail "missing schema: exit $code: $out"; fi
+
+echo "fmcheck-test: $failed failure(s)"
+[[ $failed -eq 0 ]]

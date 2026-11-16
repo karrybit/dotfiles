@@ -1,0 +1,16 @@
+#!/bin/sh
+# PostToolUse hook for Bash, registered with "if": "Bash(<this folder>/commit *)". Hooks run outside the
+# sandbox, so herdr and crit work here: runs thread-show on each thread file the last commit of the cos dir
+# wrote, and record --restart-crit when the commit added, removed, or renamed a file (crit lists only the
+# files it started with). Both scripts sit beside this one. A failed step goes to Claude on stderr with
+# exit 2; the commit stays.
+# Environment: COS_DIR (default ~/cos).
+cos=${COS_DIR:-$HOME/cos}
+bin=$(dirname "$0")
+changed=$(git -C "$cos" diff-tree --no-commit-id --name-status -r -M HEAD) || exit 0
+rc=0
+for t in $(printf '%s\n' "$changed" | awk -F '\t' '$NF ~ /^threads\/.*\.md$/ {print $NF}'); do
+  out=$("$bin/thread-show" "$cos/$t" 2>&1) || { echo "thread-show failed: $t: $out" >&2; rc=2; }
+done
+if printf '%s\n' "$changed" | grep -q '^[ADR]'; then "$bin/record" --restart-crit >&2 || rc=2; fi
+exit $rc

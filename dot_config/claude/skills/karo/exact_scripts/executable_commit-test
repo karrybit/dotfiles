@@ -1,0 +1,112 @@
+#!/usr/bin/env bash
+# Show that commit commits exactly the given record paths when they pass its checks, and otherwise
+# commits nothing, unstages them, and leaves the files as written: in a small git vault, a good write
+# lands with the body, rumdl's fix, and no other dirty file, and each bad write stops with NG.
+# usage: commit-test [<cos dir>]   (default ~/cos, read only: the vault takes its .rumdl.toml and
+#        rules/frontmatter-schema.yaml; the vault goes to a temporary directory and is removed)
+set -uo pipefail
+exec </dev/null
+cos=${1:-$HOME/cos}
+bin=$(cd "$(dirname "$0")" && pwd)
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/commit-test.XXXXXX") || exit 2
+trap 'rm -rf "$tmp"' EXIT
+failed=0
+fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
+pass() { printf 'ok\t%s\n' "$1"; }
+
+v=$tmp/cos
+export COS_DIR=$v
+mkdir -p "$v"/{journal,projects/repos/github.com/acme/demo/reviews,threads,investigations,rules}
+cp "$cos/.rumdl.toml" "$v/" && cp "$cos/rules/frontmatter-schema.yaml" "$v/rules/" || exit 2
+printf -- '---\ntype: Project\ndescription: 例のプロジェクト。\nprojects:\n  - github.com/acme/demo\n---\n\n## demo\n' > "$v/projects/repos/github.com/acme/demo.md"
+printf -- '---\ntype: Thread\ndescription: 例の会話\ntopic: 例\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - github.com/acme/demo\n---\n\n### オーナー · 2026-01-01 09:00\n\n例\n' > "$v/threads/t-test0001-demo.md"
+printf -- '---\ntype: Review\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - github.com/acme/demo\n---\n\n## 結論\n\n承認\n' > "$v/projects/repos/github.com/acme/demo/reviews/t-test0001-1.md"
+printf '# state\n' > "$v/state.md"
+git -C "$v" init -q && git -C "$v" config user.name test && git -C "$v" config user.email test@example.invalid
+git -C "$v" add -A && git -C "$v" commit -q -m init || exit 2
+
+head_() { git -C "$v" rev-parse HEAD; }
+run() { out=$("$bin/commit" "$@" 2>&1); code=$?; }
+# ng <name> <want in output>: the last run stopped with NG, HEAD did not move, and nothing is staged.
+ng() {
+  if [[ $code -eq 1 && $out == *"$2"* && ${out##*$'\n'} == "NG "* && $(head_) == "$before" && -z $(git -C "$v" diff --cached --name-only) ]]; then
+    pass "$1"
+  else
+    fail "$1: exit $code: $out"
+  fi
+}
+
+# A good write: only the given path is committed, with the subject and the body, and state.md stays dirty.
+printf '\n### CoS · 2026-01-01 09:05\n\n返事\n' >> "$v/threads/t-test0001-demo.md"
+printf 'dirty\n' >> "$v/state.md"
+before=$(head_)
+run "t-test0001: 返事を書いた" "理由の本文" threads/t-test0001-demo.md
+if [[ $code -eq 0 && $out == "OK "*" t-test0001: 返事を書いた" && $(git -C "$v" show --format= --name-only HEAD) == threads/t-test0001-demo.md \
+  && $(git -C "$v" log -1 --format=%b) == 理由の本文 && $(git -C "$v" status --porcelain) == " M state.md" ]]; then
+  pass "a good write commits only its paths"
+else
+  fail "a good write: exit $code: $out"
+fi
+git -C "$v" checkout -q -- state.md
+
+# Two IDs in the subject: the thread needs only one of them in tasks.
+printf '\n例\n' >> "$v/threads/t-test0001-demo.md"
+run "t-other001, t-test0001: 2 つのタスク" "本文" threads/t-test0001-demo.md
+if [[ $code -eq 0 ]]; then pass "one of two subject IDs in tasks commits"; else fail "two subject IDs: exit $code: $out"; fi
+
+# rumdl fixes trailing spaces before the commit.
+printf '\n行末に空白   \n' >> "$v/threads/t-test0001-demo.md"
+run "t-test0001: 空白" "本文" threads/t-test0001-demo.md
+if [[ $code -eq 0 ]] && ! git -C "$v" show HEAD:threads/t-test0001-demo.md | rg -q ' $' && [[ -z $(git -C "$v" status --porcelain) ]]; then
+  pass "rumdl fixes trailing spaces and commits"
+else
+  fail "trailing spaces: exit $code: $out"
+fi
+
+# A removed note is committed as removed.
+printf -- '---\ntype: Investigation\ndescription: 例。\ndate: 2026-01-01\nprojects:\n  - all\nsources:\n  - https://example.invalid/a\n---\n\n## 例\n' > "$v/investigations/2026-01-01-gone.md"
+run "t-test0001: 足す" "本文" investigations/2026-01-01-gone.md
+rm "$v/investigations/2026-01-01-gone.md"
+run "t-test0001: 消す" "本文" investigations/2026-01-01-gone.md
+if [[ $code -eq 0 ]] && [[ $(git -C "$v" show --format= --name-status HEAD) == $'D\tinvestigations/2026-01-01-gone.md' ]]; then
+  pass "a removed note is committed"
+else
+  fail "a removed note: exit $code: $out"
+fi
+
+before=$(head_)
+run "t-test0001: 変わらない" "本文" threads/t-test0001-demo.md
+if [[ $code -eq 0 && $out == "OK - t-test0001: 変わらない (no change)" && $(head_) == "$before" ]]; then pass "no change"; else fail "no change: exit $code: $out"; fi
+
+out=$("$bin/commit" "t-test0001: 本文なし" "" threads/t-test0001-demo.md 2>&1); code=$?
+if [[ $code -eq 2 && $out == usage:* ]]; then pass "no body prints the usage"; else fail "no body: exit $code: $out"; fi
+
+# The bad writes.
+mkdir -p "$v/decisions" && printf '# a\n' > "$v/decisions/a.md"
+run "t-test0001: 外" "本文" decisions/a.md
+ng "a path outside the record" "not a record path: decisions/a.md"
+
+printf '\n### CoS · 2026-01-01 09:10\n\n別の話\n' >> "$v/threads/t-test0001-demo.md"
+run "t-other001: 別のタスク" "本文" threads/t-test0001-demo.md
+ng "no subject ID in the thread's tasks" $'threads/t-test0001-demo.md\tnone of the subject IDs is in tasks'
+if git -C "$v" diff --quiet -- threads/t-test0001-demo.md; then fail "the stopped thread write is kept: the file was reset"; else pass "the stopped thread write is kept"; fi
+git -C "$v" checkout -q -- threads/t-test0001-demo.md
+
+printf '### CoS · 2026-01-01 09:00\n\n例\n' > "$v/threads/t-test0002-new.md"
+run "t-test0002: 新しい会話" "本文" threads/t-test0002-new.md
+ng "a new thread without frontmatter" $'threads/t-test0002-new.md\tno frontmatter'
+if [[ $(git -C "$v" status --porcelain -- threads/t-test0002-new.md) == "?? threads/t-test0002-new.md" ]]; then pass "the stopped new file stays untracked"; else fail "the stopped new file: $(git -C "$v" status --porcelain)"; fi
+rm "$v/threads/t-test0002-new.md"
+
+printf -- '---\ntype: Investigation\ndescription: 例。\n---\n\n## 例\n' > "$v/investigations/2026-01-02-bad.md"
+run "t-test0001: 欠け" "本文" investigations/2026-01-02-bad.md
+ng "fmcheck's problem stops" $'investigations/2026-01-02-bad.md\tmissing date'
+rm "$v/investigations/2026-01-02-bad.md"
+
+# rumdl leaves reviews alone, so git diff --check catches a blank line at the end of one.
+printf '\n' >> "$v/projects/repos/github.com/acme/demo/reviews/t-test0001-1.md"
+run "t-test0001: 末尾の空行" "本文" projects/repos/github.com/acme/demo/reviews/t-test0001-1.md
+ng "git diff --check stops a blank line at the end" "new blank line at EOF"
+
+echo "commit-test: $failed failure(s)"
+[[ $failed -eq 0 ]]

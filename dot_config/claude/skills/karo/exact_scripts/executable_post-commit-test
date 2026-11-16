@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Show that post-commit runs thread-show on each thread file the last commit wrote and record
+# --restart-crit only when the commit added, removed, or renamed a file, and that a failed step exits 2.
+# post-commit runs from a copy beside stubs of thread-show and record that log each call and fail on request.
+# usage: post-commit-test   (the vault and stubs go to a temporary directory and are removed)
+set -uo pipefail
+exec </dev/null
+bin=$(cd "$(dirname "$0")" && pwd)
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/post-commit-test.XXXXXX") || exit 2
+trap 'rm -rf "$tmp"' EXIT
+failed=0
+fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
+pass() { printf 'ok\t%s\n' "$1"; }
+
+mkdir -p "$tmp/bin"
+cp "$bin/post-commit" "$tmp/bin/" || exit 2
+for s in thread-show record; do
+  printf '#!/bin/sh\necho "%s $*" >> "%s/calls"\n[ -z "${STUB_FAIL:-}" ] || { echo "stub failed"; exit 1; }\n' "$s" "$tmp" > "$tmp/bin/$s"
+  chmod +x "$tmp/bin/$s"
+done
+v=$tmp/cos
+export COS_DIR=$v
+mkdir -p "$v/threads"
+printf '# t\n' > "$v/threads/t-test0001-demo.md"
+printf '# state\n' > "$v/state.md"
+git -C "$v" init -q && git -C "$v" config user.name test && git -C "$v" config user.email test@example.invalid
+git -C "$v" add -A && git -C "$v" commit -q -m init || exit 2
+
+# step <name> <want calls> <shell command run in the vault before a commit of everything> [<want exit>]
+step() {
+  local name=$1 want=$2 cmd=$3 rc=${4:-0} out code calls
+  (cd "$v" && eval "$cmd" && git add -A && git commit -q -m "$name") || { fail "$name: could not commit"; return; }
+  : > "$tmp/calls"
+  out=$("$tmp/bin/post-commit" 2>&1); code=$?
+  calls=$(cat "$tmp/calls")
+  if [[ $code -eq $rc && $calls == "$want" ]]; then pass "$name"; else fail "$name: exit $code, calls '$calls', want '$want': $out"; fi
+}
+step "a thread append shows the thread" "thread-show $v/threads/t-test0001-demo.md" 'printf "x\n" >> threads/t-test0001-demo.md'
+step "a change outside threads runs nothing" "" 'printf "x\n" >> state.md'
+step "a new thread shows it and restarts crit" "thread-show $v/threads/t-test0002-new.md"$'\n'"record --restart-crit" 'printf "# n\n" > threads/t-test0002-new.md'
+step "a removed file restarts crit" "record --restart-crit" 'git rm -q state.md'
+export STUB_FAIL=1
+step "a failed thread-show exits 2" "thread-show $v/threads/t-test0001-demo.md" 'printf "y\n" >> threads/t-test0001-demo.md' 2
+step "a failed crit restart exits 2" "record --restart-crit" 'printf "# s\n" > state.md' 2
+
+echo "post-commit-test: $failed failure(s)"
+[[ $failed -eq 0 ]]
