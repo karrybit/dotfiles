@@ -5,15 +5,20 @@
 # names the Herdr agent with each character herdr does not take in a name
 # turned into "-".
 #
-# --wait waits until the agent has finished: it is idle or done and its last
+# --wait waits until the agent stops: it is idle or done. When its last
 # message holds a "## 変更の要約" line, the first heading of a
-# karrybit:completion-report report. It then prints "status: <state>" and the
-# report. An idle or done agent without that line has only paused (waiting on
-# its own background work, or asking something), so --wait waits for it to
-# work again and then for its next stop. When it does not work again within
-# AGENT_REPORT_NO_REPORT_MS milliseconds (default 30 minutes), --wait reads
-# the last message once more and, still without the heading, prints
-# "status: no-report" and that message.
+# karrybit:completion-report report, it prints "status: <state>" and the
+# report. A stop without that line may be a pause between turns, so --wait
+# waits AGENT_REPORT_NO_REPORT_MS milliseconds (default one minute) for the
+# agent to work again; when it does not, --wait reads the last message once
+# more and, still without the heading, prints "status: no-report" and that
+# message (a question, a part-way report, or a pause on its own background
+# work).
+#
+# A stop --wait has printed is not printed again: --wait notes the stop's
+# session and herdr's completion_seq, and a later --wait on the same stop
+# waits for the next one. Run again after a pause, it hands over the agent's
+# next stop, even one that ended before it started.
 #
 # A blocked or unknown agent (one whose pane is gone) prints the state alone;
 # an agent whose pane someone is watching ends idle, not done. When herdr
@@ -54,6 +59,14 @@ if [ -z "$wait" ]; then
   report
   exit 0
 fi
+seen=$HOME/.local/state/herdr-agent/stops/$name
+# hand_over <status>: note the stop and print it with the message.
+hand_over() {
+  mkdir -p "${seen%/*}"
+  printf '%s\n' "$stop" > "$seen"
+  printf 'status: %s\n%s\n' "$1" "$text"
+  exit 0
+}
 stalled=
 while :; do
   herdr agent wait "$name" --until idle --until 'done' --until blocked --until unknown >/dev/null || true
@@ -66,6 +79,13 @@ while :; do
     idle | done) ;;
     *) echo "status: $status"; exit 0 ;;
   esac
+  stop=$(printf '%s' "$agent" | jq -r '.result.agent | "\(.agent_session.value) \(.completion_seq)"')
+  if [ "${stop#* }" != null ] && [ "$stop" = "$(cat "$seen" 2>/dev/null)" ]; then
+    # The agent's next turn may begin and end before this wait starts, so
+    # the wait is short and the loop looks at the stop again.
+    herdr agent wait "$name" --until working --until blocked --until unknown --timeout 60000 >/dev/null || true
+    continue
+  fi
   # The report is read first, so a missing transcript is an error line, not a report.
   if ! text=$(report 2>&1); then
     echo "status: error"
@@ -73,15 +93,13 @@ while :; do
     exit 1
   fi
   if printf '%s\n' "$text" | grep -qxF '## 変更の要約'; then
-    printf 'status: %s\n%s\n' "$status" "$text"
-    exit 0
+    hand_over "$status"
   fi
   if [ -n "$stalled" ]; then
-    printf 'status: no-report\n%s\n' "$text"
-    exit 0
+    hand_over no-report
   fi
   # A resume that ends before this wait starts is never seen as working, so
   # a failed wait leads to one more read rather than straight to no-report.
   herdr agent wait "$name" --until working --until blocked --until unknown \
-    --timeout "${AGENT_REPORT_NO_REPORT_MS:-1800000}" >/dev/null || stalled=1
+    --timeout "${AGENT_REPORT_NO_REPORT_MS:-60000}" >/dev/null || stalled=1
 done
