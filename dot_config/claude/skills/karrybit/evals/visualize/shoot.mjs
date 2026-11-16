@@ -1,6 +1,8 @@
 // Usage: node shoot.mjs <page.html> <out-dir>
-// Opens the page in headless Chrome at 1280x900, opens every <details>,
-// and saves one screenshot per scroll step as screen-NN.png.
+// Opens the page in headless Chrome at 1280x900 with reduced motion and
+// scroll-behavior: auto, opens every <details>, and saves one screenshot per
+// scroll step as screen-NN.png. Exits non-zero when a step does not land at
+// its scroll position, so a page that scrolls smoothly cannot be shot halfway.
 import { spawn } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync, existsSync, mkdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -29,14 +31,18 @@ try {
 
   await send('Page.enable');
   await send('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: 1, mobile: false });
+  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
   await send('Page.navigate', { url: 'file://' + resolve(page) });
   for (let i = 0; !events.includes('Page.loadEventFired'); i++) { if (i > 300) throw new Error('page did not load'); await sleep(100); }
   const height = await evaluate(`document.querySelectorAll('details').forEach((d) => { d.open = true; });
+    const s = document.createElement('style'); s.textContent = '* { scroll-behavior: auto !important; }'; document.head.append(s);
     new Promise((r) => requestAnimationFrame(() => r(document.documentElement.scrollHeight)))`);
   mkdirSync(outDir, { recursive: true });
   let n = 0;
   for (let y = 0; y === 0 || y < height - H + STEP; y += STEP) {
-    await evaluate(`window.scrollTo(0, ${y}); new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))`);
+    const at = await evaluate(`window.scrollTo(0, ${y}); new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(window.scrollY))))`);
+    const want = Math.min(y, height - H);
+    if (Math.abs(at - want) > 1) throw new Error(`step ${n + 1} is at scrollY ${at}, not ${want}`);
     const { data } = await send('Page.captureScreenshot', { format: 'png' });
     writeFileSync(join(outDir, `screen-${String(++n).padStart(2, '0')}.png`), Buffer.from(data, 'base64'));
   }
