@@ -64,6 +64,7 @@ agent-ctl start [--goal <条件>] [--permission-mode <mode>] <名前> <ブリー
 - パスと `<repo>` は絶対パスで渡す。
 - `<名前>` は `HERDR_AGENT_NAME_PATTERN` に合う形のまま渡す。Herdr の Agent 名は、`<名前>` の中の herdr が受けない文字（`[a-z0-9_-]` のほか）を `-` に置き換えた形になり（`a1b2.1` は `a1b2-1`、`a1b2.1-rv` は `a1b2-1-rv`）、JSON の `name` に出る。scripts には `start` に渡した `<名前>` を渡し、herdr のコマンド（`herdr agent read` など）には Agent 名を渡す。
 - `start` は、label が Agent 名の workspace（`tab` では tab）を作り、`claude -n <Agent 名>` をその Agent 名で起動し、ブリーフを送る。
+- `--goal` の条件と `send` の文には `<(` を書かず、別の言い方で書く。`<(` があると、Claude Code が呼び出しを `sandbox.excludedCommands` に当てず、sandbox に残った herdr が `Operation not permitted` で落ちる。
 - `--goal <条件>` を付けると、ブリーフのあとに `/goal <条件>` を送る。Agent が `working`・`idle`・`done` のときだけ送り、送れなければ JSON の `goal` が `not_sent` になる。条件は 1 行で、制御文字と見えない書式文字を含まず、clear 系の語（`clear`・`stop` など）でなく、4000 字以内にする。
 - `--permission-mode` は `default`・`plan`・`dontAsk` のどれか。読むだけの Agent（レビューなど）は `plan` で起動する。
 - JSON は `{name, kind, workspace, pane, place, branch, status}` で、`tab`、`goal`、`error` が付くことがある。`kind` は場所の種類の語。
