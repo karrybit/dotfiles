@@ -721,7 +721,7 @@ for id in cos-a2v cos-abcd1234 cos-5q5.1 cos-5q5.1.12; do
 done
 for id in cos-ab cos-abcd12345 cos-A2V cos-a2v. cos-a2v.x bd-a2v t-test001; do
   out=$(thread "bad id $id" "追記: threads/t-test0001-demo.md\nタスク: $id\n~~~~\n\n壊れた ID\n~~~~\n"); code=$?
-  if [[ $code -eq 1 && $out == *"「タスク:」はタスク ID 1 つ（話題が 2 つなら項目を分ける）: $id"* && $(head_sha) == "$before" ]] && clean; then pass "$id is not a task ID"; else fail "bad id $id: exit $code: $out"; fi
+  if [[ $code -eq 1 && $out == *"「タスク:」はタスク ID 1 つか なし（話題が 2 つなら項目を分ける）: $id"* && $(head_sha) == "$before" ]] && clean; then pass "$id is not a task ID"; else fail "bad id $id: exit $code: $out"; fi
 done
 # An append to the missing thread of a bd task is an NG naming 新規:.
 out=$(thread 'bd thread by 追記' '追記: threads/cos-a2v-demo.md\nタスク: cos-a2v\n~~~~\n\nx\n~~~~\n'); code=$?
@@ -747,6 +747,35 @@ else
 fi
 out=$(thread 'bd thread append' '追記: threads/cos-a2v.1-bd.md\nタスク: cos-a2v.1\n~~~~\n\n続き\n~~~~\n'); code=$?
 if [[ $code -eq 0 && $(tail -n 1 "$v/threads/cos-a2v.1-bd.md") == 続き ]] && clean; then pass "追記: to a thread named after a bd task lands"; else fail "bd thread append: exit $code: $out"; fi
+
+# A thread of discussion only has empty tasks and takes "タスク: なし", which is not written; なし for a
+# thread with tasks, or for a 新規: whose body has tasks, is an NG.
+talk='---\ntype: Thread\ndescription: 議論だけの会話\ntopic: 議論だけ\ndate: 2026-01-01\ntasks: []\nprojects:\n  - demo\n---\n\n### オーナー · 2026-01-01 09:00\n\n本文\n'
+out=$(thread 'talk by 新規' "新規: threads/t-test0003-talk.md\nタスク: なし\n~~~~\n$talk~~~~\n"); code=$?
+if [[ $code -eq 0 ]] && rg -qx 'tasks: \[\]' "$v/threads/t-test0003-talk.md" && ! rg -qF 'タスク:' "$v/threads/t-test0003-talk.md" && clean; then
+  pass "新規: of a thread with empty tasks takes タスク: なし"
+else
+  fail "talk by 新規: exit $code: $out"
+fi
+out=$(thread 'talk append' '追記: threads/t-test0003-talk.md\nタスク: なし\n~~~~\n\n続き\n~~~~\n'); code=$?
+if [[ $code -eq 0 && $(tail -n 1 "$v/threads/t-test0003-talk.md") == 続き ]] && ! rg -qF 'タスク:' "$v/threads/t-test0003-talk.md" && clean; then
+  pass "追記: to a thread with empty tasks takes タスク: なし"
+else
+  fail "talk append: exit $code: $out"
+fi
+before=$(head_sha)
+out=$(thread 'none with tasks' '追記: threads/t-test0001-demo.md\nタスク: なし\n~~~~\n\nタスクのある話題\n~~~~\n'); code=$?
+if [[ $code -eq 1 && $out == *"threads/t-test0001-demo.md: 「タスク: なし」はフロントマターの tasks が空のファイルにだけ書く"* && $(head_sha) == "$before" ]] && clean; then
+  pass "追記: タスク: なし to a thread with tasks is an NG"
+else
+  fail "none with tasks: exit $code: $out"
+fi
+out=$(thread 'new none with tasks' "新規: threads/t-test0001-third.md\nタスク: なし\n~~~~\n$second~~~~\n"); code=$?
+if [[ $code -eq 1 && $out == *"threads/t-test0001-third.md: 「タスク: なし」はフロントマターの tasks が空のファイルにだけ書く"* && $(head_sha) == "$before" && ! -e $v/threads/t-test0001-third.md ]] && clean; then
+  pass "新規: タスク: なし with tasks in the body is an NG"
+else
+  fail "new none with tasks: exit $code: $out"
+fi
 
 # Two NGs with one subject are cleared one by one: 解決 with one copy's name leaves the other, and a 解決
 # with the subject alone clears neither. A malformed instruction is refused by --detach on the spot.

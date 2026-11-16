@@ -17,8 +17,8 @@ under the table's header. A
 "行を足す:" item adds a row, from the same lines, to the end of the table under the given heading (or
 the file's only table); a first cell already in that table is an NG. An
 "追記:" or "新規:" item for a thread file (threads/, except threads/memo.md) carries a "タスク:" line
-with the one task it is about, which must be in the tasks of the thread's frontmatter; the line is
-not written. Every item is checked
+with the one task it is about, which must be in the tasks of the thread's frontmatter, or "なし" for a
+thread whose tasks are empty (a thread of discussion only); the line is not written. Every item is checked
 against the vault before anything is written; one bad item writes nothing. After writing, the
 Markdown files written are formatted with rumdl, the instruction's paths are staged, and
 git diff --cached --check and karo-check (beside this script) --only <each staged path> (the staged
@@ -184,21 +184,25 @@ def parse(text):
 
 
 def check_thread_task(kind, path, task, text):
-    """A threads/ item declares the one task it is about, among the tasks of the thread's frontmatter
-    (text is the file before an append, or the new file's body); threads/memo.md has no task."""
+    """A threads/ item declares the one task it is about, among the tasks of the thread's frontmatter,
+    or なし when those tasks are empty (text is the file before an append, or the new file's body);
+    threads/memo.md has no task."""
     if not path.startswith("threads/") or path == "threads/memo.md":
         if task is not None:
             raise Bad(f"{kind}: {path}: 「タスク:」は threads の会話のファイルの項目にだけ書く")
         return
     if task is None:
-        raise Bad(f"{kind}: {path}: 「タスク:」の行がない（項目の行の下に、どのタスクの話かを書く）")
-    if not re.fullmatch(TASK_ID, task):
-        raise Bad(f"{kind}: {path}: 「タスク:」はタスク ID 1 つ（話題が 2 つなら項目を分ける）: {task}")
+        raise Bad(f"{kind}: {path}: 「タスク:」の行がない（項目の行の下に、どのタスクの話か、タスクがなければ なし を書く）")
+    if task != "なし" and not re.fullmatch(TASK_ID, task):
+        raise Bad(f"{kind}: {path}: 「タスク:」はタスク ID 1 つか なし（話題が 2 つなら項目を分ける）: {task}")
     p = subprocess.run(["yq", "--front-matter=extract", ".tasks // [] | .[]", "-"],
                        input=text, capture_output=True, text=True)
     if p.returncode != 0:
         raise Bad(f"{kind}: {path}: フロントマターが読めない", (p.stderr or p.stdout).strip().splitlines())
-    if task not in p.stdout.split():
+    tasks = p.stdout.split()
+    if task == "なし" and tasks:
+        raise Bad(f"{kind}: {path}: 「タスク: なし」はフロントマターの tasks が空のファイルにだけ書く（tasks: {', '.join(tasks)}）")
+    if task != "なし" and task not in tasks:
         raise Bad(f"{kind}: {path}: {task} がフロントマターの tasks にない（{task} のファイルに書く）")
 
 
