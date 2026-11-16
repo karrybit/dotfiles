@@ -84,4 +84,21 @@ I-3 compares the implementer as a whole session (`claude --agent karrybit:implem
 
 ## What the Suite Separates
 
-Not measured yet.
+Measured with `--model claude-sonnet-5-5` and `--judge-model claude-opus-5-5`, three runs per arm; cases marked ×2 ran twice. Each cell is the passes summed over the case's graders and runs, leaving out `role-fired`.
+
+| Case | with | baseline | canary | Graders that separate |
+| --- | --- | --- | --- | --- |
+| R-1 ×2 | 18/24 | 10/24 | 11/24 | `questions-scope` 6, 0, 0 |
+| R-2 | 3/3 | 3/3 | 3/3 | none: the prompt points at `docs/`, which holds only the note with the answer |
+| S-1 | 15/15 | 12/15 | 30/30 (×2) | `decision-tradeoff` 3, 1, 3; the canary keeps `karrybit:dev-handoff`, whose artifact table already asks for invariants and tradeoffs |
+| S-2 | 3/3 | 3/3 | 3/3 | none: R-3 states the prefix isolation outright |
+| D-1 | 20/21 | 11/21 | 12/21 | `call-before-job` 3, 0, 1; `owner-plan` 3, 0, 2; `environment-first` 3, 2, 0 |
+| D-2 ×2 | 1/6 | 3/6 | 0/6 | reversed: the agent lists `K-n` or splits the fix into two increments |
+| I-1 ×2 | 24/24 | 18/24 | 21/24 | `failing-test-first` 6, 0, 3; `grade.py` passes every run |
+| I-2 | 3/3 | 0/3 | 3/3 | `kept-expectation`; the baseline fixes the code without citing `docs/spec.md`, and one baseline run changes the test |
+| V-1 ×2 | 17/18 | 16/18 | 17/18 | none beyond one run: the baseline also sees that `test_other_tenant_is_denied` misses AC-3 |
+| V-2 | 3/6 | 3/6 | 2/6 | none: `pass-brief` fails every arm, since every report runs past three lines |
+
+- `no-implementation-in-ac` (R-1) and `pass-brief` (V-2) fail in every arm, including the with-arm, which does not follow its own rule (B2, and the verifier's report item 2).
+- Inside a run, `git` resolves to a shim that fails in the run's sandbox, so `git diff base...HEAD` is unavailable; the agents read the files instead, and no run ended on an error.
+- Judge calls were 85–90% of a run's cost on long outputs: a D-1 run cost 3–5 USD, an I-1 run about 0.25 USD.
