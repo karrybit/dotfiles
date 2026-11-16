@@ -53,7 +53,9 @@ types=$'\n'$(yq '.types | keys | .[]' "$SCHEMA")$'\n'
 folders=(journal projects investigations docs threads)
 existing=()
 for d in "${folders[@]}"; do [[ -d $d ]] && existing+=("$d"); done
-vocab=" $(fd -d 1 -t f -e md . projects | sed 's#.*/##; s#\.md$##' | sort -u | tr '\n' ' ')"
+# The project vocabulary: the basenames of the .md files right under these folders. fd skips a missing
+# folder and says so on stderr, which is dropped.
+vocab=" $(fd -d 1 -t f -e md . projects projects/repos projects/misc 2>/dev/null | sed 's#.*/##; s#\.md$##' | sort -u | tr '\n' ' ')"
 
 # With --only, $scope holds the files to check, one per line between newlines.
 scoped=0; scope=$'\n'
@@ -66,7 +68,7 @@ if (( ${#only[@]} )); then
     scope+="$p"$'\n'
     [[ -e $p ]] && continue
     b=${p##*/}; b=${b%.md}
-    [[ $p == projects/*.md ]] && listed+=(-e "  - $b")
+    [[ $p =~ ^projects/((repos|misc)/)?[^/]+\.md$ ]] && listed+=(-e "  - $b")
   done
   # notes listing a given path as a derived_from item (a list item anywhere in the file: a superset)
   alt=$(printf '%s\n' "${only[@]}" | sed 's/[][\.*^$+?(){}|]/\\&/g' | paste -sd '|' -)
@@ -112,7 +114,8 @@ while IFS= read -r f; do
   IFS=$FS read -r ty projects tasks derived < <(printf '%s\n' "$info")
   # okf-lint reports a missing or unknown type
   [[ -n $ty && $types == *$'\n'"$ty"$'\n'* ]] || continue
-  # projects come from the project vocabulary (projects/<name>.md) or are 'all'
+  # projects come from the project vocabulary (projects/repos/<repo>.md, projects/misc/<theme>.md, or
+  # projects/<name>.md) or are 'all'
   IFS=$LS read -r -a ps < <(printf '%s\n' "$projects")
   for p in ${ps[@]+"${ps[@]}"}; do
     [[ $p == all || $vocab == *" $p "* ]] || report "$f" "unknown project: $p"

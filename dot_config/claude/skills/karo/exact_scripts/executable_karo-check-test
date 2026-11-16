@@ -16,12 +16,12 @@ fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
 pass() { printf 'ok\t%s\n' "$1"; }
 
 ok=$tmp/ok
-mkdir -p "$ok"/{journal,projects,threads,investigations,docs/a1b2c3d4/abc1234,rules}
+mkdir -p "$ok"/{journal,projects/repos,threads,investigations,docs/a1b2c3d4/abc1234,rules}
 cp "$vault/rules/frontmatter-schema.yaml" "$ok/rules/" || exit 2
 printf '# 現在の状況\n\n## 焦点\n\n- t-test0001: 例\n' > "$ok/state.md"
 printf -- '---\ntype: Journal\ndate: 2026-01-01\n---\n\n- 09:00 [decision] t-test0001: 例（thread 2026-01-01 09:00）\n' > "$ok/journal/2026-01-01.md"
-printf -- '---\ntype: Project\ndescription: 例のプロジェクト。\nprojects:\n  - demo\n---\n\n## demo\n' > "$ok/projects/demo.md"
-printf -- '---\ntype: Thread\ndescription: 例の会話\ntopic: 例\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - demo\n---\n\n### オーナー · 2026-01-01 09:00\n\nt-test0001 の [demo](projects/demo.md)\n' > "$ok/threads/t-test0001-demo.md"
+printf -- '---\ntype: Project\ndescription: 例のプロジェクト。\nprojects:\n  - demo\n---\n\n## demo\n' > "$ok/projects/repos/demo.md"
+printf -- '---\ntype: Thread\ndescription: 例の会話\ntopic: 例\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - demo\n---\n\n### オーナー · 2026-01-01 09:00\n\nt-test0001 の [demo](projects/repos/demo.md)\n' > "$ok/threads/t-test0001-demo.md"
 printf -- '---\ntype: Investigation\ndescription: 例の調べ物。\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - all\nderived_from:\n  - journal/2026-01-01.md#09:00\n  - threads/t-test0001-demo.md#2026-01-01 09:00\n---\n\n## 例\n' > "$ok/investigations/2026-01-01-example.md"
 # A day's standup and a meeting's notes sit beside the day's journal; their "- " lines are not journal lines.
 printf -- '---\ntype: Standup\ndate: 2026-01-01\nderived_from:\n  - journal/2026-01-01.md\n---\n\n## Checkin（2026-01-01）\n\n- 例\n' > "$ok/journal/2026-01-01-standup.md"
@@ -47,7 +47,7 @@ fi
 cases=(
   'unknown project|unknown project: nope|sed -i.bak "s/  - demo/  - nope/" threads/t-test0001-demo.md'
   'missing anchor|derived_from anchor not found|sed -i.bak "s/#09:00/#10:00/" investigations/2026-01-01-example.md'
-  'wiki link|wiki link, write a path link: \[\[demo\]\]|sed -i.bak "s#\[demo\](projects/demo.md)#[[demo]]#" threads/t-test0001-demo.md'
+  'wiki link|wiki link, write a path link: \[\[demo\]\]|sed -i.bak "s#\[demo\](projects/repos/demo.md)#[[demo]]#" threads/t-test0001-demo.md'
   'no frontmatter where no type lives|investigations/2026-01-01-demo/notes.md	no frontmatter|mkdir -p investigations/2026-01-01-demo && printf "## no frontmatter\\n" > investigations/2026-01-01-demo/notes.md'
   'journal form|journal line not normalized|sed -i.bak "s/t-test0001: /t-test0001・t-test0002:/" journal/2026-01-01.md'
   '3-digit task in state.md|state.md	old ID, use a bd ID or t- or q- and eight letters or digits: t999|sed -i.bak "s/t-test0001: 例/t999: 例/" state.md'
@@ -116,15 +116,15 @@ hostile 'only: derived_from with "|"' 1 'derived_from anchor not found: journal/
 # --only: a problem in a given file or in a file that depends on it is found; one elsewhere is not.
 # <name>|<expected problem, or "pass">|<--only paths, space-separated>|<shell command run inside the copy>
 scoped=(
-  'only: problem in a given file|unknown type: Bogus|projects/demo.md|sed -i.bak "s/^type: Project/type: Bogus/" projects/demo.md'
+  'only: problem in a given file|unknown type: Bogus|projects/repos/demo.md|sed -i.bak "s/^type: Project/type: Bogus/" projects/repos/demo.md'
   'only: problem in another file is left out|pass|journal/2026-01-01.md|sed -i.bak "s/  - demo/  - nope/" threads/t-test0001-demo.md'
-  'only: okf-lint problem in another file is left out|pass|journal/2026-01-01.md|sed -i.bak "s/^type: Project/type: Bogus/" projects/demo.md'
+  'only: okf-lint problem in another file is left out|pass|journal/2026-01-01.md|sed -i.bak "s/^type: Project/type: Bogus/" projects/repos/demo.md'
   'only: removed anchor of a derived_from|derived_from anchor not found|journal/2026-01-01.md|sed -i.bak "s/- 09:00 /- 10:00 /" journal/2026-01-01.md'
-  'only: renamed project still listed|threads/t-test0001-demo.md	unknown project: demo|projects/demo.md projects/demo2.md|sed -i.bak "s#\[demo\](projects/demo.md)#demo#" threads/t-test0001-demo.md && mv projects/demo.md projects/demo2.md'
+  'only: renamed project still listed|threads/t-test0001-demo.md	unknown project: demo|projects/repos/demo.md projects/demo2.md|sed -i.bak "s#\[demo\](projects/repos/demo.md)#demo#" threads/t-test0001-demo.md && mv projects/repos/demo.md projects/demo2.md'
   'only: journal form is not checked in a standup|pass|journal/2026-01-01-standup.md|printf "\\n- 例の行\\n" >> journal/2026-01-01-standup.md'
   'only: old ID in a given state.md|state.md	old ID|state.md|sed -i.bak "s/t-test0001: 例/t999: 例/" state.md'
   'only: journal form in a given journal|journal line not normalized|journal/2026-01-01.md|sed -i.bak "s/t-test0001: /t-test0001・t-test0002:/" journal/2026-01-01.md'
-  'only: wiki link in a given file|wiki link, write a path link: \[\[demo\]\]|threads/t-test0001-demo.md|sed -i.bak "s#\[demo\](projects/demo.md)#[[demo]]#" threads/t-test0001-demo.md'
+  'only: wiki link in a given file|wiki link, write a path link: \[\[demo\]\]|threads/t-test0001-demo.md|sed -i.bak "s#\[demo\](projects/repos/demo.md)#[[demo]]#" threads/t-test0001-demo.md'
 )
 for c in "${scoped[@]}"; do
   name=${c%%|*}; rest=${c#*|}; want=${rest%%|*}; rest=${rest#*|}; paths=${rest%%|*}; cmd=${rest#*|}
@@ -169,7 +169,7 @@ copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"
 if ! (git -C "$copy" init -q && mkdir "$copy/.beads" && printf 'x\n' > "$copy/.beads/db"); then fail "could not make the git copy"; fi
 out=$("$bin/karo-check" "$copy" 2>&1); code=$?
 if [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -qxF $'.beads\ttask database not ignored by git'; then pass ".beads not ignored fails"; else fail ".beads not ignored: exit $code: $out"; fi
-out=$("$bin/karo-check" --only projects/demo.md "$copy" 2>&1); code=$?
+out=$("$bin/karo-check" --only projects/repos/demo.md "$copy" 2>&1); code=$?
 if [[ $code -eq 0 ]]; then pass "only: .beads is left alone"; else fail "only: .beads: exit $code: $out"; fi
 printf '.beads/\n' >> "$copy/.git/info/exclude"
 out=$("$bin/karo-check" "$copy" 2>&1); code=$?
