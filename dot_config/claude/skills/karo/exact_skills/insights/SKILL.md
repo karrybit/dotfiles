@@ -1,13 +1,13 @@
 ---
 name: insights
-description: CoS と Agent の一日の働きを transcript と Beads（bd）から数えて診断し、規則・skill・ブリーフの直しの候補を挙げる手順。karo:checkout から呼ぶ。オーナーが /karo:insights を打ったとき、CoS や Agent の違反・詰まり・費用を数えてほしいと言ったときにも使う。
+description: CoS と Agent の一日の働きを transcript と Beads（bd）から数えて診断し、規則・skill・ブリーフの直しの候補を挙げる手順。オーナーが /karo:insights を打ったとき、CoS や Agent の違反・詰まり・費用を数えて診断してほしいと言ったときに使う。
 ---
 
 # Insights
 
 - 数えるのはこの skill の `scripts/insights`、例を確かめるのはサブエージェント、直すかどうかを決めるのはオーナーにする。
 - 結果には、数、場所（セッション ID の先頭 8 文字、時刻、Agent 名）、規則の名前だけを書き、transcript の会話・コマンド・出力の中身は書き写さない。
-- 結果は `~/cos/journal/YYYY-MM-DD-standup.md` の `## Checkout（YYYY-MM-DD）` の節の下の `### Insights` に置く。transcript から作り直せる、判断のための出力（Gold）なので、Silver には書かない。オーナーが直すと決めた候補は、ふだんの手順（Beads のタスクと決定）で Silver に入る。
+- 結果は、今日の `~/cos/journal/YYYY-MM-DD-standup.md` の末尾の `## Insights（<数えた日付>）` の節に置く。transcript から作り直せる、判断のための出力（Gold）なので、Silver には書かない。オーナーが直すと決めた候補は、ふだんの手順（Beads のタスクと決定）で Silver に入る。
 
 ## 手順
 
@@ -17,8 +17,8 @@ description: CoS と Agent の一日の働きを transcript と Beads（bd）か
    完了条件: サブエージェントの報告が手元にあり、選んだ例のすべてに、規則の名前と、直しの候補か「直しは要らない」がある。
 3. 下の「報告の項目」を短く報告する。
    完了条件: 5 つの指標と直しの候補がすべて報告にある（取れなかった指標は理由つき）。
-4. 3 の報告を `### Insights` の節の本文にする。`karo:checkout` から呼んだときは、checkout の手順 7 の指示に入れる。単独で呼ばれたときは、今日の standup に `## Checkout（YYYY-MM-DD）` の節がなければ `追記:` で節の見出しと `### Insights` を足し、`commit 本文:` に Insights の記録であることと standup のパスを書いた 1 つの指示にし、record で書く。
-   完了条件: 節の本文が checkout の指示に入ったか、record が `queued` を出した。
+4. 3 の報告を本文にした `## Insights（<数えた日付>）` の節を、今日の standup の末尾に `追記:` で足す指示と、Insights の記録であることと standup のパスを書いた `commit 本文:` を 1 つの指示にし、record で書く。
+   完了条件: record が `queued` を出した。
 
 ## 指標と数え方
 
