@@ -36,15 +36,6 @@ printf '<!doctype html>\n<title>例</title>\n' > "$ok/docs/a1b2c3d4/abc1234/inde
 if out=$("$bin/karo-check" "$ok" 2>&1); then pass "valid vault passes"; else fail "valid vault fails: $out"; fi
 if printf '%s\n' "$out" | rg -q 'task in body not in tasks'; then fail "thread naming only its own task warns: $out"; else pass "thread naming only its own task does not warn"; fi
 
-# While the notes move, the old layout passes too: the project note at projects/repos/<repo>.md, named <repo>.
-copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"
-if (cd "$copy/projects/repos" && mv github.com/acme/demo.md demo.md && mv github.com/acme/demo demo && rmdir github.com/acme github.com \
-    && cd "$copy" && fd -t f -e md -X sed -i.bak 's#github\.com/acme/demo#demo#g' && fd -t f -e bak -X rm); then
-  if out=$("$bin/karo-check" "$copy" 2>&1); then pass "vault in the old layout passes"; else fail "vault in the old layout fails: $out"; fi
-else
-  fail "old layout: could not move the copy"
-fi
-
 # A task ID in a thread's body that its tasks lacks is a warning: reported, counted, and not failed.
 copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"
 printf '\n***\n\n### CoS · 2026-01-01 09:05\n\nt-test0002 に分けた\n' >> "$copy/threads/t-test0001-demo.md"
