@@ -29,7 +29,7 @@ description: '資料・リポジトリ・仕組みの HTML の解説を、1 つ�
 
 ## HTML の解説を評価するとき
 
-- 評価は、新しいサブエージェント 1 つ（評価役）に Agent tool で頼む。評価役に、HTML の解説を 1 つと、`<organize>/rubric.md` と `<visualize>/rubric.md` を一緒に渡し、作るサブエージェントには渡さない。意味の観点は organize の rubric の観点 1〜7 とゲート G1〜G4、見せ方の観点は visualize の rubric の観点 1〜3 とゲート G1・G2・S1〜S6 で、ゲートは rubric の名前を付けて報告させる（G1 と G2 が 2 つの rubric にあるため）。
+- 評価は、新しいサブエージェント 1 つ（評価役）に Agent tool で頼む。評価役に、HTML の解説を 1 つと、`<organize>/rubric.md` と `<visualize>/rubric.md` を一緒に渡し、作るサブエージェントには渡さない。意味の観点は organize の rubric の観点 1〜7 とゲート G1〜G4、見せ方の観点は visualize の rubric の観点 1〜4 とゲート G1・G2・S1〜S7 で、ゲートは rubric の名前を付けて報告させる（G1 と G2 が 2 つの rubric にあるため）。
 - 評価の手順は organize の rubric の「評価のしかた」1〜6 にする。その 3 では HTML をブラウザで描画して、visualize の rubric の「評価のしかた」1 の描画の確かめも行い、その 4 の主張には、visualize の rubric のゲート G1 の大事な図の線とラベルを、visualize の rubric の「評価のしかた」2 の数え方で足す。観点ごとの点の付け方の注記は、それぞれの rubric に従う。
 - 描画の確かめには、`<visualize>/brief.md` の型の「制約」の chrome-devtools-mcp を使わせる。
 - 評価のレポートは最後のメッセージの本文で返させ、ファイルに書かせない。
