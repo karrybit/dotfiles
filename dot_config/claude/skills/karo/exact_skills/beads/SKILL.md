@@ -72,7 +72,7 @@ user-invocable: false
 
 - 複数のタスクかプロジェクトに効く決定は decision の bead にし、そのタスクの中だけの決定は `決定:` の comment にする。
 - 判断待ちの問いから決定までを、1 つの decision の bead で持つ。
-- 規則・`state.md`・ノートから決定を指すときは、`決定 cos-xxx` と書く。今の判断待ちと効く決定の引き方は、`karo:information-design` skill の「5. 探す」にある。
+- 規則・`state.md`・ノートから決定を指すときは、`決定 cos-xxx` と書く。今の判断待ちと効く決定の引き方は、`~/cos/rules/information-design.md` の「探す」の表にある。
 
 1. 判断が必要になったら、`bd create '<問い 1 文>' -t decision -l human -l project:<名前> --body-file <本文> --json` で作る。本文は「問い」「選択肢と推奨」「出典」（threads のパスと `YYYY-MM-DD HH:MM`）の節にする。全プロジェクトに効く問いは label `project:all` にする。タスクを止めるなら、`bd dep add <タスク> <決定> --json` で blocker にする（子の `--parent` にすると、親の blocker にならない）。
    完了条件: `bd human list --status open --json` に出る。
