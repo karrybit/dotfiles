@@ -865,9 +865,11 @@ fi
 # The three instructions of rules/record-examples.md pass in order, as written, in a vault of their own:
 # a new topic's thread written with its frontmatter, a delegation, and the close of the agent.
 ex=$tmp/ex
-mkdir -p "$ex/projects/repos" "$ex/rules" "$tmp/examples"
+mkdir -p "$ex/projects/repos" "$ex/projects/misc" "$ex/rules" "$tmp/examples"
 cp "$cos/.rumdl.toml" "$ex/" && cp "$cos/rules/frontmatter-schema.yaml" "$ex/rules/" || exit 2
+# The project vocabulary holds the projects an example thread may name: a repository and a theme.
 printf -- '---\ntype: Project\ndescription: 例のプロジェクト。\nprojects:\n  - dotfiles\n---\n\n## dotfiles\n' > "$ex/projects/repos/dotfiles.md"
+printf -- '---\ntype: Project\ndescription: 例のテーマ。\nprojects:\n  - work\n---\n\n## work\n' > "$ex/projects/misc/work.md"
 printf '# 割り当て\n\n## 稼働中\n\n| Agent 名 | タスク | 役割 | Herdr workspace | pane | worktree | branch | 開始日 |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n\n## 終了\n\n| Agent 名 | タスク | 役割 | worktree | branch | 開始日 | 終了日 |\n| --- | --- | --- | --- | --- | --- | --- |\n' > "$ex/assignments.md"
 printf '# 現在の状況\n\n## 焦点\n\nなし\n\n## 判断待ち\n\nなし\n' > "$ex/state.md"
 git -C "$ex" init -q && git -C "$ex" config user.name test && git -C "$ex" config user.email test@example.invalid
