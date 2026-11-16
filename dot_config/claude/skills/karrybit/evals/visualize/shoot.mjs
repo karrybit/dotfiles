@@ -41,7 +41,7 @@ try {
   let n = 0;
   for (let y = 0; y === 0 || y < height - H + STEP; y += STEP) {
     const at = await evaluate(`window.scrollTo(0, ${y}); new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(window.scrollY))))`);
-    const want = Math.min(y, height - H);
+    const want = Math.max(0, Math.min(y, height - H));
     if (Math.abs(at - want) > 1) throw new Error(`step ${n + 1} is at scrollY ${at}, not ${want}`);
     const { data } = await send('Page.captureScreenshot', { format: 'png' });
     writeFileSync(join(outDir, `screen-${String(++n).padStart(2, '0')}.png`), Buffer.from(data, 'base64'));

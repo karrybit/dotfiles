@@ -16,4 +16,4 @@
    - `misconception`: 正答と食い違う内容を、答えの言葉のまま引く。なければ空にする。
    - `from_figure`: 食い違う内容が、読み手が図から取ったもの（`elements` に図があり、`figure_use` がその内容を挙げる）か。食い違いがなければ false にする。
    - `note`: 判定に迷ったときの理由。なければ空にする。
-   完了条件: `key.md` のすべての問いに、この 6 つの項目がある。
+   完了条件: `key.md` のすべての問いに、この 5 つの項目（`points_hit`、`points_total`、`misconception`、`from_figure`、`note`）がある。
