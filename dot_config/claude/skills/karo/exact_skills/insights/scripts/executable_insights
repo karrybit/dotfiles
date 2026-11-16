@@ -172,7 +172,7 @@ def epoch: capture("^(?<s>[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})
     [ "${dir%/}" = "$cosproj" ] && continue
     for f in $(files "$dir" 1); do
       name=$(jq -r 'select(.type == "agent-name") | .agentName' "$f" | tail -n 1)
-      case $name in cos-* | t-* | t[0-9][0-9][0-9]*) summarize agents "$name" "$f" ;; esac
+      case $name in [A-Za-z]*-?*) summarize agents "$name" "$f" ;; esac
     done
   done
 } | jq -s --arg day "$day" --argjson delegations "$delegations" '

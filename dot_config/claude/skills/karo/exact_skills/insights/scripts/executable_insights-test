@@ -95,7 +95,7 @@ check "one CoS turn, two counted calls (skill steps and scratchpad brief left ou
 check "dialog approval, auto mode refusal and AskUserQuestion are told apart, and the copied records count once" \
   '.approvals.cos == {prompted: 1, rejected_user: 0, rejected_classifier: 1, prompt_wait_s: 30}'
 check "subagent refusal is counted in its own group" '.approvals.subagents.rejected_classifier == 1'
-check "Herdr agents named after a t- or a bd task that the owner refused are listed with their waits" \
+check "Herdr agents named after a task ID that the owner refused are listed with their waits" \
   '(.agent_prompts | sort_by(.agent)) == [{agent: "cos-a2v.1", session: "g4", calls: 1, wait_s: 5}, {agent: "t-ex0009", session: "g1", calls: 1, wait_s: 20}] and .approvals.agents.rejected_user == 2'
 check "turn length comes from turn_duration" '.cos_turn_s == {count: 1, total: 150, max: 150}'
 check "each task first claimed on the day ends at its first comment or its close, whichever is earlier" \

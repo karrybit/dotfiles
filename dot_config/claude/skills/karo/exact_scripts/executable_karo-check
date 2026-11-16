@@ -1,19 +1,18 @@
 #!/usr/bin/env bash
 # Check the CoS records: first the general checks of karrybit's okf-lint against the schema (frontmatter,
 # place, lineage, path links, stale_after), then the checks that belong to the CoS structure (the forms of
-# dates and task IDs; the project vocabulary; derived_from anchors; wiki links; old IDs; and the task
-# database, .beads, kept out of git).
-# A task ID is a bd ID (cos- and three to eight letters or digits, a child with ".<n>" added) or an older
-# t- ID. Tasks live in the task database, which karo-check does not read, so only the form is checked.
+# dates and task IDs; the project vocabulary; wiki links; and the task database, .beads, kept out of git).
+# A task ID is a prefix of a letter and letters or digits, then one or more hyphenated parts of letters or
+# digits, a child with ".<n>" added (cos-a2v.1, t-a1b2c3d4, ABC-12). Tasks live in the task database,
+# which karo-check does not read, so only the form is checked.
 # usage: karo-check [--only <path>]... [<cos dir>]
 # Default: ~/cos (only its record folders get the CoS checks). The schema is <cos dir>/rules/frontmatter-schema.yaml.
 # --only limits the check to the given vault-relative paths (changed, added, or removed files; for a rename, both
-# paths). okf-lint gets the same paths; the CoS checks also read the notes naming a given path (derived_from),
-# and for a removed project file, the notes listing it as a project. A file brought in is checked in full.
+# paths). okf-lint gets the same paths; the CoS checks also read, for a removed project file, the notes
+# listing it as a project. A file brought in is checked in full.
 # Prints "<path><TAB><problem>" per problem, okf-lint's and its own, and exits 1 when any is found, or stops
 # with okf-lint's code 2 when okf-lint finds an argument or schema error or cannot run yq, fd, or rg.
-# Notes past their stale_after are printed as "<path><TAB>stale since ...", and task IDs in a thread's body that its
-# tasks lacks as "<path><TAB>task in body not in tasks: ..."; neither fails the check.
+# Notes past their stale_after are printed as "<path><TAB>stale since ..." and do not fail the check.
 set -uo pipefail
 # Where aqua installs yq, rg, and fd, each call goes through aqua's proxy, which adds a start-up cost, and a
 # whole run makes hundreds of calls. Call the binaries that aqua which names instead, in this script and in
@@ -34,7 +33,6 @@ SCHEMA=$PWD/rules/frontmatter-schema.yaml
 [[ -f $SCHEMA ]] || { echo "karo-check: no schema at $SCHEMA" >&2; exit 2; }
 problems=0
 stale=0
-untracked=0
 report() { printf '%s\t%s\n' "$1" "$2"; problems=$((problems+1)); }
 
 # The general checks. okf-lint's lines are passed on and counted with the CoS checks' lines; its own count
@@ -82,11 +80,8 @@ if (( ${#only[@]} )); then
     n=${p#projects/*/}; n=${n%.md}
     [[ $p =~ ^projects/(repos/[^/]+/[^/]+/[^/]+|misc/[^/]+)\.md$ ]] && listed+=(-e "  - $n")
   done
-  # notes listing a given path as a derived_from item (a list item anywhere in the file: a superset)
-  alt=$(printf '%s\n' "${only[@]}" | sed 's/[][\.*^$+?(){}|]/\\&/g' | paste -sd '|' -)
-  # add_scope reads a process substitution, not a pipe, so that it runs in this shell and keeps $scope
-  add_scope < <(rg -l -- "^\s*- ['\"]?($alt)(#.*)?['\"]?\s*$" ${existing[@]+"${existing[@]}"} 2>/dev/null)
-  # for a removed project file, notes listing it as a project
+  # for a removed project file, notes listing it as a project; add_scope reads a process substitution,
+  # not a pipe, so that it runs in this shell and keeps $scope
   (( ${#listed[@]} )) && add_scope < <(rg -l -F -x "${listed[@]}" ${existing[@]+"${existing[@]}"} 2>/dev/null)
 fi
 
@@ -97,13 +92,11 @@ expr='
   . as $d
   | ([
       (if ($d | has("date")) and (($d.date | tostring | test("^\d{4}-\d{2}-\d{2}$")) | not) then "date is not YYYY-MM-DD" else null end),
-      (($d.tasks // [])[] | (if (tostring | test("^(t-[a-z0-9]{8}|cos-[a-z0-9]{3,8}(\.[0-9]+)*|[A-Z][A-Z0-9]+-\d+)$")) | not then "bad task id: " + tostring else null end))
+      (($d.tasks // [])[] | (if (tostring | test("^[A-Za-z][A-Za-z0-9]*(-[A-Za-z0-9]+)+(\.[0-9]+)*$")) | not then "bad task id: " + tostring else null end))
     ] | map(select(. != null)) | .[] | sub("[[:cntrl:]]"; " ")),
     ("@info" + strenv(FS) + ([
       ((.type // "") | tostring | sub("[[:cntrl:]]"; " ")),
-      ((.projects // []) | map(tostring | sub("[[:cntrl:]]"; " ")) | join(strenv(LS))),
-      ((.tasks // []) | map(tostring | sub("[[:cntrl:]]"; " ")) | join(strenv(LS))),
-      ((.derived_from // []) | map(tostring | sub("[[:cntrl:]]"; " ")) | join(strenv(LS)))
+      ((.projects // []) | map(tostring | sub("[[:cntrl:]]"; " ")) | join(strenv(LS)))
     ] | join(strenv(FS))))'
 lint_out=$'\n'$lint_out$'\n'
 while IFS= read -r f; do
@@ -123,7 +116,7 @@ while IFS= read -r f; do
     if [[ $p == "@info$FS"* ]]; then info=${p#"@info$FS"}; else report "$f" "$p"; fi
   done < <(printf '%s\n' "$out")
   [[ -z $info ]] && continue
-  IFS=$FS read -r ty projects tasks derived < <(printf '%s\n' "$info")
+  IFS=$FS read -r ty projects < <(printf '%s\n' "$info")
   # okf-lint reports a missing or unknown type
   [[ -n $ty && $types == *$'\n'"$ty"$'\n'* ]] || continue
   # projects come from the project vocabulary or are 'all'
@@ -131,22 +124,6 @@ while IFS= read -r f; do
   for p in ${ps[@]+"${ps[@]}"}; do
     [[ $p == all || $vocab == *" $p "* ]] || report "$f" "unknown project: $p"
   done
-  # a derived_from anchor is a journal line's HH:MM or a thread heading's time (okf-lint reports a missing file)
-  IFS=$LS read -r -a ds < <(printf '%s\n' "$derived")
-  for d in ${ds[@]+"${ds[@]}"}; do
-    path=${d%%#*}; anchor=${d#"$path"}; anchor=${anchor#\#}
-    [[ -n $anchor && -f $path ]] || continue
-    anchor=$(printf '%s' "$anchor" | sed 's/[][\.*^$+?(){}|]/\\&/g')
-    rg -q -- "^(- |### .* · (\d{4}-\d{2}-\d{2} )?)${anchor}( |$)" "$path" || report "$f" "derived_from anchor not found: $d"
-  done
-  # a thread's body names only its own tasks; another ID is a derived task missing from tasks, a mention, or a mixed topic.
-  # Only t- IDs are looked for: a bd ID has the form of a hyphenated word such as cos-setup.
-  if [[ $ty == Thread ]]; then
-    for t in $(awk 'NR == 1 && /^---$/ {fm = 1; next} fm && /^---$/ {fm = 0; next} !fm' "$f" | rg -o '\bt-[a-z0-9]{8}\b' | sort -u); do
-      [[ $LS$tasks$LS == *"$LS$t$LS"* ]] && continue
-      printf '%s\ttask in body not in tasks: %s\n' "$f" "$t"; untracked=$((untracked+1))
-    done
-  fi
 done < <(fd -t f -e md . ${existing[@]+"${existing[@]}"} | rg -v "$excl" | sort | while IFS= read -r f; do in_scope "$f" && printf '%s\n' "$f"; done)
 
 # A link to a note is a path link, [label](<folder>/<file>.md) with the path from the vault (okf-lint checks
@@ -170,19 +147,6 @@ done < <(
     (( ${#files[@]} )) && awk "$wiki" "${files[@]}"
   fi)
 
-# The old ID check at the end reads every day journal (journal/YYYY-MM-DD.md; not the standups and
-# meeting notes beside them) and the state file, or with --only the given ones that exist.
-day='^journal/[0-9]{4}-[0-9]{2}-[0-9]{2}\.md$'
-ids=()
-if (( ! scoped )); then
-  ids=(state.md)
-  [[ -d journal ]] && while IFS= read -r p; do ids+=("$p"); done < <(fd -d 1 -t f -e md . journal | rg "$day" | sort)
-else
-  for p in "${only[@]}"; do
-    [[ -f $p ]] && [[ $p =~ $day || $p == state.md ]] && ids+=("$p")
-  done
-fi
-
 # The task database, .beads, stays out of the vault's git: ignored when it is there, and nothing under
 # it tracked. Checked on a whole run in a git work tree; record's runs with --only leave git alone.
 if (( ! scoped )) && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
@@ -190,13 +154,6 @@ if (( ! scoped )) && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   [[ -n $(git ls-files -- .beads) ]] && report .beads "task database tracked by git"
 fi
 
-# task and pending IDs are bd IDs, or t- or q- and eight letters or digits; t or q with three digits, or
-# with 0 and five more, is an old form. assignments.md is left out because running agents keep their old
-# Herdr names, and cos/ and an old ID name an old branch.
-(( ${#ids[@]} )) && while IFS= read -r l; do report "${l%%:*}" "old ID, use a bd ID or t- or q- and eight letters or digits: ${l##*:}"; done < <(
-  rg -n -o --with-filename --pcre2 '(?<![A-Za-z0-9-])(?<!cos/)[tq](0\d{5}|\d{3})(?![0-9])' "${ids[@]}" 2>/dev/null | sort -u)
-
 echo "karo-check: $stale stale note(s)" >&2
-echo "karo-check: $untracked task(s) in thread bodies not in tasks" >&2
 echo "karo-check: $problems problem(s)" >&2
 [[ $problems -eq 0 ]]

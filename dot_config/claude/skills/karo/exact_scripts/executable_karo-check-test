@@ -18,7 +18,6 @@ pass() { printf 'ok\t%s\n' "$1"; }
 ok=$tmp/ok
 mkdir -p "$ok"/{journal,projects/repos/github.com/acme/demo/reviews,threads,investigations,docs/a1b2c3d4/abc1234,rules}
 cp "$vault/rules/frontmatter-schema.yaml" "$ok/rules/" || exit 2
-printf '# 現在の状況\n\n## 焦点\n\n- t-test0001: 例\n' > "$ok/state.md"
 printf -- '---\ntype: Journal\ndate: 2026-01-01\n---\n\n- 09:00 [decision] t-test0001: 例（thread 2026-01-01 09:00）\n' > "$ok/journal/2026-01-01.md"
 printf -- '---\ntype: Project\ndescription: 例のプロジェクト。\nprojects:\n  - github.com/acme/demo\n---\n\n## demo\n' > "$ok/projects/repos/github.com/acme/demo.md"
 # A project's reviews and Design Docs sit in the folder named after it.
@@ -34,36 +33,20 @@ printf -- '---\ntype: Explain\ndescription: 例の解説。\ntasks:\n  - t-test0
 printf '<!doctype html>\n<title>例</title>\n' > "$ok/docs/a1b2c3d4/abc1234/index.html"
 
 if out=$("$bin/karo-check" "$ok" 2>&1); then pass "valid vault passes"; else fail "valid vault fails: $out"; fi
-if printf '%s\n' "$out" | rg -q 'task in body not in tasks'; then fail "thread naming only its own task warns: $out"; else pass "thread naming only its own task does not warn"; fi
 
 # A day's journal line in any form passes.
 copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"
 printf -- '- 例の行\n' >> "$copy/journal/2026-01-01.md"
 if out=$("$bin/karo-check" "$copy" 2>&1); then pass "a journal line in any form passes"; else fail "a journal line in any form: $out"; fi
 
-# A task ID in a thread's body that its tasks lacks is a warning: reported, counted, and not failed.
-copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"
-printf '\n***\n\n### CoS · 2026-01-01 09:05\n\nt-test0002 に分けた\n' >> "$copy/threads/t-test0001-demo.md"
-out=$("$bin/karo-check" "$copy" 2>&1); code=$?
-if [[ $code -eq 0 ]] && printf '%s\n' "$out" | rg -qF 'threads/t-test0001-demo.md	task in body not in tasks: t-test0002' && printf '%s\n' "$out" | rg -qF 'karo-check: 1 task(s) in thread bodies not in tasks'; then
-  pass "task in thread body but not in tasks warns"
-else
-  fail "task in thread body but not in tasks: exit $code: $out"
-fi
-
 # <name>|<expected problem>|<shell command run inside the copy>
 cases=(
   'unknown project|unknown project: nope|sed -i.bak "s#  - github.com/acme/demo#  - nope#" threads/t-test0001-demo.md'
-  'missing anchor|derived_from anchor not found|sed -i.bak "s/#09:00/#10:00/" investigations/2026-01-01-example.md'
   'wiki link|wiki link, write a path link: \[\[demo\]\]|sed -i.bak "s#\[demo\](projects/repos/github.com/acme/demo.md)#[[demo]]#" threads/t-test0001-demo.md'
   'no frontmatter where no type lives|investigations/2026-01-01-demo/notes.md	no frontmatter|mkdir -p investigations/2026-01-01-demo && printf "## no frontmatter\\n" > investigations/2026-01-01-demo/notes.md'
-  '3-digit task in state.md|state.md	old ID, use a bd ID or t- or q- and eight letters or digits: t999|sed -i.bak "s/t-test0001: 例/t999: 例/" state.md'
-  '6-digit task in journal|journal/2026-01-01.md	old ID, use a bd ID or t- or q- and eight letters or digits: t000999|sed -i.bak "s/t-test0001: /t000999: /" journal/2026-01-01.md'
-  '6-digit q-ID|state.md	old ID, use a bd ID or t- or q- and eight letters or digits: q000999|sed -i.bak "s/t-test0001: 例/q000999: 例/" state.md'
-  '6-digit task in frontmatter|bad task id: t000999|sed -i.bak "s/  - t-test0001/  - t000999/" threads/t-test0001-demo.md'
   # The required fields and paths in the CoS schema, which okf-lint checks
   'misplaced standup|path does not match Standup|mv journal/2026-01-01-standup.md journal/2026-01-01-checkin.md'
-  '6-digit thread name|path does not match Thread|mv threads/t-test0001-demo.md threads/t000999-demo.md'
+  'thread name without a task ID or date|path does not match Thread|mv threads/t-test0001-demo.md threads/demo.md'
   'thread without topic|missing topic|sed -i.bak "/^topic:/d" threads/t-test0001-demo.md'
   'explanation without resource|missing resource|sed -i.bak "/^resource:/d" docs/a1b2c3d4/abc1234/index.md'
   'explanation outside a version folder|path does not match Explain|mv docs/a1b2c3d4/abc1234/index.md docs/a1b2c3d4/index.md'
@@ -117,8 +100,8 @@ hostile() {
 hostile 'status with a newline and a forged @info' 2 'unknown project: nope' '  - all' $'  - nope\nstatus: "x\\n@info|Bogus"'
 hostile 'project that is a glob' 1 'unknown project: *' '  - all' '  - "*"'
 hostile 'project with a command substitution' 1 'unknown project: $(touch pwned)' '  - all' '  - "$(touch pwned)"'
-hostile 'derived_from with "|"' 1 'derived_from anchor not found: journal/2026-01-01.md#09:00|x' '  - journal/2026-01-01.md#09:00' '  - "journal/2026-01-01.md#09:00|x"'
-hostile 'only: derived_from with "|"' 1 'derived_from anchor not found: journal/2026-01-01.md#09:00|x' '  - journal/2026-01-01.md#09:00' '  - "journal/2026-01-01.md#09:00|x"' investigations/2026-01-01-example.md
+hostile 'project with "|"' 1 'unknown project: all|x' '  - all' '  - "all|x"'
+hostile 'only: project with "|"' 1 'unknown project: all|x' '  - all' '  - "all|x"' investigations/2026-01-01-example.md
 
 # --only: a problem in a given file or in a file that depends on it is found; one elsewhere is not.
 # <name>|<expected problem, or "pass">|<--only paths, space-separated>|<shell command run inside the copy>
@@ -126,9 +109,7 @@ scoped=(
   'only: problem in a given file|unknown type: Bogus|projects/repos/github.com/acme/demo.md|sed -i.bak "s/^type: Project/type: Bogus/" projects/repos/github.com/acme/demo.md'
   'only: problem in another file is left out|pass|journal/2026-01-01.md|sed -i.bak "s#  - github.com/acme/demo#  - nope#" threads/t-test0001-demo.md'
   'only: okf-lint problem in another file is left out|pass|journal/2026-01-01.md|sed -i.bak "s/^type: Project/type: Bogus/" projects/repos/github.com/acme/demo.md'
-  'only: removed anchor of a derived_from|derived_from anchor not found|journal/2026-01-01.md|sed -i.bak "s/- 09:00 /- 10:00 /" journal/2026-01-01.md'
   'only: renamed project still listed|threads/t-test0001-demo.md	unknown project: github.com/acme/demo|projects/repos/github.com/acme/demo.md projects/repos/github.com/acme/demo2.md|sed -i.bak "s#\[demo\](projects/repos/github.com/acme/demo.md)#demo#" threads/t-test0001-demo.md && mv projects/repos/github.com/acme/demo.md projects/repos/github.com/acme/demo2.md'
-  'only: old ID in a given state.md|state.md	old ID|state.md|sed -i.bak "s/t-test0001: 例/t999: 例/" state.md'
   'only: a journal line in any form passes|pass|journal/2026-01-01.md|sed -i.bak "s/t-test0001: /t-test0001・t-test0002:/" journal/2026-01-01.md'
   'only: wiki link in a given file|wiki link, write a path link: \[\[demo\]\]|threads/t-test0001-demo.md|sed -i.bak "s#\[demo\](projects/repos/github.com/acme/demo.md)#[[demo]]#" threads/t-test0001-demo.md'
 )
@@ -151,19 +132,19 @@ ln -s "$tmp/outside.md" "$tmp/linked/docs/link.md"
 out=$("$bin/karo-check" --only docs/link.md "$tmp/linked" 2>&1)
 if printf '%s\n' "$out" | rg -qF '[[secret]]'; then fail "only: a symbolic link is read through: $out"; else pass "only: a symbolic link is not read through"; fi
 
-# A task ID is a t- ID or a bd ID: cos- and three to eight lowercase letters or digits, a child with
-# ".<n>" added; an ID out of both forms fails.
+# A task ID is a prefix of a letter and letters or digits, then one or more hyphenated parts of letters or
+# digits, a child with ".<n>" added, whatever the prefix; an ID out of the form fails.
 with_task() { # <task ID>: a copy whose thread lists the ID after t-test0001
   copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"
   c=$(<"$copy/threads/t-test0001-demo.md")
   printf '%s\n' "${c/  - t-test0001/  - t-test0001$'\n'  - $1}" > "$copy/threads/t-test0001-demo.md"
 }
-for id in cos-a2v cos-abcd1234 cos-5q5.1 cos-5q5.1.12; do
+for id in cos-a2v cos-5q5.1 cos-5q5.1.12 t-test0002 bd-a2v my-proj-a2v ABCD-123; do
   with_task "$id"
   out=$("$bin/karo-check" "$copy" 2>&1); code=$?
-  if [[ $code -eq 0 ]] && rg -qx -- "  - $id" "$copy/threads/t-test0001-demo.md"; then pass "bd ID $id passes"; else fail "bd ID $id: exit $code: $out"; fi
+  if [[ $code -eq 0 ]] && rg -qx -- "  - $id" "$copy/threads/t-test0001-demo.md"; then pass "task ID $id passes"; else fail "task ID $id: exit $code: $out"; fi
 done
-for id in cos-ab cos-abcd12345 cos-A2V cos-a2v. cos-a2v.x bd-a2v t-test001; do
+for id in t000999 cos- -a2v 1-a2v cos-a2v. cos-a2v.x cos_a2v; do
   with_task "$id"
   out=$("$bin/karo-check" "$copy" 2>&1); code=$?
   if [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -qxF -- "threads/t-test0001-demo.md	bad task id: $id"; then pass "$id is not a task ID"; else fail "bad ID $id: exit $code: $out"; fi
@@ -187,7 +168,7 @@ if [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -qxF $'.beads\ttask database t
 # A copy of the real vault with one note's type broken must fail on that note and on nothing else.
 # cp keeps the file names byte for byte; tar on macOS rewrites them to NFD, which breaks the link paths.
 real=$tmp/real
-count() { "$bin/karo-check" "$1" 2>&1 | rg -c -v '^karo-check: |	stale since |	task in body not in tasks: '; }
+count() { "$bin/karo-check" "$1" 2>&1 | rg -c -v '^karo-check: |	stale since '; }
 if cp -R "$vault/." "$real" && rm -rf "$real/.git"; then
   before=$(count "$real")
   target=$(cd "$real" && fd -t f -e md . projects | sort | head -n 1)

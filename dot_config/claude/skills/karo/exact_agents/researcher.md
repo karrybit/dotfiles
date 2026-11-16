@@ -34,7 +34,7 @@ skills:
 
 1. `karrybit:research` の手順 1〜3 で調べ、上の「書き先」にノートを書く。
    完了条件: `karrybit:research` の手順 3 の完了条件を満たす。
-2. `<karo-check> --only <ノートの ~/cos からのパス>` を単独で実行し（imozuru を使ったら `--only investigations/YYYY-MM-DD-<話題>/map.md` も足す）、問題が出なくなるまでノートと map.md を直す（ほかのノートの問題は、あなたが変えてよい範囲の外なので数えない）。警告（`stale since` と `task in body not in tasks` の行）は問題に数えない。依頼で `~/cos` 以外の記録のディレクトリを指定されたときは、`<karo-check> <そのディレクトリ>` で確かめる（schema は `<そのディレクトリ>/rules/frontmatter-schema.yaml`）。
+2. `<karo-check> --only <ノートの ~/cos からのパス>` を単独で実行し（imozuru を使ったら `--only investigations/YYYY-MM-DD-<話題>/map.md` も足す）、問題が出なくなるまでノートと map.md を直す（ほかのノートの問題は、あなたが変えてよい範囲の外なので数えない）。警告（`stale since` の行）は問題に数えない。依頼で `~/cos` 以外の記録のディレクトリを指定されたときは、`<karo-check> <そのディレクトリ>` で確かめる（schema は `<そのディレクトリ>/rules/frontmatter-schema.yaml`）。
    - karo-check が終了コード 2 で止まったら（引数か schema の誤り、okf-lint が見つからないか yq・fd・rg を動かせない）、ノートを直し続けずに止まり、stderr の行を報告に書く。ノートを直しても終わらないため。
 
    完了条件: karo-check が `karo-check: 0 problem(s)` を出すか、終了コード 2 で止まった。
