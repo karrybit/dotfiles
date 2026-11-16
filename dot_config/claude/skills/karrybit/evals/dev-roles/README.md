@@ -40,7 +40,7 @@ Both plugin copies hold the whole `karrybit` plugin, so the agents' `skills:` re
 - `fixtures/slug`: a one-file library whose `slugify` drops digits (D-2).
 - `fixtures/export-api`: export functions without `get_export` (I-1, and the `base` commit of V-1 and V-2). `fixtures/export-api-v1` adds a `get_export` without the tenant comparison and a test named `test_other_tenant_is_denied` that passes another tenant's `tenant_id`, so it looks like AC-3 coverage while only the authorization check runs; `fixtures/export-api-v2` adds the correct one. Their `fixture.sh` commits `export-api`, tags it `base`, and commits the v1 or v2 copy on top.
 - `fixtures/period-filter`: a period filter whose code and docstring include the end, while `docs/spec.md` and the failing test exclude it (I-2).
-- `canary.patch`: removes every `## ` section except `## 出典` from each of the five agents, keeping the frontmatter and the role paragraph; apply it with `patch -p1 -d <plugin copy>/agents`. Each belief's action is restated in the steps, the report items, and the completion gates, so a canary that removes only `## 信条` keeps those rules.
+- `canary.patch`: removes every `## ` section except `## 出典` from four agents, keeping the frontmatter and the role paragraph; `system-designer` already has only those, so the canary leaves it as it is; apply it with `patch -p1 -d <plugin copy>/agents`. Each belief's action is restated in the steps, the report items, and the completion gates, so a canary that removes only `## 信条` keeps those rules.
 - `evals.json`, `grade.py`: the script assertions above, run by `scripts/grade-kept`. `evals.json` lists every case so `grade-kept` finds a fixture for each; `grade.py` grades the four cases that have assertions.
 
 ## Settings for This Suite
@@ -84,13 +84,13 @@ I-3 compares the implementer as a whole session (`claude --agent karrybit:implem
 
 ## What the Suite Separates
 
-Measured with `--model claude-sonnet-5-5` and `--judge-model claude-opus-5-5`, three runs per arm; cases marked ×2 ran twice. Each cell is the passes summed over the case's graders and runs, leaving out `role-fired`. For R-1, D-2, and V-2, the with and canary arms ran on the current agents and the baseline is from the earlier runs.
+Measured with `--model claude-sonnet-5-5` and `--judge-model claude-opus-5-5`, three runs per arm; cases marked ×2 ran twice. Each cell is the passes summed over the case's graders and runs, leaving out `role-fired`. For R-1, D-2, V-2, and S-1, the with and canary arms ran on the current agents and the baseline is from the earlier runs.
 
 | Case | with | baseline | canary | Graders that separate |
 | --- | --- | --- | --- | --- |
 | R-1 ×2 | 16/24 | 10/24 | 12/24 | `questions-scope` 6, 0, 0 |
 | R-2 | 3/3 | 3/3 | 3/3 | none: the prompt points at `docs/`, which holds only the note with the answer |
-| S-1 | 15/15 | 12/15 | 30/30 (×2) | `decision-tradeoff` 3, 1, 3; the canary keeps `karrybit:dev-handoff`, whose artifact table already asks for invariants and tradeoffs |
+| S-1 ×2 | 30/30 | 12/15 | 30/30 | `decision-tradeoff` 6, 1, 6; `system-designer` keeps only its role paragraph, since `karrybit:dev-handoff`'s artifact table already asks for invariants and tradeoffs, so its canary is the same file |
 | S-2 | 3/3 | 3/3 | 3/3 | none: R-3 states the prefix isolation outright |
 | D-1 | 20/21 | 11/21 | 12/21 | `call-before-job` 3, 0, 1; `owner-plan` 3, 0, 2; `environment-first` 3, 2, 0 |
 | D-2 ×2 | 4/6 | 3/6 | 0/6 | `single-increment`; every with run is one increment without a `K-n` table, and two fail on an open question or a trial before the plan |
