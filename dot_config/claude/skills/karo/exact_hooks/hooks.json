@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ \"$CLAUDE_PROJECT_DIR\" != \"$HOME/cos\" ] || [ ! -f \"$CLAUDE_PROJECT_DIR/AGENTS.md\" ] || cat \"$CLAUDE_PROJECT_DIR/AGENTS.md\" \"$CLAUDE_PROJECT_DIR/state.md\""
+            "command": "[ \"$CLAUDE_PROJECT_DIR\" != \"$HOME/cos\" ] || [ ! -f \"$CLAUDE_PROJECT_DIR/AGENTS.md\" ] || { cat \"$CLAUDE_PROJECT_DIR/state.md\"; echo '記録を書く・bd で書く・委任する前に、使う karo の skill を Skill tool で呼び直す（compact で戻された skill の中身は、古い版のことがある）。'; }"
           }
         ]
       },
