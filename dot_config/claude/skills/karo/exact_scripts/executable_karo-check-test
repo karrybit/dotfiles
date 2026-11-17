@@ -23,9 +23,9 @@ printf -- '---\ntype: Project\ndescription: 例のプロジェクト。\nproject
 printf -- '---\ntype: Review\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - github.com/acme/demo\n---\n\n## 結論\n\n承認\n' > "$ok/project/repo/github.com/acme/demo/review/t-test0001-1.md"
 printf -- '---\ntype: Design Doc\ndescription: 例の設計。\ndate: 2026-01-01\nprojects:\n  - github.com/acme/demo\nsources:\n  - https://example.invalid/design\n---\n\n## 例\n' > "$ok/project/repo/github.com/acme/demo/2026-01-01-design-doc-example.md"
 printf -- '---\ntype: Thread\ndescription: 例の会話\ntopic: 例\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - github.com/acme/demo\n---\n\n### オーナー · 2026-01-01 09:00\n\nt-test0001 の [demo](project/repo/github.com/acme/demo.md)\n' > "$ok/thread/t-test0001-demo.md"
-printf -- '---\ntype: Investigation\ndescription: 例の調べ物。\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - all\nderived_from:\n  - thread/t-test0001-demo.md#2026-01-01 09:00\n---\n\n## 例\n' > "$ok/investigation/2026-01-01-example.md"
+printf -- '---\ntype: Investigation\ndescription: 例の調べ物。\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - all\n---\n\n## 例\n' > "$ok/investigation/2026-01-01-example.md"
 # A day's standup is standup/<day>.md, and a meeting's notes sit in source/meeting/.
-printf -- '---\ntype: Standup\ndate: 2026-01-01\nderived_from:\n  - thread/t-test0001-demo.md\n---\n\n## Checkin（2026-01-01）\n\n- 例\n' > "$ok/standup/2026-01-01.md"
+printf -- '---\ntype: Standup\ndate: 2026-01-01\n---\n\n## Checkin（2026-01-01）\n\n- 例\n' > "$ok/standup/2026-01-01.md"
 printf -- '---\ntype: Meeting Notes\ndescription: 例の MTG。\ndate: 2026-01-01\nprojects:\n  - github.com/acme/demo\nsources:\n  - { id: notes, resource: https://example.invalid/notes, title: 例の議事録 }\n---\n\n## 例の MTG\n\n- 決定: 例\n' > "$ok/source/meeting/2026-01-01-demo.md"
 
 if out=$("$bin/karo-check" "$ok" 2>&1); then pass "valid vault passes"; else fail "valid vault fails: $out"; fi

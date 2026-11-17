@@ -1,14 +1,14 @@
 ---
 name: frontmatter
-description: '$KARO_HOME のノートのフロントマター（type、項目の埋め方、置き場所、lineage）の書き方と、状態が変わったときに直すフィールド。ノートを作る・直すとき、フロントマターを書くとき、karo-check がフロントマターの問題を出したときに使う。'
+description: '$KARO_HOME のノートのフロントマター（type、項目の埋め方、置き場所）の書き方と、状態が変わったときに直すフィールド。ノートを作る・直すとき、フロントマターを書くとき、karo-check がフロントマターの問題を出したときに使う。'
 user-invocable: false
 ---
 
 # 記録のフロントマター
 
 - `$KARO_HOME` の記録のフォルダ（`$KARO_HOME/AGENTS.md` の「書き込み先」の表のフォルダ）のノートは、1 行目から OKF（Open Knowledge Format v0.2）の YAML フロントマターを持つ。
-- 層・lineage・鮮度の考え方（何をいつ書くか）は `karrybit:data-information-design` skill にあり、この skill は karo のフィールドの書き方を持つ。
-- 種類ごとの必須のフィールドと置き場所は `$KARO_HOME/rule/frontmatter-schema.yaml` が正本で、`~/.config/claude/skills/karo/scripts/karo-check` がそれで確かめる。schema のキー（`types`・`layers`・`paths`・`lineage`・`files`・`exclude`）の意味は `karrybit:okf-lint` skill の「schema の形」にある。
+- 層・鮮度の考え方（何をいつ書くか）は `karrybit:data-information-design` skill にあり、この skill は karo のフィールドの書き方を持つ。
+- 種類ごとの必須のフィールドと置き場所は `$KARO_HOME/rule/frontmatter-schema.yaml` が正本で、`~/.config/claude/skills/karo/scripts/karo-check` がそれで確かめる。schema のキー（`types`・`layers`・`paths`・`exclude`）の意味は `karrybit:okf-lint` skill の「schema の形」にある。
 - 対象はこれらのフォルダの `.md` すべてで、対象にしないものは `frontmatter-schema.yaml` の `exclude` にある（imozuru が書く `investigation/YYYY-MM-DD-<話題>/sources/` の原文など）。
 
 ## フィールド
@@ -24,7 +24,6 @@ user-invocable: false
 | `status` | 下書きは `draft`、置き換わったものは `deprecated`。仕上がったものには書かない |
 | `resource` | ノートが表す実物の URL（リポジトリ、PR） |
 | `sources` | `- { id, resource, title }` のリスト。外の原文（議事録、Slack、資料、ドキュメント）の URL |
-| `derived_from` | $KARO_HOME の中の元のノートのパスのリスト。行を指すときは `#` のあとに threads の `YYYY-MM-DD HH:MM` |
 | `stale_after` | 見直しの日時。`2026-12-05T00:00:00+09:00` |
 
 - ほかの道具が書いたキーは、消さずにそのまま残す。
@@ -35,14 +34,14 @@ user-invocable: false
 
 | 置き場所 | `type` | 埋め方 |
 | --- | --- | --- |
-| `standup/YYYY-MM-DD.md` | `Standup` | `date` はファイル名。`tasks` は報告で挙げたタスク。`derived_from` は、元にしたノートがあれば書く |
+| `standup/YYYY-MM-DD.md` | `Standup` | `date` はファイル名。`tasks` は報告で挙げたタスク |
 | `project/repo/<vcs>/<org>/<repo>.md`、`project/misc/<theme>.md` | `Project` | `resource` はリポジトリの URL（`misc/` は書かない）。`<vcs>/<org>/<repo>` は `resource` の URL のホストとパスで、リモートのないリポジトリは `local/<owner>/<repo>`。`projects` は自分の名前 |
-| `project/misc/<theme>/YYYY-MM-DD-<資料名>.md` | `Playbook` | 下書きのあいだは `status: draft`。`derived_from` に元のノート |
-| `project/repo/<vcs>/<org>/<repo>/YYYY-MM-DD-design-doc-<話題>.md` | `Design Doc` | `date` はファイル名。`derived_from` に元の調べ物か threads の発言。`status` は書かない |
+| `project/misc/<theme>/YYYY-MM-DD-<資料名>.md` | `Playbook` | 下書きのあいだは `status: draft` |
+| `project/repo/<vcs>/<org>/<repo>/YYYY-MM-DD-design-doc-<話題>.md` | `Design Doc` | `date` はファイル名。`status` は書かない |
 | `project/repo/<vcs>/<org>/<repo>/review/` | `Review` | `tasks` はファイル名のタスク ID。`resource` はレビューした PR |
 | `source/meeting/YYYY-MM-DD-<MTG>.md` | `Meeting Notes` | `sources` に議事録・資料ごとの URL と名前 |
-| `investigation/YYYY-MM-DD-<話題>.md` | `Investigation` | `sources` に読んだ原文。$KARO_HOME の中だけを元にしたら `derived_from` |
-| `doc/<話題>.md` | `Document` | `derived_from` か `sources` に元 |
+| `investigation/YYYY-MM-DD-<話題>.md` | `Investigation` | `sources` に読んだ外の原文 |
+| `doc/<話題>.md` | `Document` | `sources` に外の元の資料 |
 | `investigation/YYYY-MM-DD-<話題>/map.md` | `Research Map` | `description` は `題:` のあとの文（`題:` は付けない） |
 | `thread/<タスクID>-<話題>.md`、`thread/YYYY-MM-DD-<話題>.md` | `Thread` | `description` は会話で何をするかの 1 文。`topic` は pane の label に収まる短い話題。`date` は作った日。`tasks` はその話題で進めるタスクの ID（議論だけの話題は `tasks: []`）。`projects` はタスクの label `project:<名前>` の名前で、タスクがなければ話題が関わるプロジェクトの名前 |
 | `thread/memo.md` | `Memo` | |

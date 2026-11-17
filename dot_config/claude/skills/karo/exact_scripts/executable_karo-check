@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Check the karo records: first the general checks of karrybit's okf-lint against the schema (frontmatter,
-# place, lineage, path links, stale_after), then the checks that belong to the karo structure (the forms of
+# place, path links, stale_after), then the checks that belong to the karo structure (the forms of
 # dates and task IDs; the project vocabulary; wiki links; and the task database, .beads, kept out of git).
 # A task ID is a prefix of a letter and letters or digits, then one or more hyphenated parts of letters or
 # digits, a child with ".<n>" added (karo-a2v.1, t-a1b2c3d4, ABC-12). Tasks live in the task database,
