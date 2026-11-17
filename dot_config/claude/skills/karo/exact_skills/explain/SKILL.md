@@ -1,12 +1,12 @@
 ---
 name: explain
-description: '~/cos/docs/ に控える HTML の解説の手順。版を探して決め、作る部分は karrybit:explain に cos の書き先と控えの規則を渡して任せ、record で控える。オーナーが資料・リポジトリ・仕組みの解説を HTML で頼んだとき、前の解説を開きたいとき、作り直しを頼んだときに、karrybit:explain の代わりに使う（この skill が karrybit:explain を呼ぶ）。'
+description: '~/cos/docs/ に控える HTML の解説の手順。版を探して決め、作る部分は karrybit:explain に cos の書き先と控えの規則を渡して任せ、commit して控える。オーナーが資料・リポジトリ・仕組みの解説を HTML で頼んだとき、前の解説を開きたいとき、作り直しを頼んだときに、karrybit:explain の代わりに使う（この skill が karrybit:explain を呼ぶ）。'
 ---
 
 # HTML の解説を ~/cos/docs に控える
 
 - HTML の解説は、1 ファイルの HTML で資料や仕組みを解説するもの。置き場所は `~/cos/docs/<id>/<version>/` で、`index.html` と `index.md` を置く。
-- この skill は、cos の運用（版の探し方、置き場所、`index.md`、record）だけを持つ。作り方、評価のしかた、依頼の型を直すときは `karrybit:explain` skill にある。
+- この skill は、cos の運用（版の探し方、置き場所、`index.md`、commit）だけを持つ。作り方、評価のしかた、依頼の型を直すときは `karrybit:explain` skill にある。
 - 下の `<karo-check>` は `~/.config/claude/skills/karo/scripts/karo-check` で、この `~/` の形のまま書く。
 
 ## 控えの `index.md`
@@ -33,5 +33,5 @@ description: '~/cos/docs/ に控える HTML の解説の手順。版を探して
    - 呼び出し側が元の資料の場所・版・読み方を渡したときは、それもそのまま渡す。
 
    完了条件: `karrybit:explain` の返事に、`~/cos/docs/<id>/<version>/index.html` と `index.md` の絶対パスがある。
-4. 返事の `index.md` が上の「控えの `index.md`」のフロントマターと本文の項目を満たすかを確かめ、2 つのファイル（説明の文書を `~/cos/docs/<話題>.md` に置いたときはそれも）を `取り込み:` の項目にして record を走らせる（`karo:record` skill）。
-   完了条件: record が `queued` を出した。
+4. 返事の `index.md` が上の「控えの `index.md`」のフロントマターと本文の項目を満たすかを確かめ、2 つのファイル（説明の文書を `~/cos/docs/<話題>.md` に置いたときはそれも）のパスを渡して commit する（`karo:record` skill）。
+   完了条件: commit が `OK` の行を出した。

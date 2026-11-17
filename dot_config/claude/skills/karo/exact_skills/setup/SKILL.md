@@ -7,7 +7,7 @@ description: 別のマシンで、karo と ~/cos の仕組みが動くかを確�
 
 - この skill は、karo を有効にした `~/cos` の会話で動く（karo は `~/cos/.claude/settings.json` の `enabledPlugins` でだけ読み込まれる）。`~/cos` の記録そのものは karo に入っていないので、`~/cos` の用意はこの skill の前にオーナーが行う。
 - 確かめるのは構造（道具、plugin、settings、`~/cos` の git）で、記録の中身は確かめない。足りないものを入れる、settings を直す、ログインするのはオーナーで、CoS は一覧を示して止まる。
-- record と thread-show は `~/.local/state/cos/` の下を、Agent の worktree は `git worktree add` が、それぞれ使うときに作るので、この skill はフォルダを作らない。
+- karo の scripts は `~/.local/state/cos/` の下を、Agent の worktree は `git worktree add` が、それぞれ使うときに作るので、この skill はフォルダを作らない。
 
 ## 手順
 

@@ -22,10 +22,10 @@ description: 一日の始まりに、Daily Standup として CoS から報告す
    完了条件: `in_progress` のタスクの assignee と `herdr agent list` の名前のある Agent のすべてについて、Herdr の状態か「不明」（Herdr にいない assignee）が手元にあり、上の `bd` の出力がすべて手元にある（動いたタスクがなければ `bd show` は要らない）。「外の情報源」の節の源のそれぞれについて、結果か「取得できなかった」が手元にある（節がなければ、外の情報源を使わなかったことが手元にある）。
 2. 下の「報告の項目」を、前回からの変化とオーナーが対応すべきことを先にして、短く報告する。各項目にはタスク ID を付ける。
    完了条件: 5 つの項目がすべて報告にある。
-3. オーナーがその場で決めたことは、AGENTS.md の「記録の更新」の表の「オーナーが決めた」の行のファイルを、1 つの指示にまとめて record で反映する。必要なら `karo:delegate` skill で Agent に指示する。
-   完了条件: オーナーが決めたことごとに、record が `queued` を出した。
-4. 報告内容と決まったことを `~/cos/journal/YYYY-MM-DD-standup.md` に `追記:` で保存し（フロントマターは record が付ける）、`state.md` を更新する指示を 1 つにまとめ、`commit 本文:` に Checkin の記録であることを書いて、record で書く。
-   完了条件: record が `queued` を出した。
+3. オーナーがその場で決めたことは、AGENTS.md の「記録の更新」の表の「オーナーが決めた」の行のファイルに書き、1 つの commit にする（`karo:record` skill）。必要なら `karo:delegate` skill で Agent に指示する。
+   完了条件: オーナーが決めたことごとに、commit が `OK` の行を出した。
+4. 報告内容と決まったことを `~/cos/journal/YYYY-MM-DD-standup.md` に追記し（ファイルがなければ `karo:record` skill の「書く」のとおりフロントマターから作る）、`state.md` を更新し、本文に Checkin の記録であることを書いて、2 つのファイルを 1 つの commit にする（`karo:record` skill）。
+   完了条件: commit が `OK` の行を出した。
 
 ## 報告の項目
 

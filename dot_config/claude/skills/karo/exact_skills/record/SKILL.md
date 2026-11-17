@@ -1,100 +1,51 @@
 ---
 name: record
-description: '~/cos の記録を、書き込みの指示 1 つにして record で書く手順と、指示の形と NG の直し方。返事の前に threads に追記するとき、委任・取り込み・終了を記録するとき、problems.md に NG の項目が出たときに使う。'
+description: '~/cos の記録のファイルを Edit・Write で書き、karo の commit の script で commit する手順と、NG の直し方。返事の前に threads に追記するとき、委任・取り込み・終了を記録するとき、commit が NG を出したときに使う。'
 user-invocable: false
 ---
 
-# record で書く
+# 記録を書いて commit する
 
-`~/.config/claude/skills/karo/scripts/record` は書き込みの指示を 1 つ受け取り、すべての項目を確かめてから書き、rumdl で整え、指示のパスだけを stage して `git diff --cached --check` と、stage したファイルとそれに関係するノートに絞った `karo-check --only` を通し、`~/cos` の main に commit する。合わない項目が 1 つでもあれば、record は何も書かずに終わる。
+- 記録のファイルは、`~/cos/AGENTS.md` の「書き込み先」の表の記録のファイル。タスク・判断待ち・決定は記録のファイルに書かず、`bd` で書く（`karo:beads` skill）。
+- 下の `<scripts>` は `~/.config/claude/skills/karo/scripts` で、この `~/` の形のまま書く。
 
-## 書き込みの指示の形
+## 書く
 
-<template>
+- 新しいファイルは Write で、今あるファイルへの追記と直しは Edit で、`~/cos` の下の絶対パスに書く。
+- Edit・Write のあと、post-edit の hook が `.md` を rumdl で整え、記録のノートなら fmcheck でフロントマターを確かめる。hook が問題を返したら、そのファイルを直してから commit する。
+- threads の発言の見出しの日時（`karo:threads` skill の「書き方」）は、オーナーの発言には、その発言に hook が付けた `発言の時刻: YYYY-MM-DD HH:MM` の値を、CoS の発言には、書く前に `date '+%Y-%m-%d %H:%M'` を実行した出力を書く。
+- 新しい話題の threads の会話は、Write でフロントマター（`karo:frontmatter` skill の種類の表の `Thread` の行）から全文を書く。
+- standup（`journal/YYYY-MM-DD-standup.md`）がまだなければ、Write で `type: Standup` と `date` のフロントマターから作る（`karo:frontmatter` skill の種類の表の `Standup` の行）。
+- 運用の出来事（タスクを持たない依頼で記録を変えたこと）は、commit の本文に書く。日次の journal（`journal/YYYY-MM-DD.md`）は過去分だけを持つ。
+- 長い本文（サブエージェントの調査の結果、imozuru の原文）は、そのサブエージェントや imozuru に `~/cos` の書き先へ直接書かせ、終わったらそのパスを commit に渡す。
 
-```
-書き込み指示
-commit 件名: <件名>
-commit 本文:
-~~~~
-<本文>
-~~~~
-解決: <前に NG になった指示の写しの名前（problems.md の項目の「指示の写し: 」と「）」のあいだ。例: 1794150209937235000-61655.txt）>
+## commit する
 
-追記: <パス>
-タスク: <タスク ID か なし。threads の会話のファイルにだけ置く>
-~~~~
-<ファイルの末尾に足す本文>
-~~~~
+1. 1 つの返事に要る書き込みをすべて書いたら、それを 1 つの commit にする。`<scripts>/commit '<件名>' '<本文>' <パス>...` を単独の Bash の呼び出しで（パイプ・リダイレクト・`&&` をつながずに）実行する。
+   - 件名は `<タスクID>[, <タスクID>]...: <何を変えたか>` の形にし、そのやり取りのタスク ID で始める。threads の会話のファイルは、件名の ID のどれかがそのファイルのフロントマターの `tasks` にあるときだけ通る（`tasks: []` の議論だけの話題はいつも通る）。タスクのないやり取りでは、ID を置かずに何を変えたかだけを書く。
+   - 本文には、なぜ変えたか（オーナーのどの指示か、どの決定・出典に基づくか）を書く。件名と本文は、それぞれ改行を含まない 1 行にし、`'` で囲む（本文に `'` を入れない）。
+   - パスは `~/cos` からの相対パスで、この commit に入れるファイルをすべて並べる（消したファイルも並べる）。commit は並べたパスだけを stage する。
 
-新規: <パス>
-タスク: <タスク ID か なし。threads の会話のファイルにだけ置く>
-~~~~
-<ファイルの全文>
-~~~~
+   <example>
 
-置き換え: <パス>
-~~~~
-<いまの本文。ファイルの中のちょうど 1 か所に一致する>
-~~~~
-~~~~
-<新しい本文。空なら、いまの本文を消す>
-~~~~
+   ```sh
+   ~/.config/claude/skills/karo/scripts/commit 'cos-k3m: record the request to sort the fb list' 'Start the thread on sorting the fb list by update date, as the owner asked.' threads/cos-k3m-fb-sort.md state.md
+   ```
 
-行: <パス> <行の ID>
-~~~~
-<列の見出し>: <新しい値>
-~~~~
+   </example>
 
-行を足す: <パス> <表の上の見出し。ファイルに表が 1 つなら省く>
-~~~~
-<列の見出し>: <値>
-~~~~
+   完了条件: 最後の行が `OK <commit> <件名>`（commit した）か `OK - <件名> (no change)`（変わったところがない）。`NG <件名>` なら「NG を直す」に進む。
+2. commit が threads のファイルを含むと、post-commit の hook がその会話を thread-show で pane に開き、ファイルを足すか消すか移した commit では crit を起動し直す。hook が失敗を返したら、commit は済んでいるので、その行をオーナーに伝える。
+   完了条件: hook の失敗がないか、失敗の行をオーナーに伝えた。
 
-取り込み: <パス>
-```
+- 続く手順がその commit を使うとき（`karrybit:explore`）は、`OK` の行の `<commit>` を渡す。
 
-</template>
+## NG を直す
 
-- パスは `~/cos` からの相対パスで書き、`~/cos/AGENTS.md` の「書き込み先」の表の記録のファイルに限る。
-- 本文は `~~~~` の行で囲む。本文は書いたとおりに書かれ（`.md` は rumdl が空白と空行だけを整える）、record がファイルの末尾に改行を 1 つ付ける。
-- `commit 本文:` と、その下の `~~~~` で囲んだ本文は、どの指示にも書く。本文には、なぜ変えたか（オーナーのどの指示か、どの決定・出典に基づくか）を書く。record は、`commit 本文:` のない指示と、本文が空の指示を NG にする。
-- 運用の出来事（タスクを持たない依頼で記録を変えたこと）は、その指示の `commit 本文:` に書く。日次の journal（`journal/YYYY-MM-DD.md`）は過去分だけで、record はそこへの `追記` と `新規` を NG にする。
-- `解決` の行は、要るときだけ置く。
-- `threads/` の会話のファイル（`threads/memo.md` を除く）への `追記` と `新規` には、項目の行のすぐ下に `タスク:` の行を置き、その発言がどのタスクの話かを ID 1 つで宣言する。フロントマターの `tasks` が空のファイル（議論だけの話題）では `タスク: なし` と書く。record は、宣言がない項目と、ID が書き先のフロントマターの `tasks`（`新規` では本文のフロントマターの `tasks`）にない項目と、`tasks` が空でないファイルへの `なし` を NG にし、`タスク:` の行はファイルに書かない。直し方は `karo:threads` skill の「話題の分け方」にある。
-- standup（`journal/YYYY-MM-DD-standup.md`）は、ファイルがまだなくても `追記:` で書き、本文にフロントマターを入れない。record が `type` と `date` のフロントマターを付けて作る。
-- 新しい話題の threads の会話は、`新規:` で、フロントマター（`karo:frontmatter` skill の種類の表の `Thread` の行）から全文を書く。フロントマターのない `新規:` は NG にする。
-- 書き込みの項目（`追記`・`新規`・`置き換え`・`行`・`行を足す`・`取り込み`）は 1 つ以上置く。項目は上から順に適用される。
-- 同じファイルを続けて触ってよい。あとの項目は、前の項目を適用した内容に対して確かめられる。
-- `追記` と `置き換え` は今あるファイル（standup は上のとおり、まだないファイルも `追記`）、`新規` はまだないファイルにだけ使う。
-- `行` は、表の 1 列目が `<行の ID>`（`assignments.md` の Agent 名）のちょうど 1 行の、名前を書いた列だけを新しい値にする。表の行の値を変えるときは、古い行を写す `置き換え` ではなく `行` を使う。
-- 表に行を足すときは、`行を足す` を使う。record は、見出しの下の表（見出しを省くとファイルのただ 1 つの表）の最後に、書いた列の値で行を足し、書かなかった列は空にする。1 列目の値がないとき、その値の行がもう表にあるとき、列の名前が見出しにないときは NG にする（NG に表の列の名前が並ぶ）。
-- 行をほかの表に移すとき（`assignments.md` の稼働中から終了へ）は、古い行をそのまま写した `置き換え` で消し（新しい本文を空にする）、移す先に `行を足す` で足す。
-- `取り込み` は、ほかのセッション（サブエージェントや imozuru）がもう書いた未 commit のファイルを、中身を変えずにこの commit に含めるときに使う。
-- パス、本文、commit の件名と本文の中の `{日付}` は `YYYY-MM-DD`、`{時刻}` は `HH:MM` で、record に渡したとき（`--detach` では待ち行列に入れたとき）の時刻に置き換わる。1 つの指示の中では同じ値になる。
-
-## 指示の例
-
-- 指示の例（新しい話題の会話、委任、取り込みと Agent の終了）は、この skill の `examples.md` にある。このセッションで初めて threads を `新規:` で作る指示か、`assignments.md` の行を足すか移す指示を作る前に読む。
-- タスク・判断待ち・決定は record で書かず、`bd` で書く（`karo:beads` skill）。
-
-## 走らせる
-
-- 1 つの返事に要る書き込みは、1 つの指示（1 つの commit）にまとめる。
-- commit の件名には何を変えたかを書き、なぜ変えたかは上の「書き込みの指示の形」の `commit 本文:` に書く。
-- 指示は scratchpad のファイルに Write で書く（`--detach` がその場で待ち行列に写すので、次の指示は同じファイルに書いてよい）。
-- `~/.config/claude/skills/karo/scripts/record --detach <そのファイルの絶対パス>` を単独のコマンドで（Bash の background 実行にせずに）走らせ、`queued` で始まる 1 行が出たら、終わるのを待たずに返事を書く。`NG` の行が出たら（指示のファイルが読めない、など）、指示は待ち行列に入っていないので、直して走らせ直す。record は指示を待ち行列に入れてすぐ返り、裏の worker が入れた順に 1 件ずつ適用する。
-- 続く手順がその commit を使うとき（`karrybit:explore`）は、`--detach` を付けずに `~/.config/claude/skills/karo/scripts/record <そのファイルの絶対パス>` を単独のコマンドで走らせ、適用が終わるのを待つ。最後の行が `OK <commit> <件名>` なら、その commit が指示のパスをすべて含む。`NG` なら何も commit されていないので、下の NG の扱いで直す。`--detach` の `queued` と `git log -- <パス>` は、worker が commit する前には、今回の commit を指さない。
-- NG（何も書かれていない）と、commit のあとの crit と thread-show の失敗は、`~/.local/state/cos/record/problems.md` の「record からの問題」に残り、オーナーが話しかけるたびに hook が CoS の会話に入れる。
-- NG の項目は、その項目の指示の写しの名前を `解決:` に書いた指示が OK になると消える（件名が同じ NG がいくつあっても、写しの名前で 1 つずつ消える）。`crit` と `thread-show` の項目は commit が済んだあとの失敗なので、オーナーに伝える。その段があとで成功すると消え、伝えたら `解決: crit`・`解決: thread-show` で消してもよい。直さないと決めた NG（オーナーが要らないと言った、など）は、その返事の指示（threads への追記など）に `解決:` を付け、`commit 本文:` に直さない理由を書いて消す。
-- 直しの指示を入れた項目は、その指示が適用されるまで problems.md に残り、次の発言でも会話に入る。直しをもう一度入れない。直しの指示がまた NG になったら、次の直しには元の写しの名前も `解決:` に書く。
-- 前の指示が NG でも、あとの指示は通ることがある（`行:` は行が、`追記:` はファイルがあれば、前の指示の結果に関係なく通る）。NG を直す指示は、記録の今の値を読み、あとの OK の指示がもう変えたところを戻さない形で作る。
-- problems.md の項目が会話に入っていたら、指示を直して走らせ直すか、オーナーの判断が要るものをオーナーに伝える。直すときは、項目に書かれた指示の写し（`~/.local/state/cos/record/` の下）の末尾の `#` の行（karo-check や diff --check の出力がそのまま残る）を読む。その行が引数なしの `~/.config/claude/skills/karo/scripts/karo-check` にも出れば前からある問題なので、先にそれを直す（記録全体の問題を 0 に保つ）。出なければ、指示が持ち込んだ問題として指示を直す。
-- 長い本文（サブエージェントの調査の結果、imozuru の原文）は、そのサブエージェントや imozuru に `~/cos` の書き先へ直接書かせ、終わったら `取り込み:` の項目で record を走らせる。
-
-## thread-show
-
-- threads のファイルを書いた指示が commit されると、record が続けて、指示に出てきた順に `~/.config/claude/skills/karo/scripts/thread-show` でその会話を開く。CoS は thread-show を呼ばない。
-- thread-show は、thread の pane の 1 つに、その会話を glow のページャで開き直して末尾を表示する（ページャは開いたときの内容しか出さないため、毎回開き直す）。
-- thread-show は、`topic` を `## ` の見出しにして本文の前に付けた写しをページャに出し、pane の label を `thread - <topic>` にする。`topic` のないファイルは開かずに止まる。どの pane で開くかと label の付け方は、karo の `scripts/thread-show` の冒頭にある。
-- thread-show は、pane でページャか shell 以外が動いていれば文字を送らずに止まる。止まると、record が problems.md に `thread-show` の項目を残す（扱いは上の「走らせる」）。
+- NG のとき、commit は何も commit せず、並べたパスの stage を外し、ファイルは書いたままに残す。NG の理由は `NG` の行の前に出る。ファイルを Edit で直し、同じ commit を実行し直す。
+- `not a record path: <パス>`: パスが「書き込み先」の表の記録のファイルではない。書き先を表のファイルに直す。
+- ファイルのパスと `none of the subject IDs is in tasks`: その発言は別のタスクの話題のもの。直し方は `karo:threads` skill の「話題の分け方」にある。
+- ファイルのパスとフロントマターの問題（fmcheck の出力）: フロントマターを `karo:frontmatter` skill の種類の表に合わせて直す。
+- `git diff --check` の出力（行末の空白、末尾の空行など）: 出た行を直す。
+- `usage:` の行: 引数が足りないか、本文が空。件名・本文・パスをそろえて実行し直す。
+- オーナーの判断が要って直せない NG は、理由の行をオーナーに伝える。書いたファイルは commit されないまま残る。

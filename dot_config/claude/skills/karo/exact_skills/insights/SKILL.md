@@ -13,12 +13,12 @@ description: CoS と Agent の一日の働きを transcript と Beads（bd）か
 
 1. `~/.config/claude/skills/karo/skills/insights/scripts/insights <日付>` を単独で実行する（日付を省くと今日。`~/cos` で `bd query` と `bd show` を読むだけの呼び出しをする）。
    完了条件: 終了コード 0 の JSON が手元にあるか、失敗の出力が手元にある。失敗したら 2 を飛ばし、3 で 5 つの指標を「取れなかった」と理由つきで報告する。
-2. 下の「確かめる例」を JSON から選び、下の「サブエージェントへの依頼」で、Agent tool の `general-purpose` のサブエージェントを background で起動する。報告の通知を受けるまで、この節を入れる record の指示を書かない。
+2. 下の「確かめる例」を JSON から選び、下の「サブエージェントへの依頼」で、Agent tool の `general-purpose` のサブエージェントを background で起動する。報告の通知を受けてから、この節を standup に書く。
    完了条件: サブエージェントの報告が手元にあり、選んだ例のすべてに、規則の名前と、直しの候補か「直しは要らない」がある。
 3. 下の「報告の項目」を短く報告する。
    完了条件: 5 つの指標と直しの候補がすべて報告にある（取れなかった指標は理由つき）。
-4. 3 の報告を本文にした `## Insights（<数えた日付>）` の節を、今日の standup の末尾に `追記:` で足す指示と、Insights の記録であることと standup のパスを書いた `commit 本文:` を 1 つの指示にし、record で書く。
-   完了条件: record が `queued` を出した。
+4. 3 の報告を本文にした `## Insights（<数えた日付>）` の節を今日の standup の末尾に足し、Insights の記録であることと standup のパスを本文に書いて commit する（`karo:record` skill）。
+   完了条件: commit が `OK` の行を出した。
 
 ## 指標と数え方
 

@@ -10,7 +10,7 @@ argument-hint: <branch> [--rebase]
 - 引数に `--rebase` があれば、手順の 1 だけを行って返す。なければ、手順の 1〜4 を行う。
 - 取り込みは、この skill の `scripts/land` を `~/.config/claude/skills/karo/skills/land/scripts/land` の `~` の形で書き、`~/cos` から単独のコマンドで実行する。
 - land は、`scripts/land` の冒頭にある確かめをすべて通ってから、hook と fsmonitor を止めた git だけを sandbox の外で動かす（`sandbox.excludedCommands` と `allow` に入れてあり、確認は出ない）。
-- land は、確かめが 1 つでも合わなければ、何もせずに理由を 1 行出して止まる。land は record の lock を取ってから動くので、record の待ち行列と重ならない。
+- land は、確かめが 1 つでも合わなければ、何もせずに理由を 1 行出して止まる。
 - land が止まったら、そこで手順を止め、land の出した 1 行を返す。
 
 ## 手順
@@ -21,8 +21,8 @@ argument-hint: <branch> [--rebase]
    完了条件: `~/cos` の main がブランチの先頭を指している。
 3. `~/.config/claude/skills/karo/scripts/record --restart-crit` を単独のコマンドで実行し、crit の一覧に増えたファイルと消えたファイルを反映させる。最後の行が `NG crit:` ならオーナーに伝える。
    完了条件: 最後の行を読み、`NG crit:` ならオーナーに伝えている。
-4. 引数なしの `~/.config/claude/skills/karo/scripts/karo-check` を単独のコマンドで実行し、記録全体を確かめる。record の検査の範囲（`karo:record` skill の冒頭）の外にある、取り込みが持ち込んだ問題はここで見つける。問題が出たら、record で直す。あわせて `~/.local/state/cos/record/problems.md` を読み、オーナーの発言を待たずに届いていない record の NG があれば、`karo:record` skill の「走らせる」に従って直す。
-   完了条件: `karo-check: 0 problem(s)` が出たか、直しの指示に record が `queued` を出した。
+4. 引数なしの `~/.config/claude/skills/karo/scripts/karo-check` を単独のコマンドで実行し、記録全体を確かめる。commit の検査は commit したファイルだけを見るので、その外にある、取り込みが持ち込んだ問題はここで見つける。問題が出たら、出たファイルを直して commit する（`karo:record` skill）。
+   完了条件: `karo-check: 0 problem(s)` が出たか、直しの commit が `OK` の行を出した。
 
 ## 返すもの
 

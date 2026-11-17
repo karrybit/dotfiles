@@ -5,7 +5,7 @@ description: 一日の終わりに、CoS が今日を振り返り、明日やる
 
 # Checkout
 
-- 記録の書き込みは、手順 4 の record の指示 1 つにまとめる。タスクは Beads（`bd`）にあり、`bd` は `karo:beads` skill の「呼び方」に従い、1 つずつ単独のコマンドで実行する。
+- 記録の書き込みは、手順 4 の 1 つの commit にまとめる（`karo:record` skill）。タスクは Beads（`bd`）にあり、`bd` は `karo:beads` skill の「呼び方」に従い、1 つずつ単独のコマンドで実行する。
 
 ## 手順
 
@@ -20,12 +20,12 @@ description: 一日の終わりに、CoS が今日を振り返り、明日やる
    完了条件: 役目を終えた Agent ごとに `close` の JSON か止まった理由が手元にあり、`working` の Agent の一覧が手元にある。
 3. 下の「報告の項目」を短く報告する。各項目にはタスク ID を付ける。
    完了条件: 5 つの項目がすべて報告にある。
-4. 次をすべて 1 つの指示にまとめて record で書く。
-   - 報告: `~/cos/journal/YYYY-MM-DD-standup.md`（今日の日付）の末尾に `## Checkout（YYYY-MM-DD）` の節を `追記:` で足す。節の下の `### 今日の振り返り` に「報告の項目」の「明日やること」のほかの項目を、`### 明日やること` に「明日やること」を書く。今日のファイルがなくても `追記:` で書く（フロントマターは record が付ける）。報告で挙げたタスクがフロントマターの `tasks` になければ、`置き換え:` で足す。
-   - `commit 本文:`: Checkout の記録であることと standup のパス、2 で閉じた Agent の名前。
+4. 次をすべて書き、1 つの commit にする。
+   - 報告: `~/cos/journal/YYYY-MM-DD-standup.md`（今日の日付）の末尾に `## Checkout（YYYY-MM-DD）` の節を足す。節の下の `### 今日の振り返り` に「報告の項目」の「明日やること」のほかの項目を、`### 明日やること` に「明日やること」を書く。今日のファイルがなければ、`karo:record` skill の「書く」のとおりフロントマターから作る。報告で挙げたタスクがフロントマターの `tasks` になければ足す。
    - `state.md`: 1 の `bd` の出力と `herdr agent list` から書き直す。
+   - commit の本文: Checkout の記録であることと standup のパス、2 で閉じた Agent の名前。
 
-   完了条件: record が `queued` を出した。
+   完了条件: commit が `OK` の行を出した。
 5. `bd backup sync` を単独で実行し、Beads のバックアップを取る。
    完了条件: 終了コードが 0。失敗したら、その出力をオーナーに伝える。
 

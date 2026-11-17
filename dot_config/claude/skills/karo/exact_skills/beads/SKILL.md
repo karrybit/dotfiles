@@ -123,7 +123,7 @@ bd の既定の挙動のうち、`bd prime` に出ず、後半の約束が前提
 
 ### `bd prime` と違うところ
 
-- `bd prime` の memory の勧め（`bd remember`）の代わりに、会話のメモは `threads/memo.md` に record で書く。
+- `bd prime` の memory の勧め（`bd remember`）の代わりに、会話のメモは `threads/memo.md` に書いて commit する（`karo:record` skill）。
 - `bd prime` の「SESSION CLOSE PROTOCOL」の「完了した issue を閉じる」は、上の「閉じる時機」のとおり、取り込みのあとに閉じる。
 
 ### 回復
