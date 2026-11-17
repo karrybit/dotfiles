@@ -39,6 +39,16 @@ step "a thread append shows the thread" "thread-show $v/threads/t-test0001-demo.
 step "a change outside threads runs nothing" "" 'printf "x\n" >> state.md'
 step "a new thread shows it and restarts crit" "thread-show $v/threads/t-test0002-new.md"$'\n'"record --restart-crit" 'printf "# n\n" > threads/t-test0002-new.md'
 step "a removed file restarts crit" "record --restart-crit" 'git rm -q state.md'
+step "a removed thread is not shown" "record --restart-crit" 'printf "# r\n" > threads/t-test0003-gone.md && git add -A && git commit -q -m add && git rm -q threads/t-test0003-gone.md'
+step "a renamed thread shows it and restarts crit" "thread-show $v/threads/t-test0002-moved.md"$'\n'"record --restart-crit" 'git mv threads/t-test0002-new.md threads/t-test0002-moved.md'
+
+# A commondir file planted in .git would point git at another repository's config, so nothing runs.
+printf '%s\n' "$tmp/elsewhere" > "$v/.git/commondir"
+: > "$tmp/calls"
+out=$("$tmp/bin/post-commit" 2>&1); code=$?
+if [[ $code -eq 2 && $out == *"commondir points to another repository"* && ! -s $tmp/calls ]]; then pass "a commondir in .git stops it"; else fail "a commondir in .git: exit $code: $out"; fi
+rm "$v/.git/commondir"
+
 export STUB_FAIL=1
 step "a failed thread-show exits 2" "thread-show $v/threads/t-test0001-demo.md" 'printf "y\n" >> threads/t-test0001-demo.md' 2
 step "a failed crit restart exits 2" "record --restart-crit" 'printf "# s\n" > state.md' 2
