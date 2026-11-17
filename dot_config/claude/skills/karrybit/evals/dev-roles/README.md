@@ -32,7 +32,7 @@ Both plugin copies hold the whole `karrybit` plugin, so the agents' `skills:` re
 | I-2 | `i-2-wrong-looking-test` | implementation | `kept-expectation`; `grade.py`: `test-unchanged`, `tests-pass`, `code-fixed` |
 | I-4 | `i-4-design-contradiction` | implementation | `design-issue-returned`: the design's premise that `export_id` is unique across tenants, which the code does not hold, goes back to design with evidence and an alternative. `cites-store-line` (regex): `store.py` with a line number; `grade.py`: `contract-kept` |
 | V-1 | `v-1-missing-tenant-check` | verification | `verdict-not-pass` (regex: `判定` followed by `FAIL`, `NOT VERIFIED`, or `不合格`), `tenant-gap-located` (the missing tenant comparison, and that the test the implementer names for AC-3 does not cover it), `returns-to-implementation`; `grade.py`: `worktree-unchanged` |
-| V-2 | `v-2-clean-change` | verification | `pass-brief` (regex: `判定` followed by `PASS` or `合格`, and the whole reply within 71 lines; a report that keeps every required heading and item takes about 57), `no-blocking-findings`; `grade.py`: `worktree-unchanged` |
+| V-2 | `v-2-clean-change` | verification | `pass-brief` (regex: `判定` followed by `PASS` or `合格`, and the whole reply within 71 lines), `no-blocking-findings`; `grade.py`: `worktree-unchanged` |
 | V-3 | `v-3-env-vs-defect` | verification | `verdict-fail` (regex), `defect-vs-environment`: the missing-ID failure is a product defect and the `EXPORT_BUCKET` error, failing the same way at `base`, is the environment. `base-rerun` (tool_used: a `git worktree add`, `git archive`, or `git clone` that brings out `base` without changing the work tree) |
 
 - Every case also has `role-fired`, a `tool_used` grader on `Agent` with the role's name, marked `arm: with-only`; it shows that the with-arm dispatched the role and is left out of the two-arm score.
@@ -99,7 +99,7 @@ Measured with `--model claude-sonnet-5-5` and `--judge-model claude-opus-5-5`, t
 - "798ceb2" is the with-arm on the definitions at 798ceb2, which the branch's first commit builds on.
 - baseline and canary are as in "Arms"; the canary ran on the 798ceb2 definitions.
 - "earlier" marks a cell from runs made before the branch, whose commit was not recorded. Every other 798ceb2, baseline, and five-run cell ran on the same day as the branch cells.
-- A dash is an arm that did not run. No cell ran the definitions at 02cca0e or later.
+- A dash is an arm that did not run. A cell marked 62ae1be in the 798ceb2 or baseline column ran with the suite at 62ae1be. No cell other than those at 62ae1be ran the definitions at 02cca0e or later.
 
 | Case | branch | 798ceb2 | baseline | canary | Graders that separate |
 | --- | --- | --- | --- | --- | --- |
@@ -112,13 +112,13 @@ Measured with `--model claude-sonnet-5-5` and `--judge-model claude-opus-5-5`, t
 | S-3 | 9/9 (438a659) | 9/9 | 9/9 | - | none: every arm reads `docs/vendor/job-platform.md`, splits the export, and holds the concurrency limit as a blocking premise; `product-unchanged` passes every run |
 | D-1 | 18/21 (6ac7c2b), 12/21 (005cd46), 15/21 (438a659) | 19/21 | 11/21 earlier | 12/21 earlier | `fixed-csv-stub` 2, 0, 0 against 2; `owner-plan` 2, 0, 1 against 3; `call-before-job` 2, 0, 2 against 2. 6ac7c2b has the 798ceb2 delivery-strategist with the branch's `karrybit:dev-handoff`, so the dev-handoff change does not account for the drop. At 438a659 and 005cd46, delivery-strategist placed increment boundaries only where the checked `K-n`, the visible result, or the rollback unit changed, and its plans built the real job before the API server first called it |
 | D-2 | 3/3 (005cd46), 1/3 (438a659) | 4/6 ×2 earlier | 3/6 ×2 earlier | 0/6 ×2 earlier | none over five runs: `single-increment` 5/5 (438a659) and 5/5 |
-| D-3 | 8/9 (438a659) | 8/9 | 8/9 | - | none: `no-design-choice` fails one run in every arm |
+| D-3 | 11/12 (62ae1be), 8/9 (438a659) | 8/9 | 9/12 (62ae1be), 8/9 | - | `blocking-u-returned` 3 against 1, which the /9 cells ran without; `no-design-choice` fails one run in every arm |
 | I-1 | 12/12 (438a659) | 24/24 ×2 earlier | 18/24 ×2 earlier | 21/24 ×2 earlier | `failing-test-first` 3, 6, 0, 3; `grade.py` passes every run |
 | I-2 | 2/3 (438a659) | 3/3 earlier | 0/3 earlier | 3/3 earlier | none over five runs: `kept-expectation` 4/5 (438a659) and 4/5; a failing run reads the docstring as the contract and misses `docs/spec.md` |
 | I-4 | 6/6 (438a659) | 6/6 | 6/6 | - | none: every arm returns the per-tenant id to design with `store.py` lines; `contract-kept` passes every run |
 | V-1 | 9/9 (438a659) | 17/18 ×2 earlier | 16/18 ×2 earlier | 17/18 ×2 earlier | none: the baseline also sees that `test_other_tenant_is_denied` misses AC-3 |
-| V-2 | 3/6 (68a2bba) | 3/6 | - | - | none: `no-blocking-findings` 3/3 in both; `pass-brief` fails every run of every arm, since no reply fits a clean PASS in 71 lines (73–100) |
-| V-3 | 8/9 (438a659) | 6/9 | 6/9 | - | `base-rerun` 2, 0, 0 |
+| V-2 | 3/6 (68a2bba) | 3/6 | - | - | none: `no-blocking-findings` 3/3 in both; `pass-brief` fails every run of every arm, since no reply fits a clean PASS in 71 lines (73–100); the seven `karrybit:completion-report` sections and the hand-off items take 42–62 of those lines |
+| V-3 | 9/9 (62ae1be), 8/9 (438a659) | 6/9 (62ae1be), 6/9 | 6/9 | - | `base-rerun` 3 and 2, against 0 and 0, against 0; every passing run brought `base` out with `git archive` |
 
 - Inside a run, `/usr/bin/git` is a shim that fails in the run's sandbox, while `/opt/homebrew/bin/git` by its absolute path works; agents that need `git diff base...HEAD` either find it or read the files instead, and no run ended on an error.
 - Judge calls were 85–90% of a run's cost on long outputs: a D-1 run cost 3–5 USD, an I-1 run about 0.25 USD, and the other cases 0.25–1.2 USD.
