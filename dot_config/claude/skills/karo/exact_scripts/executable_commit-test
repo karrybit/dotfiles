@@ -89,6 +89,10 @@ printf '# a\n' > "$v/assignments.md"
 run "t-test0001: 割り当て" "本文" assignments.md
 ng "assignments.md is outside the record" "not a record path: assignments.md"
 rm "$v/assignments.md"
+printf '# a\n' > "$v/AGENTS.md"
+run "t-test0001: 外へ" "本文" threads/../AGENTS.md
+ng "a path that climbs out of a record folder" "not a record path: threads/../AGENTS.md"
+rm "$v/AGENTS.md"
 
 printf '\n### CoS · 2026-01-01 09:10\n\n別の話\n' >> "$v/threads/t-test0001-demo.md"
 run "t-other001: 別のタスク" "本文" threads/t-test0001-demo.md
