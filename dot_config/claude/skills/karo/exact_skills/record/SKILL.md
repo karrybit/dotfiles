@@ -15,8 +15,9 @@ user-invocable: false
 - Edit・Write のあと、post-edit の hook が `.md` を rumdl で整え、記録のノートなら fmcheck でフロントマターを確かめる。hook が問題を返したら、そのファイルを直してから commit する。
 - threads の発言の見出しの日時（`karo:threads` skill の「書き方」）は、オーナーの発言には、その発言に hook が付けた `発言の時刻: YYYY-MM-DD HH:MM` の値を、karo の発言には、書く前に `date '+%Y-%m-%d %H:%M'` を実行した出力を書く。
 - 新しい話題の threads の会話は、Write でフロントマター（`karo:frontmatter` skill の種類の表の `Thread` の行）から全文を書く。
-- standup（`journal/YYYY-MM-DD-standup.md`）がまだなければ、Write で `type: Standup` と `date` のフロントマターから作る（`karo:frontmatter` skill の種類の表の `Standup` の行）。
-- 運用の出来事（タスクを持たない依頼で記録を変えたこと）は、commit の本文に書く。日次の journal（`journal/YYYY-MM-DD.md`）は過去分だけを持つ。
+- standup（`standup/YYYY-MM-DD.md`）がまだなければ、Write で `type: Standup` と `date` のフロントマターから作る（`karo:frontmatter` skill の種類の表の `Standup` の行）。
+- `state.md` は git の外の `$KARO_STATE_HOME/state.md` にあり（`$KARO_STATE_HOME` の値は SessionStart の hook が出す）、Edit で書き、commit のパスに並べない。
+- 運用の出来事（タスクを持たない依頼で記録を変えたこと）は、commit の本文に書く。
 - 長い本文（サブエージェントの調査の結果、imozuru の原文）は、そのサブエージェントや imozuru に `$KARO_HOME` の書き先へ直接書かせ、終わったらそのパスを commit に渡す。
 
 ## commit する
@@ -29,7 +30,7 @@ user-invocable: false
    <example>
 
    ```sh
-   ~/.config/claude/skills/karo/scripts/commit 'karo-k3m: record the request to sort the fb list' 'Start the thread on sorting the fb list by update date, as the owner asked.' threads/karo-k3m-fb-sort.md state.md
+   ~/.config/claude/skills/karo/scripts/commit 'karo-k3m: record the request to sort the fb list' 'Start the thread on sorting the fb list by update date, as the owner asked.' thread/karo-k3m-fb-sort.md
    ```
 
    </example>
@@ -42,7 +43,6 @@ user-invocable: false
 
 - NG のとき、commit は何も commit せず、並べたパスの stage を外し、ファイルは書いたままに残す。NG の理由は `NG` の行の前に出る。ファイルを Edit で直し、同じ commit を実行し直す。
 - `not a record path: <パス>`: パスが「書き込み先」の表の記録のファイルではない。書き先を表のファイルに直す。
-- `the daily journal holds past days only: <パス>`: 日次の journal（`journal/YYYY-MM-DD.md`）は過去分だけを持つ。書いた内容を「書く」の書き先（threads、standup、commit の本文）へ移し、日次の journal に書いた分を Edit で消す（新しく作ったファイルなら、ファイルごと消す）。
 - ファイルのパスと `none of the subject IDs is in tasks`: その発言は別のタスクの話題のもの。直し方は `karo:threads` skill の「話題の分け方」にある。
 - ファイルのパスとフロントマターの問題（fmcheck の出力）: フロントマターを `karo:frontmatter` skill の種類の表に合わせて直す。
 - `git diff --check` の出力（行末の空白、末尾の空行など）: 出た行を直す。

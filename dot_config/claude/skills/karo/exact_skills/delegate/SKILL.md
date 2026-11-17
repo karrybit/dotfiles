@@ -12,7 +12,7 @@ description: Herdr 上の Agent に仕事を委任する手順。オーナーが
 
 ## 作業場所と取り込み
 
-- 作業場所、Agent がしてよいこと、取り込みは、リポジトリで分かれる。`$KARO_HOME` は下の表の `$KARO_HOME` の行に従う。ほかのリポジトリは、`$KARO_HOME/projects/repos/<name>.md` に `## Agent の作業場所と取り込み` の節があればその節に従い、節かファイルがなければ表の既定の行に従う。
+- 作業場所、Agent がしてよいこと、取り込みは、リポジトリで分かれる。`$KARO_HOME` は下の表の `$KARO_HOME` の行に従う。ほかのリポジトリは、`$KARO_HOME/project/repo/<name>.md` に `## Agent の作業場所と取り込み` の節があればその節に従い、節かファイルがなければ表の既定の行に従う。
 
 | リポジトリ | `agent-ctl start` の `<場所>` | Agent がしてよいこと | 取り込み |
 | --- | --- | --- | --- |
@@ -34,7 +34,7 @@ description: Herdr 上の Agent に仕事を委任する手順。オーナーが
 
 ## 新しいタスクを委任する
 
-1. ブリーフを作る。項目は次の 8 つ。`bd show <タスクID> --json` の title・description・acceptance_criteria を元にし、オーナーの発言、`$KARO_HOME/investigations`、`$KARO_HOME/journal` の MTG の記録、決定（decision の bead）、外の情報源から足し、出典を添える。タスクがまだ Beads になければ、`karo:beads` skill の「タスクを進める」の 1・2 で `bd create` してから作る。ブリーフの先頭の文字は `/` と `!` にしない（`agent-ctl` が断る）。
+1. ブリーフを作る。項目は次の 8 つ。`bd show <タスクID> --json` の title・description・acceptance_criteria を元にし、オーナーの発言、`$KARO_HOME/investigation`、`$KARO_HOME/source/meeting` の MTG の記録、決定（decision の bead）、外の情報源から足し、出典を添える。タスクがまだ Beads になければ、`karo:beads` skill の「タスクを進める」の 1・2 で `bd create` してから作る。ブリーフの先頭の文字は `/` と `!` にしない（`agent-ctl` が断る）。
    - 目的: 何のための変更か
    - 背景: 関連する決定と出典へのリンク
    - 作業する場所: 作業場所とブランチ（「作業場所と取り込み」）。`$KARO_HOME` では「この worktree のブランチに commit し、`$KARO_HOME` の本体には書かない。終える前に main の最新に rebase する」と書く（止められたときは下の制約の行）。プロジェクトの節に「作業する場所の文」があれば、その文を書く

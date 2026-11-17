@@ -1,5 +1,5 @@
 #!/bin/sh
-# Check each given karo record note's frontmatter against rules/frontmatter-schema.yaml: its type, the type's
+# Check each given karo record note's frontmatter against rule/frontmatter-schema.yaml: its type, the type's
 # required fields and path, sources or derived_from for a lineage type, projects from the project vocabulary,
 # the form of date, that each derived_from file exists, and no [[...]] wiki link outside code. One yq and one
 # jq call per note, so it suits the few files of a commit; a whole run of the record is karo-check's.
@@ -8,11 +8,11 @@
 # read. A path outside the record folders, not .md, excluded by the schema, or removed is skipped.
 # The expression is given, since yq takes a lone argument for the expression and a missing schema file
 # would pass silently.
-schema=$(yq -o=json . rules/frontmatter-schema.yaml) || exit 2
-vocab=$(ls projects/repos/*/*/*.md projects/misc/*.md 2>/dev/null | sed -E 's#^projects/(repos|misc)/##; s#\.md$##' | jq -Rn '[inputs]')
+schema=$(yq -o=json . rule/frontmatter-schema.yaml) || exit 2
+vocab=$(ls project/repo/*/*/*.md project/misc/*.md 2>/dev/null | sed -E 's#^project/(repo|misc)/##; s#\.md$##' | jq -Rn '[inputs]')
 n=0
 for p; do
-  case $p in journal/*.md|investigations/*.md|projects/*.md|threads/*.md|docs/*.md) ;; *) continue ;; esac
+  case $p in standup/*.md|source/*.md|investigation/*.md|project/*.md|thread/*.md|doc/*.md) ;; *) continue ;; esac
   [ -f "$p" ] || continue
   fm=null
   if [ "$(head -n 1 "$p")" = --- ]; then

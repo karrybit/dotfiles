@@ -81,7 +81,7 @@ bd の既定の挙動のうち、`bd prime` に出ず、後半の約束が前提
    完了条件: `bd show <ID> --json` の status が `in_progress` で、assignee が Agent 名。
 4. Agent の完了報告を受けたら、`報告:` の comment を書く。status は `in_progress` のままにし、残課題は `--deps discovered-from:<ID>` を付けて新しいタスクにする。
    完了条件: `bd show <ID> --json --include-comments` に `報告:` の comment がある。
-5. レビューを頼んだときは、誰に何のレビューを頼んだかを `レビュー依頼:` の comment に書く。レビューの原本（`projects/repos/<vcs>/<org>/<repo>/reviews/` のファイル）を保存したあとに、結果を `変更依頼:` か `承認:` の comment に、原本のパスを添えて書く。
+5. レビューを頼んだときは、誰に何のレビューを頼んだかを `レビュー依頼:` の comment に書く。レビューの原本（`project/repo/<vcs>/<org>/<repo>/review/` のファイル）を保存したあとに、結果を `変更依頼:` か `承認:` の comment に、原本のパスを添えて書く。
    完了条件: `レビュー依頼:` の comment があり、結果を受けたあとは `変更依頼:` か `承認:` の comment に原本のパスがある。
 6. 取り込んだら（karo の land、dotfiles の push と apply、PR の merge）、`bd close <ID> --reason '取り込み: <commit か PR>' --force --json` で閉じる。取り下げるときは、`--reason 'dropped: <理由>'` で閉じて `bd label add <ID> dropped --json` を付ける。
    完了条件: `bd show <ID> --json` の status が `closed` で、reason に取り込みか取り下げの印がある。
@@ -96,13 +96,13 @@ bd の既定の挙動のうち、`bd prime` に出ず、後半の約束が前提
 
 - comment の先頭の語で種類を書く: `報告:`（要旨・commit・テスト結果・残課題・Agent の worktree と branch）、`レビュー依頼:`（誰に何のレビューを頼んだか）、`変更依頼:`・`承認:`（レビューの原本のパス）、`決定:`（そのタスクの中だけの決定と出典）、`メモ:`。
 - 委任は claim の event が Agent 名と時刻を持ち、作業場所は Herdr と agent-ctl の控え（`karo:delegate` skill の冒頭）が持つので、委任の comment は書かない。
-- 長い原本（完了報告の全文、レビュー、調査）は threads・reviews・investigations に置き、comment にはそのパスを書く。
+- 長い原本（完了報告の全文、レビュー、調査）は threads・reviews・investigation に置き、comment にはそのパスを書く。
 
 ### 判断待ちと決定
 
 - 複数のタスクかプロジェクトに効く決定は decision の bead にし、そのタスクの中だけの決定は `決定:` の comment にする。
 - 判断待ちの問いから決定までを、1 つの decision の bead で持つ。
-- 規則・`state.md`・ノートから決定を指すときは、`決定 karo-xxx` と書く。今の判断待ちと効く決定の引き方は、`$KARO_HOME/rules/information-design.md` の「探す」の表にある。
+- 規則・`state.md`・ノートから決定を指すときは、`決定 karo-xxx` と書く。今の判断待ちと効く決定の引き方は、`$KARO_HOME/rule/information-design.md` の「探す」の表にある。
 
 1. 判断が必要になったら、`bd create '<問い 1 文>' -t decision -l human -l project:<名前> --body-file <本文> --json` で作る。本文は「問い」「選択肢と推奨」「出典」（threads のパスと `YYYY-MM-DD HH:MM`）の節にする。全プロジェクトに効く問いは label `project:all` にする。タスクを止めるなら、`bd dep add <タスク> <決定> --json` で blocker にする（`--parent` の子は blocker にならない。前半の「依存」）。
    完了条件: `bd human list --status open --json` に出る。
@@ -123,7 +123,7 @@ bd の既定の挙動のうち、`bd prime` に出ず、後半の約束が前提
 
 ### `bd prime` と違うところ
 
-- `bd prime` の memory の勧め（`bd remember`）の代わりに、会話のメモは `threads/memo.md` に書いて commit する（`karo:record` skill）。
+- `bd prime` の memory の勧め（`bd remember`）の代わりに、会話のメモは `thread/memo.md` に書いて commit する（`karo:record` skill）。
 - `bd prime` の「SESSION CLOSE PROTOCOL」の「完了した issue を閉じる」は、上の「閉じる時機」のとおり、取り込みのあとに閉じる。
 
 ### 回復

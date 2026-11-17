@@ -6,12 +6,12 @@ user-invocable: false
 
 # 会話の記録（threads）
 
-- 会話は話題で分ける。1 つの話題は `$KARO_HOME/threads/` の 1 つのファイルで、その話題で進めるタスクは 0 個以上ある。
+- 会話は話題で分ける。1 つの話題は `$KARO_HOME/thread/` の 1 つのファイルで、その話題で進めるタスクは 0 個以上ある。
 - 書き込みは Edit・Write で行い、karo の commit の script で commit する（`karo:record` skill）。下の `<scripts>` は `~/.config/claude/skills/karo/scripts` で、この `~/` の形のまま書く。
 
 ## 書き方
 
-- 書き方は `$KARO_HOME/threads/template.md` に従う。
+- 書き方は `$KARO_HOME/thread/template.md` に従う。
 - ファイル名は、タスクで始めた話題は `<タスクID>-<話題>.md`、議論だけで始めた話題は `YYYY-MM-DD-<話題>.md`（作った日）にする。`<話題>` は、ブランチ名の title と同じく英語の kebab-case にする。
 - 話題はフロントマターの `topic` に短く書き、タスク ID は入れない（1 つの話題を複数のタスクで進めることがあるので、タスクはフロントマターの `tasks` に書く）。フロントマターの埋め方は `karo:frontmatter` skill の種類の表の `Thread` の行にある。
 - 本文は発言の見出しから始める。発言ごとに `### オーナー · YYYY-MM-DD HH:MM` か `### karo · YYYY-MM-DD HH:MM` の見出しを置き、空行のあとに本文を書く。
@@ -56,7 +56,7 @@ user-invocable: false
 - 話題の一覧は、SessionStart の hook の出力の `## threads: 最近の話題` にある（最近 14 日の 15 件）。足りなければ `<scripts>/thread-index` を単独で実行する（`--since <n>d`・`--limit <n>`・`--task <タスクID>` で絞る）。列は、ファイル名、最後の発言の日時、`topic`、`tasks`、`- 決定:` と `- 未決:` の数。
 - タスクから話題を引くときは、`<scripts>/thread-index --task <タスクID>` を使う（議論だけで始めた話題は、ファイル名にタスク ID がない）。
 
-1. 戻る話題のファイルに `rg -n '^(### |- (決定|未決):)' threads/<ファイル>` を実行し、続けて `tail -n 30 threads/<ファイル>` で直近の発言を読む（印の行は発言の一部なので、印だけで状況を決めない）。
+1. 戻る話題のファイルに `rg -n '^(### |- (決定|未決):)' thread/<ファイル>` を実行し、続けて `tail -n 30 thread/<ファイル>` で直近の発言を読む（印の行は発言の一部なので、印だけで状況を決めない）。
    完了条件: 直近の議論、決定、未決が手元にある。
 2. 決定が複数のタスクに効くときは decision の bead を、関わるタスクの状態は `bd show <タスクID> --json --include-comments` を読む。
    完了条件: 話題の決定と関わるタスクの今の状態が手元にある。
@@ -65,4 +65,4 @@ user-invocable: false
 
 ## 会話を見せる
 
-- オーナーが threads の会話を見たいと頼んだら、その会話の `$KARO_HOME/threads/<ファイル>` のパスと、見る場所の見出し（`### <話者> · <日時>`）を返事に書き、オーナーが自分の pane で開けるようにする。
+- オーナーが threads の会話を見たいと頼んだら、その会話の `$KARO_HOME/thread/<ファイル>` のパスと、見る場所の見出し（`### <話者> · <日時>`）を返事に書き、オーナーが自分の pane で開けるようにする。

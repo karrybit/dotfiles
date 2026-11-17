@@ -2,12 +2,12 @@
 # Opens one file in terminal-browser, in a Herdr pane named "view - <name>"
 # (default "view - browser") beside the caller's, through the karrybit crit
 # skill's tb-view, and prints what tb-view prints: an .html or .svg under
-# docs/ of KARO_HOME, an explanation's index.html in the store
+# doc/ of KARO_HOME, an explanation's index.html in the store
 # (<store>/<lowercase UUID>/index.html, the store being $KARO_DATA_HOME/html),
 # or an image or video anywhere, by absolute path.
 # --no-merge opens a new pane instead of a tab in an existing one.
 # terminal-browser runs outside the sandbox, so pages that can run scripts
-# come only from docs/ and the store, where the explain skill keeps its HTML.
+# come only from doc/ and the store, where the explain skill keeps its HTML.
 # usage: view-open [--no-merge] <absolute path> [<name>]
 # Environment: KARO_HOME (default ~/karo), KARO_DATA_HOME (default
 # ${XDG_DATA_HOME:-~/.local/share}/karo).
@@ -27,7 +27,7 @@ esac
 h='[0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
 case "$1" in
   *..*) usage ;;
-  "${KARO_HOME:-$HOME/karo}"/docs/*.html | "${KARO_HOME:-$HOME/karo}"/docs/*.svg) ;;
+  "${KARO_HOME:-$HOME/karo}"/doc/*.html | "${KARO_HOME:-$HOME/karo}"/doc/*.svg) ;;
   "$store"/$h$h-$h-$h-$h-$h$h$h/index.html) ;;
   /*.png | /*.jpg | /*.jpeg | /*.webp | /*.gif | /*.mp4 | /*.webm) ;;
   *) usage ;;

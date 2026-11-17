@@ -40,12 +40,12 @@ description: 'HTML の解説を git の外の store（`$KARO_DATA_HOME/html/<UUI
   "source": {
     "kind": "git",
     "repository": "https://github.com/acme/demo",
-    "path": "docs/deploy.md",
+    "path": "doc/deploy.md",
     "revision": "0123456789abcdef0123456789abcdef01234567"
   },
   "tasks": ["t-test0001"],
   "projects": ["github.com/acme/demo"],
-  "derived_from": ["threads/t-test0001-demo.md#2026-01-01 09:00"]
+  "derived_from": ["thread/t-test0001-demo.md#2026-01-01 09:00"]
 }
 ```
 
@@ -78,7 +78,7 @@ description: 'HTML の解説を git の外の store（`$KARO_DATA_HOME/html/<UUI
 4. `karrybit:explain` skill を Skill tool で呼び、その手順を最後まで進める。渡す値は次のとおり。
    - HTML の書き先: `<一時フォルダ>/index.html`。
    - 控えのファイル: `<一時フォルダ>/metadata.json`。書き方の規則は上の「metadata.json」。入れる値は、3 の id と `created_at`、1 の `source`、頼まれたタスク・プロジェクト・threads の発言で、`title` は HTML の題にする。検査は上の「metadata.json」の検査のコマンド。
-   - 説明の文書の書き先: オーナーが説明の文書も残すよう頼んだときだけ渡す。書き先は `$KARO_HOME/docs/<話題>.md`、フロントマターは `karo:frontmatter` skill の種類の表の `Document` の行（derived_from は頼まれた threads の発言、sources は元の資料と版）、検査は `<karo-check> --only docs/<話題>.md`。`$KARO_HOME` の記録なので、書いたあとは `karo:record` skill に従う。
+   - 説明の文書の書き先: オーナーが説明の文書も残すよう頼んだときだけ渡す。書き先は `$KARO_HOME/doc/<話題>.md`、フロントマターは `karo:frontmatter` skill の種類の表の `Document` の行（derived_from は頼まれた threads の発言、sources は元の資料と版）、検査は `<karo-check> --only doc/<話題>.md`。`$KARO_HOME` の記録なので、書いたあとは `karo:record` skill に従う。
    - 頼まれた内容の原文: 頼まれた threads の発言。
    - 呼び出し側が元の資料の場所・版・読み方を渡したときは、それもそのまま渡す。
 

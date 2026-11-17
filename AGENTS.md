@@ -75,7 +75,7 @@
   `defaultEnabled: false`, so it loads only where a project's settings enable
   it; keep owner-specific values out of it and read them from the caller's
   arguments or from `$KARO_CONFIG_HOME/config.yaml`,
-  `$KARO_HOME/rules/<skill>.md`, and `$KARO_HOME/projects/repos/<name>.md`,
+  `$KARO_HOME/rule/<skill>.md`, and `$KARO_HOME/project/repo/<name>.md`,
   each with a default for when the file is missing. Its subagents are in its
   `exact_agents/`, called `karo:<agent>`. Its hooks are in its
   `exact_hooks/hooks.json`, which Claude Code merges with the project's

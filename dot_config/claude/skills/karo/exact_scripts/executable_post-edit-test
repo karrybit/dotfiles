@@ -3,7 +3,7 @@
 # there: a broken record note exits 2 with its problem on stderr, a valid one and a .md outside the record
 # folders (a worktree under .claude/ among them) pass, and a file outside KARO_HOME is left untouched.
 # usage: post-edit-test [<karo dir>]   (default KARO_HOME or ~/karo, read only: the vault takes its .rumdl.toml and
-#        rules/frontmatter-schema.yaml; the vault goes to a temporary directory and is removed)
+#        rule/frontmatter-schema.yaml; the vault goes to a temporary directory and is removed)
 set -uo pipefail
 exec </dev/null
 karo=${1:-${KARO_HOME:-$HOME/karo}}
@@ -16,8 +16,8 @@ pass() { printf 'ok\t%s\n' "$1"; }
 
 v=$tmp/karo
 export KARO_HOME=$v
-mkdir -p "$v/rules"
-cp "$karo/.rumdl.toml" "$v/" && cp "$karo/rules/frontmatter-schema.yaml" "$v/rules/" || exit 2
+mkdir -p "$v/rule"
+cp "$karo/.rumdl.toml" "$v/" && cp "$karo/rule/frontmatter-schema.yaml" "$v/rule/" || exit 2
 cd "$v" || exit 2
 
 # edit <name> <file> <content> <want exit> <want stderr, or empty for none>: writes the file with a trailing
@@ -34,18 +34,18 @@ edit() {
 fixed() { if ! grep -q ' $' "$2"; then pass "$1"; else fail "$1: trailing space left"; fi; }
 kept() { if grep -q ' $' "$2"; then pass "$1"; else fail "$1: file changed"; fi; }
 
-note=$'---\ntype: Journal\ndate: 2026-01-01\n---\n\n- 09:00 例'
-edit "a valid record note passes" "$v/journal/2026-01-01.md" "$note" 0 ""
-fixed "rumdl formats a record note" "$v/journal/2026-01-01.md"
-edit "a broken record note exits 2 with its problem" "$v/journal/2026-01-02.md" $'## 例' 2 $'journal/2026-01-02.md\tno frontmatter'
-fixed "rumdl formats a broken record note" "$v/journal/2026-01-02.md"
+note=$'---\ntype: Standup\ndate: 2026-01-01\n---\n\n## 報告'
+edit "a valid record note passes" "$v/standup/2026-01-01.md" "$note" 0 ""
+fixed "rumdl formats a record note" "$v/standup/2026-01-01.md"
+edit "a broken record note exits 2 with its problem" "$v/standup/2026-01-02.md" $'## 例' 2 $'standup/2026-01-02.md\tno frontmatter'
+fixed "rumdl formats a broken record note" "$v/standup/2026-01-02.md"
 edit "a .md outside the record folders is not checked" "$v/README.md" $'## 例' 0 ""
 fixed "rumdl formats a .md outside the record folders" "$v/README.md"
-edit "a worktree under KARO_HOME is not checked" "$v/.claude/worktrees/w/journal/2026-01-02.md" $'## 例' 0 ""
-edit "a file that is not .md is left alone" "$v/journal/2026-01-02.txt" $'## 例' 0 ""
-kept "rumdl leaves a file that is not .md" "$v/journal/2026-01-02.txt"
-edit "a file outside KARO_HOME is not checked" "$tmp/wt/journal/2026-01-02.md" $'## 例' 0 ""
-kept "rumdl leaves a file outside KARO_HOME" "$tmp/wt/journal/2026-01-02.md"
+edit "a worktree under KARO_HOME is not checked" "$v/.claude/worktrees/w/standup/2026-01-02.md" $'## 例' 0 ""
+edit "a file that is not .md is left alone" "$v/standup/2026-01-02.txt" $'## 例' 0 ""
+kept "rumdl leaves a file that is not .md" "$v/standup/2026-01-02.txt"
+edit "a file outside KARO_HOME is not checked" "$tmp/wt/standup/2026-01-02.md" $'## 例' 0 ""
+kept "rumdl leaves a file outside KARO_HOME" "$tmp/wt/standup/2026-01-02.md"
 
 echo "post-edit-test: $failed failure(s)"
 [[ $failed -eq 0 ]]

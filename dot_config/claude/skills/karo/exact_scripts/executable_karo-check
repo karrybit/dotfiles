@@ -6,7 +6,7 @@
 # digits, a child with ".<n>" added (karo-a2v.1, t-a1b2c3d4, ABC-12). Tasks live in the task database,
 # which karo-check does not read, so only the form is checked.
 # usage: karo-check [--only <path>]... [<karo dir>]
-# Default: KARO_HOME, or ~/karo when unset (only its record folders get the karo checks). The schema is <karo dir>/rules/frontmatter-schema.yaml.
+# Default: KARO_HOME, or ~/karo when unset (only its record folders get the karo checks). The schema is <karo dir>/rule/frontmatter-schema.yaml.
 # --only limits the check to the given vault-relative paths (changed, added, or removed files; for a rename, both
 # paths). okf-lint gets the same paths; the karo checks also read, for a removed project file, the notes
 # listing it as a project. A file brought in is checked in full.
@@ -29,7 +29,7 @@ vault=${1:-${KARO_HOME:-$HOME/karo}}
 lint=$HOME/.config/claude/skills/karrybit/skills/okf-lint/scripts/okf-lint
 [[ -x $lint ]] || { echo "karo-check: okf-lint not found at $lint; install the karrybit okf-lint skill" >&2; exit 2; }
 cd "$vault" || exit 2
-SCHEMA=$PWD/rules/frontmatter-schema.yaml
+SCHEMA=$PWD/rule/frontmatter-schema.yaml
 [[ -f $SCHEMA ]] || { echo "karo-check: no schema at $SCHEMA" >&2; exit 2; }
 problems=0
 stale=0
@@ -57,15 +57,15 @@ FS=$'\x1f' LS=$'\x1e'
 export FS LS
 excl=$(yq '.exclude | join("|")' "$SCHEMA")
 types=$'\n'$(yq '.types | keys | .[]' "$SCHEMA")$'\n'
-folders=(journal projects investigations docs threads)
+folders=(standup source project investigation doc thread)
 existing=()
 for d in "${folders[@]}"; do [[ -d $d ]] && existing+=("$d"); done
 # The project vocabulary: the path names of the project notes, <vcs>/<org>/<repo> for
-# projects/repos/<vcs>/<org>/<repo>.md and <theme> for projects/misc/<theme>.md. fd skips a missing
+# project/repo/<vcs>/<org>/<repo>.md and <theme> for project/misc/<theme>.md. fd skips a missing
 # folder and says so on stderr, which is dropped.
-vocab=" $({ fd --exact-depth 3 -t f -e md . projects/repos
-            fd -d 1 -t f -e md . projects/misc
-          } 2>/dev/null | sed -E 's#^projects/(repos|misc)/##; s#\.md$##' | sort -u | tr '\n' ' ')"
+vocab=" $({ fd --exact-depth 3 -t f -e md . project/repo
+            fd -d 1 -t f -e md . project/misc
+          } 2>/dev/null | sed -E 's#^project/(repo|misc)/##; s#\.md$##' | sort -u | tr '\n' ' ')"
 
 # With --only, $scope holds the files to check, one per line between newlines.
 scoped=0; scope=$'\n'
@@ -77,8 +77,8 @@ if (( ${#only[@]} )); then
   for p in "${only[@]}"; do
     scope+="$p"$'\n'
     [[ -e $p ]] && continue
-    n=${p#projects/*/}; n=${n%.md}
-    [[ $p =~ ^projects/(repos/[^/]+/[^/]+/[^/]+|misc/[^/]+)\.md$ ]] && listed+=(-e "  - $n")
+    n=${p#project/*/}; n=${n%.md}
+    [[ $p =~ ^project/(repo/[^/]+/[^/]+/[^/]+|misc/[^/]+)\.md$ ]] && listed+=(-e "  - $n")
   done
   # for a removed project file, notes listing it as a project; add_scope reads a process substitution,
   # not a pipe, so that it runs in this shell and keeps $scope
@@ -136,12 +136,12 @@ while IFS=: read -r f l; do
 done < <(
   wiki='FNR == 1 {f = 0} /^```/{f=!f; next} !f{gsub(/`[^`]*`/, ""); if (/\[\[/) print FILENAME ":" $0}'
   if (( ! scoped )); then
-    fd -t f -e md -E "investigations/*/sources" -E rules -E AGENTS.md . -X awk "$wiki"
+    fd -t f -e md -E "investigation/*/sources" -E rule -E AGENTS.md . -X awk "$wiki"
   else
     # a given path that is a symbolic link is not read through, as fd -t f leaves links out above
     files=()
     while IFS= read -r f; do
-      [[ -f $f && ! -L $f && $f == *.md && $f != investigations/*/sources/* && $f != rules/* && $f != AGENTS.md ]] && files+=("$f")
+      [[ -f $f && ! -L $f && $f == *.md && $f != investigation/*/sources/* && $f != rule/* && $f != AGENTS.md ]] && files+=("$f")
     done < <(printf '%s' "$scope")
     (( ${#files[@]} )) && awk "$wiki" "${files[@]}"
   fi)

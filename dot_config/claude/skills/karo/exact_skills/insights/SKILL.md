@@ -7,7 +7,7 @@ description: karo と Agent の一日の働きを transcript と Beads（bd）�
 
 - 数えるのはこの skill の `scripts/insights`、例を確かめるのはサブエージェント、直すかどうかを決めるのはオーナーにする。
 - 結果には、数、場所（セッション ID の先頭 8 文字、時刻、Agent 名）、規則の名前だけを書き、transcript の会話・コマンド・出力の中身は書き写さない。
-- 結果は、今日の `$KARO_HOME/journal/YYYY-MM-DD-standup.md` の末尾の `## Insights（<数えた日付>）` の節に置く。transcript から作り直せる、判断のための出力（Gold）なので、Silver には書かない。オーナーが直すと決めた候補は、ふだんの手順（Beads のタスクと決定）で Silver に入る。
+- 結果は、今日の `$KARO_HOME/standup/YYYY-MM-DD.md` の末尾の `## Insights（<数えた日付>）` の節に置く。transcript から作り直せる、判断のための出力（Gold）なので、Silver には書かない。オーナーが直すと決めた候補は、ふだんの手順（Beads のタスクと決定）で Silver に入る。
 
 ## 手順
 
@@ -55,7 +55,7 @@ insights の JSON: <1 の出力>
 
 読む場所:
 - transcript: ${CLAUDE_CONFIG_DIR:-~/.claude}/projects/ の下。karo は $KARO_HOME のフォルダの <セッション ID>*.jsonl、サブエージェントはその下の subagents/、Herdr の Agent は agent-name の行が Agent 名のセッション。jq で、その時刻の前後の tool_use の name・input と tool_result の is_error を読む。
-- 規則: $KARO_HOME/AGENTS.md、$KARO_HOME/rules/、~/.config/claude/skills/karo/skills/。
+- 規則: $KARO_HOME/AGENTS.md、$KARO_HOME/rule/、~/.config/claude/skills/karo/skills/。
 - 出来事: その日の記録の出来事は git -C $KARO_HOME log --since='<日付> 00:00' --until='<翌日> 00:00' の件名と本文に、タスクの出来事は insights の JSON の delegations にあり、bd は実行しない。
 
 制約:
@@ -66,7 +66,7 @@ insights の JSON: <1 の出力>
 報告（例ごとに 1 行の表）:
 - 場所、指標、関わる規則（ファイルと節の名前）、起きたことの分類、規則どおりか違反か、直しの候補（どのファイルのどの節をどう直すか）か「直しは要らない」。
 - 直しの候補は、規則や手順の文面を足す前に、hook・スクリプト・karo-check のような仕組みで防げるかを先に問い、防げるならその仕組みの案を先に書く。
-- $KARO_HOME/rules/enforcement.md があれば、違反した規則ごとに、そのどの表にあるか（どの表にもなければ「どの表にもない」）を書く。「強制するものがない規則」の表にあるか、どの表にもないときは、仕組みの案を書く（くり返しの扱いは同じファイルの「直し方」）。
+- $KARO_HOME/rule/enforcement.md があれば、違反した規則ごとに、そのどの表にあるか（どの表にもなければ「どの表にもない」）を書く。「強制するものがない規則」の表にあるか、どの表にもないときは、仕組みの案を書く（くり返しの扱いは同じファイルの「直し方」）。
 - 完了の報告は karrybit:completion-report に従い、この表と直しの候補を、足す見出し「例ごとの診断」に書く。
 ```
 

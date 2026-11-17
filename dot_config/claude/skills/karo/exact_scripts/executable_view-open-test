@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Show that view-open hands the karrybit crit skill's tb-view "view - <name>" (default
 # "view - browser") and the path, with --no-merge when it comes first, for an existing .html or .svg
-# under docs/ of KARO_HOME, an existing <store>/<lowercase UUID>/index.html in the store under
+# under doc/ of KARO_HOME, an existing <store>/<lowercase UUID>/index.html in the store under
 # KARO_DATA_HOME or, when it is unset or empty, under karo/ of XDG_DATA_HOME or, when that is unset or
 # empty too, of HOME's .local/share, and an
 # existing image or video anywhere, and refuses everything else: no argument or three, a relative
-# path, a path with "..", an .html or .svg outside docs/ and the store's UUID folders, an extension
+# path, a path with "..", an .html or .svg outside doc/ and the store's UUID folders, an extension
 # off the list, a missing file, a folder, and a name with characters other than letters, digits,
 # ".", "_", and "-", or starting with one of those three. It runs with HOME, KARO_HOME,
 # KARO_DATA_HOME, and XDG_DATA_HOME in a temporary directory that holds a tb-view stub
@@ -25,7 +25,7 @@ pass() { printf 'ok\t%s\n' "$1"; }
 
 stub=$tmp/.config/claude/skills/karrybit/skills/crit/scripts/tb-view
 id=0f6c7d9e-3b1a-4c52-9e34-5a8d1b7c2e40
-mkdir -p "${stub%/*}" "$tmp/karo/docs/abc/1" "$tmp/media" "$tmp/folder.png" "$tmp/data/html/$id/sub" \
+mkdir -p "${stub%/*}" "$tmp/karo/doc/abc/1" "$tmp/media" "$tmp/folder.png" "$tmp/data/html/$id/sub" \
   "$tmp/data/html/.tmp.abc123" "$tmp/data/html/0F6C7D9E-3B1A-4C52-9E34-5A8D1B7C2E40" "$tmp/data/html/abc" \
   "$tmp/.local/share/karo/html/$id" "$tmp/xdg/karo/html/$id"
 cat > "$stub" <<'EOF'
@@ -33,7 +33,7 @@ cat > "$stub" <<'EOF'
 (IFS='|'; printf '%s\n' "$*") >> "$FAKE_LOG"
 EOF
 chmod +x "$stub"
-for f in karo/docs/abc/1/index.html karo/docs/diagram.svg karo/page.html media/page.html media/d.svg \
+for f in karo/doc/abc/1/index.html karo/doc/diagram.svg karo/page.html media/page.html media/d.svg \
   media/a.png media/a.jpg media/a.jpeg media/a.webp media/a.gif media/a.mp4 media/a.webm media/a.pdf media/a.PNG \
   "data/html/$id/index.html" "data/html/$id/other.html" "data/html/$id/sub/index.html" \
   data/html/.tmp.abc123/index.html data/html/0F6C7D9E-3B1A-4C52-9E34-5A8D1B7C2E40/index.html \
@@ -65,7 +65,7 @@ refused() {
   else fail "refuses ${*#"$tmp"/}: exit $code: $out: $(paste -sd '/' "$FAKE_LOG")"; fi
 }
 
-for f in karo/docs/abc/1/index.html karo/docs/diagram.svg media/a.png media/a.jpg media/a.jpeg media/a.webp \
+for f in karo/doc/abc/1/index.html karo/doc/diagram.svg media/a.png media/a.jpg media/a.jpeg media/a.webp \
   media/a.gif media/a.mp4 media/a.webm; do
   opens "view - browser|$tmp/$f" "$tmp/$f"
 done
@@ -101,8 +101,8 @@ refused "$tmp/media/a.png" "名前"
 refused "$tmp/media/a.png" "a/b"
 refused "$tmp/media/a.png" "-x"
 refused media/a.png
-refused "$tmp/karo/docs/../page.html"
-refused "$tmp/karo/docs/abc/../../page.html"
+refused "$tmp/karo/doc/../page.html"
+refused "$tmp/karo/doc/abc/../../page.html"
 refused "$tmp/karo/page.html"
 refused "$tmp/media/page.html"
 refused "$tmp/media/d.svg"
