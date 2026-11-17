@@ -6,8 +6,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/Kitware/CMake/v4.4.5/cmake-4.4.5-macos-universal.tar.gz",
-      "checksum": "679E77A96B9EF9484CC6C1445255FC4F84206B48A65420EFBEDF16BDAB55FBFF",
+      "id": "github_release/github.com/Kitware/CMake/v4.5.0/cmake-4.5.0-macos-universal.tar.gz",
+      "checksum": "A645D69FD21E521759CC0C64E7C60462D43FAF0C7214AC05F75C80F7C5037DDE",
       "algorithm": "sha256"
     },
     {
@@ -31,8 +31,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/astral-sh/uv/0.13.7/uv-aarch64-apple-darwin.tar.gz",
-      "checksum": "81B811B57E4624DF7ED3AAC148E0359100D9962F3D9DCE00AEC533DC2E086731",
+      "id": "github_release/github.com/astral-sh/uv/0.13.8/uv-aarch64-apple-darwin.tar.gz",
+      "checksum": "6B71028A6B904F2AE3340EF52E595512DE807D06C0A20EAEF2F692581B246558",
       "algorithm": "sha256"
     },
     {
@@ -56,8 +56,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/dathere/qsv/28.0.0/qsv-28.0.0-aarch64-apple-darwin.zip",
-      "checksum": "ADA81A996092B14A5087B16A97BAA6D14E0E0A1219A44C4759C5B7320EB73DFA",
+      "id": "github_release/github.com/dathere/qsv/29.0.0/qsv-29.0.0-aarch64-apple-darwin.zip",
+      "checksum": "63A4CFDE04EFF5168BBA3765EBFDCF04C6B8B27002911CCD183F076BEF67DD53",
       "algorithm": "sha256"
     },
     {
@@ -91,8 +91,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/grafana/k6/v2.3.0/k6-v2.3.0-macos-arm64.zip",
-      "checksum": "B2417A3038EDC5FE81DC178A889237724B595C5C9CFED875822008E46E862C7D",
+      "id": "github_release/github.com/grafana/k6/v2.4.0/k6-v2.4.0-macos-arm64.zip",
+      "checksum": "5715745ADF4E5EBC92965B26B7785E54E685A370466448CB587B383330A24F20",
       "algorithm": "sha256"
     },
     {
@@ -166,8 +166,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/rvben/rumdl/v0.3.3/rumdl-v0.3.3-aarch64-apple-darwin.tar.gz",
-      "checksum": "8C60FBFC8064ACDA1E40856BFDBC7CC5F51A477920DE1BAE9426482D08916424",
+      "id": "github_release/github.com/rvben/rumdl/v0.3.4/rumdl-v0.3.4-aarch64-apple-darwin.tar.gz",
+      "checksum": "51F7BCE0D56EA632ED65E7E42A99EFFB7CE7A23923FE0738ECDA0E1D11BCB788",
       "algorithm": "sha256"
     },
     {
@@ -211,8 +211,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "http/awscli.amazonaws.com/AWSCLIV2-2.40.1.pkg",
-      "checksum": "A7BAAFB7FBB1C395A738906CFE49EA15F6B0E13E22C2B4CD2BC51D8F4AAF5FC7",
+      "id": "http/awscli.amazonaws.com/AWSCLIV2-2.40.4.pkg",
+      "checksum": "C1C579B87F777D199936AC3472E87EC07E59A0B7B66927A5899BE0DC5E13F64C",
       "algorithm": "sha256"
     },
     {
@@ -221,8 +221,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "http/get.helm.sh/helm-v4.3.1-darwin-arm64.tar.gz",
-      "checksum": "6B4E61C8CD27D99E5A801E63FF25DD5C70B36875C2CD659D3E9CE6B76FC23198",
+      "id": "http/get.helm.sh/helm-v4.3.2-darwin-arm64.tar.gz",
+      "checksum": "6F3421DE3A8CC2AC578C8CFB33B8EDDE290DDE2871BC1BAB12E24F2E5CAEAA90",
       "algorithm": "sha256"
     },
     {
@@ -246,8 +246,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.584.0/registry.yaml",
-      "checksum": "2850916D8E46BCB75075F4CCE621C713C4BC8EDEF33D616E84426F428BBB6EA8",
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.587.0/registry.yaml",
+      "checksum": "729309DB5E7562072096CFB1EA4B8DE7A6DC41A9A9D57F2923784EEFD422F330",
       "algorithm": "sha256"
     }
   ]
