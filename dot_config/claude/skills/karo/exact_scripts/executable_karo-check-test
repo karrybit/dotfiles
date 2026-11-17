@@ -16,7 +16,7 @@ fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
 pass() { printf 'ok\t%s\n' "$1"; }
 
 ok=$tmp/ok
-mkdir -p "$ok"/{journal,projects/repos/github.com/acme/demo/reviews,threads,investigations,docs/a1b2c3d4/abc1234,rules}
+mkdir -p "$ok"/{journal,projects/repos/github.com/acme/demo/reviews,threads,investigations,docs,rules}
 cp "$vault/rules/frontmatter-schema.yaml" "$ok/rules/" || exit 2
 printf -- '---\ntype: Journal\ndate: 2026-01-01\n---\n\n- 09:00 [decision] t-test0001: 例（thread 2026-01-01 09:00）\n' > "$ok/journal/2026-01-01.md"
 printf -- '---\ntype: Project\ndescription: 例のプロジェクト。\nprojects:\n  - github.com/acme/demo\n---\n\n## demo\n' > "$ok/projects/repos/github.com/acme/demo.md"
@@ -28,9 +28,6 @@ printf -- '---\ntype: Investigation\ndescription: 例の調べ物。\ndate: 2026
 # A day's standup and a meeting's notes sit beside the day's journal.
 printf -- '---\ntype: Standup\ndate: 2026-01-01\nderived_from:\n  - journal/2026-01-01.md\n---\n\n## Checkin（2026-01-01）\n\n- 例\n' > "$ok/journal/2026-01-01-standup.md"
 printf -- '---\ntype: Meeting Notes\ndescription: 例の MTG。\ndate: 2026-01-01\nprojects:\n  - github.com/acme/demo\nsources:\n  - { id: notes, resource: https://example.invalid/notes, title: 例の議事録 }\n---\n\n## 例の MTG\n\n- 決定: 例\n' > "$ok/journal/2026-01-01-demo.md"
-# An HTML explanation's index.html carries no frontmatter and is not checked.
-printf -- '---\ntype: Explain\ndescription: 例の解説。\ntasks:\n  - t-test0001\nprojects:\n  - github.com/acme/demo\nresource: https://example.invalid/demo\nderived_from:\n  - threads/t-test0001-demo.md#2026-01-01 09:00\n---\n\n## 例\n' > "$ok/docs/a1b2c3d4/abc1234/index.md"
-printf '<!doctype html>\n<title>例</title>\n' > "$ok/docs/a1b2c3d4/abc1234/index.html"
 
 if out=$("$bin/karo-check" "$ok" 2>&1); then pass "valid vault passes"; else fail "valid vault fails: $out"; fi
 
@@ -48,9 +45,6 @@ cases=(
   'misplaced standup|path does not match Standup|mv journal/2026-01-01-standup.md journal/2026-01-01-checkin.md'
   'thread name without a task ID or date|path does not match Thread|mv threads/t-test0001-demo.md threads/demo.md'
   'thread without topic|missing topic|sed -i.bak "/^topic:/d" threads/t-test0001-demo.md'
-  'explanation without resource|missing resource|sed -i.bak "/^resource:/d" docs/a1b2c3d4/abc1234/index.md'
-  'explanation outside a version folder|path does not match Explain|mv docs/a1b2c3d4/abc1234/index.md docs/a1b2c3d4/index.md'
-  'explanation id not 8 lowercase letters and digits|path does not match Explain|mv docs/a1b2c3d4 docs/h000001'
 )
 for c in "${cases[@]}"; do
   name=${c%%|*}; rest=${c#*|}; want=${rest%%|*}; cmd=${rest#*|}

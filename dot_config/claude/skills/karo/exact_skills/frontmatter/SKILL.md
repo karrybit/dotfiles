@@ -45,7 +45,6 @@ user-invocable: false
 | `investigations/YYYY-MM-DD-<話題>.md` | `Investigation` | `sources` に読んだ原文。~/cos の中だけを元にしたら `derived_from` |
 | `docs/<話題>.md` | `Document` | `derived_from` か `sources` に元 |
 | `investigations/YYYY-MM-DD-<話題>/map.md` | `Research Map` | `description` は `題:` のあとの文（`題:` は付けない） |
-| `docs/<id>/<version>/index.md` | `Explain` | `description` は解説の話題と結論の 1 文。`resource` は元の資料の URL（git はリポジトリ、Confluence はページ）。URL のない資料は `~/cos` からのパス（例: `investigations/<ファイル>`）。`projects` はプロジェクトの名前（上の `projects` の行）。`tasks` は解説を頼まれたタスク。`derived_from` に頼まれた threads の発言。版はフォルダの名前で表し、フィールドに書かない |
 | `threads/<タスクID>-<話題>.md`、`threads/YYYY-MM-DD-<話題>.md` | `Thread` | `description` は会話で何をするかの 1 文。`topic` は pane の label に収まる短い話題。`date` は作った日。`tasks` はその話題で進めるタスクの ID（議論だけの話題は `tasks: []`）。`projects` はタスクの label `project:<名前>` の名前で、タスクがなければ話題が関わるプロジェクトの名前 |
 | `threads/memo.md` | `Memo` | |
 | `threads/template.md` | `Template` | |
