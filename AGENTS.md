@@ -85,12 +85,9 @@
   repository), `KARO_DATA_HOME`, `KARO_CONFIG_HOME`, and `KARO_STATE_HOME`;
   when one is unset, the scripts use `~/karo` and `karo` under
   `${XDG_DATA_HOME:-~/.local/share}`, `${XDG_CONFIG_HOME:-~/.config}`, and
-  `${XDG_STATE_HOME:-~/.local/state}`. While `~/karo` does not exist,
-  `dot_config/zsh/zshenv.d/20_tool_karo.zsh` points `KARO_HOME`,
-  `KARO_DATA_HOME`, and `KARO_STATE_HOME` at the `~/cos` folders.
-  The karrybit plugin reads none of them and takes paths from its caller. The
-  `land` skill's script reads no variable: it runs outside the sandbox on
-  fixed folders.
+  `${XDG_STATE_HOME:-~/.local/state}`. The karrybit plugin reads none of them
+  and takes paths from its caller. The `land` skill's script reads no
+  variable: it runs outside the sandbox on fixed folders.
 - `run_onchange_04_prune-skills.sh.tmpl` removes skills deployed directly
   under `~/.config/claude/skills/` whose source entry is gone, which chezmoi
   does not do on its own. It only removes skills recorded in its own manifest,

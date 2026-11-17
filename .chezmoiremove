@@ -36,6 +36,10 @@
 # The command that opens the karo workspace is karo.
 .local/bin/cos
 
+# The karo plugin's folders default to ~/karo and the XDG base directories,
+# so no shell file exports KARO_*.
+.config/zsh/zshenv.d/20_tool_karo.zsh
+
 # The karo:record skill holds its steps in SKILL.md alone. Its skill folder is
 # not exact_, so the removed examples.md stays on a machine otherwise.
 .config/claude/skills/karo/skills/record/examples.md

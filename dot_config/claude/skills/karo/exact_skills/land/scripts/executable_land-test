@@ -288,15 +288,6 @@ real_env=(HOME="$home" KARO_HOME="$root/other" KARO_STATE_HOME="$root/other")
 refused "KARO_HOME and KARO_STATE_HOME in the environment" "Claude Code" -- "$branch"
 unset real_env
 
-# A HOME with ~/cos and ~/.local/state/cos/worktrees but no ~/karo: land takes those two.
-fresh
-home=$root/home
-mkdir -p "$home/.local/state/cos" &&
-  ln -s "$karo" "$home/cos" && ln -s "$root/worktrees" "$home/.local/state/cos/worktrees" || exit 2
-real_env=(HOME="$home")
-refused "~/cos while ~/karo does not exist" "Claude Code" -- "$branch"
-unset real_env
-
 # A TMPDIR of the caller's choosing, with a land-test.* folder in it whose karo and worktrees are links
 # to the ~/karo and the worktrees land uses.
 fresh

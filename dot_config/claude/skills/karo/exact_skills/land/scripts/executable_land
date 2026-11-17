@@ -22,8 +22,7 @@
 # which the karo_path line and the callers line are replaced, so each stays on
 # one line of its own. Nor does any config file: land runs outside the sandbox
 # on whatever these folders hold, so they are the fixed layout karo is written
-# for, not a setting. While ~/karo does not exist, ~/cos and
-# ~/.local/state/cos/worktrees stand in for it.
+# for, not a setting.
 set -eu
 
 usage() {
@@ -56,7 +55,6 @@ export GIT_OPTIONAL_LOCKS=0 GIT_CONFIG_COUNT=5 \
   GIT_CONFIG_KEY_4=submodule.recurse GIT_CONFIG_VALUE_4=false
 
 karo_path=$HOME/karo worktrees_path=$HOME/.local/state/karo/worktrees
-[ -e "$karo_path" ] || karo_path=$HOME/cos worktrees_path=$HOME/.local/state/cos/worktrees
 karo=$(cd "$karo_path" 2>/dev/null && pwd -P) || stop "$karo_path is not a folder"
 worktrees=$(cd "$worktrees_path" 2>/dev/null && pwd -P) || stop "$worktrees_path is not a folder"
 
