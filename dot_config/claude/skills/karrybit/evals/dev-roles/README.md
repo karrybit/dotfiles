@@ -93,21 +93,26 @@ I-3 compares the implementer as a whole session (`claude --agent karrybit:implem
 
 ## What the Suite Separates
 
-Measured with `--model claude-sonnet-5-5` and `--judge-model claude-opus-5-5`, three runs per arm; cases marked ×2 ran twice. Each cell is the passes summed over the case's graders and runs, leaving out `role-fired`. For R-1, D-2, V-2, and S-1, the with and canary arms ran on the current agents and the baseline is from the earlier runs.
+Measured with `--model claude-sonnet-5-5` and `--judge-model claude-opus-5-5`, three runs per arm; cases marked ×2 ran twice. Each cell is the passes summed over the case's graders and runs, leaving out `role-fired` and `grade.py`. "current" is the with-arm on the current agents; "previous" is the with-arm on the agents and `karrybit:dev-handoff` at 798ceb2, before the decision-boundary rules; baseline and canary are as in "Arms", and the canary ran on the previous agents. A dash is an arm that did not run.
 
-| Case | with | baseline | canary | Graders that separate |
-| --- | --- | --- | --- | --- |
-| R-1 ×2 | 16/24 | 10/24 | 12/24 | `questions-scope` 6, 0, 0 |
-| R-2 | 3/3 | 3/3 | 3/3 | none: the prompt points at `docs/`, which holds only the note with the answer |
-| S-1 ×2 | 30/30 | 12/15 | 30/30 | `decision-tradeoff` 6, 1, 6; `system-designer` keeps only its role paragraph, since `karrybit:dev-handoff`'s artifact table already asks for invariants and tradeoffs, so its canary is the same file |
-| S-2 | 3/3 | 3/3 | 3/3 | none: R-3 states the prefix isolation outright |
-| D-1 | 20/21 | 11/21 | 12/21 | `call-before-job` 3, 0, 1; `owner-plan` 3, 0, 2; `environment-first` 3, 2, 0 |
-| D-2 ×2 | 4/6 | 3/6 | 0/6 | `single-increment`; every with run is one increment without a `K-n` table, and two fail on an open question or a trial before the plan |
-| I-1 ×2 | 24/24 | 18/24 | 21/24 | `failing-test-first` 6, 0, 3; `grade.py` passes every run |
-| I-2 | 3/3 | 0/3 | 3/3 | `kept-expectation`; the baseline fixes the code without citing `docs/spec.md`, and one baseline run changes the test |
-| V-1 ×2 | 17/18 | 16/18 | 17/18 | none beyond one run: the baseline also sees that `test_other_tenant_is_denied` misses AC-3 |
-| V-2 ×2 | 7/12 | 3/6 | 6/12 | `pass-brief` 1/6, 0/3, 0/6: the reports still repeat the evidence under the completion-report headings |
+| Case | current | previous | baseline | canary | Graders that separate |
+| --- | --- | --- | --- | --- | --- |
+| R-1 | 9/12 | 16/24 ×2 | 10/24 ×2 | 12/24 ×2 | `questions-scope` 3, 6, 0, 0; previous, baseline, and canary used an earlier `no-implementation-in-ac`, which current still fails every run |
+| R-2 | 3/3 | 3/3 | 3/3 | 3/3 | none: the prompt points at `docs/`, which holds only the note with the answer |
+| R-3 | 9/9 | 9/9 | 8/9 | - | `no-means-in-ac` 3, 3, 2 |
+| R-4 | 6/6 | 5/6 | 5/6 | - | none over five runs: `keeps-public-contract` 5/5 and 5/5, `no-internal-names-in-ac` 4/5 and 5/5 (current, previous) |
+| S-1 | 15/15 | 30/30 ×2 | 12/15 | 30/30 ×2 | `decision-tradeoff` 3, 6, 1, 6; `system-designer` keeps only its role paragraph, so its canary is the same file |
+| S-2 | 3/3 | 3/3 | 3/3 | 3/3 | none: R-3 states the prefix isolation outright |
+| S-3 | 9/9 | 9/9 | 9/9 | - | none: every arm reads `docs/vendor/job-platform.md`, splits the export, and holds the concurrency limit as a blocking premise; `product-unchanged` passes every run |
+| D-1 | 15/21 | 20/21 | 11/21 | 12/21 | `fixed-csv-stub` 0, -, -, -: current plans serve the signed URL only after the real job; `owner-plan` 1, 3, 0, 2; `call-before-job` 2, 3, 0, 1 |
+| D-2 | 1/3 | 4/6 ×2 | 3/6 ×2 | 0/6 ×2 | none over five runs: `single-increment` 5/5 and 5/5 (current, previous) |
+| D-3 | 8/9 | 8/9 | 8/9 | - | none: `no-design-choice` fails one run in every arm |
+| I-1 | 12/12 | 24/24 ×2 | 18/24 ×2 | 21/24 ×2 | `failing-test-first` 3, 6, 0, 3; `grade.py` passes every run |
+| I-2 | 2/3 | 3/3 | 0/3 | 3/3 | none over five runs: `kept-expectation` 4/5 and 4/5 (current, previous); a failing run reads the docstring as the contract and misses `docs/spec.md` |
+| I-4 | 6/6 | 6/6 | 6/6 | - | none: every arm returns the per-tenant id to design with `store.py` lines; `contract-kept` passes every run |
+| V-1 | 9/9 | 17/18 ×2 | 16/18 ×2 | 17/18 ×2 | none: the baseline also sees that `test_other_tenant_is_denied` misses AC-3 |
+| V-2 | 1/6 | 7/12 ×2 | 3/6 | 6/12 ×2 | `no-blocking-findings` 1, 6/6, -, -: two current runs mutate the copy, find that no test fails without `authorize_tenant_access`, and return NOT VERIFIED; `pass-brief` 0/3 current, 0/1 previous, while previous, baseline, and canary also ran an earlier rubric |
+| V-3 | 8/9 | 6/9 | 6/9 | - | `base-rerun` 2, 0, 0 |
 
-- `no-implementation-in-ac` (R-1) still fails every with run: the acceptance criteria no longer name tables, functions, keys, or exceptions, but keep column names (`payload`, `actor`) and job state names.
-- Inside a run, `git` resolves to a shim that fails in the run's sandbox, so `git diff base...HEAD` is unavailable; the agents read the files instead, and no run ended on an error.
-- Judge calls were 85–90% of a run's cost on long outputs: a D-1 run cost 3–5 USD, an I-1 run about 0.25 USD.
+- Inside a run, `/usr/bin/git` is a shim that fails in the run's sandbox, while `/opt/homebrew/bin/git` by its absolute path works; agents that need `git diff base...HEAD` either find it or read the files instead, and no run ended on an error.
+- Judge calls were 85–90% of a run's cost on long outputs: a D-1 run cost 3–5 USD, an I-1 run about 0.25 USD, and the other cases 0.25–1.2 USD.
