@@ -99,7 +99,7 @@ Measured with `--model claude-sonnet-5-5` and `--judge-model claude-opus-5-5`, t
 - "798ceb2" is the with-arm on the definitions at 798ceb2, which the branch's first commit builds on.
 - baseline and canary are as in "Arms"; the canary ran on the 798ceb2 definitions.
 - "earlier" marks a cell from runs made before the branch, whose commit was not recorded. Every other 798ceb2, baseline, and five-run cell ran on the same day as the branch cells.
-- A dash is an arm that did not run. A cell marked 62ae1be in the 798ceb2 or baseline column ran with the suite at 62ae1be. No cell other than those at 62ae1be ran the definitions at 02cca0e or later.
+- A dash is an arm that did not run. A commit in the 798ceb2 or baseline column names the suite the cell ran with. No cell other than those at 62ae1be and 5af26c4 ran the definitions at 02cca0e or later.
 
 | Case | branch | 798ceb2 | baseline | canary | Graders that separate |
 | --- | --- | --- | --- | --- | --- |
@@ -118,7 +118,7 @@ Measured with `--model claude-sonnet-5-5` and `--judge-model claude-opus-5-5`, t
 | I-4 | 6/6 (438a659) | 6/6 | 6/6 | - | none: every arm returns the per-tenant id to design with `store.py` lines; `contract-kept` passes every run |
 | V-1 | 9/9 (438a659) | 17/18 ×2 earlier | 16/18 ×2 earlier | 17/18 ×2 earlier | none: the baseline also sees that `test_other_tenant_is_denied` misses AC-3 |
 | V-2 | 3/6 (68a2bba) | 3/6 | - | - | none: `no-blocking-findings` 3/3 in both; `pass-brief` fails every run of every arm, since no reply fits a clean PASS in 71 lines (73–100); the seven `karrybit:completion-report` sections and the hand-off items take 42–62 of those lines |
-| V-3 | 9/9 (62ae1be), 8/9 (438a659) | 6/9 (62ae1be), 6/9 | 6/9 | - | `base-rerun` 3 and 2, against 0 and 0, against 0; every passing run brought `base` out with `git archive` |
+| V-3 | 9/9 (5af26c4), 9/9 (62ae1be), 8/9 (438a659) | 6/9 (5af26c4), 6/9 (62ae1be), 6/9 | 6/9 | - | `base-rerun` 3, 3, and 2, against 0, 0, and 0, against 0; every passing run brought `base` out with `git archive`, and each earlier cell's runs score the same under the 5af26c4 `base-rerun` |
 
 - Inside a run, `/usr/bin/git` is a shim that fails in the run's sandbox, while `/opt/homebrew/bin/git` by its absolute path works; agents that need `git diff base...HEAD` either find it or read the files instead, and no run ended on an error.
 - Judge calls were 85–90% of a run's cost on long outputs: a D-1 run cost 3–5 USD, an I-1 run about 0.25 USD, and the other cases 0.25–1.2 USD.
