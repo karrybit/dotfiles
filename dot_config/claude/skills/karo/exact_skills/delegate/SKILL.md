@@ -45,6 +45,7 @@ description: Herdr 上の Agent に仕事を委任する手順。オーナーが
      - Herdr か Claude の起動を触る作業では、`karrybit:herdr-agent` skill の「Herdr を触る Agent のブリーフに足す決まり」に従う
      - cos では、`git rebase main` が `unable to unlink old` で落ちたら（sandbox がどの設定でも書かせない `.claude/settings.json` や `.claude/skills` を書き換える rebase）、sandbox の外でやり直さずに `git rebase --abort` で戻して作業を止め、CoS に `land --rebase` を頼むと報告する
      - 手段を徹底して simple & easy にし、既存のツールやライブラリで済むなら作らない
+     - 承認済みの手順の停止条件に当たったら、自分の判断で緩めずに止めて、当たった箇所（コマンド、パス、回数）を報告する
      - プロジェクトの節の「ブリーフの制約」の行
    - 受け入れ条件: 完了を判定できる条件。テストで確かめられる形にする
    - 許可範囲: 表かプロジェクトの節の「してよいこと」。merge と Ready for review への変更はしない
@@ -92,6 +93,7 @@ description: Herdr 上の Agent に仕事を委任する手順。オーナーが
 
 - `karrybit:herdr-agent` の「終わるのを待つ」の手順で、`<scripts>/agent-report --wait <名前>` を background で走らせ、foreground ではオーナーの次の依頼を受ける。
 - 通知の 1 行目が `idle` か `done` なら、2 行目からの完了報告を持って `karo:review` skill に進む。`blocked` なら、答えてよいかを AGENTS.md の「Herdr の操作」で決める。`no-report` なら、2 行目からの Agent の最後の発言を読み、Agent の質問のうち、答えが依頼とブリーフから決まらないものはオーナーに尋ねてから送る。そのほかの状態と `no-report` の送り方は herdr-agent の手順で扱い、そこで人に伝えるとある結果はオーナーに報告する。
+- Agent が停止条件に当たって止まったと報告したら、再開を自分で決めずに、理由と変更案を手順の承認者に出し、承認を得てから Agent に再開を頼む。
 
 完了条件: 指示を送ったすべての Agent について、background の agent-report が走っているか、終わったことを確かめている。
 
