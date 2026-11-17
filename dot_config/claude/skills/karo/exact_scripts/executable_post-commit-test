@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2016,SC2088  # the stub and the hook commands are text to run later, not to expand here
 # Show that post-commit runs thread-show on each thread file the last commit wrote and record
-# --restart-crit only when the commit added, removed, or renamed a file, and that a failed step exits 2.
+# --restart-crit only when the commit added, removed, or renamed a file, that a failed step exits 2, and
+# that the hook input of a Bash call other than the commit script runs nothing and exits 0.
 # post-commit runs from a copy beside stubs of thread-show and record that log each call and fail on request.
 # usage: post-commit-test   (the vault and stubs go to a temporary directory and are removed)
 set -uo pipefail
@@ -26,16 +28,28 @@ printf '# state\n' > "$v/state.md"
 git -C "$v" init -q && git -C "$v" config user.name test && git -C "$v" config user.email test@example.invalid
 git -C "$v" add -A && git -C "$v" commit -q -m init || exit 2
 
+# input <Bash command>: the PostToolUse hook input of a Bash call.
+input() { jq -nc --arg c "$1" '{tool_name: "Bash", tool_input: {command: $c}}'; }
+commit_call=$(input '~/.config/claude/skills/karo/scripts/commit "t-test0001: x" "why" threads/t-test0001-demo.md')
+
 # step <name> <want calls> <shell command run in the vault before a commit of everything> [<want exit>]
 step() {
   local name=$1 want=$2 cmd=$3 rc=${4:-0} out code calls
   (cd "$v" && eval "$cmd" && git add -A && git commit -q -m "$name") || { fail "$name: could not commit"; return; }
   : > "$tmp/calls"
-  out=$("$tmp/bin/post-commit" 2>&1); code=$?
+  out=$(printf '%s' "$commit_call" | "$tmp/bin/post-commit" 2>&1); code=$?
   calls=$(cat "$tmp/calls")
   if [[ $code -eq $rc && $calls == "$want" ]]; then pass "$name"; else fail "$name: exit $code, calls '$calls', want '$want': $out"; fi
 }
 step "a thread append shows the thread" "thread-show $v/threads/t-test0001-demo.md" 'printf "x\n" >> threads/t-test0001-demo.md'
+
+# The last commit changed a thread, so each of these would show it if post-commit went on.
+for c in 'git status' 'git diff; echo "exit=$?"' 'for f in a b; do echo "$f"; done' \
+  'echo ~/.config/claude/skills/karo/scripts/commit' 'rg -n scripts/commit README.md'; do
+  : > "$tmp/calls"
+  out=$(input "$c" | "$tmp/bin/post-commit" 2>&1); code=$?
+  if [[ $code -eq 0 && -z $out && ! -s $tmp/calls ]]; then pass "after '$c' nothing runs"; else fail "after '$c': exit $code, calls '$(cat "$tmp/calls")': $out"; fi
+done
 step "a change outside threads runs nothing" "" 'printf "x\n" >> state.md'
 step "a new thread shows it and restarts crit" "thread-show $v/threads/t-test0002-new.md"$'\n'"record --restart-crit" 'printf "# n\n" > threads/t-test0002-new.md'
 step "a removed file restarts crit" "record --restart-crit" 'git rm -q state.md'
@@ -45,8 +59,8 @@ step "a renamed thread shows it and restarts crit" "thread-show $v/threads/t-tes
 # A commondir file planted in .git would point git at another repository's config, so nothing runs.
 printf '%s\n' "$tmp/elsewhere" > "$v/.git/commondir"
 : > "$tmp/calls"
-out=$("$tmp/bin/post-commit" 2>&1); code=$?
-if [[ $code -eq 2 && $out == *"commondir points to another repository"* && ! -s $tmp/calls ]]; then pass "a commondir in .git stops it"; else fail "a commondir in .git: exit $code: $out"; fi
+out=$(printf '%s' "$commit_call" | "$tmp/bin/post-commit" 2>&1); code=$?
+if [[ $code -eq 2&& $out == *"commondir points to another repository"* && ! -s $tmp/calls ]]; then pass "a commondir in .git stops it"; else fail "a commondir in .git: exit $code: $out"; fi
 rm "$v/.git/commondir"
 
 export STUB_FAIL=1

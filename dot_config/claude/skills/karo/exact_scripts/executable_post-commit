@@ -1,10 +1,15 @@
 #!/bin/sh
-# PostToolUse hook for Bash, registered with "if": "Bash(<this folder>/commit *)". Hooks run outside the
-# sandbox, so herdr and crit work here: runs thread-show on each thread file the last commit of the cos dir
+# PostToolUse hook for Bash. It runs after every Bash call and exits 0 at once unless the hook input's
+# command calls the commit script beside this one, written in the ~ form that call-check requires. An
+# "if" rule cannot do this filtering: Claude Code runs the hook anyway on a command with $VAR, $(), or
+# backticks.
+# Hooks run outside the sandbox, so herdr and crit work here: runs thread-show on each thread file the last commit of the cos dir
 # added or changed, and record --restart-crit when the commit added, removed, or renamed a file (crit lists only the
 # files it started with). Both scripts sit beside this one. A failed step goes to Claude on stderr with
 # exit 2; the commit stays.
+# usage: post-commit < <PostToolUse hook input JSON>
 # Environment: COS_DIR (default ~/cos).
+jq -e '.tool_input.command // "" | test("^\\s*~/\\.config/claude/skills/karo/scripts/commit\\s")' >/dev/null 2>&1 || exit 0
 cos=${COS_DIR:-$HOME/cos}
 bin=$(dirname "$0")
 # The sandbox can write the cos dir's .git, except its config and hooks, and this hook runs outside it, so

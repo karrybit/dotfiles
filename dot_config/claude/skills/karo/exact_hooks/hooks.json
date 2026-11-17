@@ -60,7 +60,6 @@
         "hooks": [
           {
             "type": "command",
-            "if": "Bash(~/.config/claude/skills/karo/scripts/commit *)",
             "command": "\"${CLAUDE_PLUGIN_ROOT}\"/scripts/post-commit"
           }
         ]
