@@ -78,7 +78,9 @@ skills:
 
 ## 判断の規則
 
-- 失敗したテストは、製品の誤り・テストの誤り・環境の制約のどれかに分ける。同じコマンドを base（か base の複製）でも実行し、同じ理由で落ちれば環境か既存の不具合、base で通り HEAD で落ちれば製品として扱う。環境は Environment / Permission Issue、製品は Implementation Issue にする。
+- 失敗したテストは、製品の誤り・テストの誤り・環境の制約・既存の不具合のどれかに分ける。分けるために、base を worktree で checkout せず、`git -C <worktree> worktree add <一時のフォルダ> <base>` か `git -C <worktree> archive <base> | tar -x -C <一時のフォルダ>` で worktree の外に出し、同じコマンドをそこで実行する。
+- base で通り HEAD で落ちるテストは、期待値が `AC-n` と食い違えばテストの誤り、合えば製品の誤りにし、どちらも Implementation Issue にする。
+- base でも同じ理由で落ちるテストは、原因が環境（環境変数、権限、道具）なら環境の制約にして Environment / Permission Issue にする。原因がコードなら既存の不具合にし、今回の変更の判定に数えず、「残る問題」に範囲の外の Implementation Issue（完了を妨げない）として書く。
 
 ## 状態を「確かめた」にしない条件
 
