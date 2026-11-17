@@ -1,4 +1,5 @@
 tap "aquaproj/aqua", trusted: true
+tap "dicklesworthstone/tap", trusted: true
 tap "microsoft/apm", trusted: true
 tap "olets/tap"
 # Fast and opinionated formatter for R code
@@ -11,6 +12,10 @@ brew "alloy-analyzer"
 brew "aqua"
 # Automatic configure script builder
 brew "autoconf"
+# Graph-aware task management TUI for beads projects
+brew "dicklesworthstone/tap/bv"
+# Cross-agent session search - index and search AI coding agent conversations
+brew "dicklesworthstone/tap/cass"
 # Manage your dotfiles across multiple diverse machines, securely
 brew "chezmoi"
 # Modern, maintained replacement for ls
