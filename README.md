@@ -250,7 +250,9 @@ and the wheel select entries; `Esc` or `Ctrl-C` quits.
 
 terminal-browser (`work` profile, from aqua's local registry) draws a browser
 in a Herdr pane. The `karrybit:crit` skill's `crit-open` and the karo plugin's
-`view-open` open it in a right split. Chezmoi keeps three of its files:
+`view-open` open it through that skill's `tb-view`, which names the new pane
+`view - <name>`; closing the pane ends its browser, and the daemon exits 15
+seconds after the last one. Chezmoi keeps three of its files:
 
 | File | Content |
 |------|---------|

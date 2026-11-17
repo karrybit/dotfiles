@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# Show that view-open hands terminal-browser "open <path> --split right", with telemetry off, for an
-# existing .html or .svg under the cos dir's docs/ and an existing image or video anywhere, and refuses
-# everything else: no argument or two, a relative path, a path with "..", an .html or .svg outside
-# docs/, an extension off the list, a missing file, and a folder. It runs against a terminal-browser on
-# PATH that logs what it is given, with COS_DIR set to a temporary cos dir. settings-test checks that
-# the settings allow view-open and run it outside the sandbox.
+# Show that view-open hands the karrybit crit skill's tb-view "view - <name>" (default
+# "view - browser") and the path, with --no-merge when it comes first, for an existing .html or .svg
+# under the cos dir's docs/ and an existing image or video anywhere, and refuses everything else: no
+# argument or three, a relative path, a path with "..", an .html or .svg outside docs/, an extension
+# off the list, a missing file, a folder, and a name with characters other than letters, digits,
+# ".", "_", and "-", or starting with one of those three. It runs with HOME and COS_DIR in a temporary directory that holds a tb-view stub
+# logging what it is given (tb-view-test covers tb-view). settings-test checks that the settings
+# allow view-open and run it outside the sandbox.
 # usage: view-open-test [<view-open>]   (default: the one beside this script; its files go to a
 #        temporary directory that is removed)
 set -uo pipefail
@@ -17,12 +19,13 @@ failed=0
 fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
 pass() { printf 'ok\t%s\n' "$1"; }
 
-mkdir -p "$tmp/fake" "$tmp/cos/docs/abc/1" "$tmp/media" "$tmp/folder.png"
-cat > "$tmp/fake/terminal-browser" <<'EOF'
+stub=$tmp/.config/claude/skills/karrybit/skills/crit/scripts/tb-view
+mkdir -p "${stub%/*}" "$tmp/cos/docs/abc/1" "$tmp/media" "$tmp/folder.png"
+cat > "$stub" <<'EOF'
 #!/bin/sh
-printf '%s DO_NOT_TRACK=%s TERMINAL_BROWSER_NO_TELEMETRY=%s\n' "$*" "${DO_NOT_TRACK:-}" "${TERMINAL_BROWSER_NO_TELEMETRY:-}" >> "$FAKE_LOG"
+(IFS='|'; printf '%s\n' "$*") >> "$FAKE_LOG"
 EOF
-chmod +x "$tmp/fake/terminal-browser"
+chmod +x "$stub"
 for f in cos/docs/abc/1/index.html cos/docs/diagram.svg cos/page.html media/page.html media/d.svg \
   media/a.png media/a.jpg media/a.jpeg media/a.webp media/a.gif media/a.mp4 media/a.webm media/a.pdf media/a.PNG; do
   : > "$tmp/$f"
@@ -31,30 +34,42 @@ done
 export FAKE_LOG=$tmp/log COS_DIR=$tmp/cos
 run() {
   : > "$FAKE_LOG"
-  out=$(env PATH="$tmp/fake:$PATH" "$vo" "$@" 2>&1); code=$?
+  out=$(env HOME="$tmp" "$vo" "$@" 2>&1); code=$?
 }
+# opens <tb-view args joined by |> <view-open args>...
 opens() {
-  run "$1"
-  if [[ $code -eq 0 && $(cat "$FAKE_LOG") == "open $1 --split right DO_NOT_TRACK=1 TERMINAL_BROWSER_NO_TELEMETRY=1" ]]; then
-    pass "opens ${1#"$tmp"/}"
+  local want=$1
+  shift
+  run "$@"
+  if [[ $code -eq 0 && $(cat "$FAKE_LOG") == "$want" ]]; then
+    pass "opens ${*#"$tmp"/}"
   else
-    fail "opens ${1#"$tmp"/}: exit $code: $out: $(paste -sd '|' "$FAKE_LOG")"
+    fail "opens ${*#"$tmp"/}: exit $code: $out: $(paste -sd '/' "$FAKE_LOG")"
   fi
 }
 refused() {
   run "$@"
-  if [[ $code -eq 2 && ! -s $FAKE_LOG ]]; then pass "refuses ${1#"$tmp"/}${2+ (two arguments)}"
-  else fail "refuses ${1#"$tmp"/}: exit $code: $out: $(paste -sd '|' "$FAKE_LOG")"; fi
+  if [[ $code -eq 2 && ! -s $FAKE_LOG ]]; then pass "refuses ${*#"$tmp"/}"
+  else fail "refuses ${*#"$tmp"/}: exit $code: $out: $(paste -sd '/' "$FAKE_LOG")"; fi
 }
 
 for f in cos/docs/abc/1/index.html cos/docs/diagram.svg media/a.png media/a.jpg media/a.jpeg media/a.webp \
   media/a.gif media/a.mp4 media/a.webm; do
-  opens "$tmp/$f"
+  opens "view - browser|$tmp/$f" "$tmp/$f"
 done
+opens "view - diagram-1.v_2|$tmp/media/a.png" "$tmp/media/a.png" diagram-1.v_2
+opens "view - browser|$tmp/media/a.png|--no-merge" --no-merge "$tmp/media/a.png"
+opens "view - shot|$tmp/media/a.png|--no-merge" --no-merge "$tmp/media/a.png" shot
 
-run
-if [[ $code -eq 2 && ! -s $FAKE_LOG ]]; then pass "refuses no argument"; else fail "no argument: exit $code: $out"; fi
-refused "$tmp/media/a.png" "$tmp/media/a.gif"
+refused
+refused --no-merge
+refused "$tmp/media/a.png" shot extra
+refused "$tmp/media/a.png" --no-merge
+refused "$tmp/media/a.png" ""
+refused "$tmp/media/a.png" "two words"
+refused "$tmp/media/a.png" "名前"
+refused "$tmp/media/a.png" "a/b"
+refused "$tmp/media/a.png" "-x"
 refused media/a.png
 refused "$tmp/cos/docs/../page.html"
 refused "$tmp/cos/docs/abc/../../page.html"

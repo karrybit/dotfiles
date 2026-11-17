@@ -1,18 +1,25 @@
 #!/bin/sh
-# Opens one file in terminal-browser, in a right split of the Herdr pane the
-# caller runs in: an .html or .svg under the cos dir's docs/, or an image or
-# video anywhere, by absolute path. terminal-browser runs outside the sandbox,
-# so pages that can run scripts come only from docs/, where the explain
-# skill keeps its HTML.
-# usage: view-open <absolute path>
+# Opens one file in terminal-browser, in a Herdr pane named "view - <name>"
+# (default "view - browser") beside the caller's, through the karrybit crit
+# skill's tb-view, and prints what tb-view prints: an .html or .svg under the
+# cos dir's docs/, or an image or video anywhere, by absolute path. --no-merge
+# opens a new pane instead of a tab in an existing one. terminal-browser runs
+# outside the sandbox, so pages that can run scripts come only from docs/,
+# where the explain skill keeps its HTML.
+# usage: view-open [--no-merge] <absolute path> [<name>]
 # Environment: COS_DIR (default ~/cos).
 set -eu
 
 usage() {
-  echo "usage: view-open <absolute path of an .html or .svg under ${COS_DIR:-$HOME/cos}/docs, or a .png .jpg .jpeg .webp .gif .mp4 .webm>" >&2
+  echo "usage: view-open [--no-merge] <absolute path of an .html or .svg under ${COS_DIR:-$HOME/cos}/docs, or a .png .jpg .jpeg .webp .gif .mp4 .webm> [<name of letters, digits, . _ -, starting with a letter or digit>]" >&2
   exit 2
 }
-[ $# -eq 1 ] || usage
+merge=
+if [ "${1:-}" = --no-merge ]; then merge=--no-merge; shift; fi
+[ $# -eq 1 ] || [ $# -eq 2 ] || usage
+case "${2-browser}" in
+  '' | [._-]* | *[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-]*) usage ;;
+esac
 case "$1" in
   *..*) usage ;;
   "${COS_DIR:-$HOME/cos}"/docs/*.html | "${COS_DIR:-$HOME/cos}"/docs/*.svg) ;;
@@ -20,5 +27,4 @@ case "$1" in
   *) usage ;;
 esac
 [ -f "$1" ] || usage
-export DO_NOT_TRACK=1 TERMINAL_BROWSER_NO_TELEMETRY=1
-exec terminal-browser open "$1" --split right
+exec "$HOME/.config/claude/skills/karrybit/skills/crit/scripts/tb-view" "view - ${2-browser}" "$1" ${merge:+"$merge"}

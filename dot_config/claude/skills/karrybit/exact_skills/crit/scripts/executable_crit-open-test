@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# Show that crit-open hands terminal-browser only "open http://localhost:<port> --split right", with
-# telemetry off, for a port made of digits and refuses any other argument, against a terminal-browser
-# on PATH that logs what it is given. Given a Claude Code settings.json, also show that it allows
-# crit-open and runs it outside the sandbox in the ~/ form the skill calls it by (rules match the
-# command text, so an absolute-path rule misses that call), and has no rule or exclusion for
-# terminal-browser or open itself.
+# Show that crit-open hands the tb-view beside it only "view - crit" and http://localhost:<port>,
+# with --no-merge when it comes first, for a port made of digits, and refuses any other argument,
+# against a copy of crit-open beside a tb-view stub that logs what it is given (tb-view-test covers
+# tb-view). Given a Claude Code settings.json, also show that it allows crit-open and runs it outside
+# the sandbox in the ~/ form the skill calls it by (rules match the command text, so an
+# absolute-path rule misses that call), and has no rule or exclusion for terminal-browser or open
+# itself.
 # usage: crit-open-test [<settings.json>]   (tests the crit-open beside this script; its files go
 #        to a temporary directory that is removed)
 set -uo pipefail
 exec </dev/null
 bin=$(cd "$(dirname "$0")" && pwd)
-co=$bin/crit-open
 settings=${1:-}
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/crit-open-test.XXXXXX") || exit 2
 trap 'rm -rf "$tmp"' EXIT
@@ -18,24 +18,31 @@ failed=0
 fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
 pass() { printf 'ok\t%s\n' "$1"; }
 
-mkdir -p "$tmp/fake"
-cat > "$tmp/fake/terminal-browser" <<'EOF'
+cp "$bin/crit-open" "$tmp/" || exit 2
+co=$tmp/crit-open
+cat > "$tmp/tb-view" <<'EOF'
 #!/bin/sh
-printf '%s DO_NOT_TRACK=%s TERMINAL_BROWSER_NO_TELEMETRY=%s\n' "$*" "${DO_NOT_TRACK:-}" "${TERMINAL_BROWSER_NO_TELEMETRY:-}" >> "$FAKE_LOG"
+(IFS='|'; printf '%s\n' "$*") >> "$FAKE_LOG"
 EOF
-chmod +x "$tmp/fake/terminal-browser"
+chmod +x "$tmp/tb-view"
 
 export FAKE_LOG=$tmp/log
 run() {
   : > "$FAKE_LOG"
-  out=$(env PATH="$tmp/fake:$PATH" "$co" "$@" 2>&1); code=$?
+  out=$("$co" "$@" 2>&1); code=$?
 }
 
 run 49809
-if [[ $code -eq 0 && $(cat "$FAKE_LOG") == "open http://localhost:49809 --split right DO_NOT_TRACK=1 TERMINAL_BROWSER_NO_TELEMETRY=1" ]]; then
-  pass "a port opens http://localhost:<port> in a right split with telemetry off"
+if [[ $code -eq 0 && $(cat "$FAKE_LOG") == "view - crit|http://localhost:49809" ]]; then
+  pass "a port opens http://localhost:<port> in the view - crit pane"
 else
-  fail "a port: exit $code: $out: $(paste -sd '|' "$FAKE_LOG")"
+  fail "a port: exit $code: $out: $(paste -sd '/' "$FAKE_LOG")"
+fi
+run --no-merge 49809
+if [[ $code -eq 0 && $(cat "$FAKE_LOG") == "view - crit|http://localhost:49809|--no-merge" ]]; then
+  pass "--no-merge before the port is passed on"
+else
+  fail "--no-merge: exit $code: $out: $(paste -sd '/' "$FAKE_LOG")"
 fi
 
 refused() {
@@ -49,6 +56,10 @@ for arg in "" "4980a" "-a" "49809/x" "49809@example.com" "1 2" "49809;x" "\$x" "
 done
 run 49809 ~/x.command
 if [[ $code -eq 2 && ! -s $FAKE_LOG ]]; then pass "a second argument is refused"; else fail "a second argument: exit $code: $out"; fi
+run 49809 --no-merge
+if [[ $code -eq 2 && ! -s $FAKE_LOG ]]; then pass "--no-merge after the port is refused"; else fail "--no-merge after the port: exit $code: $out"; fi
+run --no-merge
+if [[ $code -eq 2 && ! -s $FAKE_LOG ]]; then pass "--no-merge alone is refused"; else fail "--no-merge alone: exit $code: $out"; fi
 
 if [[ -n $settings ]]; then
   if ! jq -e . "$settings" >/dev/null; then fail "$settings is not valid JSON"; else
