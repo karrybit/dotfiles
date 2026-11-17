@@ -7,6 +7,7 @@ description: Herdr 上の Agent に仕事を委任する手順。オーナーが
 
 - Agent の起動・指示の送信・待つ・報告の取り出し・閉じるは、`karrybit:herdr-agent` skill を読み込み、その手順と scripts で行う。下の `<scripts>` は `~/.config/claude/skills/karrybit/skills/herdr-agent/scripts` で、この `~/` の形のまま書く。この skill が決めるのは、渡す値（名前はタスク ID、ブリーフ、場所）と、返った JSON から書く記録。
 - Agent 名は、タスク ID の `.` を `-` に置き換えた形にする（`cos-a1b2.1` は `cos-a1b2-1`、その Review Agent は `cos-a1b2-1-rv`）。scripts にはタスク ID を渡し、Agent 名は claim の actor、記録、herdr のコマンドに使う。
+- 動いている Agent は、ファイルに書かずに名前で引く。状態・workspace・pane・worktree（`cwd`）は `herdr agent list`、branch と `place` は agent-ctl の控え（`~/.local/state/herdr-agent/ledger` の 1 行 1 JSON）、タスクと開始の時刻は Beads の `in_progress` の assignee と claim の event にある。
 - タスクは Beads（`bd`）にあり、`bd` を書くのは CoS だけにする。`bd` の呼び方は `karo:beads` skill の「呼び方」、comment の先頭の語は同じ skill の「comment の語」に従う。
 
 ## 作業場所と取り込み
@@ -60,9 +61,7 @@ description: Herdr 上の Agent に仕事を委任する手順。オーナーが
    完了条件: JSON の `status` が `in_progress`、`assignee` が Agent 名。
 4. `<scripts>/agent-ctl start <タスクID> <ブリーフ> <場所>` を単独で実行する（`<場所>` は「作業場所と取り込み」）。`status` が `working` でなければ、`karrybit:herdr-agent` の「止まった Agent に答える」に進み、答えてよいかは AGENTS.md の「Herdr の操作」で決める。Agent を起動できなかったときは、`bd unclaim <タスクID> --if-assignee <Agent 名> --json` で claim を戻す。
    完了条件: JSON の `status` が `working`。
-5. `assignments.md` の稼働中に `行を足す` で行（Agent 名、タスク、役割、Herdr workspace、pane、worktree は JSON の `place`、branch、開始日）を足す指示を、`commit 本文:` に workspace と、ブランチか、ブランチを作らないときは作業するチェックアウトとそのブランチを書いて、record で書く。
-   完了条件: record が `queued` を出した。
-6. 下の「終わるのを待つ」に従って待ち、その場でオーナーに返す。
+5. 下の「終わるのを待つ」に従って待ち、その場でオーナーに返す。
    完了条件: background の agent-report が走っている。
 
 ## goal を渡す
@@ -78,7 +77,7 @@ description: Herdr 上の Agent に仕事を委任する手順。オーナーが
    - 4 の `agent-ctl start` のすぐあとに `--goal "<完了の条件>"` を付ける（`<scripts>/agent-ctl start --goal "<完了の条件>" <タスクID> <ブリーフ> <場所>`。受け付ける条件の形は `karrybit:herdr-agent` の「起動する」にある）。
    - 4 で JSON の `goal` が `not_sent` なら（ブリーフで承認のダイアログが出たときなど）、4 のとおりに答えたあと、Agent が `blocked` でなくなったら `<scripts>/agent-ctl send --goal "<完了の条件>" <タスクID>` を単独で送る。
 
-   完了条件: どの goal も「新しいタスクを委任する」の 6 まで進み、`start` か `send` の JSON の `goal` が `sent` か、画面の内容を AskUserQuestion でオーナーに尋ねている。
+   完了条件: どの goal も「新しいタスクを委任する」の 5 まで進み、`start` か `send` の JSON の `goal` が `sent` か、画面の内容を AskUserQuestion でオーナーに尋ねている。
 
 ## 既存の Agent に追加指示を出す
 
@@ -103,7 +102,5 @@ description: Herdr 上の Agent に仕事を委任する手順。オーナーが
 
 1. `<scripts>/agent-ctl close <タスクID>` を単独で実行する（`karrybit:herdr-agent` の「閉じる」）。止まったら、その行と `parent_kept` をオーナーに報告する。ignored なファイルで止まったら、CoS は一覧をオーナーに示して消してよいかを尋ね、worktree のファイルは調べも消しもしない。消してよいと答えたら、一覧のパスをリテラルで並べた `rm -rf <place>/<パス> …` の 1 行を示してオーナーのターミナルで実行してもらい、終わったら `close` を走らせ直す。残すと答えたら、閉じずに残したことを報告する。
    完了条件: JSON が出ているか、止まった理由をオーナーに報告している。
-2. JSON をもとに、`assignments.md` の行を終了に移し（移し方は `karo:record` skill の「書き込みの指示の形」と、その skill の `examples.md` の終了の例）、`commit 本文:` にタスク ID、閉じた workspace、外した worktree の `place` を書いた指示を 1 つ作り、record で書く。
-   完了条件: record が `queued` を出した。
-3. タスクを閉じずに Agent を終えたとき（取り込まずに止めたとき）は、`bd unclaim <タスクID> --if-assignee <Agent 名> --json` を単独で実行する。
+2. タスクを閉じずに Agent を終えたとき（取り込まずに止めたとき）は、`bd unclaim <タスクID> --if-assignee <Agent 名> --json` を単独で実行する。
    完了条件: JSON の `status` が `open`。取り込んで閉じるタスクでは、この手順はない。

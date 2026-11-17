@@ -11,7 +11,7 @@ description: Agent の成果物をレビューに回す手順。実装 Agent の
 
 ## 1. 完了報告を受け取る
 
-1. 完了報告を読む。完了報告は、`karo:delegate` skill の「終わるのを待つ」の agent-report の通知の出力の 2 行目からにある。通知がないとき（会話を再開したあとなど）は、`<scripts>/agent-report <タスクID>` を単独で実行して読む（`<scripts>` は `karo:delegate` skill の冒頭）。完了報告に、`karrybit:completion-report` のひな形の見出しと、ブリーフの「完了時の報告」で足した見出しがそろっているかを確かめる。見出しが欠けていたら、`karo:delegate` skill の追加指示で埋めさせる。見出しがそろったら、完了報告の要旨（commit、テスト結果、残課題）を `報告:` の comment で書く。残課題のうち別の仕事にするものは、`karo:beads` skill の「タスクを進める」の 1・2 で `bd create --deps discovered-from:<タスクID>` で作る。
+1. 完了報告を読む。完了報告は、`karo:delegate` skill の「終わるのを待つ」の agent-report の通知の出力の 2 行目からにある。通知がないとき（会話を再開したあとなど）は、`<scripts>/agent-report <タスクID>` を単独で実行して読む（`<scripts>` は `karo:delegate` skill の冒頭）。完了報告に、`karrybit:completion-report` のひな形の見出しと、ブリーフの「完了時の報告」で足した見出しがそろっているかを確かめる。見出しが欠けていたら、`karo:delegate` skill の追加指示で埋めさせる。見出しがそろったら、完了報告の要旨（commit、テスト結果、残課題）と、Agent の worktree と branch（`karo:delegate` skill の冒頭の控えの `place` と `branch`）を `報告:` の comment で書く。残課題のうち別の仕事にするものは、`karo:beads` skill の「タスクを進める」の 1・2 で `bd create --deps discovered-from:<タスクID>` で作る。
    完了条件: 完了報告の項目がそろい、`報告:` の comment の JSON が出ている。
 2. PR があれば、`karrybit:publish-check` に PR の番号と worktree を渡して、ブランチ名、commit メッセージ、差分、PR の本文を調べさせる。`~/cos/rules/publish-terms.md` があれば、追加で探す語と形のファイルとして一緒に渡す。見つかったものは、レビューに回す前に `karo:delegate` skill の追加指示で元の Agent に直させる（commit メッセージは rebase で直させる）。そのリポジトリにもとからある語で直さないものは、3 の差分と一緒にオーナーに伝える。
    完了条件: `karrybit:publish-check` の報告が `見つかったもの: 0` か、残ったものすべてに直さない理由がある。
@@ -37,8 +37,8 @@ description: Agent の成果物をレビューに回す手順。実装 Agent の
    完了条件: background の agent-report が走っている。
 3. 終わったら、agent-report の通知の出力の 2 行目からの結果を、`~/cos/projects/repos/<名前>/reviews/<タスクID>-agent-<n>.md` に record の `新規:` で保存し（`<名前>` はリポジトリのプロジェクトの名前で、そのノート `projects/repos/<名前>.md` のパスから決まる。フロントマターは `karo:frontmatter` skill に従い、`commit 本文:` に指摘の数を書く）、保存したパスを添えた `レビュー依頼:` の comment を書く。
    完了条件: record が `queued` を出し、`レビュー依頼:` の comment の JSON が出ている。
-4. `<scripts>/agent-ctl close <タスクID>-rv` を単独で実行して Review Agent の tab を閉じ、`karo:delegate` skill の「Agent を終了する」の 2 の指示（Agent 名は実装 Agent の名前に `-rv` を付けた形）を record で書く。終わったら「1」の 3 に戻る。
-   完了条件: `close` の JSON が出て、record が `queued` を出した。
+4. `<scripts>/agent-ctl close <タスクID>-rv` を単独で実行して Review Agent の tab を閉じる。終わったら「1」の 3 に戻る。
+   完了条件: `close` の JSON が出た。
 
 ## 3. オーナーが差分を読んでレビューする（「1」の 3 で決めた作業）
 
@@ -64,5 +64,5 @@ description: Agent の成果物をレビューに回す手順。実装 Agent の
    完了条件: `close` の JSON が出ているか、止まった理由をオーナーに報告している。
 2. `bd close <タスクID> --reason "取り込み: <commit か PR>" --force --suggest-next --json` を単独で実行する（claim の持ち主が Agent 名なので `--force` が要る）。新しく ready になったタスクがあれば、オーナーに伝える。
    完了条件: JSON の `status` が `closed`。
-3. 次を 1 つの指示にまとめて record で書く: `state.md` の焦点にタスク ID があれば外す `置き換え:`、1 で片付けたときは `karo:delegate` skill の「Agent を終了する」の 2 の中身。どちらもなければ record は走らせない。
+3. `state.md` の焦点にタスク ID があれば、外す `置き換え:` の指示を record で書く。なければ record は走らせない。
    完了条件: record が `queued` を出したか、書くものがない。

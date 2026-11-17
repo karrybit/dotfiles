@@ -94,8 +94,8 @@ bd の既定の挙動のうち、`bd prime` に出ず、後半の約束が前提
 
 ### comment の語
 
-- comment の先頭の語で種類を書く: `報告:`（要旨・commit・テスト結果・残課題）、`レビュー依頼:`（誰に何のレビューを頼んだか）、`変更依頼:`・`承認:`（レビューの原本のパス）、`決定:`（そのタスクの中だけの決定と出典）、`メモ:`。
-- 委任は claim の event が Agent 名と時刻を持ち、作業場所は `assignments.md` が持つので、委任の comment は書かない。
+- comment の先頭の語で種類を書く: `報告:`（要旨・commit・テスト結果・残課題・Agent の worktree と branch）、`レビュー依頼:`（誰に何のレビューを頼んだか）、`変更依頼:`・`承認:`（レビューの原本のパス）、`決定:`（そのタスクの中だけの決定と出典）、`メモ:`。
+- 委任は claim の event が Agent 名と時刻を持ち、作業場所は Herdr と agent-ctl の控え（`karo:delegate` skill の冒頭）が持つので、委任の comment は書かない。
 - 長い原本（完了報告の全文、レビュー、調査）は threads・reviews・investigations に置き、comment にはそのパスを書く。
 
 ### 判断待ちと決定
