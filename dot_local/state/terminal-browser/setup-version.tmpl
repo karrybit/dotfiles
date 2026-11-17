@@ -1,10 +1,8 @@
 {{- /* terminal-browser skips its first-run setup (agent skill links, editor
        settings) while this file reads "<VERSION> <install root>". The root is
-       where aqua unpacks the version pinned in the profile's aqua.yaml. */ -}}
-{{- $prefix := "zenbu-labs/terminal-browser@" -}}
-{{- range (include (printf "dot_config/aquaproj-aqua/literal_%s/aqua.yaml" .profile) | fromYaml).packages -}}
-{{-   if hasPrefix $prefix .name -}}
-{{-     $version := trimPrefix $prefix .name -}}
-{{ $version }} {{ $.chezmoi.homeDir }}/.local/share/aquaproj-aqua/pkgs/github_release/github.com/zenbu-labs/terminal-browser/{{ $version }}/terminal-browser-darwin-arm64.tar.gz/terminal-browser
-{{    end -}}
-{{- end -}}
+       the folder the Homebrew cask unpacks for the installed version, so this
+       file follows the cask's version at each apply and is empty (not
+       written) until the cask is installed. */ -}}
+{{- range glob "/opt/homebrew/Caskroom/terminal-browser/*/terminal-browser/VERSION" -}}
+{{ include . | trim }} {{ dir . }}
+{{ end -}}

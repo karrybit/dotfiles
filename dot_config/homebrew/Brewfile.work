@@ -67,6 +67,8 @@ cask "microsoft-auto-update"
 cask "microsoft-teams"
 # Knowledge base that works on top of a local folder of plain text Markdown files
 cask "obsidian"
+# Terminal-based web browser
+cask "terminal-browser"
 # AI voice dictation that turns speech into polished text
 cask "typeless"
 vscode "christian-kohler.path-intellisense"

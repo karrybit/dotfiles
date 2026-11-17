@@ -64,9 +64,3 @@ packages:
     registry: local
   - name: tree-sitter/tree-sitter@v0.27.2
   - name: x-motemen/ghq@v1.12.0
-  # Raised by hand (README "terminal-browser"): each version keeps its own
-  # state folders and setup marker, so aqua update leaves it alone.
-  - name: zenbu-labs/terminal-browser@v0.15.5
-    registry: local
-    update:
-      enabled: false

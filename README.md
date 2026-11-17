@@ -96,11 +96,14 @@ chezmoi init --apply karrybit/dotfiles
 - Executes `run_onchange_` scripts (rustup and cargo packages except on `private_neo`, Claude settings, skills sync)
 
 aqua comes from Homebrew, so the aqua and Python `run_onchange_` scripts skip
-on the first apply. Install it, then run what those scripts would have:
+on the first apply. Install it, then run what those scripts would have. The
+second `chezmoi apply` writes the files rendered from installed casks
+(terminal-browser's `setup-version`):
 
 ```sh
 # 3. Install Homebrew, aqua-managed packages, and Python
 brew bundle install --file ~/.config/homebrew/Brewfile.<profile>
+chezmoi apply
 exec zsh -l
 aqua install --all
 uv python install --default --preview-features python-install-default
@@ -248,40 +251,41 @@ and the wheel select entries; `Esc` or `Ctrl-C` quits.
 
 ### terminal-browser
 
-terminal-browser (`work` profile, from aqua's local registry) draws a browser
-in a Herdr pane. The `karrybit:crit` skill's `crit-open` and the karo plugin's
-`view-open` open it through that skill's `tb-view`, which names the new pane
-`view - <name>`; closing the pane ends its browser, and the daemon exits 15
-seconds after the last one. Chezmoi keeps three of its files:
+terminal-browser (`work` profile, the Homebrew cask in `Brewfile.work`) draws
+a browser in a Herdr pane. It comes from Homebrew, not aqua, because the copy
+aqua unpacks fails macOS's code signature check and macOS refuses to open it.
+The `karrybit:crit` skill's `crit-open` and the karo plugin's `view-open` open
+it through that skill's `tb-view`, which names the new pane `view - <name>`;
+closing the pane ends its browser, and the daemon exits 15 seconds after the
+last one. Chezmoi keeps three of its files:
 
 | File | Content |
 |------|---------|
 | `~/.config/terminal-browser/settings.json` | Update checks and usage and crash telemetry off. Written only when missing (`create_`), so `terminal-browser config set` changes stay |
 | `~/.local/state/terminal-browser/skills-choice` | `no`: no agent skill links |
-| `~/.local/state/terminal-browser/setup-version` | `<version> <install root>`, rendered from `aqua.yaml`. While it matches the running install, terminal-browser skips its first-run setup, which links agent skills and edits editor settings |
+| `~/.local/state/terminal-browser/setup-version` | `<version> <install root>`, rendered from the installed cask's folder under `/opt/homebrew/Caskroom/terminal-browser/`, and not written until the cask is installed. While it matches the running install, terminal-browser skips its first-run setup, which links agent skills and edits editor settings |
 
-`terminal-browser upgrade` runs an unverified install script, so the version
-changes only through `aqua.yaml`, where `update.enabled: false` keeps `upup`
-from raising it. terminal-browser names its state, data, cache, and profile
-folders `terminal-browser-<hash>` after a hash of the install root, which
-contains the version, so every version gets new folders. To raise the version:
+The version is raised by `brew upgrade` in `upup`, like every cask;
+`terminal-browser upgrade` only prints that command for a Homebrew install.
+`upup` runs `chezmoi apply` after the upgrade, which rewrites `setup-version`
+for the new version. After a `brew upgrade` outside `upup`, run `chezmoi apply`
+before opening a terminal-browser pane; a pane opened in between runs the
+first-run setup once.
 
-1. Change `zenbu-labs/terminal-browser@<version>` in
-   `dot_config/aquaproj-aqua/literal_work/aqua.yaml`, and the version and
-   checksum of its entry in `aqua-checksums.json`. The checksum is the asset's
-   digest in upper case, without `sha256:`:
-   `gh api repos/zenbu-labs/terminal-browser/releases/tags/<version> --jq '.assets[] | select(.name == "terminal-browser-darwin-arm64.tar.gz") | .digest'`.
-2. Commit, merge, and `chezmoi apply`, which installs the version and rewrites
-   `setup-version`.
-3. Close every terminal-browser pane; its daemon exits 15 seconds after the
-   last one. `cat ~/.local/share/terminal-browser-*/install` prints each
-   folder's install root. For the old root's `<hash>`, remove
-   `~/.local/share/terminal-browser-<hash>`,
-   `~/.local/state/terminal-browser-<hash>`,
-   `~/.cache/terminal-browser-<hash>`, and
-   `~/Library/Application Support/terminal-browser-<hash>`. Keep
-   `~/.local/state/terminal-browser` and the `terminal-browser-interop`
-   folders, which every version shares.
+terminal-browser names its state, data, cache, and profile folders
+`terminal-browser-<hash>` after a hash of the install root with the Caskroom
+version removed, so the folders stay across versions. A folder made by another
+install root is left over: `cat ~/.local/share/terminal-browser-*/install`
+prints each folder's root, and for a root other than the cask's, close every
+terminal-browser pane and remove `~/.local/share/terminal-browser-<hash>`,
+`~/.local/state/terminal-browser-<hash>`, `~/.cache/terminal-browser-<hash>`,
+and `~/Library/Application Support/terminal-browser-<hash>`.
+
+`brew uninstall --zap --cask terminal-browser` also removes the agent skill
+links and the `~/.local/share`, `~/.cache`, and `~/.local/state` folders,
+including the two chezmoi-kept files above, which the next `chezmoi apply`
+writes again. It leaves `~/.config/terminal-browser` and
+`~/Library/Application Support/terminal-browser-<hash>`.
 
 ### run_onchange scripts
 

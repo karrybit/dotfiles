@@ -11,5 +11,3 @@ packages:
   - registry: standard
   - name: tomasz-tomczyk/crit
     registry: local
-  - name: zenbu-labs/terminal-browser
-    registry: local

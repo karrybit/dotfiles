@@ -211,11 +211,6 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/zenbu-labs/terminal-browser/v0.15.5/terminal-browser-darwin-arm64.tar.gz",
-      "checksum": "0A38BAA5A1836696BB0731B059D264AD852E8EF11855D355686FE806667608BA",
-      "algorithm": "sha256"
-    },
-    {
       "id": "http/awscli.amazonaws.com/AWSCLIV2-2.40.4.pkg",
       "checksum": "C1C579B87F777D199936AC3472E87EC07E59A0B7B66927A5899BE0DC5E13F64C",
       "algorithm": "sha256"
