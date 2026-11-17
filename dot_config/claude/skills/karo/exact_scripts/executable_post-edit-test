@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# Show that post-edit runs rumdl fmt on each .md written under the cos dir and fmcheck only on a record note
+# there: a broken record note exits 2 with its problem on stderr, a valid one and a .md outside the record
+# folders (a worktree under .claude/ among them) pass, and a file outside the cos dir is left untouched.
+# usage: post-edit-test [<cos dir>]   (default ~/cos, read only: the vault takes its .rumdl.toml and
+#        rules/frontmatter-schema.yaml; the vault goes to a temporary directory and is removed)
+set -uo pipefail
+exec </dev/null
+cos=${1:-$HOME/cos}
+bin=$(cd "$(dirname "$0")" && pwd)
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/post-edit-test.XXXXXX") || exit 2
+trap 'rm -rf "$tmp"' EXIT
+failed=0
+fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
+pass() { printf 'ok\t%s\n' "$1"; }
+
+v=$tmp/cos
+export COS_DIR=$v
+mkdir -p "$v/rules"
+cp "$cos/.rumdl.toml" "$v/" && cp "$cos/rules/frontmatter-schema.yaml" "$v/rules/" || exit 2
+cd "$v" || exit 2
+
+# edit <name> <file> <content> <want exit> <want stderr, or empty for none>: writes the file with a trailing
+# space on its last line, passes post-edit a Write's hook input for it, and checks the exit and stderr.
+# The file is left for the caller to check rumdl's fix.
+edit() {
+  local name=$1 f=$2 rc=$4 want=$5 err code
+  mkdir -p "$(dirname "$f")" && printf '%s ' "$3" > "$f"
+  err=$(jq -n --arg f "$f" '{hook_event_name: "PostToolUse", tool_name: "Write", tool_input: {file_path: $f}}' \
+    | "$bin/post-edit" 2>&1 >/dev/null); code=$?
+  if [[ $code -eq $rc && ( -z $want && -z $err || -n $want && $err == *"$want"* ) ]]; then pass "$name"; else fail "$name: exit $code: $err"; fi
+}
+# fixed <name> <file>: rumdl removed the trailing space; kept <name> <file>: it is still there.
+fixed() { if ! grep -q ' $' "$2"; then pass "$1"; else fail "$1: trailing space left"; fi; }
+kept() { if grep -q ' $' "$2"; then pass "$1"; else fail "$1: file changed"; fi; }
+
+note=$'---\ntype: Journal\ndate: 2026-01-01\n---\n\n- 09:00 例'
+edit "a valid record note passes" "$v/journal/2026-01-01.md" "$note" 0 ""
+fixed "rumdl formats a record note" "$v/journal/2026-01-01.md"
+edit "a broken record note exits 2 with its problem" "$v/journal/2026-01-02.md" $'## 例' 2 $'journal/2026-01-02.md\tno frontmatter'
+fixed "rumdl formats a broken record note" "$v/journal/2026-01-02.md"
+edit "a .md outside the record folders is not checked" "$v/README.md" $'## 例' 0 ""
+fixed "rumdl formats a .md outside the record folders" "$v/README.md"
+edit "a worktree under the cos dir is not checked" "$v/.claude/worktrees/w/journal/2026-01-02.md" $'## 例' 0 ""
+edit "a file that is not .md is left alone" "$v/journal/2026-01-02.txt" $'## 例' 0 ""
+kept "rumdl leaves a file that is not .md" "$v/journal/2026-01-02.txt"
+edit "a file outside the cos dir is not checked" "$tmp/wt/journal/2026-01-02.md" $'## 例' 0 ""
+kept "rumdl leaves a file outside the cos dir" "$tmp/wt/journal/2026-01-02.md"
+
+echo "post-edit-test: $failed failure(s)"
+[[ $failed -eq 0 ]]

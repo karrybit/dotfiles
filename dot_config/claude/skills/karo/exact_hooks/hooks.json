@@ -1,5 +1,5 @@
 {
-  "description": "Session context, the right column, the Bash call check, and Markdown formatting for the ~/cos record repository.",
+  "description": "Session context, the right column, the Bash call check, Markdown formatting and record note checks after an edit, the panes after a commit, and the prompt time for the ~/cos record repository.",
   "hooks": {
     "SessionStart": [
       {
@@ -51,7 +51,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "f=$(jq -r '.tool_input.file_path // empty'); case \"$f\" in \"$HOME\"/cos/*.md) rumdl fmt \"$f\" >/dev/null 2>&1 ;; esac; exit 0"
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/scripts/post-edit"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(~/.config/claude/skills/karo/scripts/commit *)",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/scripts/post-commit"
           }
         ]
       }
@@ -62,6 +72,10 @@
           {
             "type": "command",
             "command": "[ \"$CLAUDE_PROJECT_DIR\" != \"$HOME/cos\" ] || cat ~/.local/state/cos/record/problems.md 2>/dev/null || true"
+          },
+          {
+            "type": "command",
+            "command": "[ \"$CLAUDE_PROJECT_DIR\" != \"$HOME/cos\" ] || date '+発言の時刻: %Y-%m-%d %H:%M'"
           }
         ]
       }
