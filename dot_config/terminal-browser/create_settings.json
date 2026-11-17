@@ -1,0 +1,5 @@
+{
+  "updates.check": "off",
+  "telemetry.usage": "off",
+  "telemetry.crashReports": "off"
+}

@@ -246,6 +246,41 @@ The preview, below the listing at the pane's full width, shows the hovered
 file (glow for Markdown, bat otherwise) or the folder's contents. Mouse clicks
 and the wheel select entries; `Esc` or `Ctrl-C` quits.
 
+### terminal-browser
+
+terminal-browser (`work` profile, from aqua's local registry) draws a browser
+in a Herdr pane. The `karrybit:crit` skill's `crit-open` and the karo plugin's
+`view-open` open it in a right split. Chezmoi keeps three of its files:
+
+| File | Content |
+|------|---------|
+| `~/.config/terminal-browser/settings.json` | Update checks and usage and crash telemetry off. Written only when missing (`create_`), so `terminal-browser config set` changes stay |
+| `~/.local/state/terminal-browser/skills-choice` | `no`: no agent skill links |
+| `~/.local/state/terminal-browser/setup-version` | `<version> <install root>`, rendered from `aqua.yaml`. While it matches the running install, terminal-browser skips its first-run setup, which links agent skills and edits editor settings |
+
+`terminal-browser upgrade` runs an unverified install script, so the version
+changes only through `aqua.yaml`, where `update.enabled: false` keeps `upup`
+from raising it. terminal-browser names its state, data, cache, and profile
+folders `terminal-browser-<hash>` after a hash of the install root, which
+contains the version, so every version gets new folders. To raise the version:
+
+1. Change `zenbu-labs/terminal-browser@<version>` in
+   `dot_config/aquaproj-aqua/literal_work/aqua.yaml`, and the version and
+   checksum of its entry in `aqua-checksums.json`. The checksum is the asset's
+   digest in upper case, without `sha256:`:
+   `gh api repos/zenbu-labs/terminal-browser/releases/tags/<version> --jq '.assets[] | select(.name == "terminal-browser-darwin-arm64.tar.gz") | .digest'`.
+2. Commit, merge, and `chezmoi apply`, which installs the version and rewrites
+   `setup-version`.
+3. Close every terminal-browser pane; its daemon exits 15 seconds after the
+   last one. `cat ~/.local/share/terminal-browser-*/install` prints each
+   folder's install root. For the old root's `<hash>`, remove
+   `~/.local/share/terminal-browser-<hash>`,
+   `~/.local/state/terminal-browser-<hash>`,
+   `~/.cache/terminal-browser-<hash>`, and
+   `~/Library/Application Support/terminal-browser-<hash>`. Keep
+   `~/.local/state/terminal-browser` and the `terminal-browser-interop`
+   folders, which every version shares.
+
 ### run_onchange scripts
 
 These run automatically during `chezmoi apply` when their tracked content changes.
