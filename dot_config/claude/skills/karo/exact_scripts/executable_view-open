@@ -1,0 +1,24 @@
+#!/bin/sh
+# Opens one file in terminal-browser, in a right split of the Herdr pane the
+# caller runs in: an .html or .svg under the cos dir's docs/, or an image or
+# video anywhere, by absolute path. terminal-browser runs outside the sandbox,
+# so pages that can run scripts come only from docs/, where the explain
+# skill keeps its HTML.
+# usage: view-open <absolute path>
+# Environment: COS_DIR (default ~/cos).
+set -eu
+
+usage() {
+  echo "usage: view-open <absolute path of an .html or .svg under ${COS_DIR:-$HOME/cos}/docs, or a .png .jpg .jpeg .webp .gif .mp4 .webm>" >&2
+  exit 2
+}
+[ $# -eq 1 ] || usage
+case "$1" in
+  *..*) usage ;;
+  "${COS_DIR:-$HOME/cos}"/docs/*.html | "${COS_DIR:-$HOME/cos}"/docs/*.svg) ;;
+  /*.png | /*.jpg | /*.jpeg | /*.webp | /*.gif | /*.mp4 | /*.webm) ;;
+  *) usage ;;
+esac
+[ -f "$1" ] || usage
+export DO_NOT_TRACK=1 TERMINAL_BROWSER_NO_TELEMETRY=1
+exec terminal-browser open "$1" --split right

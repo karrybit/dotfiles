@@ -34,13 +34,13 @@ hook() {
 }
 
 check "karo@skills-dir is enabled" "$settings" '.enabledPlugins["karo@skills-dir"] == true'
-for rule in "scripts/commit *" "scripts/thread-show *" "scripts/thread-index *" "scripts/right-pane" "skills/land/scripts/land *" "scripts/karo-check"; do
+for rule in "scripts/commit *" "scripts/thread-show *" "scripts/thread-index *" "scripts/right-pane" "skills/land/scripts/land *" "scripts/karo-check" "scripts/view-open *"; do
   check "Bash($karo/$rule) is allowed and in neither ask nor deny" "$settings" '
     any(.permissions.allow[]?; . == "Bash(\($r))")
       and ([.permissions.ask[]?, .permissions.deny[]?] | any(startswith("Bash(" + ($r | rtrimstr(" *")))) | not)' \
     --arg r "$karo/$rule"
 done
-for command in "scripts/thread-show *" "scripts/right-pane" "skills/land/scripts/land *"; do
+for command in "scripts/thread-show *" "scripts/right-pane" "skills/land/scripts/land *" "scripts/view-open *"; do
   check "$karo/$command is in sandbox.excludedCommands" "$settings" 'any(.sandbox.excludedCommands[]?; . == $c)' --arg c "$karo/$command"
 done
 hook SessionStart 'startup|resume' right-pane

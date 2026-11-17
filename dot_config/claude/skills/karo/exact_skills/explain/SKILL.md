@@ -35,3 +35,8 @@ description: '~/cos/docs/ に控える HTML の解説の手順。版を探して
    完了条件: `karrybit:explain` の返事に、`~/cos/docs/<id>/<version>/index.html` と `index.md` の絶対パスがある。
 4. 返事の `index.md` が上の「控えの `index.md`」のフロントマターと本文の項目を満たすかを確かめ、2 つのファイル（説明の文書を `~/cos/docs/<話題>.md` に置いたときはそれも）のパスを渡して commit する（`karo:record` skill）。
    完了条件: commit が `OK` の行を出した。
+
+## 見せる
+
+- オーナーが解説を見たいと言ったら、`~/.config/claude/skills/karo/scripts/view-open ~/cos/docs/<id>/<version>/index.html` を単独の Bash で実行し、Herdr の pane の右の split に terminal-browser で開く。開いた pane はオーナーが閉じるので、CoS はその pane に触れない。
+- view-open が 0 でない終了コードで終わったら、`index.html` のパスをオーナーに伝える。

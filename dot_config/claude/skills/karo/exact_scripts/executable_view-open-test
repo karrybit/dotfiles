@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# Show that view-open hands terminal-browser "open <path> --split right", with telemetry off, for an
+# existing .html or .svg under the cos dir's docs/ and an existing image or video anywhere, and refuses
+# everything else: no argument or two, a relative path, a path with "..", an .html or .svg outside
+# docs/, an extension off the list, a missing file, and a folder. It runs against a terminal-browser on
+# PATH that logs what it is given, with COS_DIR set to a temporary cos dir. settings-test checks that
+# the settings allow view-open and run it outside the sandbox.
+# usage: view-open-test [<view-open>]   (default: the one beside this script; its files go to a
+#        temporary directory that is removed)
+set -uo pipefail
+exec </dev/null
+bin=$(cd "$(dirname "$0")" && pwd)
+vo=${1:-$bin/view-open}
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/view-open-test.XXXXXX") || exit 2
+trap 'rm -rf "$tmp"' EXIT
+failed=0
+fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
+pass() { printf 'ok\t%s\n' "$1"; }
+
+mkdir -p "$tmp/fake" "$tmp/cos/docs/abc/1" "$tmp/media" "$tmp/folder.png"
+cat > "$tmp/fake/terminal-browser" <<'EOF'
+#!/bin/sh
+printf '%s DO_NOT_TRACK=%s TERMINAL_BROWSER_NO_TELEMETRY=%s\n' "$*" "${DO_NOT_TRACK:-}" "${TERMINAL_BROWSER_NO_TELEMETRY:-}" >> "$FAKE_LOG"
+EOF
+chmod +x "$tmp/fake/terminal-browser"
+for f in cos/docs/abc/1/index.html cos/docs/diagram.svg cos/page.html media/page.html media/d.svg \
+  media/a.png media/a.jpg media/a.jpeg media/a.webp media/a.gif media/a.mp4 media/a.webm media/a.pdf media/a.PNG; do
+  : > "$tmp/$f"
+done
+
+export FAKE_LOG=$tmp/log COS_DIR=$tmp/cos
+run() {
+  : > "$FAKE_LOG"
+  out=$(env PATH="$tmp/fake:$PATH" "$vo" "$@" 2>&1); code=$?
+}
+opens() {
+  run "$1"
+  if [[ $code -eq 0 && $(cat "$FAKE_LOG") == "open $1 --split right DO_NOT_TRACK=1 TERMINAL_BROWSER_NO_TELEMETRY=1" ]]; then
+    pass "opens ${1#"$tmp"/}"
+  else
+    fail "opens ${1#"$tmp"/}: exit $code: $out: $(paste -sd '|' "$FAKE_LOG")"
+  fi
+}
+refused() {
+  run "$@"
+  if [[ $code -eq 2 && ! -s $FAKE_LOG ]]; then pass "refuses ${1#"$tmp"/}${2+ (two arguments)}"
+  else fail "refuses ${1#"$tmp"/}: exit $code: $out: $(paste -sd '|' "$FAKE_LOG")"; fi
+}
+
+for f in cos/docs/abc/1/index.html cos/docs/diagram.svg media/a.png media/a.jpg media/a.jpeg media/a.webp \
+  media/a.gif media/a.mp4 media/a.webm; do
+  opens "$tmp/$f"
+done
+
+run
+if [[ $code -eq 2 && ! -s $FAKE_LOG ]]; then pass "refuses no argument"; else fail "no argument: exit $code: $out"; fi
+refused "$tmp/media/a.png" "$tmp/media/a.gif"
+refused media/a.png
+refused "$tmp/cos/docs/../page.html"
+refused "$tmp/cos/docs/abc/../../page.html"
+refused "$tmp/cos/page.html"
+refused "$tmp/media/page.html"
+refused "$tmp/media/d.svg"
+refused "$tmp/media/a.pdf"
+refused "$tmp/media/a.PNG"
+refused "$tmp/media/missing.png"
+refused "$tmp/folder.png"
+refused "file://$tmp/media/a.png"
+
+if [[ $failed -gt 0 ]]; then echo "$failed failed"; exit 1; fi
+echo "all passed"
