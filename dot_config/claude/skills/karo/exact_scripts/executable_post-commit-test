@@ -2,10 +2,10 @@
 # shellcheck disable=SC2016,SC2088  # the stubs and the hook commands are text to run later, not to expand here
 # Show that post-commit restarts the crit daemon of the cos dir after a commit that added, removed, or
 # renamed a file and after a land without --rebase, and after nothing else; that it leaves crit alone
-# when no "crit ." daemon runs; that it never runs thread-show; that a failed restart exits 2; and that
-# the hook input of any other Bash call runs nothing and exits 0.
-# post-commit runs from a copy beside stubs of crit and thread-show that log each call; the crit stub
-# keeps whether its daemon runs in a file, and fails or does not start on request.
+# when no "crit ." daemon runs; that a failed restart exits 2; and that the hook input of any other
+# Bash call runs nothing and exits 0.
+# post-commit runs from a copy beside a crit stub that logs each call, keeps whether its daemon runs in
+# a file, and fails or does not start on request.
 # usage: post-commit-test   (the vault and stubs go to a temporary directory and are removed)
 set -uo pipefail
 exec </dev/null
@@ -18,7 +18,6 @@ pass() { printf 'ok\t%s\n' "$1"; }
 
 mkdir -p "$tmp/bin"
 cp "$bin/post-commit" "$tmp/bin/" || exit 2
-printf '#!/bin/sh\necho "thread-show $*" >> "%s/calls"\n' "$tmp" > "$tmp/bin/thread-show"
 cat > "$tmp/bin/crit" <<EOF
 #!/bin/sh
 state=$tmp/running
@@ -28,7 +27,7 @@ case \$1 in
   .) echo "crit \$* in \$PWD with \$GIT_DIR" >> "$tmp/calls"; [ -n "\${STUB_NOSTART:-}" ] || : > "\$state" ;;
 esac
 EOF
-chmod +x "$tmp/bin/thread-show" "$tmp/bin/crit"
+chmod +x "$tmp/bin/crit"
 export PATH=$tmp/bin:$PATH
 v=$tmp/cos
 export COS_DIR=$v

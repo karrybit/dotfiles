@@ -17,7 +17,7 @@ user-invocable: false
 | --- | --- |
 | `type` | 下の表の値 |
 | `description` | 1 文の要約。ファイル名の言い換えでなく、中身の結論か目的を書く |
-| `topic` | threads の短い話題（`threads/template.md` と `threads/memo.md` も持つ）。thread-show が pane の label と glow の見出しにする |
+| `topic` | threads の短い話題（`threads/template.md` と `threads/memo.md` も持つ）。thread-index が一覧の列に出す |
 | `date` | `YYYY-MM-DD`、引用符なし。ノートの日（journal の日、決めた日、MTG の日、会話を始めた日、調べた日） |
 | `tasks` | タスク ID のブロック形式のリスト（`  - cos-a2v`）。タスクのない threads は `tasks: []`。タスク ID のない仕事は外のチケットのキー（`ABC-123`） |
 | `projects` | プロジェクトの名前のブロック形式のリスト。値は Project のノートの、`projects/repos/` か `projects/misc/` より後ろのパスから `.md` を除いたもの（`github.com/acme/demo`、`work`） |

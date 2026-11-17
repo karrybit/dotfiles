@@ -3,9 +3,9 @@
 # Show that a project's settings.json holds what karo's scripts need from it: karo enabled, the scripts
 # a skill runs as one call allowed and kept out of ask and deny, and the ones that must leave the sandbox
 # in sandbox.excludedCommands. The hooks are karo's own hooks/hooks.json, which Claude Code merges with
-# the settings' hooks: it must run right-pane by a SessionStart hook on startup and resume, call-check
-# by a PreToolUse hook on Bash, and post-edit and post-commit by PostToolUse hooks on Edit|Write and on
-# Bash, and no settings hook may name a karo script or repeat one of its commands,
+# the settings' hooks: it must run call-check by a PreToolUse hook on Bash, and post-edit and
+# post-commit by PostToolUse hooks on Edit|Write and on Bash, and no settings hook may name a karo
+# script or repeat one of its commands,
 # since that hook would run twice. Each missing value is a FAIL line of its own. The rules use the ~
 # form, since permission rules and sandbox.excludedCommands match the command text as written.
 # usage: settings-test <settings.json>
@@ -34,16 +34,15 @@ hook() {
 }
 
 check "karo@skills-dir is enabled" "$settings" '.enabledPlugins["karo@skills-dir"] == true'
-for rule in "scripts/commit *" "scripts/thread-show *" "scripts/thread-index *" "scripts/right-pane" "skills/land/scripts/land *" "scripts/karo-check" "scripts/view-open *"; do
+for rule in "scripts/commit *" "scripts/thread-index *" "skills/land/scripts/land *" "scripts/karo-check" "scripts/view-open *"; do
   check "Bash($karo/$rule) is allowed and in neither ask nor deny" "$settings" '
     any(.permissions.allow[]?; . == "Bash(\($r))")
       and ([.permissions.ask[]?, .permissions.deny[]?] | any(startswith("Bash(" + ($r | rtrimstr(" *")))) | not)' \
     --arg r "$karo/$rule"
 done
-for command in "scripts/thread-show *" "scripts/right-pane" "skills/land/scripts/land *" "scripts/view-open *"; do
+for command in "skills/land/scripts/land *" "scripts/view-open *"; do
   check "$karo/$command is in sandbox.excludedCommands" "$settings" 'any(.sandbox.excludedCommands[]?; . == $c)' --arg c "$karo/$command"
 done
-hook SessionStart 'startup|resume' right-pane
 hook PreToolUse Bash call-check
 hook PostToolUse 'Edit|Write' post-edit
 hook PostToolUse Bash post-commit
