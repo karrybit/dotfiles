@@ -10,8 +10,8 @@
 # The new pane is the one herdr pane list shows after the open and not before.
 # Prints "<pane id> <label>", or a line saying the page went to an existing
 # pane, which keeps its name. Closing the pane ends its browser.
-# crit-open and the karo plugin's view-open call this after checking the
-# target, so this script takes any target and has no settings rule of its own.
+# Its callers, such as crit-open, check the target first, so this script
+# takes any target and has no settings rule of its own.
 # usage: tb-view <label> <url or absolute path> [--no-merge]
 set -eu
 

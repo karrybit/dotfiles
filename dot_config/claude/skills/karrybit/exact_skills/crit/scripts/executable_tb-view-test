@@ -42,13 +42,13 @@ EOF
 chmod +x "$tmp/fake/herdr" "$tmp/fake/terminal-browser"
 
 export LOG=$tmp/log PANES=$tmp/panes.json
-cos='{"pane_id": "w1:p1", "tab_id": "w1:t1", "label": "cos"}'
+caller='{"pane_id": "w1:p1", "tab_id": "w1:t1", "label": "caller"}'
 views='{"pane_id": "w1:p2", "tab_id": "w1:t1", "label": "view - crit"}, {"pane_id": "w1:p3", "tab_id": "w1:t2", "label": "view - browser"}, {"pane_id": "w1:p4", "tab_id": "w1:t1", "label": "notes"}'
 # run <new panes: 0, 1, 2, or fail> <panes beside the caller's, as JSON objects> <tb-view args>...
 run() {
   local new=$1 others=$2
   shift 2
-  printf '{"result": {"panes": [%s%s]}}\n' "$cos" "${others:+, $others}" > "$PANES"
+  printf '{"result": {"panes": [%s%s]}}\n' "$caller" "${others:+, $others}" > "$PANES"
   : > "$LOG"
   out=$(env PATH="$tmp/fake:$PATH" HERDR_WORKSPACE_ID=w1 HERDR_PANE_ID=w1:p1 HERDR_TAB_ID=w1:t1 NEW="$new" "$tv" "$@" 2>/dev/null); code=$?
   log=$(paste -sd '|' "$LOG")
