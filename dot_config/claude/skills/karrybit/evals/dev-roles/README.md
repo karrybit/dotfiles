@@ -93,27 +93,32 @@ I-3 compares the implementer as a whole session (`claude --agent karrybit:implem
 
 ## What the Suite Separates
 
-Measured with `--model claude-sonnet-5-5` and `--judge-model claude-opus-5-5`, three runs per arm; cases marked ×2 ran twice. Each cell is the passes summed over the case's graders and runs, leaving out `role-fired` and `grade.py`. "current" is the with-arm on the current agents; "previous" is the with-arm on the agents and `karrybit:dev-handoff` at 798ceb2, before the decision-boundary rules; baseline and canary are as in "Arms", and the canary ran on the previous agents. A dash is an arm that did not run. For R-1, R-2, S-1, S-2, D-2, I-1, I-2, and V-1, the previous, baseline, and canary cells come from runs made before the current agents existed, as do D-1's baseline and canary; every other cell, and every five-run count, ran on the same day as current.
+Measured with `--model claude-sonnet-5-5` and `--judge-model claude-opus-5-5`, three runs per arm; cases marked ×2 ran twice. Each cell is the passes summed over the case's graders and runs, leaving out `role-fired` and `grade.py`.
 
-| Case | current | previous | baseline | canary | Graders that separate |
+- "branch" is the with-arm on the role definitions and `karrybit:dev-handoff` at the commit in parentheses; a cell with several commits lists one count per commit.
+- "798ceb2" is the with-arm on the definitions at 798ceb2, which the branch's first commit builds on.
+- baseline and canary are as in "Arms"; the canary ran on the 798ceb2 definitions.
+- "earlier" marks a cell from runs made before the branch, whose commit was not recorded. Every other 798ceb2, baseline, and five-run cell ran on the same day as the branch cells.
+- A dash is an arm that did not run. No cell ran the definitions at 02cca0e or later.
+
+| Case | branch | 798ceb2 | baseline | canary | Graders that separate |
 | --- | --- | --- | --- | --- | --- |
-| R-1 | 9/12 | 16/24 ×2 | 10/24 ×2 | 12/24 ×2 | `questions-scope` 3, 6, 0, 0; previous, baseline, and canary used an earlier `no-implementation-in-ac`, which current still fails every run |
-| R-2 | 3/3 | 3/3 | 3/3 | 3/3 | none: the prompt points at `docs/`, which holds only the note with the answer |
-| R-3 | 9/9 | 9/9 | 8/9 | - | `no-means-in-ac` 3, 3, 2 |
-| R-4 | 6/6 | 5/6 | 5/6 | - | none over five runs: `keeps-public-contract` 5/5 and 5/5, `no-internal-names-in-ac` 4/5 and 5/5 (current, previous) |
-| S-1 | 15/15 | 30/30 ×2 | 12/15 | 30/30 ×2 | `decision-tradeoff` 3, 6, 1, 6; `system-designer` keeps only its role paragraph, so its canary is the same file |
-| S-2 | 3/3 | 3/3 | 3/3 | 3/3 | none: R-3 states the prefix isolation outright |
-| S-3 | 9/9 | 9/9 | 9/9 | - | none: every arm reads `docs/vendor/job-platform.md`, splits the export, and holds the concurrency limit as a blocking premise; `product-unchanged` passes every run |
-| D-1 | 18/21 | 19/21 | 11/21 | 12/21 | none beyond one run: `owner-plan` 2, 3; `fixed-csv-stub` 2, 2; `call-before-job` 2, 2 (current, previous). The current delivery-strategist has the previous body, so the `karrybit:dev-handoff` change does not account for a drop; a delivery-strategist with decision-boundary rules (increment boundaries only where the checked `K-n`, the visible result, or the rollback unit changes) scored 12/21, building the real job before the API server first called it |
-| D-2 | 3/3 | 4/6 ×2 | 3/6 ×2 | 0/6 ×2 | none: `single-increment` 5/5 and 5/5 over five runs (current, previous) |
-| D-3 | 8/9 | 8/9 | 8/9 | - | none: `no-design-choice` fails one run in every arm |
-| I-1 | 12/12 | 24/24 ×2 | 18/24 ×2 | 21/24 ×2 | `failing-test-first` 3, 6, 0, 3; `grade.py` passes every run |
-| I-2 | 2/3 | 3/3 | 0/3 | 3/3 | none over five runs: `kept-expectation` 4/5 and 4/5 (current, previous); a failing run reads the docstring as the contract and misses `docs/spec.md` |
-| I-4 | 6/6 | 6/6 | 6/6 | - | none: every arm returns the per-tenant id to design with `store.py` lines; `contract-kept` passes every run |
-| V-1 | 9/9 | 17/18 ×2 | 16/18 ×2 | 17/18 ×2 | none: the baseline also sees that `test_other_tenant_is_denied` misses AC-3 |
-| V-2 | 3/6 | 3/6 | - | - | none: `no-blocking-findings` 3/3 in both; `pass-brief` fails every run of every arm, since no reply fits a clean PASS in 71 lines (73–100). The current cell ran a verifier whose report item also asked for a one-line summary and one-line runs; that item now matches the previous agents |
-| V-3 | 8/9 | 6/9 | 6/9 | - | `base-rerun` 2, 0, 0 |
+| R-1 | 9/12 (438a659) | 16/24 ×2 earlier | 10/24 ×2 earlier | 12/24 ×2 earlier | `questions-scope` 3, 6, 0, 0; the earlier cells used an earlier `no-implementation-in-ac`, which the branch fails every run |
+| R-2 | 3/3 (438a659) | 3/3 earlier | 3/3 earlier | 3/3 earlier | none: the prompt points at `docs/`, which holds only the note with the answer |
+| R-3 | 9/9 (438a659) | 9/9 | 8/9 | - | `no-means-in-ac` 3, 3, 2 |
+| R-4 | 6/6 (438a659) | 5/6 | 5/6 | - | none over five runs: `keeps-public-contract` 5/5 (438a659) and 5/5, `no-internal-names-in-ac` 4/5 (438a659) and 5/5 |
+| S-1 | 15/15 (438a659) | 30/30 ×2 earlier | 12/15 earlier | 30/30 ×2 earlier | `decision-tradeoff` 3, 6, 1, 6; `system-designer` keeps only its role paragraph, so its canary is the same file |
+| S-2 | 3/3 (438a659) | 3/3 earlier | 3/3 earlier | 3/3 earlier | none: R-3 states the prefix isolation outright |
+| S-3 | 9/9 (438a659) | 9/9 | 9/9 | - | none: every arm reads `docs/vendor/job-platform.md`, splits the export, and holds the concurrency limit as a blocking premise; `product-unchanged` passes every run |
+| D-1 | 18/21 (6ac7c2b), 12/21 (005cd46), 15/21 (438a659) | 19/21 | 11/21 earlier | 12/21 earlier | `fixed-csv-stub` 2, 0, 0 against 2; `owner-plan` 2, 0, 1 against 3; `call-before-job` 2, 0, 2 against 2. 6ac7c2b has the 798ceb2 delivery-strategist with the branch's `karrybit:dev-handoff`, so the dev-handoff change does not account for the drop. At 438a659 and 005cd46, delivery-strategist placed increment boundaries only where the checked `K-n`, the visible result, or the rollback unit changed, and its plans built the real job before the API server first called it |
+| D-2 | 3/3 (005cd46), 1/3 (438a659) | 4/6 ×2 earlier | 3/6 ×2 earlier | 0/6 ×2 earlier | none over five runs: `single-increment` 5/5 (438a659) and 5/5 |
+| D-3 | 8/9 (438a659) | 8/9 | 8/9 | - | none: `no-design-choice` fails one run in every arm |
+| I-1 | 12/12 (438a659) | 24/24 ×2 earlier | 18/24 ×2 earlier | 21/24 ×2 earlier | `failing-test-first` 3, 6, 0, 3; `grade.py` passes every run |
+| I-2 | 2/3 (438a659) | 3/3 earlier | 0/3 earlier | 3/3 earlier | none over five runs: `kept-expectation` 4/5 (438a659) and 4/5; a failing run reads the docstring as the contract and misses `docs/spec.md` |
+| I-4 | 6/6 (438a659) | 6/6 | 6/6 | - | none: every arm returns the per-tenant id to design with `store.py` lines; `contract-kept` passes every run |
+| V-1 | 9/9 (438a659) | 17/18 ×2 earlier | 16/18 ×2 earlier | 17/18 ×2 earlier | none: the baseline also sees that `test_other_tenant_is_denied` misses AC-3 |
+| V-2 | 3/6 (68a2bba) | 3/6 | - | - | none: `no-blocking-findings` 3/3 in both; `pass-brief` fails every run of every arm, since no reply fits a clean PASS in 71 lines (73–100) |
+| V-3 | 8/9 (438a659) | 6/9 | 6/9 | - | `base-rerun` 2, 0, 0 |
 
-- D-2 and D-3's current cells ran the delivery-strategist with decision-boundary rules that the current one does not have.
 - Inside a run, `/usr/bin/git` is a shim that fails in the run's sandbox, while `/opt/homebrew/bin/git` by its absolute path works; agents that need `git diff base...HEAD` either find it or read the files instead, and no run ended on an error.
 - Judge calls were 85–90% of a run's cost on long outputs: a D-1 run cost 3–5 USD, an I-1 run about 0.25 USD, and the other cases 0.25–1.2 USD.
