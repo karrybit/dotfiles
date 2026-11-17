@@ -17,9 +17,8 @@ user-invocable: false
 | --- | --- |
 | `type` | 下の表の値 |
 | `description` | 1 文の要約。ファイル名の言い換えでなく、中身の結論か目的を書く |
-| `topic` | threads の短い話題（`thread/template.md` と `thread/memo.md` も持つ）。thread-index が一覧の列に出す |
-| `date` | `YYYY-MM-DD`、引用符なし。ノートの日（standup の日、決めた日、MTG の日、会話を始めた日、調べた日） |
-| `tasks` | タスク ID のブロック形式のリスト（`  - karo-a2v`）。タスクのない threads は `tasks: []`。タスク ID のない仕事は外のチケットのキー（`ABC-123`） |
+| `date` | `YYYY-MM-DD`、引用符なし。ノートの日（standup の日、決めた日、MTG の日、調べた日） |
+| `tasks` | タスク ID のブロック形式のリスト（`  - karo-a2v`）。タスク ID のない仕事は外のチケットのキー（`ABC-123`） |
 | `projects` | プロジェクトの名前のブロック形式のリスト。値は Project のノートの、`project/repo/` か `project/misc/` より後ろのパスから `.md` を除いたもの（`github.com/acme/demo`、`work`） |
 | `status` | 下書きは `draft`、置き換わったものは `deprecated`。仕上がったものには書かない |
 | `resource` | ノートが表す実物の URL（リポジトリ、PR） |
@@ -28,7 +27,7 @@ user-invocable: false
 
 - ほかの道具が書いたキーは、消さずにそのまま残す。
 - 値が `` ` ``・`[`・`*`・`&`・`!`・`|`・`>`・`'`・`"`・`%`・`@` で始まるとき、`: ` か ` #` を含むときは、値を単一引用符で囲む。
-- フロントマターのあとに空行を置き、本文を `## ` の見出しから始める。threads は、本文を `thread/template.md` から写して発言の `### ` の見出しから始め、template の `type: Template` は写さない。
+- フロントマターのあとに空行を置き、本文を `## ` の見出しから始める。
 
 ## 種類
 
@@ -43,9 +42,6 @@ user-invocable: false
 | `investigation/YYYY-MM-DD-<話題>.md` | `Investigation` | `sources` に読んだ外の原文 |
 | `doc/<話題>.md` | `Document` | `sources` に外の元の資料 |
 | `investigation/YYYY-MM-DD-<話題>/map.md` | `Research Map` | `description` は `題:` のあとの文（`題:` は付けない） |
-| `thread/<タスクID>-<話題>.md`、`thread/YYYY-MM-DD-<話題>.md` | `Thread` | `description` は会話で何をするかの 1 文。`topic` は pane の label に収まる短い話題。`date` は作った日。`tasks` はその話題で進めるタスクの ID（議論だけの話題は `tasks: []`）。`projects` はタスクの label `project:<名前>` の名前で、タスクがなければ話題が関わるプロジェクトの名前 |
-| `thread/memo.md` | `Memo` | |
-| `thread/template.md` | `Template` | |
 
 - どれにも当てはまらないノートの `type` の追加をオーナーが承認したら、`frontmatter-schema.yaml` の `types`・`layers`・`paths` を同じ commit で直し、この表に行を足す karo の直しをオーナーに伝える（この表は karo の skill にあり、`$KARO_HOME` の commit には入らない）。
 
@@ -53,11 +49,11 @@ user-invocable: false
 
 | 出来事 | 直すフィールド |
 | --- | --- |
-| standup・threads に追記した | なし |
+| standup に追記した | なし |
 | 決定を新しい決定で置き換えた | なし（`bd supersede`。`karo:beads` skill の「判断待ちと決定」） |
 | 下書きが仕上がった | `status: draft` の行を消す |
 | 調査や資料が新しいものに置き換わった | 古いほうに `status: deprecated` |
-| ノートが別のタスクにも使われるようになった（thread なら、その話題で新しいタスクを作ったか、派生タスクの会話を書いた） | `tasks` にそのタスク ID を足す |
+| ノートが別のタスクにも使われるようになった | `tasks` にそのタスク ID を足す |
 | タスクの状態・優先度・担当が変わった | なし（`bd` で変える。`karo:beads` skill） |
 
 - 表の出来事が起きたら、`$KARO_HOME/AGENTS.md` の「記録の更新」の書き込みと一緒にフィールドを直し、同じ commit に入れる。完了条件: 表の右の列のフィールドを直したファイルが、その commit に入っている。

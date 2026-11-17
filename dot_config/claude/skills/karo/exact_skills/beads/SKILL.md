@@ -96,7 +96,8 @@ bd の既定の挙動のうち、`bd prime` に出ず、後半の約束が前提
 
 - comment の先頭の語で種類を書く: `報告:`（要旨・commit・テスト結果・残課題・Agent の worktree と branch）、`レビュー依頼:`（誰に何のレビューを頼んだか）、`変更依頼:`・`承認:`（レビューの原本のパス）、`決定:`（そのタスクの中だけの決定と出典）、`メモ:`。
 - 委任は claim の event が Agent 名と時刻を持ち、作業場所は Herdr と agent-ctl の控え（`karo:delegate` skill の冒頭）が持つので、委任の comment は書かない。
-- 長い原本（完了報告の全文、レビュー、調査）は threads・reviews・investigation に置き、comment にはそのパスを書く。
+- 長い原本（レビュー、調査）は `project/repo/<vcs>/<org>/<repo>/review/`・`investigation/` に置き、comment にはそのパスを書く。
+- 会話を出典に書くときは、オーナーの発言なら `会話 YYYY-MM-DD HH:MM`（その発言に hook が付けた `発言の時刻:` の値）、cass で引いた過去の会話なら、そのセッションの `source_path` と発言の時刻を書く。
 
 ### 判断待ちと決定
 
@@ -104,7 +105,7 @@ bd の既定の挙動のうち、`bd prime` に出ず、後半の約束が前提
 - 判断待ちの問いから決定までを、1 つの decision の bead で持つ。
 - 規則・`state.md`・ノートから決定を指すときは、`決定 karo-xxx` と書く。今の判断待ちと効く決定の引き方は、`$KARO_HOME/rule/information-design.md` の「探す」の表にある。
 
-1. 判断が必要になったら、`bd create '<問い 1 文>' -t decision -l human -l project:<名前> --body-file <本文> --json` で作る。本文は「問い」「選択肢と推奨」「出典」（threads のパスと `YYYY-MM-DD HH:MM`）の節にする。全プロジェクトに効く問いは label `project:all` にする。タスクを止めるなら、`bd dep add <タスク> <決定> --json` で blocker にする（`--parent` の子は blocker にならない。前半の「依存」）。
+1. 判断が必要になったら、`bd create '<問い 1 文>' -t decision -l human -l project:<名前> --body-file <本文> --json` で作る。本文は「問い」「選択肢と推奨」「出典」（上の「comment の語」の会話の出典の形）の節にする。全プロジェクトに効く問いは label `project:all` にする。タスクを止めるなら、`bd dep add <タスク> <決定> --json` で blocker にする（`--parent` の子は blocker にならない。前半の「依存」）。
    完了条件: `bd human list --status open --json` に出る。
 2. オーナーが決めたら、`bd update <決定> --title '<決めたこと 1 文>' --body-file <全文> --json` で、本文を「決定」「理由」「検討した選択肢」「影響」「出典」の節にする。続けて `bd close <決定> --reason '決定: <1 文>' --json` で閉じる（`bd human respond` の close_reason は前半の「書く」のとおり `Responded` になる）。
    完了条件: `bd show <決定> --json` の close_reason に決定の文があり、止めていたタスクが `bd ready` に戻っている。
@@ -123,7 +124,7 @@ bd の既定の挙動のうち、`bd prime` に出ず、後半の約束が前提
 
 ### `bd prime` と違うところ
 
-- `bd prime` の memory の勧め（`bd remember`）の代わりに、会話のメモは `thread/memo.md` に書いて commit する（`karo:record` skill）。
+- `bd prime` の memory の勧め（`bd remember`）の代わりに、返事の要らない会話のメモは、関わるタスクの `メモ:` の comment にする。当たるタスクがなければ、上の「タスクを進める」の 1・2 でタスクを作ってから書く。
 - `bd prime` の「SESSION CLOSE PROTOCOL」の「完了した issue を閉じる」は、上の「閉じる時機」のとおり、取り込みのあとに閉じる。
 
 ### 回復

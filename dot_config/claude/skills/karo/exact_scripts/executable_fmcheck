@@ -12,7 +12,7 @@ schema=$(yq -o=json . rule/frontmatter-schema.yaml) || exit 2
 vocab=$(ls project/repo/*/*/*.md project/misc/*.md 2>/dev/null | sed -E 's#^project/(repo|misc)/##; s#\.md$##' | jq -Rn '[inputs]')
 n=0
 for p; do
-  case $p in standup/*.md|source/*.md|investigation/*.md|project/*.md|thread/*.md|doc/*.md) ;; *) continue ;; esac
+  case $p in standup/*.md|source/*.md|investigation/*.md|project/*.md|doc/*.md) ;; *) continue ;; esac
   [ -f "$p" ] || continue
   fm=null
   if [ "$(head -n 1 "$p")" = --- ]; then

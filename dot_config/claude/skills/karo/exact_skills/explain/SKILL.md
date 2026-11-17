@@ -78,7 +78,7 @@ description: 'HTML の解説を git の外の store（`$KARO_DATA_HOME/html/<UUI
    - HTML の書き先: `<一時フォルダ>/index.html`。
    - 控えのファイル: `<一時フォルダ>/metadata.json`。書き方の規則は上の「metadata.json」。入れる値は、3 の id と `created_at`、1 の `source`、頼まれたタスクとプロジェクトで、`title` は HTML の題にする。検査は上の「metadata.json」の検査のコマンド。
    - 説明の文書の書き先: オーナーが説明の文書も残すよう頼んだときだけ渡す。書き先は `$KARO_HOME/doc/<話題>.md`、フロントマターは `karo:frontmatter` skill の種類の表の `Document` の行（sources は元の資料と版）、検査は `<karo-check> --only doc/<話題>.md`。`$KARO_HOME` の記録なので、書いたあとは `karo:record` skill に従う。
-   - 頼まれた内容の原文: 頼まれた threads の発言。
+   - 頼まれた内容の原文: 頼まれた発言の本文と時刻。今のセッションにない過去の発言は、`$KARO_HOME/rule/information-design.md` の「探す」の表のとおり cass で引く。
    - 呼び出し側が元の資料の場所・版・読み方を渡したときは、それもそのまま渡す。
 
    完了条件: `karrybit:explain` の返事に、`<一時フォルダ>/index.html` と `<一時フォルダ>/metadata.json` の絶対パスがある。

@@ -31,7 +31,7 @@ passes() {
 
 stops_bin "$HOME/.config/claude/skills/karo/scripts/commit s b x"
 stops_bin '$HOME/.config/claude/skills/karo/skills/land/scripts/land b'
-stops_bin '${HOME}/.config/claude/skills/karo/scripts/thread-index --since 3d'
+stops_bin '${HOME}/.config/claude/skills/karo/scripts/karo-check --only doc/a.md'
 stops_bin '"$HOME"/.config/claude/skills/karo/scripts/karo-check'
 stops_bin "cat $HOME/.config/claude/skills/karo/scripts/call-check"
 stops_bin "$HOME/.config/claude/skills/karo/scripts/commit s b x | head"

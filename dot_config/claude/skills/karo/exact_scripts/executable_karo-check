@@ -57,7 +57,7 @@ FS=$'\x1f' LS=$'\x1e'
 export FS LS
 excl=$(yq '.exclude | join("|")' "$SCHEMA")
 types=$'\n'$(yq '.types | keys | .[]' "$SCHEMA")$'\n'
-folders=(standup source project investigation doc thread)
+folders=(standup source project investigation doc)
 existing=()
 for d in "${folders[@]}"; do [[ -d $d ]] && existing+=("$d"); done
 # The project vocabulary: the path names of the project notes, <vcs>/<org>/<repo> for

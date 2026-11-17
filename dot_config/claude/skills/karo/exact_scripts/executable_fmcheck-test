@@ -14,15 +14,17 @@ fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
 pass() { printf 'ok\t%s\n' "$1"; }
 
 v=$tmp/karo
-mkdir -p "$v"/{standup,project/repo/github.com/acme,thread,investigation,rule}
+mkdir -p "$v"/{standup,project/repo/github.com/acme/demo/review,doc,investigation,rule}
 cp "$karo/rule/frontmatter-schema.yaml" "$v/rule/" || exit 2
 printf -- '---\ntype: Standup\ndate: 2026-01-01\n---\n\n## 報告\n' > "$v/standup/2026-01-01.md"
 printf -- '---\ntype: Project\ndescription: 例のプロジェクト。\nprojects:\n  - github.com/acme/demo\n---\n\n## demo\n' > "$v/project/repo/github.com/acme/demo.md"
-thread=$'---\ntype: Thread\ndescription: 例の会話\ntopic: 例\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - github.com/acme/demo\n---\n\n### オーナー · 2026-01-01 09:00\n\n[demo](project/repo/github.com/acme/demo.md)\n'
-printf '%s' "$thread" > "$v/thread/t-test0001-demo.md"
+review=$'---\ntype: Review\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - github.com/acme/demo\n---\n\n## 結論\n\n承認\n'
+printf '%s' "$review" > "$v/project/repo/github.com/acme/demo/review/t-test0001-1.md"
+doc=$'---\ntype: Document\ndescription: 例の資料。\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - github.com/acme/demo\n---\n\n## 例\n\n[demo](project/repo/github.com/acme/demo.md)\n'
+printf '%s' "$doc" > "$v/doc/demo.md"
 printf -- '---\ntype: Investigation\ndescription: 例の調べ物。\ndate: 2026-01-01\nprojects:\n  - all\n---\n\n## 例\n' > "$v/investigation/2026-01-01-example.md"
 cd "$v" || exit 2
-valid=(standup/2026-01-01.mdproject/repo/github.com/acme/demo.md thread/t-test0001-demo.md investigation/2026-01-01-example.md)
+valid=(standup/2026-01-01.md project/repo/github.com/acme/demo.md project/repo/github.com/acme/demo/review/t-test0001-1.md doc/demo.md investigation/2026-01-01-example.md)
 if out=$("$bin/fmcheck" "${valid[@]}" 2>&1) && [[ -z $out ]]; then pass "valid notes pass"; else fail "valid notes: $out"; fi
 
 # expect <name> <path> <content> <problem>...: fmcheck on the note alone exits 1 and prints each problem
@@ -41,11 +43,11 @@ expect "standup named YYYY-MM-DD-standup.md" standup/2026-01-02-standup.md $'---
 expect "meeting notes outside source/meeting/" source/2026-01-02-weekly.md $'---\ntype: Meeting Notes\ndescription: 例。\ndate: 2026-01-02\nprojects:\n  - all\nsources:\n  - https://example.invalid/a\n---\n\n## 例\n' "path does not match Meeting Notes"
 expect "missing date and projects" investigation/2026-01-02-nodate.md $'---\ntype: Investigation\ndescription: 例。\nsources:\n  - https://example.invalid/a\n---\n\n## 例\n' "missing date" "missing projects"
 expect "unparseable frontmatter" investigation/2026-01-02-bad.md $'---\ntype: Investigation\ndescription: a: b\n---\n\n## 例\n' "unparseable frontmatter"
-expect "unknown project" thread/t-test0001-nope.md "${thread/github.com\/acme\/demo$'\n'/nope$'\n'}" "unknown project: nope"
-expect "wiki link" thread/t-test0001-wiki.md "${thread}"$'\n[[foo]] の話\n' "wiki link, write a path link"
-expect "thread name without a task ID or date" thread/demo.md "$thread" "path does not match Thread"
-expect "unknown type" thread/t-test0001-type.md "${thread/type: Thread/type: Threads}" "unknown type: Threads"
-expect "date not YYYY-MM-DD" thread/t-test0001-date.md "${thread/date: 2026-01-01/date: 2026-1-1}" "date is not YYYY-MM-DD"
+expect "unknown project" doc/nope.md "${doc/github.com\/acme\/demo$'\n'/nope$'\n'}" "unknown project: nope"
+expect "wiki link" doc/wiki.md "${doc}"$'\n[[foo]] の話\n' "wiki link, write a path link"
+expect "review name without a task ID" project/repo/github.com/acme/demo/review/demo.md "$review" "path does not match Review"
+expect "unknown type" doc/type.md "${doc/type: Document/type: Documents}" "unknown type: Documents"
+expect "date not YYYY-MM-DD" doc/date.md "${doc/date: 2026-01-01/date: 2026-1-1}" "date is not YYYY-MM-DD"
 
 # skip <name> <path> <content>: fmcheck passes the path without a word
 skip() {
@@ -54,11 +56,12 @@ skip() {
   if out=$("$bin/fmcheck" "$p" 2>&1) && [[ -z $out ]]; then pass "$name"; else fail "$name: $out"; fi
   rm "$p"
 }
-skip "unclosed [[ and wiki links in code are not links" thread/t-test0001-code.md "${thread}"$'\n[[meet] と `[[a]]`\n\n```\n[[b]]\n```\n'
+skip "unclosed [[ and wiki links in code are not links" doc/code.md "${doc}"$'\n[[meet] と `[[a]]`\n\n```\n[[b]]\n```\n'
 skip "a path the schema excludes" investigation/2026-01-01-example/sources/a.md $'## 原文\n'
 skip "a path outside the record folders" README.md $'## 例\n'
-skip "a file that is not .md" thread/t-test0001-demo.txt $'例\n'
-if out=$("$bin/fmcheck" thread/removed.md 2>&1) && [[ -z $out ]]; then pass "a removed path"; else fail "a removed path: $out"; fi
+skip "thread/ is outside the record folders" thread/t-test0001-demo.md $'## 例\n'
+skip "a file that is not .md" doc/demo.txt $'例\n'
+if out=$("$bin/fmcheck" doc/removed.md 2>&1) && [[ -z $out ]]; then pass "a removed path"; else fail "a removed path: $out"; fi
 
 mv rule/frontmatter-schema.yaml rule/schema.yaml
 out=$("$bin/fmcheck" "${valid[@]}" 2>&1); code=$?
