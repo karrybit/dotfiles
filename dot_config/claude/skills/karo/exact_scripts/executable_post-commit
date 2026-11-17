@@ -40,7 +40,8 @@ running() {
 running || exit 0
 out=$(crit stop . 2>&1) || ng "crit stop failed: $out"
 # The daemon lives only while this client does, so the client gets a session of its own and outlives the hook.
-python3 -c 'import os, sys; os.setsid(); os.execvp(sys.argv[1], sys.argv[1:])' crit . --no-open </dev/null >/dev/null 2>&1 &
+# -I keeps the cos dir, which the sandbox can write, and PYTHON* variables off the interpreter's import path.
+python3 -I -c 'import os, sys; os.setsid(); os.execvp(sys.argv[1], sys.argv[1:])' crit . --no-open </dev/null >/dev/null 2>&1 &
 i=0
 while [ $i -lt 50 ]; do
   sleep 0.2
