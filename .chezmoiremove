@@ -39,3 +39,7 @@
 # The karo:record skill holds its steps in SKILL.md alone. Its skill folder is
 # not exact_, so the removed examples.md stays on a machine otherwise.
 .config/claude/skills/karo/skills/record/examples.md
+
+# The crit eval's branch case has no port-from-target grader. The evals folder
+# is not exact_, so the removed grader stays on a machine otherwise.
+.config/claude/skills/karrybit/evals/crit/plugin-eval/branch/graders/port-from-target.md

@@ -1,4 +1,4 @@
 ---
 type: regex
-pattern: 'cd /work/retry && crit -p '
+pattern: 'cd /work/retry && crit(?:\s|`|$)'
 ---

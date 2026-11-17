@@ -9,9 +9,8 @@ The cases grant no `Bash`, so a run cannot start crit or open a browser; each ca
 - `plugin-eval/pr-number`: the user gives only a PR number.
   - `asks-url`: the answer asks for the PR's URL instead of guessing a repository.
 - `plugin-eval/branch`: the user gives a branch that is not a PR and its worktree, and asks for the commands.
-  - `worktree-command`: `cd /work/retry && crit -p <port>`.
-  - `no-range`: no `--range`, which would key the session to a SHA.
-  - `port-from-target`: the port comes from `echo '/work/retry feature/retry' | cksum`.
+  - `worktree-command`: `cd /work/retry && crit`.
+  - `no-range`: no `crit --range`, which would key the session to a SHA.
 
 ## Settings for This Suite
 
@@ -20,4 +19,4 @@ The cases grant no `Bash`, so a run cannot start crit or open a browser; each ca
 
 ## What the Suite Separates
 
-Measured on a wrapper holding only this skill, with `karrybit:skill-eval`'s suite command (`--ablation none`, `--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`): every grader passes 3/3. The graders guard against regressions; no other configuration has been measured against them.
+Measured on a wrapper holding only this skill, with `karrybit:skill-eval`'s suite command (`--ablation none`, `--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`): every `pr-number` grader passes 3/3. The `branch` case's prompt and graders are not measured. The graders guard against regressions; no other configuration has been measured against them.

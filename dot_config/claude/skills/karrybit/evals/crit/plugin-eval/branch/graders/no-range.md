@@ -1,5 +1,5 @@
 ---
 type: regex
-pattern: 'crit (?:-p \S+ )?--range'
+pattern: 'crit --range'
 match: not_contains
 ---
