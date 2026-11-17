@@ -22,3 +22,4 @@ Measured on wrappers holding only this skill, with `karrybit:skill-eval`'s suite
 
 - `no-commit-is-none` passes 3/3 in each repeat of the skill, and 0/3 in each repeat of a version without the template line saying that no commit is the one word `なし` and without the rule naming where such an explanation goes: those runs write `なし（commit していません）`. With the template line removed and the one-word rule kept only under 書き方, it passes 1 of 9, so the line under the heading carries the behavior.
 - The other graders fail at most one run in any repeat. They guard against regressions and do not separate versions.
+- With the rule that writes a repeated fact under one heading and points to it from the others, every grader passes 3/3 in one repeat at 2e34e1b and one at 10778d8.

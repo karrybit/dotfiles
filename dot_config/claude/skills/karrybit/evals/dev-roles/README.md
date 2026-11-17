@@ -99,7 +99,7 @@ Measured with `--model claude-sonnet-5-5` and `--judge-model claude-opus-5-5`, t
 - "798ceb2" is the with-arm on the definitions at 798ceb2, which the branch's first commit builds on.
 - baseline and canary are as in "Arms"; the canary ran on the 798ceb2 definitions.
 - "earlier" marks a cell from runs made before the branch, whose commit was not recorded. Every other 798ceb2, baseline, and five-run cell ran on the same day as the branch cells.
-- A dash is an arm that did not run. A commit in the 798ceb2 or baseline column names the suite the cell ran with. No cell other than those at 98accf4, 6ed7460, 4fe2178, and 2e34e1b ran the definitions at 02cca0e or later.
+- A dash is an arm that did not run. A commit in the 798ceb2 or baseline column names the suite the cell ran with. No cell other than those at 98accf4, 6ed7460, 4fe2178, 2e34e1b, and 10778d8 ran the definitions at 02cca0e or later.
 
 | Case | branch | 798ceb2 | baseline | canary | Graders that separate |
 | --- | --- | --- | --- | --- | --- |
@@ -116,7 +116,7 @@ Measured with `--model claude-sonnet-5-5` and `--judge-model claude-opus-5-5`, t
 | I-1 | 12/12 (2e34e1b), 12/12 (438a659) | 24/24 ×2 earlier | 18/24 ×2 earlier | 21/24 ×2 earlier | `failing-test-first` 3 and 3, 6, 0, 3; `grade.py` passes every run |
 | I-2 | 2/3 (438a659) | 3/3 earlier | 0/3 earlier | 3/3 earlier | none over five runs: `kept-expectation` 4/5 (438a659) and 4/5; a failing run reads the docstring as the contract and misses `docs/spec.md` |
 | I-4 | 6/6 (438a659) | 6/6 | 6/6 | - | none: every arm returns the per-tenant id to design with `store.py` lines; `contract-kept` passes every run |
-| V-1 | 9/9 (438a659) | 17/18 ×2 earlier | 16/18 ×2 earlier | 17/18 ×2 earlier | none: the baseline also sees that `test_other_tenant_is_denied` misses AC-3 |
+| V-1 | 7/7 (10778d8), 9/9 (438a659) | 17/18 ×2 earlier | 16/18 ×2 earlier | 17/18 ×2 earlier | none: the baseline also sees that `test_other_tenant_is_denied` misses AC-3. At 10778d8 the third run's `tenant-gap-located` and `returns-to-implementation` were skipped at the run's cost ceiling and are left out; one run writes its unverified items under `### 確かめられなかったこと` inside the Verification Report and leaves out the `## 確かめられなかったこと` heading |
 | V-2 | 3/6 (2e34e1b), 3/6 (4fe2178), 3/6 (68a2bba) | 3/6 | - | - | none: `no-blocking-findings` 3/3 in every cell; `pass-brief` fails every run, since no reply fits a clean PASS in 71 lines. Replies ran 72–99 lines at 68a2bba and 798ceb2, 87–105 at 4fe2178, and 73–84 at 2e34e1b, whose verifier leaves unverified items and remaining risks to the `karrybit:completion-report` sections and the hand-off; the Verification Report took 34–51 lines at 4fe2178 and 20–30 at 2e34e1b, the seven sections and the hand-off 47–54 in both, and blank lines 23–34 of every reply |
 | V-3 | 9/9 (2e34e1b), 9/9 (6ed7460), 9/9 (98accf4), 8/9 (438a659) | 6/9 (6ed7460), 6/9 (98accf4), 6/9 | 6/9 | - | `base-rerun` 3, 3, 3, and 2, against 0, 0, and 0, against 0; every passing run brought `base` out with `git archive`, and each earlier cell's runs score the same under the 6ed7460 `base-rerun` |
 
