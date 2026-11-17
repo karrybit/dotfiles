@@ -111,7 +111,7 @@ Measured with `--model claude-sonnet-5-5` and `--judge-model claude-opus-5-5`, t
 | I-2 | 2/3 | 3/3 | 0/3 | 3/3 | none over five runs: `kept-expectation` 4/5 and 4/5 (current, previous); a failing run reads the docstring as the contract and misses `docs/spec.md` |
 | I-4 | 6/6 | 6/6 | 6/6 | - | none: every arm returns the per-tenant id to design with `store.py` lines; `contract-kept` passes every run |
 | V-1 | 9/9 | 17/18 ×2 | 16/18 ×2 | 17/18 ×2 | none: the baseline also sees that `test_other_tenant_is_denied` misses AC-3 |
-| V-2 | 3/6 | 3/6 | - | - | none: `no-blocking-findings` 3/3 in both; `pass-brief` 0/3 in both, with replies of 84–100 lines (current) and 73–89 lines (previous) against 71 |
+| V-2 | 3/6 | 3/6 | - | - | none: `no-blocking-findings` 3/3 in both; `pass-brief` fails every run of every arm, since no reply fits a clean PASS in 71 lines (73–100). The current cell ran a verifier whose report item also asked for a one-line summary and one-line runs; that item now matches the previous agents |
 | V-3 | 8/9 | 6/9 | 6/9 | - | `base-rerun` 2, 0, 0 |
 
 - Inside a run, `/usr/bin/git` is a shim that fails in the run's sandbox, while `/opt/homebrew/bin/git` by its absolute path works; agents that need `git diff base...HEAD` either find it or read the files instead, and no run ended on an error.
