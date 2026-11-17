@@ -93,7 +93,7 @@ I-3 compares the implementer as a whole session (`claude --agent karrybit:implem
 
 ## What the Suite Separates
 
-Measured with `--model claude-sonnet-5-5` and `--judge-model claude-opus-5-5`, three runs per arm; cases marked ×2 ran twice. Each cell is the passes summed over the case's graders and runs, leaving out `role-fired` and `grade.py`. "current" is the with-arm on the current agents; "previous" is the with-arm on the agents and `karrybit:dev-handoff` at 798ceb2, before the decision-boundary rules; baseline and canary are as in "Arms", and the canary ran on the previous agents. A dash is an arm that did not run.
+Measured with `--model claude-sonnet-5-5` and `--judge-model claude-opus-5-5`, three runs per arm; cases marked ×2 ran twice. Each cell is the passes summed over the case's graders and runs, leaving out `role-fired` and `grade.py`. "current" is the with-arm on the current agents; "previous" is the with-arm on the agents and `karrybit:dev-handoff` at 798ceb2, before the decision-boundary rules; baseline and canary are as in "Arms", and the canary ran on the previous agents. A dash is an arm that did not run. For R-1, R-2, S-1, S-2, D-2, I-1, I-2, and V-1, the previous, baseline, and canary cells come from runs made before the current agents existed, as do D-1's baseline and canary; every other cell, and every five-run count, ran on the same day as current.
 
 | Case | current | previous | baseline | canary | Graders that separate |
 | --- | --- | --- | --- | --- | --- |
@@ -104,14 +104,14 @@ Measured with `--model claude-sonnet-5-5` and `--judge-model claude-opus-5-5`, t
 | S-1 | 15/15 | 30/30 ×2 | 12/15 | 30/30 ×2 | `decision-tradeoff` 3, 6, 1, 6; `system-designer` keeps only its role paragraph, so its canary is the same file |
 | S-2 | 3/3 | 3/3 | 3/3 | 3/3 | none: R-3 states the prefix isolation outright |
 | S-3 | 9/9 | 9/9 | 9/9 | - | none: every arm reads `docs/vendor/job-platform.md`, splits the export, and holds the concurrency limit as a blocking premise; `product-unchanged` passes every run |
-| D-1 | 15/21 | 20/21 | 11/21 | 12/21 | `fixed-csv-stub` 0, -, -, -: current plans serve the signed URL only after the real job; `owner-plan` 1, 3, 0, 2; `call-before-job` 2, 3, 0, 1 |
+| D-1 | 15/21 | 19/21 | 11/21 | 12/21 | `fixed-csv-stub` 0, 2; `owner-plan` 1, 3 (current, previous): current plans have seven increments and serve the signed URL only after the real job, previous plans eight or nine with the signed URL before it; `call-before-job` 2 and 2 |
 | D-2 | 1/3 | 4/6 ×2 | 3/6 ×2 | 0/6 ×2 | none over five runs: `single-increment` 5/5 and 5/5 (current, previous) |
 | D-3 | 8/9 | 8/9 | 8/9 | - | none: `no-design-choice` fails one run in every arm |
 | I-1 | 12/12 | 24/24 ×2 | 18/24 ×2 | 21/24 ×2 | `failing-test-first` 3, 6, 0, 3; `grade.py` passes every run |
 | I-2 | 2/3 | 3/3 | 0/3 | 3/3 | none over five runs: `kept-expectation` 4/5 and 4/5 (current, previous); a failing run reads the docstring as the contract and misses `docs/spec.md` |
 | I-4 | 6/6 | 6/6 | 6/6 | - | none: every arm returns the per-tenant id to design with `store.py` lines; `contract-kept` passes every run |
 | V-1 | 9/9 | 17/18 ×2 | 16/18 ×2 | 17/18 ×2 | none: the baseline also sees that `test_other_tenant_is_denied` misses AC-3 |
-| V-2 | 1/6 | 7/12 ×2 | 3/6 | 6/12 ×2 | `no-blocking-findings` 1, 6/6, -, -: two current runs mutate the copy, find that no test fails without `authorize_tenant_access`, and return NOT VERIFIED; `pass-brief` 0/3 current, 0/1 previous, while previous, baseline, and canary also ran an earlier rubric |
+| V-2 | 3/6 | 3/6 | - | - | none: `no-blocking-findings` 3/3 in both; `pass-brief` 0/3 in both, with replies of 84–100 lines (current) and 73–89 lines (previous) against 71 |
 | V-3 | 8/9 | 6/9 | 6/9 | - | `base-rerun` 2, 0, 0 |
 
 - Inside a run, `/usr/bin/git` is a shim that fails in the run's sandbox, while `/opt/homebrew/bin/git` by its absolute path works; agents that need `git diff base...HEAD` either find it or read the files instead, and no run ended on an error.
