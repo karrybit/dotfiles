@@ -1,5 +1,5 @@
 {
-  "description": "Session context, the Bash call check, Markdown formatting and record note checks after an edit, the crit restart after a commit or a landing, and the prompt time for the record repository at KARO_HOME (default ~/karo).",
+  "description": "Session context, the Bash call check, Markdown formatting and record note checks after an edit, and the prompt time for the record repository at KARO_HOME (default ~/karo).",
   "hooks": {
     "SessionStart": [
       {
@@ -48,15 +48,6 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}\"/scripts/post-edit"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/scripts/post-commit"
           }
         ]
       }

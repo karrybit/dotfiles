@@ -4,9 +4,9 @@
 # a skill runs as one call allowed and kept out of ask and deny, view-open in ask and kept out of allow
 # and deny (each open asks first, since the page it opens can run scripts outside the sandbox), and the
 # ones that must leave the sandbox in sandbox.excludedCommands. The hooks are karo's own hooks/hooks.json, which Claude Code merges with
-# the settings' hooks: it must run call-check by a PreToolUse hook on Bash, and post-edit and
-# post-commit by PostToolUse hooks on Edit|Write and on Bash, and no settings hook may name a karo
-# script or repeat one of its commands,
+# the settings' hooks: it must run call-check by a PreToolUse hook on Bash and post-edit by a
+# PostToolUse hook on Edit|Write, and no settings hook may name a karo script or repeat one of its
+# commands,
 # since that hook would run twice. Each missing value is a FAIL line of its own. The rules use the ~
 # form, since permission rules and sandbox.excludedCommands match the command text as written.
 # usage: settings-test <settings.json>
@@ -50,7 +50,6 @@ for command in "skills/land/scripts/land *" "scripts/view-open *"; do
 done
 hook PreToolUse Bash call-check
 hook PostToolUse 'Edit|Write' post-edit
-hook PostToolUse Bash post-commit
 check "no settings hook names a karo script or repeats a hooks.json command" "$settings" '
   [$plugin[0].hooks[][].hooks[].command] as $p
   | all(.hooks[]?[]?.hooks[]?.command // ""; (test("skills/karo/scripts/") or IN($p[])) | not)' \

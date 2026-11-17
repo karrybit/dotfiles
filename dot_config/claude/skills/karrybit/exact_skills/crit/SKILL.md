@@ -1,7 +1,7 @@
 ---
 name: crit
 description: crit を terminal-browser で開き、ユーザーが付けたコメントに返事をする手順。引数なしなら起動した場所のファイルを、GitHub の PR の URL を渡すとその PR を、PR になっていないブランチか commit を渡すとその差分を開く。ユーザーが /karrybit:crit を打ったとき、crit でコメントしたいと言ったときに使う。
-allowed-tools: Bash(crit .), Bash(crit --session *), Bash(crit comments *), Bash(crit comment *), Bash(crit stop), Bash(crit -p *), Bash(CRIT_PORT=0 crit *), Bash(echo *), Bash(cksum), Read
+allowed-tools: Bash(crit .), Bash(crit --session *), Bash(crit comments *), Bash(crit comment *), Bash(crit stop), Bash(crit stop .), Bash(crit -p *), Bash(CRIT_PORT=0 crit *), Bash(echo *), Bash(cksum), Read
 argument-hint: "[GitHub の PR の URL | PR になっていないブランチ | commit]"
 ---
 
@@ -21,7 +21,7 @@ argument-hint: "[GitHub の PR の URL | PR になっていないブランチ | 
 - `<checkout>` は、呼び出し側がその PR か commit のブランチの worktree か checkout のパスを渡せばそれを使う。渡されなければ、その PR のリポジトリを checkout している場所をユーザーに尋ねる。PR のブランチを checkout しておく必要はない。
 - `<worktree>` は、呼び出し側が渡したそのブランチの worktree にする。渡されなければ、そのブランチを checkout している場所をユーザーに尋ねる。
 - PR になっていないブランチは、範囲を付けずにブランチを checkout した worktree で開く。crit は、`origin/HEAD` が指す既定のブランチとの merge-base からの差分を出し、session を worktree のパスとブランチで決めるので、commit を足しても rebase しても同じ session と URL のままコメントと返事が残り、手順 5 で次の回に進む。`--range` で開くと session が SHA で決まり、次の回に進めない。
-- crit は PR の head と `--range` の先を daemon の起動時にしか読まず、reload でも `crit --session` でも新しい commit は出ない。そこで PR と 1 つの commit を開く前に毎回、同じ checkout で `cd <checkout> && crit stop` を動かす。daemon が動いていなければ `no running daemon found` で終わるので、そのまま表のコマンドに進む。同じ checkout から同じ対象を開けば、session の ID とコメントとポートは変わらない。
+- crit は、`crit .` のファイルの一覧と、PR の head と `--range` の先を daemon の起動時にしか読まず、reload でも `crit --session` でも、足したファイルや新しい commit は出ない。そこで引数なし・PR・1 つの commit を開く前に毎回、起動した場所で `crit stop .`（PR と 1 つの commit は `cd <checkout> && crit stop`）を動かす。daemon が動いていなければ `no running daemon found` で終わるので、そのまま表のコマンドに進む。同じ checkout から同じ対象を開けば、session の ID とコメントとポートは変わらない。
 - PR になっていないブランチの daemon は、レビューを終えるまで止めずに残す。止めて起動し直すと、同じ session で新しい commit までの差分は出るが、回は進まない。
 - daemon は `cd <checkout> && crit stop`（ブランチは `cd <worktree> && crit stop`）で checkout ごとに止める。`crit stop --all` はほかの checkout の `crit .` も止める。
 - PR の番号だけを渡されたら、リポジトリが決まらないので、ユーザーに PR の URL を尋ねる。
@@ -35,7 +35,7 @@ argument-hint: "[GitHub の PR の URL | PR になっていないブランチ | 
 
 ## 手順
 
-1. 上の表のコマンドを、Bash の `run_in_background: true` と `timeout: 86400000` で動かす（引数なしのほかは、先に「ポートを決める」でポートを決める。PR と 1 つの commit なら、そのあと `crit stop` を動かす）。timeout を付けないと、Claude Code が 30 分で crit を止める。
+1. 上の表のコマンドを、Bash の `run_in_background: true` と `timeout: 86400000` で動かす（引数なしのほかは、先に「ポートを決める」でポートを決める。引数なし・PR・1 つの commit なら、そのあと「開くもの」の `crit stop` を動かす）。timeout を付けないと、Claude Code が 30 分で crit を止める。
    完了条件: crit の出力にある review の URL が手元にある。
 2. review の URL（`http://localhost:<ポート>`）のポートを crit-open に渡し、ほかのコマンドとつながない 1 回の Bash で動かす（どの対象でも）。crit-open は、レビューの画面を terminal-browser で、呼び出した Herdr の pane の隣の `view - crit` の pane に開く（出力と pane の扱いは下の「開いた pane」）。crit-open は、この plugin を配る場所の `~` の形の `~/.config/claude/skills/karrybit/skills/crit/scripts/crit-open <ポート>` で呼ぶ。terminal-browser は sandbox の中では起動しないので、crit-open は、settings でこの `~` の形を許可し sandbox の外で動く形として除外したときに動く（`${CLAUDE_SKILL_DIR}/scripts/crit-open-test <settings.json>` で確かめられる）。settings の規則はコマンドの文字列をそのまま照らすので、絶対パスで呼ぶと `~` の形の規則に合わず、つなぐと sandbox の中に残って terminal-browser が起動しない。crit-open が 0 でない終了コードで終わったとき（Herdr の外で動いているときなど）は、URL をユーザーに伝えて開いてもらう。そのうえで URL をユーザーに伝え、「コメントを付けて Finish Review を押してください」と返して、background の crit が終わるのを待つ。レビューのファイルは、crit が終わってから読む。
    完了条件: background の crit が終わった。

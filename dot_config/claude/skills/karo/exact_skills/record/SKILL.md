@@ -35,8 +35,6 @@ user-invocable: false
    </example>
 
    完了条件: 最後の行が `OK <commit> <件名>`（commit した）か `OK - <件名> (no change)`（変わったところがない）。`NG <件名>` なら「NG を直す」に進む。
-2. ファイルを足すか消すか移した commit のあと、post-commit の hook が crit を起動し直し、crit の一覧に反映させる。hook が失敗を返したら、commit は済んでいるので、その行をオーナーに伝える。
-   完了条件: hook の失敗がないか、失敗の行をオーナーに伝えた。
 
 - 続く手順がその commit を使うとき（`karrybit:explore`）は、`OK` の行の `<commit>` を渡す。
 
