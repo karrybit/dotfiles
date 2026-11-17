@@ -104,7 +104,7 @@ Measured with `--model claude-sonnet-5-5` and `--judge-model claude-opus-5-5`, t
 | S-1 | 15/15 | 30/30 ×2 | 12/15 | 30/30 ×2 | `decision-tradeoff` 3, 6, 1, 6; `system-designer` keeps only its role paragraph, so its canary is the same file |
 | S-2 | 3/3 | 3/3 | 3/3 | 3/3 | none: R-3 states the prefix isolation outright |
 | S-3 | 9/9 | 9/9 | 9/9 | - | none: every arm reads `docs/vendor/job-platform.md`, splits the export, and holds the concurrency limit as a blocking premise; `product-unchanged` passes every run |
-| D-1 | 12/21 | 19/21 | 11/21 | 12/21 | `fixed-csv-stub` 0, 2; `owner-plan` 0, 3; `call-before-job` 0, 2 (current, previous): current plans have six or seven increments and build the real job before the API server first calls it, with the signed URL after both; previous plans have eight or nine, with the signed URL before the real job |
+| D-1 | 18/21 | 19/21 | 11/21 | 12/21 | none beyond one run: `owner-plan` 2, 3; `fixed-csv-stub` 2, 2; `call-before-job` 2, 2 (current, previous). The current delivery-strategist has the previous body, so the `karrybit:dev-handoff` change does not account for a drop; a delivery-strategist with decision-boundary rules (increment boundaries only where the checked `K-n`, the visible result, or the rollback unit changes) scored 12/21, building the real job before the API server first called it |
 | D-2 | 3/3 | 4/6 ×2 | 3/6 ×2 | 0/6 ×2 | none: `single-increment` 5/5 and 5/5 over five runs (current, previous) |
 | D-3 | 8/9 | 8/9 | 8/9 | - | none: `no-design-choice` fails one run in every arm |
 | I-1 | 12/12 | 24/24 ×2 | 18/24 ×2 | 21/24 ×2 | `failing-test-first` 3, 6, 0, 3; `grade.py` passes every run |
@@ -114,5 +114,6 @@ Measured with `--model claude-sonnet-5-5` and `--judge-model claude-opus-5-5`, t
 | V-2 | 3/6 | 3/6 | - | - | none: `no-blocking-findings` 3/3 in both; `pass-brief` fails every run of every arm, since no reply fits a clean PASS in 71 lines (73–100). The current cell ran a verifier whose report item also asked for a one-line summary and one-line runs; that item now matches the previous agents |
 | V-3 | 8/9 | 6/9 | 6/9 | - | `base-rerun` 2, 0, 0 |
 
+- D-2 and D-3's current cells ran the delivery-strategist with decision-boundary rules that the current one does not have.
 - Inside a run, `/usr/bin/git` is a shim that fails in the run's sandbox, while `/opt/homebrew/bin/git` by its absolute path works; agents that need `git diff base...HEAD` either find it or read the files instead, and no run ended on an error.
 - Judge calls were 85–90% of a run's cost on long outputs: a D-1 run cost 3–5 USD, an I-1 run about 0.25 USD, and the other cases 0.25–1.2 USD.
