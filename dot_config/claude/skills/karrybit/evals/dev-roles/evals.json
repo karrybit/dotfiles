@@ -118,6 +118,60 @@
           "text": "The working tree equals HEAD"
         }
       ]
+    },
+    {
+      "name": "r-3-vague-quality",
+      "files": [
+        "fixtures/audit-console"
+      ],
+      "assertions": []
+    },
+    {
+      "name": "r-4-public-contract",
+      "files": [
+        "fixtures/export-api"
+      ],
+      "assertions": []
+    },
+    {
+      "name": "s-3-unverified-premise",
+      "files": [
+        "fixtures/audit-console-limits"
+      ],
+      "assertions": [
+        {
+          "id": "product-unchanged",
+          "type": "script",
+          "text": "Every file outside docs/design/ equals the scaffold: audit-console with the case files"
+        }
+      ]
+    },
+    {
+      "name": "d-3-design-issue-in-plan",
+      "files": [
+        "fixtures/export-design-docs"
+      ],
+      "assertions": []
+    },
+    {
+      "name": "i-4-design-contradiction",
+      "files": [
+        "fixtures/export-api-tenant-ids"
+      ],
+      "assertions": [
+        {
+          "id": "contract-kept",
+          "type": "script",
+          "text": "app/store.py, tests/test_start_export.py, docs/, and start_export in app/exports.py are unchanged"
+        }
+      ]
+    },
+    {
+      "name": "v-3-env-vs-defect",
+      "files": [
+        "fixtures/export-api-v3"
+      ],
+      "assertions": []
     }
   ]
 }

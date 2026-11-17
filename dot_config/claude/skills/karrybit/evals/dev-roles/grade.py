@@ -9,6 +9,7 @@ Runs each graded run's tests in a temporary copy, and prints one line per run:
 Cases without assertions are skipped.
 """
 
+import ast
 import json
 import shutil
 import subprocess
@@ -16,6 +17,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+FIXTURES = Path(__file__).parent / "fixtures"
 EVALS = json.loads((Path(__file__).parent / "evals.json").read_text())
 TEST = [sys.executable, "-I", "-B", "-m", "unittest", "discover", "-s", "tests", "-t", "."]
 
@@ -76,7 +78,46 @@ def tests_pass(repo, mutant=None):
         return run.returncode == 0
 
 
+def tree(root):
+    """Return {relative path: bytes} for the files under root, without .git and __pycache__."""
+    return {
+        p.relative_to(root).as_posix(): p.read_bytes()
+        for p in root.rglob("*")
+        if p.is_file() and ".git" not in p.parts and "__pycache__" not in p.parts
+    }
+
+
+def outside_design(files):
+    return {p: b for p, b in files.items() if not p.startswith("docs/design/")}
+
+
+def s3_product_unchanged(repo):
+    """s-3's fixture.sh lays audit-console-limits over audit-console."""
+    expected = tree(FIXTURES / "audit-console")
+    expected.update(tree(FIXTURES / "audit-console-limits"))
+    return outside_design(tree(repo)) == outside_design(expected)
+
+
+def function_dump(path, name):
+    for node in ast.parse(path.read_text()).body:
+        if isinstance(node, ast.FunctionDef) and node.name == name:
+            return ast.dump(node)
+    return None
+
+
+def i4_contract_kept(repo, changed):
+    kept = ("app/store.py", "tests/test_start_export.py")
+    if any(p in kept or p.startswith("docs/") for p in changed):
+        return False
+    original = function_dump(FIXTURES / "export-api-tenant-ids" / "app" / "exports.py", "start_export")
+    return function_dump(repo / "app" / "exports.py", "start_export") == original
+
+
 def check(assertion, repo, changed):
+    if assertion == "product-unchanged":
+        return s3_product_unchanged(repo)
+    if assertion == "contract-kept":
+        return i4_contract_kept(repo, changed)
     if assertion == "tests-pass":
         return tests_pass(repo)
     if assertion in MUTANTS:
