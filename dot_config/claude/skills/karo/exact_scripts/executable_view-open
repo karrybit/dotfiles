@@ -2,16 +2,21 @@
 # Opens one file in terminal-browser, in a Herdr pane named "view - <name>"
 # (default "view - browser") beside the caller's, through the karrybit crit
 # skill's tb-view, and prints what tb-view prints: an .html or .svg under the
-# cos dir's docs/, or an image or video anywhere, by absolute path. --no-merge
-# opens a new pane instead of a tab in an existing one. terminal-browser runs
-# outside the sandbox, so pages that can run scripts come only from docs/,
-# where the explain skill keeps its HTML.
+# cos dir's docs/, an explanation's index.html in the store
+# (<store>/<lowercase UUID>/index.html, the store being
+# $XDG_DATA_HOME/cos/html, or ~/.local/share/cos/html when XDG_DATA_HOME is
+# unset, empty, or relative), or an image or video anywhere, by absolute path.
+# --no-merge opens a new pane instead of a tab in an existing one.
+# terminal-browser runs outside the sandbox, so pages that can run scripts
+# come only from docs/ and the store, where the explain skill keeps its HTML.
 # usage: view-open [--no-merge] <absolute path> [<name>]
-# Environment: COS_DIR (default ~/cos).
+# Environment: COS_DIR (default ~/cos), XDG_DATA_HOME.
 set -eu
 
+base=${XDG_DATA_HOME:-}; case $base in /*) ;; *) base=$HOME/.local/share ;; esac
+store=$base/cos/html
 usage() {
-  echo "usage: view-open [--no-merge] <absolute path of an .html or .svg under ${COS_DIR:-$HOME/cos}/docs, or a .png .jpg .jpeg .webp .gif .mp4 .webm> [<name of letters, digits, . _ -, starting with a letter or digit>]" >&2
+  echo "usage: view-open [--no-merge] <absolute path of an .html or .svg under ${COS_DIR:-$HOME/cos}/docs, a $store/<UUID>/index.html, or a .png .jpg .jpeg .webp .gif .mp4 .webm> [<name of letters, digits, . _ -, starting with a letter or digit>]" >&2
   exit 2
 }
 merge=
@@ -20,9 +25,11 @@ if [ "${1:-}" = --no-merge ]; then merge=--no-merge; shift; fi
 case "${2-browser}" in
   '' | [._-]* | *[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-]*) usage ;;
 esac
+h='[0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
 case "$1" in
   *..*) usage ;;
   "${COS_DIR:-$HOME/cos}"/docs/*.html | "${COS_DIR:-$HOME/cos}"/docs/*.svg) ;;
+  "$store"/$h$h-$h-$h-$h-$h$h$h/index.html) ;;
   /*.png | /*.jpg | /*.jpeg | /*.webp | /*.gif | /*.mp4 | /*.webm) ;;
   *) usage ;;
 esac
