@@ -1,23 +1,31 @@
 #!/bin/bash
 # Declares the user-scope chrome-devtools MCP server and passes the rest of
-# Claude Code's runtime state through unchanged. jq keeps the file's key order,
-# so only the declared entry differs from what Claude Code wrote. -j omits the
-# trailing newline, which Claude Code does not write either.
+# Claude Code's runtime state through. jq reads the file as raw text: when the
+# declared entry already matches, it prints that text byte for byte, so the
+# formatting Claude Code chose never shows up as a diff. Otherwise it prints
+# the parsed file with the entry set; jq keeps the key order, and -j omits the
+# trailing newline. Claude Code then rewrites the file in its own format.
 # Its URL guard is the PreToolUse hook in settings.base.pkl.
 set -euo pipefail
 
-jq -jn '(try input catch {}) | .mcpServers["chrome-devtools"] = {
-  type: "stdio",
-  command: "npx",
-  args: [
-    "-y",
-    "chrome-devtools-mcp@1.13.0",
-    "--isolated",
-    "--headless",
-    "--no-usage-statistics",
-    "--no-performance-crux",
-    "--no-category-network",
-    "--proxyServer=127.0.0.1:9"
-  ],
-  env: {CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS: "1"}
-}'
+jq -Rjs '
+  {
+    type: "stdio",
+    command: "npx",
+    args: [
+      "-y",
+      "chrome-devtools-mcp@1.13.0",
+      "--isolated",
+      "--headless",
+      "--no-usage-statistics",
+      "--no-performance-crux",
+      "--no-category-network",
+      "--proxyServer=127.0.0.1:9"
+    ],
+    env: {CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS: "1"}
+  } as $server
+  | (try fromjson catch {}) as $live
+  | if $live.mcpServers["chrome-devtools"] == $server then .
+    else $live | .mcpServers["chrome-devtools"] = $server
+    end
+'
