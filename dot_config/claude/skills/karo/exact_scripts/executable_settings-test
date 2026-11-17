@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2016,SC2088  # the filters are jq, and the ~ paths are rule text, not paths to expand
 # Show that a project's settings.json holds what karo's scripts need from it: karo enabled, the scripts
-# a skill runs as one call allowed and kept out of ask and deny, and the ones that must leave the sandbox
-# in sandbox.excludedCommands. The hooks are karo's own hooks/hooks.json, which Claude Code merges with
+# a skill runs as one call allowed and kept out of ask and deny, view-open in ask and kept out of allow
+# and deny (each open asks first, since the page it opens can run scripts outside the sandbox), and the
+# ones that must leave the sandbox in sandbox.excludedCommands. The hooks are karo's own hooks/hooks.json, which Claude Code merges with
 # the settings' hooks: it must run call-check by a PreToolUse hook on Bash, and post-edit and
 # post-commit by PostToolUse hooks on Edit|Write and on Bash, and no settings hook may name a karo
 # script or repeat one of its commands,
@@ -34,12 +35,16 @@ hook() {
 }
 
 check "karo@skills-dir is enabled" "$settings" '.enabledPlugins["karo@skills-dir"] == true'
-for rule in "scripts/commit *" "scripts/thread-index *" "skills/land/scripts/land *" "scripts/karo-check" "scripts/view-open *"; do
+for rule in "scripts/commit *" "scripts/thread-index *" "skills/land/scripts/land *" "scripts/karo-check"; do
   check "Bash($karo/$rule) is allowed and in neither ask nor deny" "$settings" '
     any(.permissions.allow[]?; . == "Bash(\($r))")
       and ([.permissions.ask[]?, .permissions.deny[]?] | any(startswith("Bash(" + ($r | rtrimstr(" *")))) | not)' \
     --arg r "$karo/$rule"
 done
+check "Bash($karo/scripts/view-open *) is in ask and in neither allow nor deny" "$settings" '
+  any(.permissions.ask[]?; . == "Bash(\($r))")
+    and ([.permissions.allow[]?, .permissions.deny[]?] | any(startswith("Bash(" + ($r | rtrimstr(" *")))) | not)' \
+  --arg r "$karo/scripts/view-open *"
 for command in "skills/land/scripts/land *" "scripts/view-open *"; do
   check "$karo/$command is in sandbox.excludedCommands" "$settings" 'any(.sandbox.excludedCommands[]?; . == $c)' --arg c "$karo/$command"
 done

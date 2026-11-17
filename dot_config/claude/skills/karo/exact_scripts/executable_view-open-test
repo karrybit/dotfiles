@@ -6,7 +6,7 @@
 # off the list, a missing file, a folder, and a name with characters other than letters, digits,
 # ".", "_", and "-", or starting with one of those three. It runs with HOME and COS_DIR in a temporary directory that holds a tb-view stub
 # logging what it is given (tb-view-test covers tb-view). settings-test checks that the settings
-# allow view-open and run it outside the sandbox.
+# ask before each view-open and run it outside the sandbox.
 # usage: view-open-test [<view-open>]   (default: the one beside this script; its files go to a
 #        temporary directory that is removed)
 set -uo pipefail

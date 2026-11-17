@@ -40,4 +40,4 @@ description: '~/cos/docs/ に控える HTML の解説の手順。版を探して
 
 - オーナーが解説を見たいと言ったら、`~/.config/claude/skills/karo/scripts/view-open ~/cos/docs/<id>/<version>/index.html <id>` を単独の Bash で実行し、terminal-browser の `view - <id>` の pane に開く。view-open は、新しい pane なら `<pane の ID> view - <id>` を出し、右の terminal-browser の pane に tab として足したときはそう書いた 1 行を出す。オーナーが新しい pane で開きたいと言ったときだけ、`view-open --no-merge <パス> <id>` で呼ぶ。
 - オーナーが閉じてと言ったら、`herdr pane close <pane の ID>` を単独の Bash で実行して閉じる（中のブラウザも終わる）。pane の中の操作はオーナーに任せ、キーは送らない。
-- view-open が 0 でない終了コードで終わったら、`index.html` のパスをオーナーに伝える。
+- view-open が 0 でない終了コードで終わったときと、オーナーが view-open の実行の確認を断ったときは、`index.html` のパスをオーナーに伝える。
