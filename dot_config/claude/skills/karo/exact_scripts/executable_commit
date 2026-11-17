@@ -1,5 +1,5 @@
 #!/bin/sh
-# Commit only the given paths of the CoS record, after rumdl fmt on each .md, git diff --cached --check,
+# Commit only the given paths of the CoS record, never a daily journal (journal/YYYY-MM-DD.md, past days only), after rumdl fmt on each .md, git diff --cached --check,
 # fmcheck, and, for a thread file, that its frontmatter tasks name one of the task IDs the subject starts
 # with ("<ID>[, <ID>]...: ..."). A failed check unstages the paths, leaves the files as written, and prints
 # "NG <subject>" after the reason; a commit prints "OK <short hash> <subject>".
@@ -11,6 +11,7 @@ bin=$(cd "$(dirname "$0")" && pwd)
 cd "${COS_DIR:-$HOME/cos}" || exit 2
 for p; do
   case $p in *..*|/*|*//*) echo "NG $subject: not a record path: $p"; exit 1 ;; esac
+  case $p in journal/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md) echo "NG $subject: the daily journal holds past days only: $p"; exit 1 ;; esac
   case $p in state.md|journal/?*|investigations/?*|projects/?*|threads/?*|docs/?*) ;;
     *) echo "NG $subject: not a record path: $p"; exit 1 ;; esac
 done

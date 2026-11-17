@@ -44,6 +44,7 @@ user-invocable: false
 
 - NG のとき、commit は何も commit せず、並べたパスの stage を外し、ファイルは書いたままに残す。NG の理由は `NG` の行の前に出る。ファイルを Edit で直し、同じ commit を実行し直す。
 - `not a record path: <パス>`: パスが「書き込み先」の表の記録のファイルではない。書き先を表のファイルに直す。
+- `the daily journal holds past days only: <パス>`: 日次の journal（`journal/YYYY-MM-DD.md`）は過去分だけを持つ。書いた内容を「書く」の書き先（threads、standup、commit の本文）へ移し、日次の journal に書いた分を Edit で消す（新しく作ったファイルなら、ファイルごと消す）。
 - ファイルのパスと `none of the subject IDs is in tasks`: その発言は別のタスクの話題のもの。直し方は `karo:threads` skill の「話題の分け方」にある。
 - ファイルのパスとフロントマターの問題（fmcheck の出力）: フロントマターを `karo:frontmatter` skill の種類の表に合わせて直す。
 - `git diff --check` の出力（行末の空白、末尾の空行など）: 出た行を直す。
