@@ -165,7 +165,7 @@ real=$tmp/real
 count() { "$bin/karo-check" "$1" 2>&1 | rg -c -v '^karo-check: |	stale since '; }
 if cp -R "$vault/." "$real" && rm -rf "$real/.git"; then
   before=$(count "$real")
-  target=$(cd "$real" && fd -t f -e md . projects | sort | head -n 1)
+  target=$(cd "$real" && rg -l -x 'type: Project' projects | sort | head -n 1)
   sed -i.bak 's/^type: Project$/type: Bogus/' "$real/$target" && rm -f "$real/$target.bak"
   out=$("$bin/karo-check" "$real" 2>&1); code=$?
   after=$(count "$real")
