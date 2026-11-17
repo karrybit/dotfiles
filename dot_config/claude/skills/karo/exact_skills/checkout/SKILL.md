@@ -1,6 +1,6 @@
 ---
 name: checkout
-description: 一日の終わりに、CoS が今日を振り返り、明日やることの候補を残し、記録と Agent を片付ける手順。オーナーが /karo:checkout を打ったとき、一日の終わりの挨拶をしたとき、今日の振り返りを尋ねたときに使う。
+description: 一日の終わりに、karo が今日を振り返り、明日やることの候補を残し、記録と Agent を片付ける手順。オーナーが /karo:checkout を打ったとき、一日の終わりの挨拶をしたとき、今日の振り返りを尋ねたときに使う。
 ---
 
 # Checkout
@@ -10,7 +10,7 @@ description: 一日の終わりに、CoS が今日を振り返り、明日やる
 ## 手順
 
 1. 材料を集める。
-   - `~/cos` の `git log --since='<今日の日付> 00:00'` の件名と本文。
+   - `$KARO_HOME` の `git log --since='<今日の日付> 00:00'` の件名と本文。
    - 開いているタスクは `bd list --status open,in_progress,blocked,deferred --limit 0 --json`、判断待ちは `bd human list --status open --json`、今日閉じたタスクは `bd list --all --closed-after <今日の日付> --limit 0 --json`、今日作ったタスクは `bd list --all --created-after <今日の日付> --limit 0 --json`。
    - `herdr agent list`。各 Agent の `name` と `agent_status` を、開いているタスクのうち `in_progress` の `assignee` と名前で突き合わせる。
    - 引数なしの `~/.config/claude/skills/karo/scripts/karo-check` を単独のコマンドで実行した出力。
@@ -21,7 +21,7 @@ description: 一日の終わりに、CoS が今日を振り返り、明日やる
 3. 下の「報告の項目」を短く報告する。各項目にはタスク ID を付ける。
    完了条件: 5 つの項目がすべて報告にある。
 4. 次をすべて書き、1 つの commit にする。
-   - 報告: `~/cos/journal/YYYY-MM-DD-standup.md`（今日の日付）の末尾に `## Checkout（YYYY-MM-DD）` の節を足す。節の下の `### 今日の振り返り` に「報告の項目」の「明日やること」のほかの項目を、`### 明日やること` に「明日やること」を書く。今日のファイルがなければ、`karo:record` skill の「書く」のとおりフロントマターから作る。報告で挙げたタスクがフロントマターの `tasks` になければ足す。
+   - 報告: `$KARO_HOME/journal/YYYY-MM-DD-standup.md`（今日の日付）の末尾に `## Checkout（YYYY-MM-DD）` の節を足す。節の下の `### 今日の振り返り` に「報告の項目」の「明日やること」のほかの項目を、`### 明日やること` に「明日やること」を書く。今日のファイルがなければ、`karo:record` skill の「書く」のとおりフロントマターから作る。報告で挙げたタスクがフロントマターの `tasks` になければ足す。
    - `state.md`: 1 の `bd` の出力と `herdr agent list` から書き直す。
    - commit の本文: Checkout の記録であることと standup のパス、2 で閉じた Agent の名前。
 

@@ -36,18 +36,18 @@ stops_bin '"$HOME"/.config/claude/skills/karo/scripts/karo-check'
 stops_bin "cat $HOME/.config/claude/skills/karo/scripts/call-check"
 stops_bin "$HOME/.config/claude/skills/karo/scripts/commit s b x | head"
 
-# git rebase outside the sandbox, in the shapes the CoS and Agents have run it in.
+# git rebase outside the sandbox, in the shapes karo and Agents have run it in.
 stops_rebase() {
   run "$1" true
   if [[ $code -eq 2 && $out == *'git rebase を sandbox の外で'* && $out == *'karo/skills/land/scripts/land <branch> --rebase'* ]]; then pass "stops_rebase: $1"
   else fail "stops_rebase: $1: exit $code: $out"; fi
 }
-stops_rebase 'git -c core.hooksPath=/dev/null -c core.fsmonitor=false -c maintenance.auto=false -c gc.auto=0 -C /home/owner/.local/state/cos/worktrees/land-agent-branches rebase main'
+stops_rebase 'git -c core.hooksPath=/dev/null -c core.fsmonitor=false -c maintenance.auto=false -c gc.auto=0 -C /home/owner/.local/state/karo/worktrees/land-agent-branches rebase main'
 stops_rebase 'git rebase main'
 stops_rebase 'git status --short && git rebase main 2>&1 | tail -5; git status --short | head'
-stops_rebase 'cd ~/.local/state/cos/worktrees/markdown-format && git rebase -q main && git log --oneline -3'
+stops_rebase 'cd ~/.local/state/karo/worktrees/markdown-format && git rebase -q main && git log --oneline -3'
 passes 'git rebase main'
-passes 'git -c core.hooksPath=/dev/null -C /home/owner/.local/state/cos/worktrees/x rebase --abort' true
+passes 'git -c core.hooksPath=/dev/null -C /home/owner/.local/state/karo/worktrees/x rebase --abort' true
 passes 'git log --oneline main..HEAD' true
 passes "rg -n 'git rebase main' notes.md" true
 passes "cat > s.sh <<'EOF'

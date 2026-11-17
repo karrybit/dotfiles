@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Show what insights counts from small transcripts and a task database's answers in a temporary
 # config folder: a known day gives known counts, and changed copies of it (a third counted tool
-# call, a dialog-free approval, a script listed in uncounted: of rules/karo.yaml) change exactly
+# call, a dialog-free approval, a script listed in uncounted: of KARO_CONFIG_HOME/config.yaml) change exactly
 # the counts they should. A bd stub on PATH answers bd query and bd show with sample JSON.
 # usage: insights-test
 set -uo pipefail
@@ -11,22 +11,22 @@ trap 'rm -rf "$tmp"' EXIT
 failed=0
 fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
 pass() { printf 'ok\t%s\n' "$1"; }
-export TZ=Asia/Tokyo COS_DIR=$tmp/cos CLAUDE_CONFIG_DIR=$tmp/claude
-mkdir -p "$tmp/cos/rules" "$tmp/bin"
-cosproj=$tmp/claude/projects/$(cd "$tmp/cos" && printf '%s' "$(pwd -P)" | tr -c 'A-Za-z0-9' '-')
-mkdir -p "$cosproj/s1/subagents" "$tmp/claude/projects/-work-t9" "$tmp/claude/projects/-work-cos" "$tmp/claude/projects/-work-other"
+export TZ=Asia/Tokyo KARO_HOME=$tmp/karo KARO_CONFIG_HOME=$tmp/config CLAUDE_CONFIG_DIR=$tmp/claude
+mkdir -p "$tmp/karo" "$tmp/config" "$tmp/bin"
+karoproj=$tmp/claude/projects/$(cd "$tmp/karo" && printf '%s' "$(pwd -P)" | tr -c 'A-Za-z0-9' '-')
+mkdir -p "$karoproj/s1/subagents" "$tmp/claude/projects/-work-t9" "$tmp/claude/projects/-work-karo" "$tmp/claude/projects/-work-other"
 
 # The day's tasks in the task database, as bd show --json --include-comments gives them (times in UTC
-# or with an offset, with or without fractional seconds). On 2026-11-09 JST: cos-a2v starts at 10:00 and
-# ends at its first comment after the start (one before it is left out); cos-5q5.1 starts at 10:00 and
-# ends at its close; cos-b7x ends at its close, before its first comment; cos-c9d has neither; cos-zzz
+# or with an offset, with or without fractional seconds). On 2026-11-09 JST: karo-a2v starts at 10:00 and
+# ends at its first comment after the start (one before it is left out); karo-5q5.1 starts at 10:00 and
+# ends at its close; karo-b7x ends at its close, before its first comment; karo-c9d has neither; karo-zzz
 # started the day before in JST, though on the same UTC day.
 printf '%s\n' '[
-  {"id": "cos-a2v", "started_at": "2026-11-09T01:00:00Z", "comments": [{"created_at": "2026-11-09T00:30:00Z"}, {"created_at": "2026-11-09T01:12:30.123456789Z"}]},
-  {"id": "cos-5q5.1", "started_at": "2026-11-09T10:00:00+09:00", "closed_at": "2026-11-09T10:20:00.5+09:00"},
-  {"id": "cos-b7x", "started_at": "2026-11-09T02:00:00Z", "closed_at": "2026-11-09T02:10:00Z", "comments": [{"created_at": "2026-11-09T02:30:00Z"}]},
-  {"id": "cos-c9d", "started_at": "2026-11-09T03:00:00Z", "comments": []},
-  {"id": "cos-zzz", "started_at": "2026-11-08T14:00:00Z", "comments": [{"created_at": "2026-11-08T14:05:00Z"}]}
+  {"id": "karo-a2v", "started_at": "2026-11-09T01:00:00Z", "comments": [{"created_at": "2026-11-09T00:30:00Z"}, {"created_at": "2026-11-09T01:12:30.123456789Z"}]},
+  {"id": "karo-5q5.1", "started_at": "2026-11-09T10:00:00+09:00", "closed_at": "2026-11-09T10:20:00.5+09:00"},
+  {"id": "karo-b7x", "started_at": "2026-11-09T02:00:00Z", "closed_at": "2026-11-09T02:10:00Z", "comments": [{"created_at": "2026-11-09T02:30:00Z"}]},
+  {"id": "karo-c9d", "started_at": "2026-11-09T03:00:00Z", "comments": []},
+  {"id": "karo-zzz", "started_at": "2026-11-08T14:00:00Z", "comments": [{"created_at": "2026-11-08T14:05:00Z"}]}
 ]' > "$tmp/shown.json"
 # The stub logs its directory and arguments; BD_STUB=empty answers with no tasks, BD_STUB=fail fails.
 cat > "$tmp/bin/bd" <<EOF
@@ -66,21 +66,21 @@ day() {
 }
 
 write() { # <approval source> [extra call]
-  day "$@" > "$cosproj/s1.jsonl"
+  day "$@" > "$karoproj/s1.jsonl"
   # A continued session's new file repeats the earlier records under the same uuids.
-  head -n 6 "$cosproj/s1.jsonl" > "$cosproj/s2.jsonl"
+  head -n 6 "$karoproj/s1.jsonl" > "$karoproj/s2.jsonl"
   printf '%s\n' '{"type":"user","uuid":"q1","timestamp":"2026-11-09T02:00:00.000Z","sessionId":"q","message":{"content":[{"type":"tool_result","tool_use_id":"z","is_error":true,"content":"Permission for this action was denied by the Claude Code auto mode classifier. Reason: x"}]}}' \
-    > "$cosproj/s1/subagents/agent-q.jsonl"
+    > "$karoproj/s1/subagents/agent-q.jsonl"
   printf '%s\n' '{"type":"agent-name","agentName":"t-ex0009","sessionId":"g1"}' \
     '{"type":"assistant","uuid":"g2","timestamp":"2026-11-09T03:00:00.000Z","sessionId":"g1","message":{"id":"n1","model":"claude-sonnet-5-5","usage":{"input_tokens":3,"output_tokens":4},"content":[{"type":"tool_use","id":"c1","name":"Bash","input":{"command":"git push"}}]}}' \
     '{"type":"user","uuid":"g3","timestamp":"2026-11-09T03:00:20.000Z","sessionId":"g1","message":{"content":[{"type":"tool_result","tool_use_id":"c1","is_error":true,"content":"The user doesn'"'"'t want to proceed with this tool use."}]}}' \
     > "$tmp/claude/projects/-work-t9/g1.jsonl"
   # A Herdr agent named after a bd task counts as an agent; a session with another name does not.
-  printf '%s\n' '{"type":"agent-name","agentName":"cos-a2v.1","sessionId":"g4"}' \
+  printf '%s\n' '{"type":"agent-name","agentName":"karo-a2v.1","sessionId":"g4"}' \
     '{"type":"assistant","uuid":"g5","timestamp":"2026-11-09T04:00:00.000Z","sessionId":"g4","message":{"id":"n4","model":"claude-sonnet-5-5","usage":{"input_tokens":1,"output_tokens":1},"content":[{"type":"tool_use","id":"c4","name":"Bash","input":{"command":"git push"}}]}}' \
     '{"type":"user","uuid":"g6","timestamp":"2026-11-09T04:00:05.000Z","sessionId":"g4","message":{"content":[{"type":"tool_result","tool_use_id":"c4","is_error":true,"content":"The user doesn'"'"'t want to proceed with this tool use."}]}}' \
-    > "$tmp/claude/projects/-work-cos/g4.jsonl"
-  sed 's/cos-a2v\.1/helper/; s/"g4"/"g7"/g' "$tmp/claude/projects/-work-cos/g4.jsonl" > "$tmp/claude/projects/-work-other/g7.jsonl"
+    > "$tmp/claude/projects/-work-karo/g4.jsonl"
+  sed 's/karo-a2v\.1/helper/; s/"g4"/"g7"/g' "$tmp/claude/projects/-work-karo/g4.jsonl" > "$tmp/claude/projects/-work-other/g7.jsonl"
 }
 
 run() { out=$("$bin/insights" 2026-11-09 2>&1); code=$?; }
@@ -90,31 +90,31 @@ check() { # <name> <jq expression that must be true>
 
 write user_temporary
 run
-check "one CoS turn, two counted calls (skill steps and scratchpad brief left out)" \
+check "one karo turn, two counted calls (skill steps and scratchpad brief left out)" \
   '.turns == 1 and .over_limit == []'
 check "dialog approval, auto mode refusal and AskUserQuestion are told apart, and the copied records count once" \
-  '.approvals.cos == {prompted: 1, rejected_user: 0, rejected_classifier: 1, prompt_wait_s: 30}'
+  '.approvals.karo == {prompted: 1, rejected_user: 0, rejected_classifier: 1, prompt_wait_s: 30}'
 check "subagent refusal is counted in its own group" '.approvals.subagents.rejected_classifier == 1'
 check "Herdr agents named after a task ID that the owner refused are listed with their waits" \
-  '(.agent_prompts | sort_by(.agent)) == [{agent: "cos-a2v.1", session: "g4", calls: 1, wait_s: 5}, {agent: "t-ex0009", session: "g1", calls: 1, wait_s: 20}] and .approvals.agents.rejected_user == 2'
-check "turn length comes from turn_duration" '.cos_turn_s == {count: 1, total: 150, max: 150}'
+  '(.agent_prompts | sort_by(.agent)) == [{agent: "karo-a2v.1", session: "g4", calls: 1, wait_s: 5}, {agent: "t-ex0009", session: "g1", calls: 1, wait_s: 20}] and .approvals.agents.rejected_user == 2'
+check "turn length comes from turn_duration" '.karo_turn_s == {count: 1, total: 150, max: 150}'
 check "each task first claimed on the day ends at its first comment or its close, whichever is earlier" \
-  '.delegations == [{task: "cos-5q5.1", delegated: "10:00", ended: "10:20", minutes: 20}, {task: "cos-a2v", delegated: "10:00", ended: "10:12", minutes: 12}, {task: "cos-b7x", delegated: "11:00", ended: "11:10", minutes: 10}, {task: "cos-c9d", delegated: "12:00", ended: null, minutes: null}]'
-real=$(cd "$tmp/cos" && pwd -P)
-if [[ $(cat "$tmp/bd-calls") == "$real query started>=2026-11-08 AND started<2026-11-11 --all --limit 0 --json"$'\n'"$real show cos-a2v cos-5q5.1 cos-b7x cos-c9d cos-zzz --json --include-comments" ]]; then
-  pass "bd query and bd show run in the CoS folder, with the IDs the query gave"
+  '.delegations == [{task: "karo-5q5.1", delegated: "10:00", ended: "10:20", minutes: 20}, {task: "karo-a2v", delegated: "10:00", ended: "10:12", minutes: 12}, {task: "karo-b7x", delegated: "11:00", ended: "11:10", minutes: 10}, {task: "karo-c9d", delegated: "12:00", ended: null, minutes: null}]'
+real=$(cd "$tmp/karo" && pwd -P)
+if [[ $(cat "$tmp/bd-calls") == "$real query started>=2026-11-08 AND started<2026-11-11 --all --limit 0 --json"$'\n'"$real show karo-a2v karo-5q5.1 karo-b7x karo-c9d karo-zzz --json --include-comments" ]]; then
+  pass "bd query and bd show run in the karo folder, with the IDs the query gave"
 else
   fail "bd calls: $(cat "$tmp/bd-calls")"
 fi
 check "tokens count one API message once and leave out the day before" \
-  '.tokens.cos == {"claude-opus-5-5": {input: 10, output: 5, cache_read: 100, cache_creation: 7}} and .tokens.agents["claude-sonnet-5-5"].output == 5'
+  '.tokens.karo == {"claude-opus-5-5": {input: 10, output: 5, cache_read: 100, cache_creation: 7}} and .tokens.agents["claude-sonnet-5-5"].output == 5'
 check "session cost is the running total with its start" \
-  '.session_cost == [{group: "cos", session: "s1", name: "", started: "2026-11-04 11:14", total_usd: 1.23}]'
+  '.session_cost == [{group: "karo", session: "s1", name: "", started: "2026-11-04 11:14", total_usd: 1.23}]'
 
 write user_temporary extra
 run
 check "a third counted call puts the turn over the limit" \
-  '.turns == 1 and .over_limit == [{session: "s1", time: "10:00", kind: "human", calls: 3, tools: {Bash: 2, Read: 1}}] and .tokens.cos["claude-opus-5-5"].input == 11'
+  '.turns == 1 and .over_limit == [{session: "s1", time: "10:00", kind: "human", calls: 3, tools: {Bash: 2, Read: 1}}] and .tokens.karo["claude-opus-5-5"].input == 11'
 
 write user_temporary reads
 run
@@ -126,15 +126,15 @@ run
 check "runs of karo's step scripts are not counted" \
   '.over_limit == [{session: "s1", time: "10:00", kind: "human", calls: 4, tools: {Bash: 3, Read: 1}}]'
 
-printf '%s\n' 'uncounted:' "  - '^~/bin/mine( |\$)'" > "$tmp/cos/rules/karo.yaml"
+printf '%s\n' 'uncounted:' "  - '^~/bin/mine( |\$)'" > "$tmp/config/config.yaml"
 run
-check "a command matching uncounted: in rules/karo.yaml is not counted" \
+check "a command matching uncounted: in KARO_CONFIG_HOME/config.yaml is not counted" \
   '.over_limit == [{session: "s1", time: "10:00", kind: "human", calls: 3, tools: {Bash: 2, Read: 1}}]'
-rm "$tmp/cos/rules/karo.yaml"
+rm "$tmp/config/config.yaml"
 
 write config
 run
-check "an approval by configuration is not a dialog" '.approvals.cos.prompted == 0 and .approvals.cos.prompt_wait_s == 0'
+check "an approval by configuration is not a dialog" '.approvals.karo.prompted == 0 and .approvals.karo.prompt_wait_s == 0'
 
 rm "$tmp/bd-calls"
 BD_STUB=empty run

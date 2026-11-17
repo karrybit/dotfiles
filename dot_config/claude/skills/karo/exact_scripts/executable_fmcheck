@@ -1,9 +1,9 @@
 #!/bin/sh
-# Check each given CoS record note's frontmatter against rules/frontmatter-schema.yaml: its type, the type's
+# Check each given karo record note's frontmatter against rules/frontmatter-schema.yaml: its type, the type's
 # required fields and path, sources or derived_from for a lineage type, projects from the project vocabulary,
 # the form of date, that each derived_from file exists, and no [[...]] wiki link outside code. One yq and one
 # jq call per note, so it suits the few files of a commit; a whole run of the record is karo-check's.
-# usage: fmcheck <path>...   (run in the cos dir; paths from there)
+# usage: fmcheck <path>...   (run in KARO_HOME; paths from there)
 # Prints "<path><TAB><problem>" per problem and exits 1 when any is found, or 2 when the schema cannot be
 # read. A path outside the record folders, not .md, excluded by the schema, or removed is skipped.
 # The expression is given, since yq takes a lone argument for the expression and a missing schema file

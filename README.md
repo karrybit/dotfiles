@@ -48,7 +48,8 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/).
 ~/.local/share/agents/docs/   ← agent source summaries and reference files
 ~/.local/share/agents/scripts/ ← reusable agent-operated scripts
 ~/.config/claude/skills/karrybit/ ← user-level agent skills and subagents (karrybit plugin)
-~/.config/claude/skills/karo/ ← skills, scripts, and a subagent for the ~/cos record repository (karo plugin, off unless a project enables it)
+~/.config/claude/skills/karo/ ← skills, scripts, and a subagent for the karo record repository at $KARO_HOME (karo plugin, off unless a project enables it)
+~/.config/karo/config.yaml    ← settings the karo plugin's scripts read ($KARO_CONFIG_HOME)
 ~/.config/claude/agents/      ← user-level subagents
 ```
 

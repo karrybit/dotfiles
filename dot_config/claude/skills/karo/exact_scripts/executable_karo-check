@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Check the CoS records: first the general checks of karrybit's okf-lint against the schema (frontmatter,
-# place, lineage, path links, stale_after), then the checks that belong to the CoS structure (the forms of
+# Check the karo records: first the general checks of karrybit's okf-lint against the schema (frontmatter,
+# place, lineage, path links, stale_after), then the checks that belong to the karo structure (the forms of
 # dates and task IDs; the project vocabulary; wiki links; and the task database, .beads, kept out of git).
 # A task ID is a prefix of a letter and letters or digits, then one or more hyphenated parts of letters or
-# digits, a child with ".<n>" added (cos-a2v.1, t-a1b2c3d4, ABC-12). Tasks live in the task database,
+# digits, a child with ".<n>" added (karo-a2v.1, t-a1b2c3d4, ABC-12). Tasks live in the task database,
 # which karo-check does not read, so only the form is checked.
-# usage: karo-check [--only <path>]... [<cos dir>]
-# Default: ~/cos (only its record folders get the CoS checks). The schema is <cos dir>/rules/frontmatter-schema.yaml.
+# usage: karo-check [--only <path>]... [<karo dir>]
+# Default: KARO_HOME, or ~/karo when unset (only its record folders get the karo checks). The schema is <karo dir>/rules/frontmatter-schema.yaml.
 # --only limits the check to the given vault-relative paths (changed, added, or removed files; for a rename, both
-# paths). okf-lint gets the same paths; the CoS checks also read, for a removed project file, the notes
+# paths). okf-lint gets the same paths; the karo checks also read, for a removed project file, the notes
 # listing it as a project. A file brought in is checked in full.
 # Prints "<path><TAB><problem>" per problem, okf-lint's and its own, and exits 1 when any is found, or stops
 # with okf-lint's code 2 when okf-lint finds an argument or schema error or cannot run yq, fd, or rg.
@@ -25,7 +25,7 @@ if command -v aqua >/dev/null; then
 fi
 only=()
 while [[ ${1:-} == --only ]]; do only+=("${2#./}"); shift 2; done
-vault=${1:-$HOME/cos}
+vault=${1:-${KARO_HOME:-$HOME/karo}}
 lint=$HOME/.config/claude/skills/karrybit/skills/okf-lint/scripts/okf-lint
 [[ -x $lint ]] || { echo "karo-check: okf-lint not found at $lint; install the karrybit okf-lint skill" >&2; exit 2; }
 cd "$vault" || exit 2
@@ -35,7 +35,7 @@ problems=0
 stale=0
 report() { printf '%s\t%s\n' "$1" "$2"; problems=$((problems+1)); }
 
-# The general checks. okf-lint's lines are passed on and counted with the CoS checks' lines; its own count
+# The general checks. okf-lint's lines are passed on and counted with the karo checks' lines; its own count
 # lines are dropped, and when it stops with code 2 its output goes to stderr and nothing is counted.
 lint_args=()
 for p in ${only[@]+"${only[@]}"}; do lint_args+=(--only "$p"); done
@@ -50,7 +50,7 @@ while IFS= read -r l; do
   fi
 done < <(printf '%s\n' "$lint_out")
 
-# The CoS checks.
+# The karo checks.
 # Frontmatter values are split on these two control characters, which yq replaces in every value it
 # prints; values never reach arithmetic, word splitting, or globbing.
 FS=$'\x1f' LS=$'\x1e'
@@ -85,7 +85,7 @@ if (( ${#only[@]} )); then
   (( ${#listed[@]} )) && add_scope < <(rg -l -F -x "${listed[@]}" ${existing[@]+"${existing[@]}"} 2>/dev/null)
 fi
 
-# Per note, one yq call prints the CoS frontmatter problems, then one "@info" line with the fields the later
+# Per note, one yq call prints the karo frontmatter problems, then one "@info" line with the fields the later
 # checks need ($FS between fields, $LS between list items; control characters in values become spaces).
 # yq emits a string literal even after a failing select, so each check is an if/else-null.
 expr='

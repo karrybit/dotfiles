@@ -1,14 +1,14 @@
 #!/bin/sh
-# Commit only the given paths of the CoS record, never a daily journal (journal/YYYY-MM-DD.md, past days only), after rumdl fmt on each .md, git diff --cached --check,
+# Commit only the given paths of the karo record, never a daily journal (journal/YYYY-MM-DD.md, past days only), after rumdl fmt on each .md, git diff --cached --check,
 # fmcheck, and, for a thread file, that its frontmatter tasks name one of the task IDs the subject starts
 # with ("<ID>[, <ID>]...: ..."). A failed check unstages the paths, leaves the files as written, and prints
 # "NG <subject>" after the reason; a commit prints "OK <short hash> <subject>".
-# usage: commit <subject> <body> <path>...   (paths from the cos dir; the body says why)
-# Environment: COS_DIR (default ~/cos). Runs inside the sandbox: it writes only the cos dir and its .git.
+# usage: commit <subject> <body> <path>...   (paths from KARO_HOME; the body says why)
+# Environment: KARO_HOME (default ~/karo). Runs inside the sandbox: it writes only KARO_HOME and its .git.
 [ $# -ge 3 ] && [ -n "$2" ] || { echo "usage: commit <subject> <body (why)> <path>..." >&2; exit 2; }
 subject=$1 body=$2; shift 2
 bin=$(cd "$(dirname "$0")" && pwd)
-cd "${COS_DIR:-$HOME/cos}" || exit 2
+cd "${KARO_HOME:-$HOME/karo}" || exit 2
 for p; do
   case $p in *..*|/*|*//*) echo "NG $subject: not a record path: $p"; exit 1 ;; esac
   case $p in journal/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md) echo "NG $subject: the daily journal holds past days only: $p"; exit 1 ;; esac

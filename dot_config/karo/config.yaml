@@ -1,0 +1,6 @@
+# Settings that the karo plugin's scripts read from KARO_CONFIG_HOME.
+# uncounted: regular expressions for commands that the insights script leaves
+# out of karo's tool calls per turn (the karo:beads skill asks for several bd
+# calls per reply).
+uncounted:
+  - '^bd '

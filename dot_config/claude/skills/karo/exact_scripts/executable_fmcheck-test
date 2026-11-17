@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Show that fmcheck tells a valid record note from a broken one: in a small vault, the valid notes pass,
 # each broken note is reported with its problem, and a path fmcheck does not check is skipped.
-# usage: fmcheck-test [<cos dir>]   (default ~/cos, read only: the vault takes its
+# usage: fmcheck-test [<karo dir>]   (default KARO_HOME or ~/karo, read only: the vault takes its
 #        rules/frontmatter-schema.yaml; the vault goes to a temporary directory and is removed)
 set -uo pipefail
 exec </dev/null
-cos=${1:-$HOME/cos}
+karo=${1:-${KARO_HOME:-$HOME/karo}}
 bin=$(cd "$(dirname "$0")" && pwd)
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/fmcheck-test.XXXXXX") || exit 2
 trap 'rm -rf "$tmp"' EXIT
@@ -13,9 +13,9 @@ failed=0
 fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
 pass() { printf 'ok\t%s\n' "$1"; }
 
-v=$tmp/cos
+v=$tmp/karo
 mkdir -p "$v"/{journal,projects/repos/github.com/acme,threads,investigations,rules}
-cp "$cos/rules/frontmatter-schema.yaml" "$v/rules/" || exit 2
+cp "$karo/rules/frontmatter-schema.yaml" "$v/rules/" || exit 2
 printf -- '---\ntype: Journal\ndate: 2026-01-01\n---\n\n- 09:00 例\n' > "$v/journal/2026-01-01.md"
 printf -- '---\ntype: Project\ndescription: 例のプロジェクト。\nprojects:\n  - github.com/acme/demo\n---\n\n## demo\n' > "$v/projects/repos/github.com/acme/demo.md"
 thread=$'---\ntype: Thread\ndescription: 例の会話\ntopic: 例\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - github.com/acme/demo\n---\n\n### オーナー · 2026-01-01 09:00\n\n[demo](projects/repos/github.com/acme/demo.md)\n'

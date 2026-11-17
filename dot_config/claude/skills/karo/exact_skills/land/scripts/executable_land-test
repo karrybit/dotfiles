@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # Show that land changes nothing and exits non-zero on each unmet condition (a usage error, a dirty
-# ~/cos or worktree, ~/cos off main, a call from another folder or under a Claude Code session started
+# ~/karo or worktree, ~/karo off main, a call from another folder or under a Claude Code session started
 # elsewhere or under none, a branch not named <semantics>/agent/<title>, a worktree
-# outside the worktrees folder or not of ~/cos, a .git link or a gitdir file in it, config that runs a
+# outside the worktrees folder or not of ~/karo, a .git link or a gitdir file in it, config that runs a
 # command, a branch main cannot fast-forward to, a rebase that conflicts), and that a clean branch is
 # rebased and fast-forwarded. settings-test checks that the settings run land outside the sandbox
 # without a prompt.
-# Every repository is a new one in a land-test.* folder made with mktemp in $TMPDIR; the real ~/cos is
+# Every repository is a new one in a land-test.* folder made with mktemp in $TMPDIR; the real ~/karo is
 # never touched. land itself reads no variable that moves its folders or its look-up of the Claude Code
 # process (which lists processes and cannot run in the sandbox), so each case runs a copy of land with
-# those two lines replaced. The cases that set such variables, or point a link at the ~/cos land
+# those two lines replaced. The cases that set such variables, or point a link at the ~/karo land
 # would use, run land itself under a HOME in the test folder.
 # usage: land-test   (tests the land beside this script)
 set -uo pipefail
@@ -29,69 +29,69 @@ fi
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
 unset LAND_TEST_ROOT LAND_TEST_CLAUDE_CWD
 tmp_root=$(cd "${TMPDIR:-/tmp}" && pwd -P)
-# The folder of ~/cos relative to HOME, as land names it.
-cos_rel=$(sed -n 's|^[[:space:]]*cos_path=\$HOME/\([^ ]*\) worktrees_path=.*|\1|p' "$land")
-if [[ $(grep -c '^[[:space:]]*cos_path=\$HOME/' "$land") != 1 || $(grep -cxF 'callers=$(claude_cwds)' "$land") != 1 || -z $cos_rel ]]; then
-  echo "land-test: $land lacks the one cos_path line and the one callers line the copy replaces" >&2
+# The folder of ~/karo relative to HOME, as land names it.
+karo_rel=$(sed -n 's|^[[:space:]]*karo_path=\$HOME/\([^ ]*\) worktrees_path=.*|\1|p' "$land")
+if [[ $(grep -c '^[[:space:]]*karo_path=\$HOME/' "$land") != 1 || $(grep -cxF 'callers=$(claude_cwds)' "$land") != 1 || -z $karo_rel ]]; then
+  echo "land-test: $land lacks the one karo_path line and the one callers line the copy replaces" >&2
   exit 1
 fi
 
-# fresh: a new root with cos on main (a.txt) and a worktree of the branch feat/agent/x adding b.txt,
-# and root/land, the copy of land that takes cos and the worktrees in root and reads the Claude Code
+# fresh: a new root with karo on main (a.txt) and a worktree of the branch feat/agent/x adding b.txt,
+# and root/land, the copy of land that takes karo and the worktrees in root and reads the Claude Code
 # folders from root/claude-cwds.
 fresh() {
   root=$(mktemp -d "$tmp_root/land-test.XXXXXX") || exit 2
-  cos=$root/cos wt=$root/worktrees/x branch=feat/agent/x
+  karo=$root/karo wt=$root/worktrees/x branch=feat/agent/x
   mkdir -p "$root/worktrees"
   awk -v r="$root" '
-    /^[[:space:]]*cos_path=\$HOME\// { print "cos_path='"'"'" r "/cos'"'"' worktrees_path='"'"'" r "/worktrees'"'"'"; next }
+    /^[[:space:]]*karo_path=\$HOME\// { print "karo_path='"'"'" r "/karo'"'"' worktrees_path='"'"'" r "/worktrees'"'"'"; next }
     $0 == "callers=$(claude_cwds)" { print "callers=$(cat '"'"'" r "/claude-cwds'"'"')"; next }
     { print }' "$land" >"$root/land" && chmod +x "$root/land" || exit 2
-  git init -q -b main "$cos" &&
-    git -C "$cos" config user.name test && git -C "$cos" config user.email test@example.invalid &&
-    echo a >"$cos/a.txt" && git -C "$cos" add a.txt && git -C "$cos" commit -q -m init &&
-    git -C "$cos" worktree add -q -b "$branch" "$wt" main &&
+  git init -q -b main "$karo" &&
+    git -C "$karo" config user.name test && git -C "$karo" config user.email test@example.invalid &&
+    echo a >"$karo/a.txt" && git -C "$karo" add a.txt && git -C "$karo" commit -q -m init &&
+    git -C "$karo" worktree add -q -b "$branch" "$wt" main &&
     echo b >"$wt/b.txt" && git -C "$wt" add b.txt && git -C "$wt" commit -q -m b || exit 2
 }
-# on_main: commit c.txt (or the given file and text) on main of cos, so the branch is behind.
+# on_main: commit c.txt (or the given file and text) on main of karo, so the branch is behind.
 on_main() {
-  echo "${2:-c}" >"$cos/${1:-c.txt}" && git -C "$cos" add "${1:-c.txt}" && git -C "$cos" commit -q -m "${1:-c.txt}" || exit 2
+  echo "${2:-c}" >"$karo/${1:-c.txt}" && git -C "$karo" add "${1:-c.txt}" && git -C "$karo" commit -q -m "${1:-c.txt}" || exit 2
 }
-# run [<folder>] -- <land arguments>: run the copy of land in the folder (default cos), keeping its
+# run [<folder>] -- <land arguments>: run the copy of land in the folder (default karo), keeping its
 # stderr in err. The copy's look-up of the calling Claude Code process answers the folders in claude_at
-# (one per line, nearest first), cos when unset, and none when empty. With real_env set (an array of
+# (one per line, nearest first), karo when unset, and none when empty. With real_env set (an array of
 # NAME=value), land itself runs instead, with those variables added to its environment.
 run() {
-  local dir=$cos
+  local dir=$karo
   if [[ $1 != -- ]]; then dir=$1; shift; fi
   shift
-  printf '%s' "${claude_at-$cos}" >"$root/claude-cwds" || exit 2
+  printf '%s' "${claude_at-$karo}" >"$root/claude-cwds" || exit 2
   if [[ -n ${real_env+set} ]]; then
     err=$(cd "$dir" && env "${real_env[@]}" "$land" "$@" 2>&1 >/dev/null)
   else
     err=$(cd "$dir" && "$root/land" "$@" 2>&1 >/dev/null)
   fi
 }
-# fake_home: a HOME in root whose ~/cos is cos and whose worktrees folder is root/worktrees, both
+# fake_home: a HOME in root whose ~/karo is karo and whose worktrees folder is root/worktrees, both
 # through links, so land itself finds the test repositories and gets as far as its look-up of the
 # Claude Code process, which no Claude Code in this test folder can pass.
 fake_home() {
   home=$root/home
-  mkdir -p "$home/$(dirname "$cos_rel")" "$home/.local/state/cos" &&
-    ln -s "$cos" "$home/$cos_rel" && ln -s "$root/worktrees" "$home/.local/state/cos/worktrees" || exit 2
+  mkdir -p "$home/$(dirname "$karo_rel")" "$home/.local/state/karo" &&
+    ln -s "$karo" "$home/$karo_rel" && ln -s "$root/worktrees" "$home/.local/state/karo/worktrees" || exit 2
 }
 # refused <name> <expected words in stderr> [<folder>] -- <land arguments>: land exits non-zero, says
 # why, and leaves main and the branch where they were.
 refused() {
   local name=$1 words=$2 main_before branch_before
   shift 2
-  main_before=$(git -C "$cos" rev-parse main) branch_before=$(git -C "$cos" rev-parse "$branch" 2>/dev/null)
+  main_before=$(git -C "$karo" rev-parse main) branch_before=$(git -C "$karo" rev-parse "$branch" 2>/dev/null)
   if run "$@"; then
     fail "$name: land succeeded"
   elif [[ $err != *"$words"* ]]; then
     fail "$name: stderr lacks '$words': $err"
-  elif [[ $(git -C "$cos" rev-parse main) != "$main_before" ]] ||
-    [[ $(git -C "$cos" rev-parse "$branch" 2>/dev/null) != "$branch_before" ]]; then
+  elif [[ $(git -C "$karo" rev-parse main) != "$main_before" ]] ||
+    [[ $(git -C "$karo" rev-parse "$branch" 2>/dev/null) != "$branch_before" ]]; then
     fail "$name: land moved main or the branch"
   else
     pass "$name is refused"
@@ -101,8 +101,8 @@ refused() {
 fresh
 on_main
 run -- "$branch" --rebase && run -- "$branch"
-if [[ -z $err && $(git -C "$cos" rev-parse main) == "$(git -C "$cos" rev-parse "$branch")" &&
-  -f $cos/b.txt && -f $wt/c.txt ]]; then
+if [[ -z $err && $(git -C "$karo" rev-parse main) == "$(git -C "$karo" rev-parse "$branch")" &&
+  -f $karo/b.txt && -f $wt/c.txt ]]; then
   pass "a clean branch is rebased onto main and main is fast-forwarded to it"
 else
   fail "rebase and fast-forward: $err"
@@ -110,7 +110,7 @@ fi
 
 fresh
 run -- "$branch"
-if [[ -z $err && $(git -C "$cos" rev-parse main) == "$(git -C "$cos" rev-parse "$branch")" ]]; then
+if [[ -z $err && $(git -C "$karo" rev-parse main) == "$(git -C "$karo" rev-parse "$branch")" ]]; then
   pass "a branch already on main is fast-forwarded without a rebase"
 else
   fail "fast-forward: $err"
@@ -123,8 +123,8 @@ refused "a branch main cannot fast-forward to" "--rebase first" -- "$branch"
 fresh
 on_main b.txt other
 run -- "$branch" --rebase
-if [[ $err == *"conflicted and was aborted: b.txt"* && ! -d $cos/.git/worktrees/x/rebase-merge &&
-  ! -d $cos/.git/worktrees/x/rebase-apply && -z $(git -C "$wt" status --porcelain) &&
+if [[ $err == *"conflicted and was aborted: b.txt"* && ! -d $karo/.git/worktrees/x/rebase-merge &&
+  ! -d $karo/.git/worktrees/x/rebase-apply && -z $(git -C "$wt" status --porcelain) &&
   $(git -C "$wt" log -1 --format=%s) == b ]]; then
   pass "a conflicting rebase is aborted, names the file, and leaves the branch as it was"
 else
@@ -132,35 +132,35 @@ else
 fi
 
 fresh
-echo changed >"$cos/a.txt"
-refused "a ~/cos with an uncommitted change" "uncommitted changes" -- "$branch"
+echo changed >"$karo/a.txt"
+refused "a ~/karo with an uncommitted change" "uncommitted changes" -- "$branch"
 
 fresh
 echo changed >"$wt/b.txt"
 refused "a worktree with an uncommitted change" "uncommitted changes" -- "$branch" --rebase
 
 fresh
-git -C "$cos" checkout -q -b other
-refused "a ~/cos off main" "not main" -- "$branch"
+git -C "$karo" checkout -q -b other
+refused "a ~/karo off main" "not main" -- "$branch"
 
 fresh
 refused "a call from the worktree" "run it from" "$wt" -- "$branch" --rebase
 
-# A call made in ~/cos but under an agent's Claude Code, which started in its worktree.
+# A call made in ~/karo but under an agent's Claude Code, which started in its worktree.
 fresh
 claude_at=$wt
-refused "a call under a Claude Code session in the worktree" "runs in $wt, not $cos" -- "$branch"
+refused "a call under a Claude Code session in the worktree" "runs in $wt, not $karo" -- "$branch"
 
-# An agent starts a Claude Code in ~/cos and calls land under it: the agent's own session is still
+# An agent starts a Claude Code in ~/karo and calls land under it: the agent's own session is still
 # an ancestor.
 fresh
-claude_at=$cos$'\n'$wt
-refused "a call under a Claude Code in ~/cos started by a session in the worktree" "runs in $wt, not $cos" -- "$branch"
+claude_at=$karo$'\n'$wt
+refused "a call under a Claude Code in ~/karo started by a session in the worktree" "runs in $wt, not $karo" -- "$branch"
 
 # "?" is what the look-up prints for a folder lsof could not read; neither it nor a relative path may
-# resolve against land's own folder. A one-letter folder in ~/cos would match "?" as a glob.
+# resolve against land's own folder. A one-letter folder in ~/karo would match "?" as a glob.
 fresh
-mkdir "$cos/a"
+mkdir "$karo/a"
 claude_at='?'
 refused "a Claude Code session whose folder cannot be read" "cannot be read: ?" -- "$branch"
 
@@ -174,67 +174,67 @@ refused "a call with no Claude Code process among the callers" "no Claude Code p
 unset claude_at
 
 fresh
-claude_at=$cos/.
+claude_at=$karo/.
 run -- "$branch"
-if [[ -z $err && $(git -C "$cos" rev-parse main) == "$(git -C "$cos" rev-parse "$branch")" ]]; then
-  pass "a call under a Claude Code session in ~/cos lands the branch"
+if [[ -z $err && $(git -C "$karo" rev-parse main) == "$(git -C "$karo" rev-parse "$branch")" ]]; then
+  pass "a call under a Claude Code session in ~/karo lands the branch"
 else
-  fail "Claude Code session in ~/cos: $err"
+  fail "Claude Code session in ~/karo: $err"
 fi
 unset claude_at
 
 fresh
-git -C "$cos" branch -q -m "$branch" feature/x
+git -C "$karo" branch -q -m "$branch" feature/x
 branch=feature/x
 refused "a branch not named <semantics>/agent/<title>" "<semantics>/agent/<title>" -- "$branch"
 
 fresh
-git -C "$cos" worktree add -q -b feat/agent/y "$root/elsewhere" main
+git -C "$karo" worktree add -q -b feat/agent/y "$root/elsewhere" main
 branch=feat/agent/y
 refused "a worktree outside the worktrees folder" "not directly in" -- "$branch" --rebase
 
 fresh
-git -C "$cos" branch -q feat/agent/z
+git -C "$karo" branch -q feat/agent/z
 branch=feat/agent/z
 refused "a branch no worktree has checked out" "no worktree" -- "$branch"
 
 fresh
-git -C "$cos" config filter.x.clean 'touch pwned'
-refused "a ~/cos whose config runs a command" "does not allow: filter.x.clean" -- "$branch"
+git -C "$karo" config filter.x.clean 'touch pwned'
+refused "a ~/karo whose config runs a command" "does not allow: filter.x.clean" -- "$branch"
 
 # bd reads beads.role from the git config; that one key is allowed, not the rest of beads.*.
 fresh
-git -C "$cos" config beads.role maintainer
+git -C "$karo" config beads.role maintainer
 run -- "$branch"
-if [[ -z $err && $(git -C "$cos" rev-parse main) == "$(git -C "$cos" rev-parse "$branch")" ]]; then
-  pass "a ~/cos with beads.role in its config lands the branch"
+if [[ -z $err && $(git -C "$karo" rev-parse main) == "$(git -C "$karo" rev-parse "$branch")" ]]; then
+  pass "a ~/karo with beads.role in its config lands the branch"
 else
   fail "beads.role: $err"
 fi
 
 fresh
-git -C "$cos" config beads.foo x
-refused "a ~/cos with another beads.* key in its config" "does not allow: beads.foo" -- "$branch"
+git -C "$karo" config beads.foo x
+refused "a ~/karo with another beads.* key in its config" "does not allow: beads.foo" -- "$branch"
 
 fresh
 other=$root/other
 git init -q -b main "$other" && git -C "$other" -c user.name=test -c user.email=test@example.invalid commit -q --allow-empty -m other
 git -C "$other" worktree add -q -b "$branch" "$root/worktrees/fake" main
-# The worktree of cos keeps its branch, but its .git now names the other repository.
+# The worktree of karo keeps its branch, but its .git now names the other repository.
 printf 'gitdir: %s\n' "$other/.git/worktrees/fake" >"$wt/.git"
 refused "a worktree whose .git names another repository" "not a worktree of" -- "$branch" --rebase
 
 fresh
-git -C "$cos" config extensions.worktreeConfig true
-refused "a ~/cos that reads config.worktree, which agents can write" "does not allow: extensions.worktreeconfig" -- "$branch" --rebase
+git -C "$karo" config extensions.worktreeConfig true
+refused "a ~/karo that reads config.worktree, which agents can write" "does not allow: extensions.worktreeconfig" -- "$branch" --rebase
 
 # An agent rewrites the worktree's .git file and its commondir after land's checks, pointing them at a
 # copy of the repository whose config runs a command on checkout. A git on PATH plants both just
 # before the rebase runs; land must still use only the repository it checked.
 fresh
-printf 'c.txt filter=evil\n' >"$cos/.gitattributes" && git -C "$cos" add .gitattributes && git -C "$cos" commit -q -m attributes
+printf 'c.txt filter=evil\n' >"$karo/.gitattributes" && git -C "$karo" add .gitattributes && git -C "$karo" commit -q -m attributes
 on_main
-cp -R "$cos/.git" "$root/evil.git"
+cp -R "$karo/.git" "$root/evil.git"
 git --git-dir="$root/evil.git" config filter.evil.smudge "touch $root/pwned; cat"
 mkdir -p "$root/path"
 real_git=$(command -v git)
@@ -242,7 +242,7 @@ cat >"$root/path/git" <<EOF
 #!/bin/sh
 case " \$* " in
   *" rebase main "*)
-    printf '%s\n' "$root/evil.git" >"$cos/.git/worktrees/x/commondir"
+    printf '%s\n' "$root/evil.git" >"$karo/.git/worktrees/x/commondir"
     printf 'gitdir: %s\n' "$root/evil.git/worktrees/x" >"$wt/.git" ;;
 esac
 exec "$real_git" "\$@"
@@ -256,14 +256,14 @@ else
 fi
 
 fresh
-mv "$cos/.git" "$root/real.git" && ln -s "$root/real.git" "$cos/.git"
-refused "a ~/cos whose .git is a link" ".git is not a folder" -- "$branch"
-rm "$cos/.git" && mv "$root/real.git" "$cos/.git"
+mv "$karo/.git" "$root/real.git" && ln -s "$root/real.git" "$karo/.git"
+refused "a ~/karo whose .git is a link" ".git is not a folder" -- "$branch"
+rm "$karo/.git" && mv "$root/real.git" "$karo/.git"
 
 # git reads no gitdir file in a main checkout's .git, so only land's own check stands in the way.
 fresh
-printf '%s\n' "$root/elsewhere/.git" >"$cos/.git/gitdir"
-refused "a ~/cos whose .git has a gitdir file" "has a gitdir file" -- "$branch"
+printf '%s\n' "$root/elsewhere/.git" >"$karo/.git/gitdir"
+refused "a ~/karo whose .git has a gitdir file" "has a gitdir file" -- "$branch"
 
 fresh
 fake_home
@@ -272,23 +272,40 @@ real_env=(HOME="$home" LAND_TEST_ROOT="$outside")
 refused "LAND_TEST_ROOT outside a land-test.* folder" "land $branch: " -- "$branch"
 unset real_env
 
-# LAND_TEST_ROOT and LAND_TEST_CLAUDE_CWD naming the test folder and cos, which land must not take
-# as a place for ~/cos or as the Claude Code callers: land still looks up the real callers.
+# LAND_TEST_ROOT and LAND_TEST_CLAUDE_CWD naming the test folder and karo, which land must not take
+# as a place for ~/karo or as the Claude Code callers: land still looks up the real callers.
 fresh
 fake_home
-real_env=(HOME="$home" TMPDIR="$tmp_root" LAND_TEST_ROOT="$root" LAND_TEST_CLAUDE_CWD="$cos")
+real_env=(HOME="$home" TMPDIR="$tmp_root" LAND_TEST_ROOT="$root" LAND_TEST_CLAUDE_CWD="$karo")
 refused "LAND_TEST_ROOT and LAND_TEST_CLAUDE_CWD in the environment" "Claude Code" -- "$branch"
 unset real_env
 
-# A TMPDIR of the caller's choosing, with a land-test.* folder in it whose cos and worktrees are links
-# to the ~/cos and the worktrees land uses.
+# KARO_HOME and KARO_STATE_HOME naming another folder: land still takes ~/karo.
+fresh
+fake_home
+mkdir "$root/other" || exit 2
+real_env=(HOME="$home" KARO_HOME="$root/other" KARO_STATE_HOME="$root/other")
+refused "KARO_HOME and KARO_STATE_HOME in the environment" "Claude Code" -- "$branch"
+unset real_env
+
+# A HOME with ~/cos and ~/.local/state/cos/worktrees but no ~/karo: land takes those two.
+fresh
+home=$root/home
+mkdir -p "$home/.local/state/cos" &&
+  ln -s "$karo" "$home/cos" && ln -s "$root/worktrees" "$home/.local/state/cos/worktrees" || exit 2
+real_env=(HOME="$home")
+refused "~/cos while ~/karo does not exist" "Claude Code" -- "$branch"
+unset real_env
+
+# A TMPDIR of the caller's choosing, with a land-test.* folder in it whose karo and worktrees are links
+# to the ~/karo and the worktrees land uses.
 fresh
 fake_home
 mkdir -p "$root/tmp/land-test.evil" &&
-  ln -s "$home/$cos_rel" "$root/tmp/land-test.evil/cos" &&
-  ln -s "$home/.local/state/cos/worktrees" "$root/tmp/land-test.evil/worktrees" || exit 2
-real_env=(HOME="$home" TMPDIR="$root/tmp" LAND_TEST_ROOT="$root/tmp/land-test.evil" LAND_TEST_CLAUDE_CWD="$cos")
-refused "a land-test.* folder linking to the ~/cos land uses" "Claude Code" -- "$branch"
+  ln -s "$home/$karo_rel" "$root/tmp/land-test.evil/karo" &&
+  ln -s "$home/.local/state/karo/worktrees" "$root/tmp/land-test.evil/worktrees" || exit 2
+real_env=(HOME="$home" TMPDIR="$root/tmp" LAND_TEST_ROOT="$root/tmp/land-test.evil" LAND_TEST_CLAUDE_CWD="$karo")
+refused "a land-test.* folder linking to the ~/karo land uses" "Claude Code" -- "$branch"
 unset real_env
 
 # usage_error <name> -- <land arguments>: land exits 2 with its usage line and nothing else.

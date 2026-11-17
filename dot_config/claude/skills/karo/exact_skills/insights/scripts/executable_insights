@@ -1,20 +1,20 @@
 #!/bin/sh
-# Counts one day of CoS and agent work from the Claude Code transcripts and the
-# task database (bd, run in COS_DIR), and prints the counts as one JSON object
+# Counts one day of karo and agent work from the Claude Code transcripts and the
+# task database (bd, run in KARO_HOME), and prints the counts as one JSON object
 # for the karo:insights skill.
 # It reads only structural fields; the output holds counts, seconds, tokens,
 # dollars, session IDs, agent names, times and tool names, never prompt,
 # command or result text.
 #
-# Transcripts come in three groups: cos (the sessions in the project folder of
-# COS_DIR), subagents (their <session>/subagents/), and agents (any other
+# Transcripts come in three groups: karo (the sessions in the project folder of
+# KARO_HOME), subagents (their <session>/subagents/), and agents (any other
 # project's session whose agent-name record starts with a task ID: a Herdr
 # agent). A continued session copies earlier records into its new file, so
 # records are counted once per uuid within a group. A record belongs to the day
 # of its timestamp in the local time zone.
 #
 # Output keys:
-#   turns          CoS turns (one per prompt from the owner, a peer or a task
+#   turns          karo turns (one per prompt from the owner, a peer or a task
 #                  notification) with tool calls, not counting AskUserQuestion,
 #                  Write/Edit to a scratchpad, and runs of the scripts the
 #                  skills call as steps (karo's scripts/commit,
@@ -24,8 +24,8 @@
 #                  crit-open, the karrybit herdr-agent skill's agent-ctl and
 #                  agent-report, and every command matching a regular
 #                  expression in the uncounted: list of
-#                  <cos>/rules/karo.yaml): AGENTS.md leaves the calls a skill
-#                  requires out of the CoS's two. A run is a command that
+#                  $KARO_CONFIG_HOME/config.yaml): AGENTS.md leaves the calls a skill
+#                  requires out of karo's two. A run is a command that
 #                  starts with the script's ~ path, the one form AGENTS.md
 #                  allows, so a command that only reads a script still counts.
 #   over_limit     the turns with more than 2 such calls: session, start time,
@@ -36,7 +36,7 @@
 #                  user-rejected calls, run time included). AskUserQuestion is
 #                  a question, not a permission, and is left out.
 #   agent_prompts  per Herdr agent that waited on a dialog: calls and seconds.
-#   cos_turn_s     CoS turn lengths from turn_duration: count, total, max.
+#   karo_turn_s    karo turn lengths from turn_duration: count, total, max.
 #   delegations    the tasks first claimed (started_at) on the day, each with
 #                  the first comment or the close after its start, whichever
 #                  is earlier, and the minutes in between; ended is null
@@ -48,7 +48,7 @@
 #                  now and then, not per day, so it is not the day's cost.
 #
 # usage: insights [YYYY-MM-DD]   (default: today)
-# Environment: COS_DIR (default ~/cos), CLAUDE_CONFIG_DIR (default ~/.claude).
+# Environment: KARO_HOME (default ~/karo), KARO_CONFIG_HOME (default ~/.config/karo), CLAUDE_CONFIG_DIR (default ~/.claude).
 set -eu
 
 usage() {
@@ -61,13 +61,14 @@ case $day in
   [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) ;;
   *) usage ;;
 esac
-cos=$(cd "${COS_DIR:-$HOME/cos}" && pwd -P)
+karo=$(cd "${KARO_HOME:-$HOME/karo}" && pwd -P)
 projects=${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects
 # Claude Code names a project folder after its cwd with every non-alphanumeric
 # character replaced by "-".
-cosproj=$projects/$(printf '%s' "$cos" | tr -c 'A-Za-z0-9' '-')
+karoproj=$projects/$(printf '%s' "$karo" | tr -c 'A-Za-z0-9' '-')
 uncounted='[]'
-[ ! -f "$cos/rules/karo.yaml" ] || uncounted=$(yq -o=json -I=0 '.uncounted // []' "$cos/rules/karo.yaml")
+config=${KARO_CONFIG_HOME:-$HOME/.config/karo}/config.yaml
+[ ! -f "$config" ] || uncounted=$(yq -o=json -I=0 '.uncounted // []' "$config")
 
 # The $ names below are jq variables, not shell ones.
 # shellcheck disable=SC2016
@@ -107,7 +108,7 @@ def counted: .name == "AskUserQuestion" or (.name == "Bash" and (.input.command 
      rejected_user: ($ap | map(select(.k == "rejected_user")) | length),
      rejected_classifier: ($ap | map(select(.k == "rejected_classifier")) | length),
      prompt_wait_s: ($ap | map(.wait) | add // 0 | floor)},
-   turns: (if $group != "cos" then [] else
+   turns: (if $group != "karo" then [] else
      reduce $d[] as $r ([];
        if $r.type == "user" and ($r.message.content | type) == "string" and $r.origin.kind? then
          . + [{session: $r.sessionId[:8], time: ($r | hm), kind: $r.origin.kind, ids: {}}]
@@ -144,12 +145,12 @@ files() { # <dir> <depth>: jsonl files changed since the day began (an older fil
 # tasks.
 from=$(jq -rn --arg d "$day" '$d + "T00:00:00Z" | fromdate - 86400 | todate[:10]')
 to=$(jq -rn --arg d "$day" '$d + "T00:00:00Z" | fromdate + 2 * 86400 | todate[:10]')
-started=$(cd "$cos" && bd query "started>=$from AND started<$to" --all --limit 0 --json)
+started=$(cd "$karo" && bd query "started>=$from AND started<$to" --all --limit 0 --json)
 ids=$(printf '%s\n' "$started" | jq -r '.[].id')
 shown='[]'
 # IDs have no spaces, so the word splitting below is safe.
 # shellcheck disable=SC2086
-[ -z "$ids" ] || shown=$(cd "$cos" && bd show $ids --json --include-comments)
+[ -z "$ids" ] || shown=$(cd "$karo" && bd show $ids --json --include-comments)
 # shellcheck disable=SC2016
 delegations=$(printf '%s\n' "$shown" | jq -c --arg day "$day" '
 # bd writes RFC 3339 times, with or without fractional seconds, in UTC or with an offset.
@@ -166,11 +167,11 @@ def epoch: capture("^(?<s>[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})
 {
   # Project folder names have no spaces, so the word splitting below is safe.
   # shellcheck disable=SC2046
-  summarize cos "" $(files "$cosproj" 1)
+  summarize karo "" $(files "$karoproj" 1)
   # shellcheck disable=SC2046
-  summarize subagents "" $(files "$cosproj" 3)
+  summarize subagents "" $(files "$karoproj" 3)
   for dir in "$projects"/*/; do
-    [ "${dir%/}" = "$cosproj" ] && continue
+    [ "${dir%/}" = "$karoproj" ] && continue
     for f in $(files "$dir" 1); do
       name=$(jq -r 'select(.type == "agent-name") | .agentName' "$f" | tail -n 1)
       case $name in [A-Za-z]*-?*) summarize agents "$name" "$f" ;; esac
@@ -179,14 +180,14 @@ def epoch: capture("^(?<s>[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})
 } | jq -s --arg day "$day" --argjson delegations "$delegations" '
 def sumobj: reduce .[] as $o ({}; reduce ($o | to_entries[]) as $e (.; .[$e.key] += $e.value));
 . as $f
-| ($f | map(select(.group == "cos")) | map(.turns) | add // []) as $turns
+| ($f | map(select(.group == "karo")) | map(.turns) | add // []) as $turns
 | {date: $day,
    turns: ($turns | length),
    over_limit: ($turns | map(select(.calls > 2))),
    approvals: ($f | group_by(.group) | map({key: .[0].group, value: (map(.approvals) | sumobj)}) | from_entries),
    agent_prompts: ($f | map(select(.group == "agents" and (.approvals.prompted + .approvals.rejected_user) > 0))
      | map({agent: .name, session, calls: (.approvals.prompted + .approvals.rejected_user), wait_s: .approvals.prompt_wait_s})),
-   cos_turn_s: ($f | map(select(.group == "cos")) | map(.turn_ms) | add // [] | map(. / 1000 | floor)
+   karo_turn_s: ($f | map(select(.group == "karo")) | map(.turn_ms) | add // [] | map(. / 1000 | floor)
      | {count: length, total: (add // 0), max: (max // 0)}),
    delegations: $delegations,
    tokens: ($f | group_by(.group) | map({key: .[0].group,

@@ -1,20 +1,20 @@
 ---
 name: explain
-description: 'HTML の解説を git の外の store（`$XDG_DATA_HOME/cos/html/<UUID>/` の index.html と metadata.json）に置く手順。metadata.json を jq で探して既存の解説を渡すか決め、作る部分は karrybit:explain に書き先と metadata.json の規則を渡して任せる。オーナーが資料・リポジトリ・仕組みの解説を HTML で頼んだとき、前の解説を開きたいとき、作り直しを頼んだときに、karrybit:explain の代わりに使う（この skill が karrybit:explain を呼ぶ）。'
+description: 'HTML の解説を git の外の store（`$KARO_DATA_HOME/html/<UUID>/` の index.html と metadata.json）に置く手順。metadata.json を jq で探して既存の解説を渡すか決め、作る部分は karrybit:explain に書き先と metadata.json の規則を渡して任せる。オーナーが資料・リポジトリ・仕組みの解説を HTML で頼んだとき、前の解説を開きたいとき、作り直しを頼んだときに、karrybit:explain の代わりに使う（この skill が karrybit:explain を呼ぶ）。'
 ---
 
 # HTML の解説を store に置く
 
 - HTML の解説は、1 ファイルの HTML で資料や仕組みを解説するもの。1 つの解説は store の `<root>/<id>/` のフォルダで、`index.html` と `metadata.json` を持つ。store は git の外にある。
-- この skill は、cos の運用（store の場所、id、`metadata.json`、探し方、置き方）だけを持つ。作り方、評価のしかた、依頼の型を直すときは `karrybit:explain` skill にある。
+- この skill は、karo の運用（store の場所、id、`metadata.json`、探し方、置き方）だけを持つ。作り方、評価のしかた、依頼の型を直すときは `karrybit:explain` skill にある。
 - 下の `<karo-check>` は `~/.config/claude/skills/karo/scripts/karo-check` で、この `~/` の形のまま書く。
 
 ## store
 
-- root は次の式で出す。`XDG_DATA_HOME` が絶対パスならその下、未設定・空・相対パスなら `$HOME/.local/share` の下の `cos/html` になる（XDG Base Directory Specification の `$XDG_DATA_HOME`）。
+- root は次の式で出す（`KARO_DATA_HOME` が未設定か空なら `$HOME/.local/share/karo` の下）。
 
   ```sh
-  base=${XDG_DATA_HOME:-}; case $base in /*) ;; *) base=$HOME/.local/share ;; esac; root=$base/cos/html
+  root=${KARO_DATA_HOME:-$HOME/.local/share/karo}/html
   ```
 
 - id は `uuidgen | tr A-Z a-z` の小文字の UUID だけにする。解説を作るたびに新しい id を出す（作り直しと、既存の解説の更新も新しい id にする）。
@@ -27,7 +27,7 @@ description: 'HTML の解説を git の外の store（`$XDG_DATA_HOME/cos/html/<
 - `source` は、元の資料が git の資料かどうかで次の 2 つの形のどちらかにする。
   - git の資料: `kind` は `git`。`repository` はリモートの URL（`git remote get-url origin`）で、リモートがなければ ghq の形の `local/<owner>/<repo>`。`path` はリポジトリの中の相対パス。`revision` は読んだ commit の 40 桁（`git rev-parse <commit>`）。
   - git でない資料: `kind` は資料の種類（`confluence`、`web` など）、`location` は URL、`version` はページの版の番号（取れたときだけ）。
-- 任意は、`tasks`（解説を頼まれたタスク ID）、`projects`（`karo:frontmatter` skill の `projects` の行の値）、`derived_from`（頼まれた threads の発言の `~/cos` からのパス）。
+- 任意は、`tasks`（解説を頼まれたタスク ID）、`projects`（`karo:frontmatter` skill の `projects` の行の値）、`derived_from`（頼まれた threads の発言の `$KARO_HOME` からのパス）。
 - 入れるのは上の項目の値だけにする。HTML の本文、絶対パス、秘密、個人名は入れない。
 
 <example>
@@ -78,7 +78,7 @@ description: 'HTML の解説を git の外の store（`$XDG_DATA_HOME/cos/html/<
 4. `karrybit:explain` skill を Skill tool で呼び、その手順を最後まで進める。渡す値は次のとおり。
    - HTML の書き先: `<一時フォルダ>/index.html`。
    - 控えのファイル: `<一時フォルダ>/metadata.json`。書き方の規則は上の「metadata.json」。入れる値は、3 の id と `created_at`、1 の `source`、頼まれたタスク・プロジェクト・threads の発言で、`title` は HTML の題にする。検査は上の「metadata.json」の検査のコマンド。
-   - 説明の文書の書き先: オーナーが説明の文書も残すよう頼んだときだけ渡す。書き先は `~/cos/docs/<話題>.md`、フロントマターは `karo:frontmatter` skill の種類の表の `Document` の行（derived_from は頼まれた threads の発言、sources は元の資料と版）、検査は `<karo-check> --only docs/<話題>.md`。`~/cos` の記録なので、書いたあとは `karo:record` skill に従う。
+   - 説明の文書の書き先: オーナーが説明の文書も残すよう頼んだときだけ渡す。書き先は `$KARO_HOME/docs/<話題>.md`、フロントマターは `karo:frontmatter` skill の種類の表の `Document` の行（derived_from は頼まれた threads の発言、sources は元の資料と版）、検査は `<karo-check> --only docs/<話題>.md`。`$KARO_HOME` の記録なので、書いたあとは `karo:record` skill に従う。
    - 頼まれた内容の原文: 頼まれた threads の発言。
    - 呼び出し側が元の資料の場所・版・読み方を渡したときは、それもそのまま渡す。
 

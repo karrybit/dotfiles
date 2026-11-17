@@ -3,26 +3,26 @@
 # command calls the commit script beside this one or the land skill's land without --rebase, written in
 # the ~ form that call-check requires. An "if" rule cannot do this filtering: Claude Code runs the hook
 # anyway on a command with $VAR, $(), or backticks.
-# Hooks run outside the sandbox, so crit works here: it restarts the crit daemon reviewing the cos dir
+# Hooks run outside the sandbox, so crit works here: it restarts the crit daemon reviewing KARO_HOME
 # ("crit ." there) after a commit that added, removed, or renamed a file and after every land, since crit
 # lists only the files it started with. Without crit, or with no such daemon, it does nothing. A failed
 # step goes to Claude on stderr with exit 2; the commit or the landing stays.
 # usage: post-commit < <PostToolUse hook input JSON>
-# Environment: COS_DIR (default ~/cos).
+# Environment: KARO_HOME (default ~/karo).
 call=$(jq -r '.tool_input.command // "" |
   if test("^\\s*~/\\.config/claude/skills/karo/scripts/commit\\s") then "commit"
   elif test("^\\s*~/\\.config/claude/skills/karo/skills/land/scripts/land\\s") and (test("\\s--rebase(\\s|$)") | not) then "land"
   else empty end' 2>/dev/null)
 [ -n "$call" ] || exit 0
-cos=${COS_DIR:-$HOME/cos}
-# The sandbox can write the cos dir's .git, except its config and hooks, and this hook runs outside it, so
+karo=${KARO_HOME:-$HOME/karo}
+# The sandbox can write KARO_HOME's .git, except its config and hooks, and this hook runs outside it, so
 # git, and every git the crit daemon runs, has its git and common folders named, so a commondir or gitdir
 # file in .git is refused rather than followed, and runs no hooks, fsmonitor, or automatic maintenance.
 # The only repository config git then reads is .git/config.
-g=$cos/.git
+g=$karo/.git
 for f in commondir gitdir; do [ -e "$g/$f" ] || [ -L "$g/$f" ] && { echo "post-commit: $g/$f points to another repository" >&2; exit 2; }; done
 [ -d "$g" ] && [ ! -L "$g" ] || { echo "post-commit: $g is not a folder" >&2; exit 2; }
-export GIT_DIR="$g" GIT_COMMON_DIR="$g" GIT_WORK_TREE="$cos" GIT_CONFIG_COUNT=4 \
+export GIT_DIR="$g" GIT_COMMON_DIR="$g" GIT_WORK_TREE="$karo" GIT_CONFIG_COUNT=4 \
   GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/dev/null GIT_CONFIG_KEY_1=core.fsmonitor GIT_CONFIG_VALUE_1=false \
   GIT_CONFIG_KEY_2=gc.auto GIT_CONFIG_VALUE_2=0 GIT_CONFIG_KEY_3=maintenance.auto GIT_CONFIG_VALUE_3=false
 if [ "$call" = commit ]; then
@@ -30,7 +30,7 @@ if [ "$call" = commit ]; then
   printf '%s\n' "$changed" | grep -q '^[AD]' || exit 0
 fi
 command -v crit >/dev/null || exit 0
-cd "$cos" || exit 2
+cd "$karo" || exit 2
 ng() { echo "NG crit: $*" >&2; exit 2; }
 # running: the daemon runs and has a "crit ." session.
 running() {
@@ -40,7 +40,7 @@ running() {
 running || exit 0
 out=$(crit stop . 2>&1) || ng "crit stop failed: $out"
 # The daemon lives only while this client does, so the client gets a session of its own and outlives the hook.
-# -I keeps the cos dir, which the sandbox can write, and PYTHON* variables off the interpreter's import path.
+# -I keeps KARO_HOME, which the sandbox can write, and PYTHON* variables off the interpreter's import path.
 python3 -I -c 'import os, sys; os.setsid(); os.execvp(sys.argv[1], sys.argv[1:])' crit . --no-open </dev/null >/dev/null 2>&1 &
 i=0
 while [ $i -lt 50 ]; do

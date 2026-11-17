@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Show that view-open hands the karrybit crit skill's tb-view "view - <name>" (default
 # "view - browser") and the path, with --no-merge when it comes first, for an existing .html or .svg
-# under the cos dir's docs/, an existing <store>/<lowercase UUID>/index.html in the store under an
-# absolute XDG_DATA_HOME or, when it is unset, empty, or relative, under HOME's .local/share, and an
+# under docs/ of KARO_HOME, an existing <store>/<lowercase UUID>/index.html in the store under
+# KARO_DATA_HOME or, when it is unset or empty, under HOME's .local/share/karo, and an
 # existing image or video anywhere, and refuses everything else: no argument or three, a relative
 # path, a path with "..", an .html or .svg outside docs/ and the store's UUID folders, an extension
 # off the list, a missing file, a folder, and a name with characters other than letters, digits,
-# ".", "_", and "-", or starting with one of those three. It runs with HOME, COS_DIR, and
-# XDG_DATA_HOME in a temporary directory that holds a tb-view stub
+# ".", "_", and "-", or starting with one of those three. It runs with HOME, KARO_HOME, and
+# KARO_DATA_HOME in a temporary directory that holds a tb-view stub
 # logging what it is given (tb-view-test covers tb-view). settings-test checks that the settings
 # ask before each view-open and run it outside the sandbox.
 # usage: view-open-test [<view-open>]   (default: the one beside this script; its files go to a
@@ -24,23 +24,23 @@ pass() { printf 'ok\t%s\n' "$1"; }
 
 stub=$tmp/.config/claude/skills/karrybit/skills/crit/scripts/tb-view
 id=0f6c7d9e-3b1a-4c52-9e34-5a8d1b7c2e40
-mkdir -p "${stub%/*}" "$tmp/cos/docs/abc/1" "$tmp/media" "$tmp/folder.png" "$tmp/data/cos/html/$id/sub" \
-  "$tmp/data/cos/html/.tmp.abc123" "$tmp/data/cos/html/0F6C7D9E-3B1A-4C52-9E34-5A8D1B7C2E40" "$tmp/data/cos/html/abc" \
-  "$tmp/.local/share/cos/html/$id"
+mkdir -p "${stub%/*}" "$tmp/karo/docs/abc/1" "$tmp/media" "$tmp/folder.png" "$tmp/data/html/$id/sub" \
+  "$tmp/data/html/.tmp.abc123" "$tmp/data/html/0F6C7D9E-3B1A-4C52-9E34-5A8D1B7C2E40" "$tmp/data/html/abc" \
+  "$tmp/.local/share/karo/html/$id"
 cat > "$stub" <<'EOF'
 #!/bin/sh
 (IFS='|'; printf '%s\n' "$*") >> "$FAKE_LOG"
 EOF
 chmod +x "$stub"
-for f in cos/docs/abc/1/index.html cos/docs/diagram.svg cos/page.html media/page.html media/d.svg \
+for f in karo/docs/abc/1/index.html karo/docs/diagram.svg karo/page.html media/page.html media/d.svg \
   media/a.png media/a.jpg media/a.jpeg media/a.webp media/a.gif media/a.mp4 media/a.webm media/a.pdf media/a.PNG \
-  "data/cos/html/$id/index.html" "data/cos/html/$id/other.html" "data/cos/html/$id/sub/index.html" \
-  data/cos/html/.tmp.abc123/index.html data/cos/html/0F6C7D9E-3B1A-4C52-9E34-5A8D1B7C2E40/index.html \
-  data/cos/html/abc/index.html data/cos/html/index.html ".local/share/cos/html/$id/index.html"; do
+  "data/html/$id/index.html" "data/html/$id/other.html" "data/html/$id/sub/index.html" \
+  data/html/.tmp.abc123/index.html data/html/0F6C7D9E-3B1A-4C52-9E34-5A8D1B7C2E40/index.html \
+  data/html/abc/index.html data/html/index.html ".local/share/karo/html/$id/index.html"; do
   : > "$tmp/$f"
 done
 
-export FAKE_LOG=$tmp/log COS_DIR=$tmp/cos XDG_DATA_HOME=$tmp/data
+export FAKE_LOG=$tmp/log KARO_HOME=$tmp/karo KARO_DATA_HOME=$tmp/data
 run() {
   : > "$FAKE_LOG"
   out=$(env HOME="$tmp" "$vo" "$@" 2>&1); code=$?
@@ -62,20 +62,19 @@ refused() {
   else fail "refuses ${*#"$tmp"/}: exit $code: $out: $(paste -sd '/' "$FAKE_LOG")"; fi
 }
 
-for f in cos/docs/abc/1/index.html cos/docs/diagram.svg media/a.png media/a.jpg media/a.jpeg media/a.webp \
+for f in karo/docs/abc/1/index.html karo/docs/diagram.svg media/a.png media/a.jpg media/a.jpeg media/a.webp \
   media/a.gif media/a.mp4 media/a.webm; do
   opens "view - browser|$tmp/$f" "$tmp/$f"
 done
-opens "view - ${id:0:8}|$tmp/data/cos/html/$id/index.html" "$tmp/data/cos/html/$id/index.html" "${id:0:8}"
-# Without an absolute XDG_DATA_HOME, the store is under HOME's .local/share.
-for XDG_DATA_HOME in "" data; do
-  opens "view - browser|$tmp/.local/share/cos/html/$id/index.html" "$tmp/.local/share/cos/html/$id/index.html"
-  refused "$tmp/data/cos/html/$id/index.html"
-done
-unset XDG_DATA_HOME
-opens "view - browser|$tmp/.local/share/cos/html/$id/index.html" "$tmp/.local/share/cos/html/$id/index.html"
-refused "$tmp/data/cos/html/$id/index.html"
-export XDG_DATA_HOME=$tmp/data
+opens "view - ${id:0:8}|$tmp/data/html/$id/index.html" "$tmp/data/html/$id/index.html" "${id:0:8}"
+# With KARO_DATA_HOME empty or unset, the store is under HOME's .local/share/karo.
+KARO_DATA_HOME=
+opens "view - browser|$tmp/.local/share/karo/html/$id/index.html" "$tmp/.local/share/karo/html/$id/index.html"
+refused "$tmp/data/html/$id/index.html"
+unset KARO_DATA_HOME
+opens "view - browser|$tmp/.local/share/karo/html/$id/index.html" "$tmp/.local/share/karo/html/$id/index.html"
+refused "$tmp/data/html/$id/index.html"
+export KARO_DATA_HOME=$tmp/data
 opens "view - diagram-1.v_2|$tmp/media/a.png" "$tmp/media/a.png" diagram-1.v_2
 opens "view - browser|$tmp/media/a.png|--no-merge" --no-merge "$tmp/media/a.png"
 opens "view - shot|$tmp/media/a.png|--no-merge" --no-merge "$tmp/media/a.png" shot
@@ -90,19 +89,19 @@ refused "$tmp/media/a.png" "名前"
 refused "$tmp/media/a.png" "a/b"
 refused "$tmp/media/a.png" "-x"
 refused media/a.png
-refused "$tmp/cos/docs/../page.html"
-refused "$tmp/cos/docs/abc/../../page.html"
-refused "$tmp/cos/page.html"
+refused "$tmp/karo/docs/../page.html"
+refused "$tmp/karo/docs/abc/../../page.html"
+refused "$tmp/karo/page.html"
 refused "$tmp/media/page.html"
 refused "$tmp/media/d.svg"
-refused "$tmp/.local/share/cos/html/$id/index.html"
-refused "$tmp/data/cos/html/$id/other.html"
-refused "$tmp/data/cos/html/$id/sub/index.html"
-refused "$tmp/data/cos/html/.tmp.abc123/index.html"
-refused "$tmp/data/cos/html/0F6C7D9E-3B1A-4C52-9E34-5A8D1B7C2E40/index.html"
-refused "$tmp/data/cos/html/abc/index.html"
-refused "$tmp/data/cos/html/index.html"
-refused "$tmp/data/cos/html/$id/../$id/index.html"
+refused "$tmp/.local/share/karo/html/$id/index.html"
+refused "$tmp/data/html/$id/other.html"
+refused "$tmp/data/html/$id/sub/index.html"
+refused "$tmp/data/html/.tmp.abc123/index.html"
+refused "$tmp/data/html/0F6C7D9E-3B1A-4C52-9E34-5A8D1B7C2E40/index.html"
+refused "$tmp/data/html/abc/index.html"
+refused "$tmp/data/html/index.html"
+refused "$tmp/data/html/$id/../$id/index.html"
 refused "$tmp/media/a.pdf"
 refused "$tmp/media/a.PNG"
 refused "$tmp/media/missing.png"

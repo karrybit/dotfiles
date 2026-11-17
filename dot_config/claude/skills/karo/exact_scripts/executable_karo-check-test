@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Show that karo-check can tell a valid vault from a broken one: a small valid vault must pass, each
 # broken note in a copy of it must be reported, and a copy of the real vault with one note broken must fail.
-# The cases break what the CoS checks and the CoS schema decide, and how okf-lint's results are counted with
+# The cases break what the karo checks and the karo schema decide, and how okf-lint's results are counted with
 # them; okf-lint's own checks are tested by okf-lint-test beside okf-lint.
-# usage: karo-check-test [<cos dir>]   (default ~/cos, read only: the small vault takes its
+# usage: karo-check-test [<karo dir>]   (default KARO_HOME or ~/karo, read only: the small vault takes its
 #        rules/frontmatter-schema.yaml, and the real vault is its copy; the copies go to a temporary
 #        directory and are removed)
 set -uo pipefail
-vault=${1:-$HOME/cos}
+vault=${1:-${KARO_HOME:-$HOME/karo}}
 bin=$(cd "$(dirname "$0")" && pwd)
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/karo-check-test.XXXXXX") || exit 2
 trap 'rm -rf "$tmp"' EXIT
@@ -41,7 +41,7 @@ cases=(
   'unknown project|unknown project: nope|sed -i.bak "s#  - github.com/acme/demo#  - nope#" threads/t-test0001-demo.md'
   'wiki link|wiki link, write a path link: \[\[demo\]\]|sed -i.bak "s#\[demo\](projects/repos/github.com/acme/demo.md)#[[demo]]#" threads/t-test0001-demo.md'
   'no frontmatter where no type lives|investigations/2026-01-01-demo/notes.md	no frontmatter|mkdir -p investigations/2026-01-01-demo && printf "## no frontmatter\\n" > investigations/2026-01-01-demo/notes.md'
-  # The required fields and paths in the CoS schema, which okf-lint checks
+  # The required fields and paths in the karo schema, which okf-lint checks
   'misplaced standup|path does not match Standup|mv journal/2026-01-01-standup.md journal/2026-01-01-checkin.md'
   'thread name without a task ID or date|path does not match Thread|mv threads/t-test0001-demo.md threads/demo.md'
   'thread without topic|missing topic|sed -i.bak "/^topic:/d" threads/t-test0001-demo.md'
@@ -54,16 +54,16 @@ for c in "${cases[@]}"; do
   if [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -q -- "$want"; then pass "$name"; else fail "$name: exit $code, want /$want/: $out"; fi
 done
 
-# okf-lint's problems are counted with the CoS checks' problems, once each, under karo-check's count line.
+# okf-lint's problems are counted with the karo checks' problems, once each, under karo-check's count line.
 copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"
 printf '## no frontmatter\n' > "$copy/journal/2026-01-02.md"
 sed -i.bak 's#  - github.com/acme/demo#  - nope#' "$copy/threads/t-test0001-demo.md" && rm "$copy/threads/t-test0001-demo.md.bak"
 out=$("$bin/karo-check" "$copy" 2>&1); code=$?
 if [[ $code -eq 1 ]] && [[ $(printf '%s\n' "$out" | rg -c -- '	no frontmatter') == 1 ]] && printf '%s\n' "$out" | rg -qF $'threads/t-test0001-demo.md\tunknown project: nope' \
   && printf '%s\n' "$out" | rg -qxF 'karo-check: 2 problem(s)' && ! printf '%s\n' "$out" | rg -q '^okf-lint: '; then
-  pass "okf-lint and CoS problems counted together"
+  pass "okf-lint and karo problems counted together"
 else
-  fail "okf-lint and CoS problems counted together: exit $code: $out"
+  fail "okf-lint and karo problems counted together: exit $code: $out"
 fi
 
 # Without okf-lint or a schema, or when okf-lint finds an argument or schema error, karo-check stops without a count.
@@ -133,12 +133,12 @@ with_task() { # <task ID>: a copy whose thread lists the ID after t-test0001
   c=$(<"$copy/threads/t-test0001-demo.md")
   printf '%s\n' "${c/  - t-test0001/  - t-test0001$'\n'  - $1}" > "$copy/threads/t-test0001-demo.md"
 }
-for id in cos-a2v cos-5q5.1 cos-5q5.1.12 t-test0002 bd-a2v my-proj-a2v ABCD-123; do
+for id in karo-a2v karo-5q5.1 karo-5q5.1.12 t-test0002 bd-a2v my-proj-a2v ABCD-123; do
   with_task "$id"
   out=$("$bin/karo-check" "$copy" 2>&1); code=$?
   if [[ $code -eq 0 ]] && rg -qx -- "  - $id" "$copy/threads/t-test0001-demo.md"; then pass "task ID $id passes"; else fail "task ID $id: exit $code: $out"; fi
 done
-for id in t000999 cos- -a2v 1-a2v cos-a2v. cos-a2v.x cos_a2v; do
+for id in t000999 karo- -a2v 1-a2v karo-a2v. karo-a2v.x karo_a2v; do
   with_task "$id"
   out=$("$bin/karo-check" "$copy" 2>&1); code=$?
   if [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -qxF -- "threads/t-test0001-demo.md	bad task id: $id"; then pass "$id is not a task ID"; else fail "bad ID $id: exit $code: $out"; fi

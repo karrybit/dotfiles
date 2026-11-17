@@ -8,7 +8,7 @@
 #   --since <n>d   only threads whose last message is on or after the day n days ago
 #   --limit <n>    only the first n threads
 #   --task <ID>    only threads whose tasks hold the ID
-# Environment: COS_THREADS_DIR (default ~/cos/threads).
+# Environment: KARO_HOME (default ~/karo); the threads directory is its threads/.
 set -eu
 
 usage() {
@@ -33,7 +33,7 @@ if [ -n "$since" ]; then
   from=$(date -v-"$since"d +%Y-%m-%d 2>/dev/null || date -d "$since days ago" +%Y-%m-%d)
 fi
 
-cd "${COS_THREADS_DIR:-$HOME/cos/threads}"
+cd "${KARO_HOME:-$HOME/karo}/threads"
 printf 'file\tlast\ttopic\ttasks\tdecided\topen\n'
 set -- *.md
 [ -e "$1" ] || exit 0

@@ -69,14 +69,21 @@
   `karrybit@skills-dir`, so each skill is called `karrybit:<skill>`; there is
   no intermediate canonical copy. The plugin's `exact_skills/` makes
   `chezmoi apply` remove a deployed skill whose source folder is gone.
-- Skills and scripts that know the layout of the `~/cos` record repository
+- Skills and scripts that know the layout of the karo record repository
   live in the `karo` plugin at `dot_config/claude/skills/karo/`, deployed and
   loaded the same way as `karo@skills-dir`. Its manifest sets
   `defaultEnabled: false`, so it loads only where a project's settings enable
   it; keep owner-specific values out of it and read them from the caller's
-  arguments or from `~/cos/rules/karo.yaml`, `~/cos/rules/<skill>.md`, and
-  `~/cos/projects/repos/<name>.md`, each with a default for when the file is
-  missing. Its subagents are in its `exact_agents/`, called `karo:<agent>`.
+  arguments or from `$KARO_CONFIG_HOME/config.yaml`,
+  `$KARO_HOME/rules/<skill>.md`, and `$KARO_HOME/projects/repos/<name>.md`,
+  each with a default for when the file is missing.
+- The karo plugin finds its folders through `KARO_HOME` (the record
+  repository), `KARO_DATA_HOME`, `KARO_CONFIG_HOME`, and `KARO_STATE_HOME`,
+  exported by `dot_config/zsh/zshenv.d/20_tool_karo.zsh`; when one is unset,
+  the scripts use `~/karo`, `~/.local/share/karo`, `~/.config/karo`, and
+  `~/.local/state/karo`. The karrybit plugin reads none of them and takes
+  paths from its caller. The `land` skill's script reads no variable: it runs
+  outside the sandbox on fixed folders. Its subagents are in its `exact_agents/`, called `karo:<agent>`.
   Its hooks are in its `exact_hooks/hooks.json`, which Claude Code merges
   with the project's settings hooks, so keep them out of the project's
   settings: a hook in both runs twice.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2016,SC2088  # the stubs and the hook commands are text to run later, not to expand here
-# Show that post-commit restarts the crit daemon of the cos dir after a commit that added, removed, or
+# Show that post-commit restarts the crit daemon of KARO_HOME after a commit that added, removed, or
 # renamed a file and after a land without --rebase, and after nothing else; that it leaves crit alone
 # when no "crit ." daemon runs; that a failed restart exits 2; and that the hook input of any other
 # Bash call runs nothing and exits 0.
@@ -29,8 +29,8 @@ esac
 EOF
 chmod +x "$tmp/bin/crit"
 export PATH=$tmp/bin:$PATH
-v=$tmp/cos
-export COS_DIR=$v
+v=$tmp/karo
+export KARO_HOME=$v
 mkdir -p "$v/threads"
 printf '# t\n' > "$v/threads/t-test0001-demo.md"
 printf '# state\n' > "$v/state.md"

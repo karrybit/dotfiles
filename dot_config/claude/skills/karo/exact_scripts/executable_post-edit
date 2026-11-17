@@ -1,12 +1,12 @@
 #!/bin/sh
-# PostToolUse hook for Edit|Write: runs rumdl fmt on a .md file written under the cos dir, and then fmcheck
-# (beside this script) on it from the cos dir, which checks only a record note. A problem goes to Claude on
+# PostToolUse hook for Edit|Write: runs rumdl fmt on a .md file written under KARO_HOME, and then fmcheck
+# (beside this script) on it from KARO_HOME, which checks only a record note. A problem goes to Claude on
 # stderr with exit 2; the edit is already made, and the commit script stops it from landing.
-# Environment: COS_DIR (default ~/cos).
-cos=${COS_DIR:-$HOME/cos}
+# Environment: KARO_HOME (default ~/karo).
+karo=${KARO_HOME:-$HOME/karo}
 f=$(jq -r '.tool_input.file_path // empty')
-case $f in "$cos"/*.md) ;; *) exit 0 ;; esac
+case $f in "$karo"/*.md) ;; *) exit 0 ;; esac
 rumdl fmt "$f" >/dev/null 2>&1
 bin=$(cd "$(dirname "$0")" && pwd)
-cd "$cos" || exit 0
-out=$("$bin/fmcheck" "${f#"$cos"/}" 2>&1) || { printf '%s\n' "$out" >&2; exit 2; }
+cd "$karo" || exit 0
+out=$("$bin/fmcheck" "${f#"$karo"/}" 2>&1) || { printf '%s\n' "$out" >&2; exit 2; }

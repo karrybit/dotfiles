@@ -2,11 +2,11 @@
 # Show that commit commits exactly the given record paths when they pass its checks, and otherwise
 # commits nothing, unstages them, and leaves the files as written: in a small git vault, a good write
 # lands with the body, rumdl's fix, and no other dirty file, and each bad write stops with NG.
-# usage: commit-test [<cos dir>]   (default ~/cos, read only: the vault takes its .rumdl.toml and
+# usage: commit-test [<karo dir>]   (default KARO_HOME or ~/karo, read only: the vault takes its .rumdl.toml and
 #        rules/frontmatter-schema.yaml; the vault goes to a temporary directory and is removed)
 set -uo pipefail
 exec </dev/null
-cos=${1:-$HOME/cos}
+karo=${1:-${KARO_HOME:-$HOME/karo}}
 bin=$(cd "$(dirname "$0")" && pwd)
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/commit-test.XXXXXX") || exit 2
 trap 'rm -rf "$tmp"' EXIT
@@ -14,10 +14,10 @@ failed=0
 fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
 pass() { printf 'ok\t%s\n' "$1"; }
 
-v=$tmp/cos
-export COS_DIR=$v
+v=$tmp/karo
+export KARO_HOME=$v
 mkdir -p "$v"/{journal,projects/repos/github.com/acme/demo/reviews,threads,investigations,rules}
-cp "$cos/.rumdl.toml" "$v/" && cp "$cos/rules/frontmatter-schema.yaml" "$v/rules/" || exit 2
+cp "$karo/.rumdl.toml" "$v/" && cp "$karo/rules/frontmatter-schema.yaml" "$v/rules/" || exit 2
 printf -- '---\ntype: Project\ndescription: 例のプロジェクト。\nprojects:\n  - github.com/acme/demo\n---\n\n## demo\n' > "$v/projects/repos/github.com/acme/demo.md"
 printf -- '---\ntype: Thread\ndescription: 例の会話\ntopic: 例\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - github.com/acme/demo\n---\n\n### オーナー · 2026-01-01 09:00\n\n例\n' > "$v/threads/t-test0001-demo.md"
 printf -- '---\ntype: Review\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - github.com/acme/demo\n---\n\n## 結論\n\n承認\n' > "$v/projects/repos/github.com/acme/demo/reviews/t-test0001-1.md"
@@ -37,7 +37,7 @@ ng() {
 }
 
 # A good write: only the given path is committed, with the subject and the body, and state.md stays dirty.
-printf '\n### CoS · 2026-01-01 09:05\n\n返事\n' >> "$v/threads/t-test0001-demo.md"
+printf '\n### karo · 2026-01-01 09:05\n\n返事\n' >> "$v/threads/t-test0001-demo.md"
 printf 'dirty\n' >> "$v/state.md"
 before=$(head_)
 run "t-test0001: 返事を書いた" "理由の本文" threads/t-test0001-demo.md
@@ -106,13 +106,13 @@ run "t-test0001: 日次" "本文" journal/2026-11-18.md
 ng "a daily journal" "the daily journal holds past days only: journal/2026-11-18.md"
 rm "$v/journal/2026-11-18.md"
 
-printf '\n### CoS · 2026-01-01 09:10\n\n別の話\n' >> "$v/threads/t-test0001-demo.md"
+printf '\n### karo · 2026-01-01 09:10\n\n別の話\n' >> "$v/threads/t-test0001-demo.md"
 run "t-other001: 別のタスク" "本文" threads/t-test0001-demo.md
 ng "no subject ID in the thread's tasks" $'threads/t-test0001-demo.md\tnone of the subject IDs is in tasks'
 if git -C "$v" diff --quiet -- threads/t-test0001-demo.md; then fail "the stopped thread write is kept: the file was reset"; else pass "the stopped thread write is kept"; fi
 git -C "$v" checkout -q -- threads/t-test0001-demo.md
 
-printf '### CoS · 2026-01-01 09:00\n\n例\n' > "$v/threads/t-test0002-new.md"
+printf '### karo · 2026-01-01 09:00\n\n例\n' > "$v/threads/t-test0002-new.md"
 run "t-test0002: 新しい会話" "本文" threads/t-test0002-new.md
 ng "a new thread without frontmatter" $'threads/t-test0002-new.md\tno frontmatter'
 if [[ $(git -C "$v" status --porcelain -- threads/t-test0002-new.md) == "?? threads/t-test0002-new.md" ]]; then pass "the stopped new file stays untracked"; else fail "the stopped new file: $(git -C "$v" status --porcelain)"; fi

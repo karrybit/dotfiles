@@ -1,10 +1,10 @@
 #!/bin/sh
-# PreToolUse hook on Bash: stops calls that bypass what the cos settings expect.
+# PreToolUse hook on Bash: stops calls that bypass what the settings of KARO_HOME expect.
 # A path under ~/.config/claude/skills/karo/ (where this plugin is deployed) written another way
 # ($HOME or ${HOME} in place of ~, or the home directory spelled out) anywhere in the command stops,
 # reads included: sandbox.excludedCommands matches the command text as written and lists the ~ form
 # only, and a read works just as well with ~.
-# A git rebase that asks to leave the sandbox stops (git rebase --abort passes): a cos branch is
+# A git rebase that asks to leave the sandbox stops (git rebase --abort passes): a branch of KARO_HOME is
 # rebased by the karo:land skill's scripts/land <branch> --rebase, which is the one way that rebases
 # with git's hooks off.
 # Quoted strings, backslash escapes and heredoc bodies are dropped before looking for git rebase, so
@@ -29,7 +29,7 @@ EOF
     exit 2 ;;
   rebase)
     cat >&2 <<EOF
-このコマンドは git rebase を sandbox の外で走らせようとしている。cos のブランチの rebase は、CoS が ~/.config/claude/skills/karo/skills/land/scripts/land <branch> --rebase を単独で実行して行う。Agent は sandbox の中で rebase し、unable to unlink old で落ちたら git rebase --abort で戻して作業を止め、CoS に land --rebase を頼むと報告する。
+このコマンドは git rebase を sandbox の外で走らせようとしている。KARO_HOME のリポジトリのブランチの rebase は、karo が ~/.config/claude/skills/karo/skills/land/scripts/land <branch> --rebase を単独で実行して行う。Agent は sandbox の中で rebase し、unable to unlink old で落ちたら git rebase --abort で戻して作業を止め、karo に land --rebase を頼むと報告する。
 EOF
     exit 2 ;;
 esac
