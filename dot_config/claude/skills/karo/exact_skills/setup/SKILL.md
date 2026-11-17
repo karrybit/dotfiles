@@ -14,7 +14,7 @@ description: 別のマシンで、karo と $KARO_HOME の仕組みが動くか�
 1. karo の scripts と skill が呼ぶ道具を確かめる。次を 1 回の Bash で実行する。
 
    ```sh
-   for t in herdr git jq yq rg fd ghq rumdl crit terminal-browser python3 shortid claude bd; do command -v "$t" >/dev/null || echo "missing: $t"; done
+   for t in herdr git jq yq rg fd ghq rumdl crit terminal-browser python3 shortid claude bd cass bv; do command -v "$t" >/dev/null || echo "missing: $t"; done
    ```
 
    完了条件: 出力が空か、`missing:` の行の一覧をオーナーに示している。
