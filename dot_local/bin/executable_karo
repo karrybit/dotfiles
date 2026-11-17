@@ -1,17 +1,17 @@
 #!/bin/bash
-# Opens the Chief of Staff workspace (~/cos) in herdr, creating whatever is
-# missing: the herdr server, a workspace labelled "cos", and the CoS Claude
-# Code session. The session is tracked by a fixed ID stored in the CoS
-# directory, so resuming never depends on the display name being unique.
+# Opens the karo workspace (KARO_HOME, default ~/karo) in herdr, creating whatever is
+# missing: the herdr server, a workspace labelled "karo", and the karo Claude
+# Code session. The session is tracked by a fixed ID stored in KARO_HOME,
+# so resuming never depends on the display name being unique.
 set -euo pipefail
 
-cos_dir="${COS_DIR:-$HOME/cos}"
+karo_dir="${KARO_HOME:-$HOME/karo}"
 claude_dir="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
-id_file="$cos_dir/.cos-session-id"
-name=cos
+id_file="$karo_dir/.karo-session-id"
+name=karo
 
-if [ ! -f "$cos_dir/AGENTS.md" ]; then
-  echo "cos: $cos_dir has no AGENTS.md; set up the CoS directory first" >&2
+if [ ! -f "$karo_dir/AGENTS.md" ]; then
+  echo "karo: $karo_dir has no AGENTS.md; set up the karo directory first" >&2
   exit 1
 fi
 
@@ -28,7 +28,7 @@ if ! server_running; then
     sleep 0.2
   done
   if ! server_running; then
-    echo "cos: the herdr server did not start" >&2
+    echo "karo: the herdr server did not start" >&2
     exit 1
   fi
 fi
@@ -37,13 +37,13 @@ workspace=$(herdr workspace list |
   jq -r --arg l "$name" '[.result.workspaces[] | select(.label == $l)][0].workspace_id // empty')
 free_pane=
 if [ -z "$workspace" ]; then
-  created=$(herdr workspace create --cwd "$cos_dir" --label "$name" --no-focus)
+  created=$(herdr workspace create --cwd "$karo_dir" --label "$name" --no-focus)
   workspace=$(jq -r .result.workspace.workspace_id <<<"$created")
   free_pane=$(jq -r .result.root_pane.pane_id <<<"$created")
 fi
 
 # Starting Claude reports agent_not_ready while a dialog such as workspace
-# trust is open; that pane is still the CoS and the user answers it on attach.
+# trust is open; that pane is still karo and the user answers it on attach.
 # A pane the server has just created or restored reports agent_pane_busy until
 # its shell reaches the prompt, so the pane is retried for a few seconds
 # before the next one is tried; otherwise Claude lands in whichever pane's
@@ -90,12 +90,12 @@ if ! jq -e --arg n "$name" '.result.agents[] | select(.name == $n)' <<<"$agents"
         fi
       done
       if [ -z "$started" ]; then
-        free_pane=$(herdr tab create --workspace "$workspace" --cwd "$cos_dir" --label "$name" --no-focus |
+        free_pane=$(herdr tab create --workspace "$workspace" --cwd "$karo_dir" --label "$name" --no-focus |
           jq -r .result.root_pane.pane_id)
       fi
     fi
     if [ -z "$started" ] && ! start_claude "$free_pane"; then
-      echo "cos: could not start Claude Code in herdr pane $free_pane" >&2
+      echo "karo: could not start Claude Code in herdr pane $free_pane" >&2
       exit 1
     fi
   fi

@@ -33,6 +33,9 @@
 .config/claude/skills/karo/skills/review/PROVENANCE.md
 .config/claude/skills/karo/skills/setup/PROVENANCE.md
 
+# The command that opens the karo workspace is karo.
+.local/bin/cos
+
 # The karo:record skill holds its steps in SKILL.md alone. Its skill folder is
 # not exact_, so the removed examples.md stays on a machine otherwise.
 .config/claude/skills/karo/skills/record/examples.md

@@ -219,16 +219,16 @@ report, and closes only what it started. A project that uses it allows the
 skill's scripts in its `.claude/settings.json`; the skill's `SKILL.md` lists
 the rules, and `scripts/agent-ctl-test <settings.json>` checks them.
 
-### `cos`
+### `karo`
 
-`cos` (`dot_local/bin/executable_cos`) opens a long-lived Claude Code session
-for a work directory, `~/cos` by default (`COS_DIR` overrides it), and creates
+`karo` (`dot_local/bin/executable_karo`) opens a long-lived Claude Code session
+for a work directory, `$KARO_HOME` (`~/karo` when unset), and creates
 whatever is missing. Running it again only brings the same session back:
 
 1. Starts the herdr server if none is running. It is started from the calling
    terminal so that panes keep Keychain access.
-2. Finds the workspace labelled `cos`, or creates one rooted at the directory.
-3. Makes sure an agent named `cos` is running there:
+2. Finds the workspace labelled `karo`, or creates one rooted at the directory.
+3. Makes sure an agent named `karo` is running there:
    - Restores the name on a Claude Code agent that a server restart brought
      back unnamed.
    - Otherwise starts Claude Code in a free shell pane, or in a new tab when
@@ -238,11 +238,11 @@ whatever is missing. Running it again only brings the same session back:
 4. Focuses the workspace and attaches. Inside herdr it focuses without
    attaching.
 
-The session is tracked by a fixed ID in `<dir>/.cos-session-id`, not by its
-display name. `cos` resumes that ID while its transcript exists and starts a
+The session is tracked by a fixed ID in `<dir>/.karo-session-id`, not by its
+display name. `karo` resumes that ID while its transcript exists and starts a
 new session once the transcript is gone, for example after the
 `cleanupPeriodDays` sweep. The directory must already contain `AGENTS.md`:
-`cos` never creates its contents. `HERDR_SESSION` points every step at a named
+`karo` never creates its contents. `HERDR_SESSION` points every step at a named
 herdr session, which keeps experiments off the default server.
 
 ---
