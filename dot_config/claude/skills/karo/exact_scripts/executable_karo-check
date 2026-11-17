@@ -138,8 +138,7 @@ done < <(
   if (( ! scoped )); then
     fd -t f -e md -E "investigations/*/sources" -E rules -E AGENTS.md . -X awk "$wiki"
   else
-    # record runs this outside the sandbox, so a given path that is a symbolic link is not read through,
-    # as fd -t f leaves links out above
+    # a given path that is a symbolic link is not read through, as fd -t f leaves links out above
     files=()
     while IFS= read -r f; do
       [[ -f $f && ! -L $f && $f == *.md && $f != investigations/*/sources/* && $f != rules/* && $f != AGENTS.md ]] && files+=("$f")
@@ -148,7 +147,7 @@ done < <(
   fi)
 
 # The task database, .beads, stays out of the vault's git: ignored when it is there, and nothing under
-# it tracked. Checked on a whole run in a git work tree; record's runs with --only leave git alone.
+# it tracked. Checked on a whole run in a git work tree; runs with --only leave git alone.
 if (( ! scoped )) && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   [[ -e .beads ]] && ! git check-ignore -q .beads && report .beads "task database not ignored by git"
   [[ -n $(git ls-files -- .beads) ]] && report .beads "task database tracked by git"

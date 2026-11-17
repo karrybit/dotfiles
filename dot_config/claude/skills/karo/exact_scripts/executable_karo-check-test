@@ -124,8 +124,8 @@ for c in "${scoped[@]}"; do
   elif [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -q -- "$want"; then pass "$name"; else fail "$name: exit $code, want /$want/: $out"; fi
 done
 
-# record runs karo-check outside the sandbox, so a given path that is a symbolic link is not read
-# through: the wiki link check does not print a line of the file it points to.
+# A given path that is a symbolic link is not read through: the wiki link check does not print a line
+# of the file it points to.
 cp -R "$ok" "$tmp/linked"
 printf '[[secret]]\n' > "$tmp/outside.md"
 ln -s "$tmp/outside.md" "$tmp/linked/docs/link.md"

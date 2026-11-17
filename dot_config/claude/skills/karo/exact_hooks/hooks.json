@@ -1,5 +1,5 @@
 {
-  "description": "Session context, the right column, the Bash call check, Markdown formatting and record note checks after an edit, the panes after a commit, and the prompt time for the ~/cos record repository.",
+  "description": "Session context, the right column, the Bash call check, Markdown formatting and record note checks after an edit, the crit restart after a commit or a landing, and the prompt time for the ~/cos record repository.",
   "hooks": {
     "SessionStart": [
       {
@@ -68,10 +68,6 @@
     "UserPromptSubmit": [
       {
         "hooks": [
-          {
-            "type": "command",
-            "command": "[ \"$CLAUDE_PROJECT_DIR\" != \"$HOME/cos\" ] || cat ~/.local/state/cos/record/problems.md 2>/dev/null || true"
-          },
           {
             "type": "command",
             "command": "[ \"$CLAUDE_PROJECT_DIR\" != \"$HOME/cos\" ] || date '+発言の時刻: %Y-%m-%d %H:%M'"

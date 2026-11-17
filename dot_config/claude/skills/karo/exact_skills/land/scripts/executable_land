@@ -57,17 +57,6 @@ cos_path=$HOME/cos worktrees_path=$HOME/.local/state/cos/worktrees
 cos=$(cd "$cos_path" 2>/dev/null && pwd -P) || stop "$cos_path is not a folder"
 worktrees=$(cd "$worktrees_path" 2>/dev/null && pwd -P) || stop "$worktrees_path is not a folder"
 
-# record applies queued write instructions in the background and rewrites whole files, so land holds
-# record's lock for its whole run: no record write can fall between land's checks and its git commands,
-# nor overwrite a file the fast-forward just changed. The lock belongs to the open file on fd 9, which
-# stays open in this shell after python3 takes it. Without the state folder (a scratch run) there is no
-# record to wait for.
-record_lock=$HOME/.local/state/cos/record/lock
-if (: >>"$record_lock") 2>/dev/null; then
-  exec 9>>"$record_lock"
-  python3 -c 'import fcntl; fcntl.flock(9, fcntl.LOCK_EX)' || stop "could not take record's lock $record_lock"
-fi
-
 # claude_cwds: print the working directory of every Claude Code process among
 # this one's ancestors, nearest first, one per line ("?" when it cannot be
 # read), or nothing when there is none.

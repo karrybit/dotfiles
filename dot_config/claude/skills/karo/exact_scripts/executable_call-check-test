@@ -29,12 +29,12 @@ passes() {
   if [[ $code -eq 0 && -z $out ]]; then pass "passes: $1 ${2:-}"; else fail "passes: $1 ${2:-}: exit $code: $out"; fi
 }
 
-stops_bin "$HOME/.config/claude/skills/karo/scripts/record --detach x"
+stops_bin "$HOME/.config/claude/skills/karo/scripts/commit s b x"
 stops_bin '$HOME/.config/claude/skills/karo/skills/land/scripts/land b'
 stops_bin '${HOME}/.config/claude/skills/karo/scripts/thread-show t'
 stops_bin '"$HOME"/.config/claude/skills/karo/scripts/right-pane'
 stops_bin "cat $HOME/.config/claude/skills/karo/scripts/call-check"
-stops_bin "$HOME/.config/claude/skills/karo/scripts/record x | head"
+stops_bin "$HOME/.config/claude/skills/karo/scripts/commit s b x | head"
 
 # git rebase outside the sandbox, in the shapes the CoS and Agents have run it in.
 stops_rebase() {
@@ -54,7 +54,7 @@ passes "cat > s.sh <<'EOF'
 git rebase main
 EOF" true
 
-passes '~/.config/claude/skills/karo/scripts/record --detach x'
+passes '~/.config/claude/skills/karo/scripts/commit s b x'
 passes '~/.config/claude/skills/karo/skills/land/scripts/land b'
 passes 'git status'
 passes 'git status' true
