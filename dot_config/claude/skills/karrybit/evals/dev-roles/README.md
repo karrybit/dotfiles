@@ -104,8 +104,8 @@ Measured with `--model claude-sonnet-5-5` and `--judge-model claude-opus-5-5`, t
 | S-1 | 15/15 | 30/30 ×2 | 12/15 | 30/30 ×2 | `decision-tradeoff` 3, 6, 1, 6; `system-designer` keeps only its role paragraph, so its canary is the same file |
 | S-2 | 3/3 | 3/3 | 3/3 | 3/3 | none: R-3 states the prefix isolation outright |
 | S-3 | 9/9 | 9/9 | 9/9 | - | none: every arm reads `docs/vendor/job-platform.md`, splits the export, and holds the concurrency limit as a blocking premise; `product-unchanged` passes every run |
-| D-1 | 15/21 | 19/21 | 11/21 | 12/21 | `fixed-csv-stub` 0, 2; `owner-plan` 1, 3 (current, previous): current plans have seven increments and serve the signed URL only after the real job, previous plans eight or nine with the signed URL before it; `call-before-job` 2 and 2 |
-| D-2 | 1/3 | 4/6 ×2 | 3/6 ×2 | 0/6 ×2 | none over five runs: `single-increment` 5/5 and 5/5 (current, previous) |
+| D-1 | 12/21 | 19/21 | 11/21 | 12/21 | `fixed-csv-stub` 0, 2; `owner-plan` 0, 3; `call-before-job` 0, 2 (current, previous): current plans have six or seven increments and build the real job before the API server first calls it, with the signed URL after both; previous plans have eight or nine, with the signed URL before the real job |
+| D-2 | 3/3 | 4/6 ×2 | 3/6 ×2 | 0/6 ×2 | none: `single-increment` 5/5 and 5/5 over five runs (current, previous) |
 | D-3 | 8/9 | 8/9 | 8/9 | - | none: `no-design-choice` fails one run in every arm |
 | I-1 | 12/12 | 24/24 ×2 | 18/24 ×2 | 21/24 ×2 | `failing-test-first` 3, 6, 0, 3; `grade.py` passes every run |
 | I-2 | 2/3 | 3/3 | 0/3 | 3/3 | none over five runs: `kept-expectation` 4/5 and 4/5 (current, previous); a failing run reads the docstring as the contract and misses `docs/spec.md` |
