@@ -1,4 +1,4 @@
-export CASS_DATA_DIR=${KARO_DATA_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/karo}/cass
+export CASS_DATA_DIR=${XDG_DATA_HOME:-$HOME/.local/share}/cass
 export CASS_RAW_MIRROR=0
 # Index Claude Code sessions only from CLAUDE_CONFIG_DIR, not from the legacy
 # ~/.claude/projects or Claude Desktop's session folders.
