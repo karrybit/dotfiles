@@ -1,6 +1,6 @@
 ---
 name: crit
-description: crit をブラウザで開き、ユーザーが付けたコメントに返事をする手順。引数なしなら起動した場所のファイルを、GitHub の PR の URL を渡すとその PR を、PR になっていないブランチか commit を渡すとその差分を開く。ユーザーが /karrybit:crit を打ったとき、crit でコメントしたいと言ったときに使う。
+description: crit を terminal-browser で開き、ユーザーが付けたコメントに返事をする手順。引数なしなら起動した場所のファイルを、GitHub の PR の URL を渡すとその PR を、PR になっていないブランチか commit を渡すとその差分を開く。ユーザーが /karrybit:crit を打ったとき、crit でコメントしたいと言ったときに使う。
 allowed-tools: Bash(crit .), Bash(crit --session *), Bash(crit comments *), Bash(crit comment *), Bash(crit stop), Bash(crit -p *), Bash(CRIT_PORT=0 crit *), Bash(echo *), Bash(cksum), Read
 argument-hint: "[GitHub の PR の URL | PR になっていないブランチ | commit]"
 ---
@@ -37,7 +37,7 @@ argument-hint: "[GitHub の PR の URL | PR になっていないブランチ | 
 
 1. 上の表のコマンドを、Bash の `run_in_background: true` と `timeout: 86400000` で動かす（引数なしのほかは、先に「ポートを決める」でポートを決める。PR と 1 つの commit なら、そのあと `crit stop` を動かす）。timeout を付けないと、Claude Code が 30 分で crit を止める。
    完了条件: crit の出力にある review の URL が手元にある。
-2. review の URL（`http://localhost:<ポート>`）のポートを crit-open に渡し、ほかのコマンドとつながない 1 回の Bash で動かしてブラウザで開く（どの対象でも）。crit-open は、この plugin を配る場所の `~` の形の `~/.config/claude/skills/karrybit/skills/crit/scripts/crit-open <ポート>` で呼ぶ。crit-open は、settings でこの `~` の形を許可し sandbox の外で動く形として除外したときに `open` を動かせる（`${CLAUDE_SKILL_DIR}/scripts/crit-open-test <settings.json>` で確かめられる）。settings の規則はコマンドの文字列をそのまま照らすので、絶対パスで呼ぶと `~` の形の規則に合わず、つなぐと sandbox の中に残って `open` が止められる。そのうえで URL をユーザーに伝え、「コメントを付けて Finish Review を押してください」と返して、background の crit が終わるのを待つ。レビューのファイルは、crit が終わってから読む。
+2. review の URL（`http://localhost:<ポート>`）のポートを crit-open に渡し、ほかのコマンドとつながない 1 回の Bash で動かす（どの対象でも）。crit-open は、レビューの画面を terminal-browser で、呼び出した Herdr の pane の右の split に開く。開いた pane はユーザーが閉じる。crit-open は、この plugin を配る場所の `~` の形の `~/.config/claude/skills/karrybit/skills/crit/scripts/crit-open <ポート>` で呼ぶ。terminal-browser は sandbox の中では起動しないので、crit-open は、settings でこの `~` の形を許可し sandbox の外で動く形として除外したときに動く（`${CLAUDE_SKILL_DIR}/scripts/crit-open-test <settings.json>` で確かめられる）。settings の規則はコマンドの文字列をそのまま照らすので、絶対パスで呼ぶと `~` の形の規則に合わず、つなぐと sandbox の中に残って terminal-browser が起動しない。crit-open が 0 でない終了コードで終わったとき（Herdr の外で動いているときなど）は、URL をユーザーに伝えて開いてもらう。そのうえで URL をユーザーに伝え、「コメントを付けて Finish Review を押してください」と返して、background の crit が終わるのを待つ。レビューのファイルは、crit が終わってから読む。
    完了条件: background の crit が終わった。
 3. crit の stdout を読み、その指示と、次に動かすコマンド（`crit --session <id>`）を控える。stderr の `approved: true` か `approved: false` を見る。stdout にコメントがなければ `crit comments --session <id> --json` で読む。
    完了条件: session の ID と、未解決のコメントの一覧（0 件でもよい）が手元にある。
@@ -47,12 +47,12 @@ argument-hint: "[GitHub の PR の URL | PR になっていないブランチ | 
    - コメントの解決はユーザーが決めるので、`--resolve` はユーザーが頼んだときだけ付ける。
 
    完了条件: 未解決のコメントすべてに返事がある。
-5. 引数なしと PR になっていないブランチなら、3 で控えた `crit --session <id>` を 1 と同じ形で動かす（ブランチは、足された commit が差分に出て、回が 1 つ進む）。PR と 1 つの commit なら、push された commit を差分に出すために 1 から同じポートで開き直す。そのうえでユーザーに「crit に返事を書きました。ブラウザで確かめて Finish Review を押してください」とだけ返す。crit が終わったら 3 に戻る。
+5. 引数なしと PR になっていないブランチなら、3 で控えた `crit --session <id>` を 1 と同じ形で動かす（ブランチは、足された commit が差分に出て、回が 1 つ進む）。PR と 1 つの commit なら、push された commit を差分に出すために 1 から同じポートで開き直す。そのうえでユーザーに「crit に返事を書きました。表示された画面で確かめて Finish Review を押してください」とだけ返す。crit が終わったら 3 に戻る。
    完了条件: 3 で未解決のコメントが 0 件だった（ユーザーがコメントなしで Finish Review を押した）。
 
 ## 困ったとき
 
 - crit が `operation not permitted` で落ちたら、sandbox が `~/.crit` への書き込みか待ち受けを止めている。settings の `sandbox` に `filesystem.allowWrite` の `~/.crit` と `network.allowLocalBinding: true` があるかを確かめ、なければユーザーに足してもらう。
 - PR の差分ではなく checkout の作業ツリーが出て、crit の出力に `failed to apply focus` があれば、PR の SHA が手元になく、sandbox が crit の `git fetch` を止めている。`git -C <checkout> fetch origin` を sandbox の外で動かす承認をユーザーに求め、1 から開き直す。
-- Approve のあとタブが閉じず「Approved — you can close this tab」と出たら、ユーザーにタブを閉じてもらう。
-- Claude Code が background の時間の上限（既定で 2 時間）で crit を止めたら、コメントはブラウザに残っているとユーザーに伝え、待ち続けるときは同じコマンドを 1 と同じ形で動かし直す。
+- Approve のあと「Approved — you can close this tab」と出たら、ユーザーに terminal-browser の pane を閉じてもらう。
+- Claude Code が background の時間の上限（既定で 2 時間）で crit を止めたら、コメントは開いている crit の画面に残っているとユーザーに伝え、待ち続けるときは同じコマンドを 1 と同じ形で動かし直す。

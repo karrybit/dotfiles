@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# Show that crit-open hands open only http://localhost:<port> for a port made of digits and refuses
-# any other argument, against an open on PATH that logs what it is given. Given a Claude Code
-# settings.json, also show that it allows crit-open and runs it outside the sandbox in the ~/ form
-# the skill calls it by (rules match the command text, so an absolute-path rule misses that call),
-# and has no rule or exclusion for open itself.
+# Show that crit-open hands terminal-browser only "open http://localhost:<port> --split right", with
+# telemetry off, for a port made of digits and refuses any other argument, against a terminal-browser
+# on PATH that logs what it is given. Given a Claude Code settings.json, also show that it allows
+# crit-open and runs it outside the sandbox in the ~/ form the skill calls it by (rules match the
+# command text, so an absolute-path rule misses that call), and has no rule or exclusion for
+# terminal-browser or open itself.
 # usage: crit-open-test [<settings.json>]   (tests the crit-open beside this script; its files go
 #        to a temporary directory that is removed)
 set -uo pipefail
@@ -18,11 +19,11 @@ fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
 pass() { printf 'ok\t%s\n' "$1"; }
 
 mkdir -p "$tmp/fake"
-cat > "$tmp/fake/open" <<'EOF'
+cat > "$tmp/fake/terminal-browser" <<'EOF'
 #!/bin/sh
-printf '%s\n' "$*" >> "$FAKE_LOG"
+printf '%s DO_NOT_TRACK=%s TERMINAL_BROWSER_NO_TELEMETRY=%s\n' "$*" "${DO_NOT_TRACK:-}" "${TERMINAL_BROWSER_NO_TELEMETRY:-}" >> "$FAKE_LOG"
 EOF
-chmod +x "$tmp/fake/open"
+chmod +x "$tmp/fake/terminal-browser"
 
 export FAKE_LOG=$tmp/log
 run() {
@@ -31,8 +32,8 @@ run() {
 }
 
 run 49809
-if [[ $code -eq 0 && $(cat "$FAKE_LOG") == "http://localhost:49809" ]]; then
-  pass "a port opens http://localhost:<port>"
+if [[ $code -eq 0 && $(cat "$FAKE_LOG") == "open http://localhost:49809 --split right DO_NOT_TRACK=1 TERMINAL_BROWSER_NO_TELEMETRY=1" ]]; then
+  pass "a port opens http://localhost:<port> in a right split with telemetry off"
 else
   fail "a port: exit $code: $out: $(paste -sd '|' "$FAKE_LOG")"
 fi
@@ -57,14 +58,14 @@ if [[ -n $settings ]]; then
       fail "crit-open is not in permissions.allow in the ~/ form"
     fi
     if jq -e '.sandbox.excludedCommands // [] | any(test("^~/.*/crit-open \\*$"))' "$settings" >/dev/null; then
-      pass "crit-open runs outside the sandbox, where open works, in the ~/ form"
+      pass "crit-open runs outside the sandbox, where terminal-browser starts, in the ~/ form"
     else
       fail "crit-open is not in sandbox.excludedCommands in the ~/ form"
     fi
-    if jq -e '[(.permissions.allow // [])[], (.sandbox.excludedCommands // [])[]] | any(test("^(Bash\\()?open "))' "$settings" >/dev/null; then
-      fail "$settings still allows or excludes open itself"
+    if jq -e '[(.permissions.allow // [])[], (.sandbox.excludedCommands // [])[]] | any(test("^(Bash\\()?(open|terminal-browser)( |\\)|$)"))' "$settings" >/dev/null; then
+      fail "$settings allows or excludes terminal-browser or open itself"
     else
-      pass "open itself is neither allowed nor excluded"
+      pass "terminal-browser and open themselves are neither allowed nor excluded"
     fi
   fi
 fi

@@ -1,9 +1,11 @@
 #!/bin/sh
-# Opens the crit review at http://localhost:<port> in the default browser.
-# open is blocked inside the sandbox, and a "*" in a permission rule or a
-# sandbox exclusion matches any run of words, so a rule on open itself would
-# also let open run other files and apps outside the sandbox; this script
-# takes only a port number and is the allowed form.
+# Opens the crit review at http://localhost:<port> in terminal-browser, in a
+# right split of the Herdr pane the caller runs in. terminal-browser does not
+# start inside the sandbox, and a "*" in a permission rule or a sandbox
+# exclusion matches any run of words, so a rule on terminal-browser itself
+# would also let it run page scripts, proxy through ssh, or upgrade itself
+# outside the sandbox; this script takes only a port number and is the
+# allowed form.
 set -eu
 
 usage() {
@@ -14,4 +16,5 @@ usage() {
 case "$1" in
   '' | *[!0123456789]*) usage ;;
 esac
-exec open "http://localhost:$1"
+export DO_NOT_TRACK=1 TERMINAL_BROWSER_NO_TELEMETRY=1
+exec terminal-browser open "http://localhost:$1" --split right
