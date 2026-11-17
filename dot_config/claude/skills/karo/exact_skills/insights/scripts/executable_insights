@@ -48,7 +48,7 @@
 #                  now and then, not per day, so it is not the day's cost.
 #
 # usage: insights [YYYY-MM-DD]   (default: today)
-# Environment: KARO_HOME (default ~/karo), KARO_CONFIG_HOME (default ~/.config/karo), CLAUDE_CONFIG_DIR (default ~/.claude).
+# Environment: KARO_HOME (default ~/karo), KARO_CONFIG_HOME (default ${XDG_CONFIG_HOME:-~/.config}/karo), CLAUDE_CONFIG_DIR (default ~/.claude).
 set -eu
 
 usage() {
@@ -67,7 +67,7 @@ projects=${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects
 # character replaced by "-".
 karoproj=$projects/$(printf '%s' "$karo" | tr -c 'A-Za-z0-9' '-')
 uncounted='[]'
-config=${KARO_CONFIG_HOME:-$HOME/.config/karo}/config.yaml
+config=${KARO_CONFIG_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/karo}/config.yaml
 [ ! -f "$config" ] || uncounted=$(yq -o=json -I=0 '.uncounted // []' "$config")
 
 # The $ names below are jq variables, not shell ones.

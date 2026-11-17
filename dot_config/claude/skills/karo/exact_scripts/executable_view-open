@@ -10,10 +10,10 @@
 # come only from docs/ and the store, where the explain skill keeps its HTML.
 # usage: view-open [--no-merge] <absolute path> [<name>]
 # Environment: KARO_HOME (default ~/karo), KARO_DATA_HOME (default
-# ~/.local/share/karo).
+# ${XDG_DATA_HOME:-~/.local/share}/karo).
 set -eu
 
-store=${KARO_DATA_HOME:-$HOME/.local/share/karo}/html
+store=${KARO_DATA_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/karo}/html
 usage() {
   echo "usage: view-open [--no-merge] <absolute path of an .html or .svg under ${KARO_HOME:-$HOME/karo}/docs, a $store/<UUID>/index.html, or a .png .jpg .jpeg .webp .gif .mp4 .webm> [<name of letters, digits, . _ -, starting with a letter or digit>]" >&2
   exit 2

@@ -11,10 +11,10 @@ description: 'HTML の解説を git の外の store（`$KARO_DATA_HOME/html/<UUI
 
 ## store
 
-- root は次の式で出す（`KARO_DATA_HOME` が未設定か空なら `$HOME/.local/share/karo` の下）。
+- root は次の式で出す（`KARO_DATA_HOME` が未設定か空なら `${XDG_DATA_HOME:-$HOME/.local/share}/karo` の下）。
 
   ```sh
-  root=${KARO_DATA_HOME:-$HOME/.local/share/karo}/html
+  root=${KARO_DATA_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/karo}/html
   ```
 
 - id は `uuidgen | tr A-Z a-z` の小文字の UUID だけにする。解説を作るたびに新しい id を出す（作り直しと、既存の解説の更新も新しい id にする）。
