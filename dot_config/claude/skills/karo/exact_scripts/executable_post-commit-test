@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2016,SC2088  # the stub and the hook commands are text to run later, not to expand here
-# Show that post-commit runs thread-show on each thread file the last commit wrote and record
-# --restart-crit only when the commit added, removed, or renamed a file, that a failed step exits 2, and
-# that the hook input of a Bash call other than the commit script runs nothing and exits 0.
-# post-commit runs from a copy beside stubs of thread-show and record that log each call and fail on request.
+# shellcheck disable=SC2016,SC2088  # the stubs and the hook commands are text to run later, not to expand here
+# Show that post-commit restarts the crit daemon of the cos dir after a commit that added, removed, or
+# renamed a file and after a land without --rebase, and after nothing else; that it leaves crit alone
+# when no "crit ." daemon runs; that it never runs thread-show; that a failed restart exits 2; and that
+# the hook input of any other Bash call runs nothing and exits 0.
+# post-commit runs from a copy beside stubs of crit and thread-show that log each call; the crit stub
+# keeps whether its daemon runs in a file, and fails or does not start on request.
 # usage: post-commit-test   (the vault and stubs go to a temporary directory and are removed)
 set -uo pipefail
 exec </dev/null
@@ -16,10 +18,18 @@ pass() { printf 'ok\t%s\n' "$1"; }
 
 mkdir -p "$tmp/bin"
 cp "$bin/post-commit" "$tmp/bin/" || exit 2
-for s in thread-show record; do
-  printf '#!/bin/sh\necho "%s $*" >> "%s/calls"\n[ -z "${STUB_FAIL:-}" ] || { echo "stub failed"; exit 1; }\n' "$s" "$tmp" > "$tmp/bin/$s"
-  chmod +x "$tmp/bin/$s"
-done
+printf '#!/bin/sh\necho "thread-show $*" >> "%s/calls"\n' "$tmp" > "$tmp/bin/thread-show"
+cat > "$tmp/bin/crit" <<EOF
+#!/bin/sh
+state=$tmp/running
+case \$1 in
+  status) if [ -f "\$state" ]; then echo '{"daemon":{"running":true},"sessions":[{"args":["."]}]}'; else echo '{"daemon":{"running":false},"sessions":[]}'; fi ;;
+  stop) echo "crit \$*" >> "$tmp/calls"; [ -z "\${STUB_FAIL:-}" ] || { echo "stub failed"; exit 1; }; rm -f "\$state" ;;
+  .) echo "crit \$* in \$PWD with \$GIT_DIR" >> "$tmp/calls"; [ -n "\${STUB_NOSTART:-}" ] || : > "\$state" ;;
+esac
+EOF
+chmod +x "$tmp/bin/thread-show" "$tmp/bin/crit"
+export PATH=$tmp/bin:$PATH
 v=$tmp/cos
 export COS_DIR=$v
 mkdir -p "$v/threads"
@@ -27,45 +37,56 @@ printf '# t\n' > "$v/threads/t-test0001-demo.md"
 printf '# state\n' > "$v/state.md"
 git -C "$v" init -q && git -C "$v" config user.name test && git -C "$v" config user.email test@example.invalid
 git -C "$v" add -A && git -C "$v" commit -q -m init || exit 2
+: > "$tmp/running"
+restart="crit stop ."$'\n'"crit . --no-open in $v with $v/.git"
 
 # input <Bash command>: the PostToolUse hook input of a Bash call.
 input() { jq -nc --arg c "$1" '{tool_name: "Bash", tool_input: {command: $c}}'; }
 commit_call=$(input '~/.config/claude/skills/karo/scripts/commit "t-test0001: x" "why" threads/t-test0001-demo.md')
+land_call=$(input '~/.config/claude/skills/karo/skills/land/scripts/land feat/agent/x')
 
-# step <name> <want calls> <shell command run in the vault before a commit of everything> [<want exit>]
-step() {
-  local name=$1 want=$2 cmd=$3 rc=${4:-0} out code calls
-  (cd "$v" && eval "$cmd" && git add -A && git commit -q -m "$name") || { fail "$name: could not commit"; return; }
+# hook <name> <hook input> <want calls> [<want exit>]: run post-commit on the input.
+hook() {
+  local name=$1 in=$2 want=$3 rc=${4:-0} out code calls
   : > "$tmp/calls"
-  out=$(printf '%s' "$commit_call" | "$tmp/bin/post-commit" 2>&1); code=$?
+  out=$(printf '%s' "$in" | post-commit 2>&1); code=$?
   calls=$(cat "$tmp/calls")
   if [[ $code -eq $rc && $calls == "$want" ]]; then pass "$name"; else fail "$name: exit $code, calls '$calls', want '$want': $out"; fi
 }
-step "a thread append shows the thread" "thread-show $v/threads/t-test0001-demo.md" 'printf "x\n" >> threads/t-test0001-demo.md'
+# step <name> <want calls> <shell command run in the vault before a commit of everything> [<want exit>]
+step() {
+  (cd "$v" && eval "$3" && git add -A && git commit -q -m "$1") || { fail "$1: could not commit"; return; }
+  hook "$1" "$commit_call" "$2" "${4:-0}"
+}
+step "a new file restarts crit" "$restart" 'printf "# n\n" > threads/t-test0002-new.md'
 
-# The last commit changed a thread, so each of these would show it if post-commit went on.
+# The last commit added a file, so each of these would restart crit if post-commit went on.
 for c in 'git status' 'git diff; echo "exit=$?"' 'for f in a b; do echo "$f"; done' \
-  'echo ~/.config/claude/skills/karo/scripts/commit' 'rg -n scripts/commit README.md'; do
+  'echo ~/.config/claude/skills/karo/scripts/commit' 'rg -n scripts/commit README.md' \
+  '~/.config/claude/skills/karo/skills/land/scripts/land feat/agent/x --rebase'; do
   : > "$tmp/calls"
-  out=$(input "$c" | "$tmp/bin/post-commit" 2>&1); code=$?
+  out=$(input "$c" | post-commit 2>&1); code=$?
   if [[ $code -eq 0 && -z $out && ! -s $tmp/calls ]]; then pass "after '$c' nothing runs"; else fail "after '$c': exit $code, calls '$(cat "$tmp/calls")': $out"; fi
 done
+step "a thread append runs nothing" "" 'printf "x\n" >> threads/t-test0001-demo.md'
 step "a change outside threads runs nothing" "" 'printf "x\n" >> state.md'
-step "a new thread shows it and restarts crit" "thread-show $v/threads/t-test0002-new.md"$'\n'"record --restart-crit" 'printf "# n\n" > threads/t-test0002-new.md'
-step "a removed file restarts crit" "record --restart-crit" 'git rm -q state.md'
-step "a removed thread is not shown" "record --restart-crit" 'printf "# r\n" > threads/t-test0003-gone.md && git add -A && git commit -q -m add && git rm -q threads/t-test0003-gone.md'
-step "a renamed thread shows it and restarts crit" "thread-show $v/threads/t-test0002-moved.md"$'\n'"record --restart-crit" 'git mv threads/t-test0002-new.md threads/t-test0002-moved.md'
+step "a removed file restarts crit" "$restart" 'git rm -q state.md'
+step "a renamed file restarts crit" "$restart" 'git mv threads/t-test0002-new.md threads/t-test0002-moved.md'
+hook "a land restarts crit" "$land_call" "$restart"
+
+rm "$tmp/running"
+step "no crit . daemon: nothing restarted" "" 'printf "# a\n" > state.md'
+: > "$tmp/running"
 
 # A commondir file planted in .git would point git at another repository's config, so nothing runs.
 printf '%s\n' "$tmp/elsewhere" > "$v/.git/commondir"
 : > "$tmp/calls"
-out=$(printf '%s' "$commit_call" | "$tmp/bin/post-commit" 2>&1); code=$?
-if [[ $code -eq 2&& $out == *"commondir points to another repository"* && ! -s $tmp/calls ]]; then pass "a commondir in .git stops it"; else fail "a commondir in .git: exit $code: $out"; fi
+out=$(printf '%s' "$commit_call" | post-commit 2>&1); code=$?
+if [[ $code -eq 2 && $out == *"commondir points to another repository"* && ! -s $tmp/calls ]]; then pass "a commondir in .git stops it"; else fail "a commondir in .git: exit $code: $out"; fi
 rm "$v/.git/commondir"
 
-export STUB_FAIL=1
-step "a failed thread-show exits 2" "thread-show $v/threads/t-test0001-demo.md" 'printf "y\n" >> threads/t-test0001-demo.md' 2
-step "a failed crit restart exits 2" "record --restart-crit" 'printf "# s\n" > state.md' 2
+STUB_FAIL=1 step "a failed crit stop exits 2" "crit stop ." 'printf "# s\n" > docs.md' 2
+STUB_NOSTART=1 hook "a crit that does not start exits 2" "$land_call" "$restart" 2
 
 echo "post-commit-test: $failed failure(s)"
 [[ $failed -eq 0 ]]

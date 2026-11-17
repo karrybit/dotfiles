@@ -7,7 +7,7 @@ argument-hint: <branch> [--rebase]
 # cos の取り込み
 
 - 引数は、取り込むブランチの名前（`<semantics>/agent/<title>`）と、任意の `--rebase` だけを受け取る。
-- 引数に `--rebase` があれば、手順の 1 だけを行って返す。なければ、手順の 1〜4 を行う。
+- 引数に `--rebase` があれば、手順の 1 だけを行って返す。なければ、手順の 1〜3 を行う。
 - 取り込みは、この skill の `scripts/land` を `~/.config/claude/skills/karo/skills/land/scripts/land` の `~` の形で書き、`~/cos` から単独のコマンドで実行する。
 - land は、`scripts/land` の冒頭にある確かめをすべて通ってから、hook と fsmonitor を止めた git だけを sandbox の外で動かす（`sandbox.excludedCommands` と `allow` に入れてあり、確認は出ない）。
 - land は、確かめが 1 つでも合わなければ、何もせずに理由を 1 行出して止まる。
@@ -17,11 +17,9 @@ argument-hint: <branch> [--rebase]
 
 1. ブランチが main より遅れていれば、`~/.config/claude/skills/karo/skills/land/scripts/land <branch> --rebase` で、worktree の中でブランチを main に載せ替える。競合したら land が rebase を戻し、競合したファイルを出すので、Agent に直させる。
    完了条件: ブランチが main より遅れていない。
-2. `~/.config/claude/skills/karo/skills/land/scripts/land <branch>` で、main をブランチに fast-forward する。
-   完了条件: `~/cos` の main がブランチの先頭を指している。
-3. `~/.config/claude/skills/karo/scripts/record --restart-crit` を単独のコマンドで実行し、crit の一覧に増えたファイルと消えたファイルを反映させる。最後の行が `NG crit:` ならオーナーに伝える。
-   完了条件: 最後の行を読み、`NG crit:` ならオーナーに伝えている。
-4. 引数なしの `~/.config/claude/skills/karo/scripts/karo-check` を単独のコマンドで実行し、記録全体を確かめる。commit の検査は commit したファイルだけを見るので、その外にある、取り込みが持ち込んだ問題はここで見つける。問題が出たら、出たファイルを直して commit する（`karo:record` skill）。
+2. `~/.config/claude/skills/karo/skills/land/scripts/land <branch>` で、main をブランチに fast-forward する。そのあと post-commit の hook が crit を起動し直し、crit の一覧に増えたファイルと消えたファイルを反映させる。hook が `NG crit:` の行を返したら、main は進んでいるので、その行をオーナーに伝える。
+   完了条件: `~/cos` の main がブランチの先頭を指し、hook の `NG crit:` の行がないか、その行をオーナーに伝えた。
+3. 引数なしの `~/.config/claude/skills/karo/scripts/karo-check` を単独のコマンドで実行し、記録全体を確かめる。commit の検査は commit したファイルだけを見るので、その外にある、取り込みが持ち込んだ問題はここで見つける。問題が出たら、出たファイルを直して commit する（`karo:record` skill）。
    完了条件: `karo-check: 0 problem(s)` が出たか、直しの commit が `OK` の行を出した。
 
 ## 返すもの
