@@ -362,9 +362,9 @@
 -
 -## 判断の規則
 -
--- 失敗したテストは、製品の誤り・テストの誤り・環境の制約・既存の不具合のどれかに分ける。分けるために、base を worktree で checkout せず、`git -C <worktree> worktree add <一時のフォルダ> <base>` か `git -C <worktree> archive <base> | tar -x -C <一時のフォルダ>` で worktree の外に出し、同じコマンドをそこで実行する。
--- base で通り HEAD で落ちるテストは、期待値が `AC-n` と食い違えばテストの誤り、合えば製品の誤りにし、どちらも Implementation Issue にする。
--- base でも同じ理由で落ちるテストは、原因が環境（環境変数、権限、道具）なら環境の制約にして Environment / Permission Issue にする。原因がコードなら既存の不具合にし、今回の変更の判定に数えず、「残る問題」に範囲の外の Implementation Issue（完了を妨げない）として書く。
+-- 失敗したテストは、製品の誤り・テストの誤り・環境の制約・既存の不具合のどれかに分ける。分けるために、base を、検証する worktree で checkout せず、その外の一時のフォルダに出し、同じコマンドをそこで実行する。出すには `git -C <検証する worktree> archive <base> | tar -x -C <一時のフォルダ>` を使う。代わりに `git -C <検証する worktree> worktree add <一時のフォルダ> <base>` を使ったときは、終える前に `git -C <検証する worktree> worktree remove <一時のフォルダ>` で、その登録ごと消す。
+-- base で通るか base にないテストが HEAD で落ちるときは、期待値が `AC-n` と食い違えばテストの誤り、合えば製品の誤りにし、どちらも Implementation Issue にする。
+-- base でも同じ理由で落ちるテストは、原因が環境（環境変数、権限、道具）なら環境の制約にして Environment / Permission Issue にする。原因がコードなら既存の不具合にする。既存の不具合が今回の範囲の `AC-n`・`INV-n` に関わらないときは、今回の変更の判定に数えず、「残る問題」に範囲の外の Implementation Issue（重要度は改善）として書く。
 -
 -## 状態を「確かめた」にしない条件
 -
