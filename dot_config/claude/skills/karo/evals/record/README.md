@@ -26,7 +26,8 @@ The cases grant no `Bash` and remove `Agent`, so a run shows the request and the
 
 ## What the Suite Separates
 
-Measured on the karo copy (`--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`):
+Measured on the karo copy (`--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`), one measurement each, at 7e03076:
 
 - In `research-request`, every grader passes 3/3; each is a regression guard for what the request carries.
 - `subagent-not-herdr` failed the one run of a `record` whose section said "the agent", which in karo means a Herdr agent: that run started the researcher through `karo:delegate`.
+- In `finish-draft`, every grader passes 3/3. On a copy without `record/frontmatter.md`, `draft-removed` and `rest-kept` pass 0/3, so they separate the rules file; `rules-read` passes 3/3 there too, since it sees the Read call and not whether the file was found, and `record-fired` and `commit-shown` guard against regressions only.
