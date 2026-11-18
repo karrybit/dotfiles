@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: si-8-simple-with-skill
+context:
+  scaffold_script: fixture.sh
