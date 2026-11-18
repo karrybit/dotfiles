@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # Usage: skill-wrap SKILL_DIR REF OUT_DIR [SIBLING...]
 # Builds a plugin directory at OUT_DIR (which must not exist yet) holding the
 # skill in SKILL_DIR as committed at git REF, and the suites and fixtures from
@@ -9,7 +9,11 @@
 # plugin-eval* directory there becomes evals* in OUT_DIR. Each SIBLING names
 # another skill directory beside SKILL_DIR, added at the same REF for a skill
 # that reads its siblings' files.
-set -eu
+# A failed step, such as a REF that does not exist or a SKILL_DIR that held no
+# files at REF, exits non-zero and removes the OUT_DIR this run created. For a
+# REF from before the skill moved, pass SKILL_DIR from a checkout of REF made
+# with git worktree add.
+set -euo pipefail
 skill=$(cd "$1" && pwd)
 ref=$2
 out=$3
@@ -23,6 +27,7 @@ done
 evals=$root/evals/$name
 
 mkdir "$out"
+trap 'rm -rf "$out"' EXIT
 mkdir -p "$out/.claude-plugin"
 for each in "$name" "$@"; do
   mkdir -p "$out/skills/$each"
@@ -46,4 +51,5 @@ done
 if [ -d "$evals/fixtures" ]; then
   cp -R "$evals/fixtures" "$out/fixtures"
 fi
+trap - EXIT
 echo "$out <- $name${*:+ $*}@$commit"

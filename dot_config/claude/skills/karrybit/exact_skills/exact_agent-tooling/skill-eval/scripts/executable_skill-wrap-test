@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Show that skill-wrap builds a wrapper holding the skill's SKILL.md at a ref where the skill
+# exists and exits 0; that a ref that does not exist and a ref from before the skill moved exit
+# non-zero and leave no OUT_DIR; and that an OUT_DIR that already exists makes it exit non-zero
+# and keeps that directory as it was.
+# It runs against a throwaway plugin repository whose skill moved from skills/demo to
+# skills/cat/demo in its second commit, tagged moved; its first commit is tagged before-move.
+# usage: skill-wrap-test [<skill-wrap>]   (default: the one beside this script; its files go to a
+#        temporary directory that is removed)
+set -uo pipefail
+exec </dev/null
+bin=$(cd "$(dirname "$0")" && pwd)
+sw=${1:-$bin/skill-wrap}
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/skill-wrap-test.XXXXXX") || exit 2
+trap 'rm -rf "$tmp"' EXIT
+failed=0
+fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
+pass() { printf 'ok\t%s\n' "$1"; }
+
+repo=$tmp/plugin
+g() { GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 git -C "$repo" -c user.name=test -c user.email=test@example.invalid "$@" >/dev/null; }
+mkdir -p "$repo/skills/demo/scripts" "$repo/evals/demo/plugin-eval/one"
+echo '# demo' > "$repo/skills/demo/SKILL.md"
+printf '#!/bin/sh\n' > "$repo/skills/demo/scripts/executable_run"
+echo 'Do it.' > "$repo/evals/demo/plugin-eval/one/prompt.md"
+g init -q && g add . && g commit -qm before && g tag before-move || exit 2
+mkdir "$repo/skills/cat"
+g mv skills/demo skills/cat/demo && g commit -qm move && g tag moved || exit 2
+skill=$repo/skills/cat/demo
+
+# run <name> <ref> <out>: runs skill-wrap and sets code
+run() { "$sw" "$skill" "$2" "$3" >/dev/null 2>&1; code=$?; }
+
+out=$tmp/good
+run good moved "$out"
+if [[ $code -eq 0 && -f $out/skills/demo/SKILL.md && -x $out/skills/demo/scripts/run \
+  && -f $out/evals/one/prompt.md && -f $out/.claude-plugin/plugin.json ]]; then
+  pass "a ref that has the skill builds a wrapper with SKILL.md and exits 0"
+else fail "a ref that has the skill: exit $code: $(cd "$tmp" && find good 2>/dev/null | sort | paste -sd ' ' -)"; fi
+
+for ref in no-such-ref before-move; do
+  out=$tmp/$ref
+  run "$ref" "$ref" "$out"
+  if [[ $code -ne 0 && ! -e $out ]]; then pass "ref $ref exits non-zero and leaves no OUT_DIR"
+  else fail "ref $ref: exit $code: OUT_DIR $( [[ -e $out ]] && echo left || echo absent )"; fi
+done
+
+out=$tmp/existing
+mkdir "$out" && echo keep > "$out/mine"
+run existing moved "$out"
+if [[ $code -ne 0 && $(ls -A "$out") == mine && $(cat "$out/mine") == keep ]]; then
+  pass "an existing OUT_DIR exits non-zero and is kept as it was"
+else fail "an existing OUT_DIR: exit $code: holds [$(ls -A "$out" 2>/dev/null | paste -sd ' ' -)]"; fi
+
+if [[ $failed -gt 0 ]]; then echo "$failed failed"; exit 1; fi
+echo "all passed"
