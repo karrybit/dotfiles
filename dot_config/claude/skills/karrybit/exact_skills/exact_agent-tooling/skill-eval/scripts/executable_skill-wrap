@@ -3,8 +3,9 @@
 # Builds a plugin directory at OUT_DIR (which must not exist yet) holding the
 # skill in SKILL_DIR as committed at git REF, and the suites and fixtures from
 # the skill's eval directory in the working tree, so one suite can be run
-# against several skill versions. SKILL_DIR is a plugin's skills/<name>, and
-# its eval directory is evals/<name> at that plugin's root. Each
+# against several skill versions. SKILL_DIR is a plugin's skills/<name> or
+# skills/<category>/<name>, and its eval directory is evals/<name> at that
+# plugin's root, the nearest folder above SKILL_DIR that holds it. Each
 # plugin-eval* directory there becomes evals* in OUT_DIR. Each SIBLING names
 # another skill directory beside SKILL_DIR, added at the same REF for a skill
 # that reads its siblings' files.
@@ -14,7 +15,12 @@ ref=$2
 out=$3
 shift 3
 name=$(basename "$skill")
-evals=$(cd "$skill/../.." && pwd)/evals/$name
+root=$(dirname "$skill")
+until [ -d "$root/evals/$name" ]; do
+  [ "$root" != / ] || { echo "skill-wrap: no evals/$name above $skill" >&2; exit 1; }
+  root=$(dirname "$root")
+done
+evals=$root/evals/$name
 
 mkdir "$out"
 mkdir -p "$out/.claude-plugin"

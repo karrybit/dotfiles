@@ -69,6 +69,14 @@
   `karrybit@skills-dir`, so each skill is called `karrybit:<skill>`; there is
   no intermediate canonical copy. The plugin's `exact_skills/` makes
   `chezmoi apply` remove a deployed skill whose source folder is gone.
+- Place a karrybit skill in the folder of its responsibility,
+  `exact_skills/exact_<category>/<skill>/`, and list each category in the
+  manifest's `skills`, since Claude Code scans only `skills/<skill>/` by
+  default; the folder does not change the name `karrybit:<skill>`. Give each
+  category folder the `exact_` prefix, since chezmoi's `exact_` does not
+  reach subfolders. Keep `herdr-agent` and `crit` directly in
+  `exact_skills/`, since settings rules and other plugins' scripts call their scripts
+  as `~/.config/claude/skills/karrybit/skills/<skill>/scripts/…`.
 - Skills and scripts that know the layout of the karo record repository
   live in the `karo` plugin at `dot_config/claude/skills/karo/`, deployed and
   loaded the same way as `karo@skills-dir`. Its manifest sets

@@ -14,7 +14,7 @@ Behavior cases for comparing versions of the `completion-report` skill. Run them
 
 - Cases grant `Bash` and `Edit`: run them with `--scaffold --allow-tools Bash Edit`.
 - Run the suite against a wrapper. chezmoi sets a deployed file's mode from the `executable_` prefix of its source name only, so the deployed `fixtures/notes-app/run-tests` loses its executable bit, and in an in-place run `./run-tests` fails with `Permission denied` instead of the `docker` error the case relies on; a wrapper copies the fixtures from the working tree with their mode.
-- `completion-report` reads no sibling skill: build the wrapper with `skill-wrap <karrybit>/exact_skills/completion-report <ref> DIR/kit`.
+- `completion-report` reads no sibling skill: build the wrapper with `skill-wrap <karrybit>/exact_skills/exact_agent-core/completion-report <ref> DIR/kit`.
 
 ## What the Suite Separates
 

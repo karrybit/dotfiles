@@ -15,7 +15,7 @@ Behavior cases for comparing versions of the `size-github-issues` skill. Run the
 ## Settings for This Suite
 
 - Cases grant no gated tool: run them with `--scaffold` and without `--allow-tools`.
-- `size-github-issues` reads no sibling skill: build the wrapper with `skill-wrap <karrybit>/exact_skills/size-github-issues <ref> DIR/kit`.
+- `size-github-issues` reads no sibling skill: build the wrapper with `skill-wrap <karrybit>/exact_skills/exact_develop/size-github-issues <ref> DIR/kit`.
 
 ## What the Suite Separates
 

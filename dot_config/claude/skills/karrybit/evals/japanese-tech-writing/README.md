@@ -15,7 +15,7 @@ Behavior cases for comparing versions of the `japanese-tech-writing` skill. Run 
 ## Settings for This Suite
 
 - Cases edit files and grant no Bash: run them with `--scaffold --allow-tools Write Edit`.
-- `japanese-tech-writing` reads only its own `references/`: build the wrapper with `skill-wrap <karrybit>/exact_skills/japanese-tech-writing <ref> DIR/kit`.
+- `japanese-tech-writing` reads only its own `references/`: build the wrapper with `skill-wrap <karrybit>/exact_skills/exact_writing/japanese-tech-writing <ref> DIR/kit`.
 
 ## What the Suite Separates
 

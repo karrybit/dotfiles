@@ -1,4 +1,12 @@
 {
   "name": "karrybit",
-  "description": "Skills from these dotfiles, called as /karrybit:<skill>."
+  "description": "Skills from these dotfiles, called as /karrybit:<skill>.",
+  "skills": [
+    "./skills/develop/",
+    "./skills/research/",
+    "./skills/explain/",
+    "./skills/writing/",
+    "./skills/agent-core/",
+    "./skills/agent-tooling/"
+  ]
 }

@@ -15,7 +15,7 @@ Behavior cases for comparing versions of the `install-agent-extension` skill. Ru
 ## Settings for This Suite
 
 - Cases grant `Bash`: run them with `--scaffold --allow-tools Bash`.
-- `install-agent-extension` reads no sibling skill: build the wrapper with `skill-wrap <karrybit>/exact_skills/install-agent-extension <ref> DIR/kit`.
+- `install-agent-extension` reads no sibling skill: build the wrapper with `skill-wrap <karrybit>/exact_skills/exact_agent-tooling/install-agent-extension <ref> DIR/kit`.
 
 ## What the Suite Separates
 

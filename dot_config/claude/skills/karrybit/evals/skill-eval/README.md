@@ -13,7 +13,7 @@ Behavior cases for comparing versions of the `skill-eval` skill. Run them with t
 ## Settings for This Suite
 
 - Cases grant no gated tool and have no scaffold: run them without `--scaffold` and `--allow-tools`.
-- `skill-eval` reads no sibling skill: build the wrapper with `skill-wrap <karrybit>/exact_skills/skill-eval <ref> DIR/kit`.
+- `skill-eval` reads no sibling skill: build the wrapper with `skill-wrap <karrybit>/exact_skills/exact_agent-tooling/skill-eval <ref> DIR/kit`.
 
 ## What the Suite Separates
 

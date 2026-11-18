@@ -15,7 +15,7 @@ Behavior cases for comparing versions of the `goal` skill. Run them with the `ka
 
 - Cases grant `Bash`, so that a run can execute `bin/parse-test` to see its output, and `Edit` and `Write`, so that `no-edit` and `no-write` can fail: run them with `--scaffold --allow-tools Bash Edit Write`.
 - Run the suite against a wrapper. chezmoi sets a deployed file's mode from the `executable_` prefix of its source name only, so the deployed `fixtures/csvtool/bin/parse-test` loses its executable bit, and an in-place run gets `Permission denied` from it; a wrapper copies the fixtures from the working tree with their mode.
-- `goal` reads no sibling skill: build the wrapper with `skill-wrap <karrybit>/exact_skills/goal <ref> DIR/kit`.
+- `goal` reads no sibling skill: build the wrapper with `skill-wrap <karrybit>/exact_skills/exact_agent-core/goal <ref> DIR/kit`.
 
 ## What the Suite Separates
 

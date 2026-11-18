@@ -1,8 +1,8 @@
 # karrybit:visualize comprehension evaluation
 
-Measures whether a reader who sees only an HTML explanation can answer the questions that matter, so that two versions of the `visualize` request template can be compared on the same source. It complements `exact_skills/visualize/rubric.md`, whose evaluator checks meaning, figures, and display quality but answers no questions. The "依頼の型を直すとき" section of `exact_skills/visualize/SKILL.md` runs both.
+Measures whether a reader who sees only an HTML explanation can answer the questions that matter, so that two versions of the `visualize` request template can be compared on the same source. It complements `exact_skills/exact_explain/visualize/rubric.md`, whose evaluator checks meaning, figures, and display quality but answers no questions. The "依頼の型を直すとき" section of `exact_skills/exact_explain/visualize/SKILL.md` runs both.
 
-`exact_skills/organize/rubric.md` also has its evaluator answer questions (its steps 1 and 3), but the same evaluator writes the questions from the source and then answers them from the document, so an answer can come from its memory of the source. Here the questions, the answers, and the matching are three separate runs, and the answerer never sees the source.
+`exact_skills/exact_explain/organize/rubric.md` also has its evaluator answer questions (its steps 1 and 3), but the same evaluator writes the questions from the source and then answers them from the document, so an answer can come from its memory of the source. Here the questions, the answers, and the matching are three separate runs, and the answerer never sees the source.
 
 Three roles keep the answers from leaking out of the source or the answer key:
 

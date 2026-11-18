@@ -40,8 +40,8 @@ All cases share `fixtures/orders`, built by `fixtures/orders/build.sh` into four
 ## Running
 
 1. Build the copy in a `DIR` outside the repository whose path has no `eval`, `test`, or `scratchpad`:
-   `chezmoi archive -S <checkout> --format tar ~/.config/claude/skills/karrybit | tar -x -C DIR/with`, then copy the installed pstack (`installPath` in `claude plugin list --json`) to `DIR/with/.config/claude/skills/karrybit/vendor/pstack`, and run `patch -p1 -d DIR/with/.config/claude/skills/karrybit/skills/system-investigation -i <checkout>/dot_config/claude/skills/karrybit/evals/system-investigation/locate.patch`.
-   Completion: `rg -c vendor/pstack DIR/with/.config/claude/skills/karrybit/skills/system-investigation/SKILL.md` prints `1`, and `claude plugin validate` passes on the copy.
+   `chezmoi archive -S <checkout> --format tar ~/.config/claude/skills/karrybit | tar -x -C DIR/with`, then copy the installed pstack (`installPath` in `claude plugin list --json`) to `DIR/with/.config/claude/skills/karrybit/vendor/pstack`, and run `patch -p1 -d DIR/with/.config/claude/skills/karrybit/skills/develop/system-investigation -i <checkout>/dot_config/claude/skills/karrybit/evals/system-investigation/locate.patch`.
+   Completion: `rg -c vendor/pstack DIR/with/.config/claude/skills/karrybit/skills/develop/system-investigation/SKILL.md` prints `1`, and `claude plugin validate` passes on the copy.
 2. Run `--eval-dir evals/system-investigation/plugin-eval` against `DIR/with/.config/claude/skills/karrybit` with two arms, and `--eval-dir evals/system-investigation/plugin-eval-direct` against the same copy with `--ablation none`.
    Completion: each result JSON has `"partial": false`, every run has `"error": null`, and `costUsd` is recorded.
 3. Compare per-grader pass counts and the summed `costUsd` per case across with, baseline, and direct.
