@@ -2,10 +2,10 @@
 # Show what agent-report prints, with herdr replaced by a stub and transcripts in a temporary
 # config folder: the last assistant text alone, and with --wait the agent's state after the wait,
 # followed by the report when the last message holds the completion report's heading,
-# "status: no-report" when an agent without it does not work again within a minute, "status:
-# question" and the question when an AskUserQuestion is open, the next stop when the stop it finds
-# was handed over already, and "status: error" when herdr fails. A name
-# holding characters herdr does not take reaches herdr with each turned into "-".
+# "status: no-report" when an agent without it does not work again within a minute,
+# "status: awaiting-answer" and the calls when tool calls after the last text have no result, the
+# next stop when the stop it finds was handed over already, and "status: error" when herdr fails.
+# A name holding characters herdr does not take reaches herdr with each turned into "-".
 # usage: agent-report-test   (tests the agent-report beside this script; its files go to a
 #        temporary directory that is removed)
 set -uo pipefail
@@ -55,8 +55,13 @@ printf '%s\n' "$(text first)" "$user" "$(text $'## 変更の要約\nreport of b'
 printf '%s\n' "$(text first)" "$user" "$(text 'waiting for the run; ## 変更の要約 comes after it')" > "$tmp/stub/pause.jsonl"
 ask='{"type":"assistant","message":{"content":[{"type":"tool_use","id":"toolu_q1","name":"AskUserQuestion","input":{"questions":[{"question":"Which one?","header":"Pick","multiSelect":false,"options":[{"label":"A","description":"a"},{"label":"B","description":"b"}]}]}}]}}'
 answer='{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"toolu_q1","content":"The user answered: A"}]}}'
+bash='{"type":"assistant","message":{"content":[{"type":"tool_use","id":"toolu_b1","name":"Bash","input":{"command":"make test"}}]}}'
+ran='{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"toolu_b1","content":"ok"}]}}'
 printf '%s\n' "$(text 'checking the docs')" "$ask" '{"type":"system"}' > "$tmp/stub/question.jsonl"
 printf '%s\n' "$(text 'checking the docs')" "$ask" "$answer" "$(text $'## 変更の要約\nthe report')" > "$tmp/stub/answered.jsonl"
+printf '%s\n' "$(text 'checking the docs')" "$ask" '{"type":"user","message":{"content":"continue"}}' "$(text $'## 変更の要約\nthe report')" > "$tmp/stub/stale.jsonl"
+printf '%s\n' "$(text 'checking the docs')" "$ask" "$bash" "$ran" > "$tmp/stub/parallel.jsonl"
+printf '%s\n' "$(text 'running the tests')" "$bash" > "$tmp/stub/approval.jsonl"
 export PATH=$tmp/fake:$PATH HOME=$tmp/home CLAUDE_CONFIG_DIR=$tmp/claude STUB_LOG=$tmp/log STUB_DIR=$tmp/stub
 report=$'## 変更の要約\nthe report'
 pause='waiting for the run; ## 変更の要約 comes after it'
@@ -105,14 +110,24 @@ states b5 "idle pause" "unknown -"
 run --wait b5
 if [[ $code -eq 0 && $out == "status: unknown" ]]; then pass "--wait on an agent whose pane is gone before the report prints the state alone"; else fail "--wait gone: $code $out ($calls)"; fi
 
-# An agent that does not work again ends each case on a "status:" line, before the fix as after it.
-asked=$'status: question\nWhich one?\n- A\n- B'
+# An agent waiting for an answer does not work again, so these cases set STUB_NO_RESUME, and each
+# ends on a "status:" line whatever the agent-report it runs.
+asked=$'status: awaiting-answer\nAskUserQuestion\n[Pick] Which one? (multiSelect: false)\n- A: a\n- B: b'
 states q1 "idle question"
 STUB_NO_RESUME=1 run --wait q1
-if [[ $code -eq 0 && $out == "$asked" && $calls == "agent wait q1 $stop;agent get q1;" ]]; then pass "--wait on an idle agent with an AskUserQuestion open prints question and the question at once"; else fail "--wait question: $code $out ($calls)"; fi
+if [[ $code -eq 0 && $out == "$asked" && $calls == "agent wait q1 $stop;agent get q1;" ]]; then pass "--wait on an idle agent with an AskUserQuestion open prints awaiting-answer and the question at once"; else fail "--wait question: $code $out ($calls)"; fi
 states q2 "done question"
 STUB_NO_RESUME=1 run --wait q2
-if [[ $code -eq 0 && $out == "$asked" ]]; then pass "--wait on a done agent with an AskUserQuestion open prints question too"; else fail "--wait done question: $code $out ($calls)"; fi
+if [[ $code -eq 0 && $out == "$asked" ]]; then pass "--wait on a done agent with an AskUserQuestion open prints awaiting-answer too"; else fail "--wait done question: $code $out ($calls)"; fi
+states q8 "idle stale"
+STUB_NO_RESUME=1 run --wait q8
+if [[ $code -eq 0 && $out == "status: idle"$'\n'"$report" ]]; then pass "--wait prints the report written after an older AskUserQuestion left without a result"; else fail "--wait stale question: $code $out ($calls)"; fi
+states q9 "idle parallel"
+STUB_NO_RESUME=1 run --wait q9
+if [[ $code -eq 0 && $out == "$asked" && $calls == "agent wait q9 $stop;agent get q9;" ]]; then pass "--wait prints an AskUserQuestion made at once with a tool whose result came first"; else fail "--wait parallel: $code $out ($calls)"; fi
+states q10 "idle approval"
+STUB_NO_RESUME=1 run --wait q10
+if [[ $code -eq 0 && $out == $'status: awaiting-answer\nBash: {"command":"make test"}' && $calls == "agent wait q10 $stop;agent get q10;" ]]; then pass "--wait on an idle agent with another tool call left without a result prints the tool and its input"; else fail "--wait approval: $code $out ($calls)"; fi
 states q3 "idle pause"
 STUB_NO_RESUME=1 run --wait q3
 states q3 "idle question" "unknown -"
