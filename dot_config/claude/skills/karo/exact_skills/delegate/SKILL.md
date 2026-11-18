@@ -1,6 +1,6 @@
 ---
 name: delegate
-description: Herdr 上の Agent に仕事を委任する手順。オーナーが実装・修正・調査を頼んだとき、goal を Agent ごとの /goal で進めるとき、既存 Agent に追加指示を出すとき、Agent を終了するときに使う。
+description: 'Herdr 上の Agent に仕事を委任する手順。オーナーが実装・修正・調査を頼んだとき、「goal: 〇〇」の形の依頼など完了まで続けてほしい作業を goal ごとに別の Agent の /goal で進めるとき、既存 Agent に追加指示を出すとき、Agent を終了するときに使う。goal の依頼では karrybit:goal の代わりに使う（この skill が karrybit:goal に完了の条件を書かせる）。'
 ---
 
 # 委任
