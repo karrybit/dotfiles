@@ -21,4 +21,5 @@ The case grants no `Bash` and removes `Agent`, so the run shows the request inst
 
 Measured on the karo copy (`--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`):
 
-- Every grader is a regression guard for what the request carries. `subagent-not-herdr` failed a run of a `record` whose section said "the agent" in the karo sense of a Herdr agent, which started the researcher through `karo:delegate`.
+- Every grader passes 3/3; each is a regression guard for what the request carries.
+- `subagent-not-herdr` failed the one run of a `record` whose section said "the agent", which in karo means a Herdr agent: that run started the researcher through `karo:delegate`.
