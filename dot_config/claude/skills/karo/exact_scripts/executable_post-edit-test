@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Show that post-edit runs rumdl fmt on each .md written under KARO_HOME and karo-check --only on that file
-# alone: a broken record note exits 2 with its problem on stderr, a valid one passes while another note is
-# broken, a .md outside the record folders and a hidden path pass, a check that cannot run exits 2 with
-# its reason, and a file outside KARO_HOME or reached through .. is left untouched.
+# Show that post-edit runs rumdl fmt on each .md written under KARO_HOME and karo-check --only on it, and
+# stops only on the written file's problems: a broken record note exits 2 with its problem on stderr, a
+# valid one passes while another note is broken, even one that reads it, a .md outside the record folders
+# and a hidden path pass, a check that cannot run exits 2 with its reason, and a file outside KARO_HOME
+# or reached through .. is left untouched.
 # usage: post-edit-test [<karo dir>]   (default KARO_HOME or ~/karo, read only: the vault takes its .rumdl.toml and
 #        rule/frontmatter-schema.yaml; the vault goes to a temporary directory and is removed)
 set -uo pipefail
@@ -48,6 +49,9 @@ kept "rumdl leaves a file that is not .md" "$v/standup/2026-01-02.txt"
 mkdir -p "$v/doc" && printf -- '---\ntype: Bogus\n---\n\n## 例\n' > "$v/doc/broken.md"
 edit "only the edited file is checked" "$v/standup/2026-01-03.md" "${note//01-01/01-03}" 0 ""
 rm "$v/doc/broken.md"
+printf -- '---\ntype: Bogus\nderived_from:\n  - standup/2026-01-05.md\n---\n\n## 例\n' > "$v/doc/reader.md"
+edit "a broken note that reads the edited file does not stop it" "$v/standup/2026-01-05.md" "${note//01-01/01-05}" 0 ""
+rm "$v/doc/reader.md"
 edit "a path that climbs out of KARO_HOME is not checked" "$v/standup/../../wt2/standup/2026-01-02.md" $'## 例' 0 ""
 kept "rumdl leaves a path that climbs out of KARO_HOME" "$tmp/wt2/standup/2026-01-02.md"
 mv rule/frontmatter-schema.yaml rule/schema.yaml
