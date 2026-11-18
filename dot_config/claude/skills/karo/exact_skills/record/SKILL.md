@@ -13,7 +13,7 @@ user-invocable: false
 ## 書く
 
 - 新しいファイルは Write で、今あるファイルへの追記と直しは Edit で、`$KARO_HOME` の下の絶対パスに書く（`$KARO_HOME` の値は SessionStart の hook が出す）。
-- Edit・Write のあと、post-edit の hook が `.md` を rumdl で整え、`<scripts>/karo-check --only <そのファイル>` で確かめる。hook が問題を返したら、そのファイルを直してから commit する。hook が確かめるのは書いたファイルだけで、そのファイルを指すほかのノートは commit が確かめる。
+- Edit・Write のあと、post-edit の hook が `.md` を rumdl で整え、`<scripts>/karo-check --only <そのファイル>` で確かめる。hook が問題を返したら、そのファイルを直してから commit する。hook が返すのは書いたファイルの問題か検査そのものの失敗だけで、そのファイルを指すほかのノートの問題は commit が止める。
 - standup（`standup/YYYY-MM-DD.md`）がまだなければ、Write で `type: Standup` と `date` のフロントマターから作る（`frontmatter.md` の「種類」の `Standup` の行）。
 - `state.md` は git の外の `$KARO_STATE_HOME/state.md` にあり（`$KARO_STATE_HOME` の値は SessionStart の hook が出す）、Edit で書き、commit のパスに並べない。
 - 運用の出来事（タスクを持たない依頼で記録を変えたこと）は、commit の本文に書く。
@@ -28,7 +28,7 @@ user-invocable: false
 | ノートの書き先 | 調べた結果は `$KARO_HOME/investigation/YYYY-MM-DD-<話題>.md`、MTG の記録は MTG ごとに `$KARO_HOME/source/meeting/YYYY-MM-DD-<MTG>.md` |
 | 情報源のアクセスの制約 | `$KARO_HOME/AGENTS.md` の「情報源」の節（外のサービスは読むだけ、MTG の議事録を読む範囲）に従うこと |
 | ノートの規則 | 書く前に `frontmatter.md`（この skill のフォルダ。依頼には絶対パスで書く）を Read で読み、その「フィールド」と、書き先の種類の行（調べ物は `Investigation`、MTG は `Meeting Notes`、imozuru の map.md は `Research Map`）に従うこと |
-| 検査 | `~/.config/claude/skills/karo/scripts/karo-check --only <ノートの $KARO_HOME からのパス>` を `~/` の形のまま単独で実行する（imozuru を使ったら `--only investigation/YYYY-MM-DD-<話題>/map.md` も足す）。合格の出力は `karo-check: 0 problem(s) in the --only scope`。`stale since` の行と、ほかのノートの問題は数えない。終了コード 2 は検査そのものの失敗（引数か schema の誤り、yq・fd・rg を動かせない） |
+| 検査 | `~/.config/claude/skills/karo/scripts/karo-check --only <ノートの $KARO_HOME からのパス>` を `~/` の形のまま単独で実行する（imozuru を使ったら `--only investigation/YYYY-MM-DD-<話題>/map.md` も足す）。合格は、終了コードが 2 でなく、出力に `<ノートのパス><TAB>` で始まる行が `stale since` の行のほかにないこと。ほかのノートの行は数えないので、件数の行（`karo-check: <件数> problem(s) in the --only scope`）が 0 でなくてもよい。終了コード 2 は検査そのものの失敗（引数か schema の誤り、yq・fd・rg を動かせない） |
 | 追加の skill | 分野や論点を探る調査には `imozuru:imozuru` を使ってよく、原文の保存先はノートと同じ名前のフォルダ `$KARO_HOME/investigation/YYYY-MM-DD-<話題>/` |
 | 分担 | ノートの commit は karo が commit の script で行い、判断待ち（decision の bead）は karo が `bd` で作る。サブエージェントは commit も `bd` もしない |
 
@@ -39,7 +39,7 @@ user-invocable: false
 1. 1 つの返事に要る書き込みをすべて書いたら、それを 1 つの commit にする。`<scripts>/commit '<件名>' '<本文>' <パス>...` を単独の Bash の呼び出しで（パイプ・リダイレクト・`&&` をつながずに）実行する。
    - 件名は `<タスクID>[, <タスクID>]...: <何を変えたか>` の形にし、そのやり取りのタスク ID で始める。タスクのないやり取りでは、ID を置かずに何を変えたかだけを書く。
    - 本文には、なぜ変えたか（オーナーのどの指示か、どの決定・出典に基づくか）を書く。件名と本文は、それぞれ改行を含まない 1 行にし、`'` で囲む（本文に `'` を入れない）。
-   - パスは `$KARO_HOME` からの相対パスで、この commit に入れるファイルをすべて並べる（消したファイルも、名前を変えたファイルは前と後の両方も並べる）。commit は並べたパスだけを stage し、`<scripts>/karo-check --only` でそのパスと、そのパスを指すほかのノートを確かめる。記録の全体は確かめないので、全体は `karo:land`・`karo:checkout` の引数なしの karo-check が確かめる。
+   - パスは `$KARO_HOME` からの相対パスで、この commit に入れるファイルをすべて並べる（消したファイルも、名前を変えたファイルは前と後の両方も並べる）。commit は並べたパスだけを stage し、commit に入る中身（HEAD に並べたパスの今の中身を足したもの）を `<scripts>/karo-check --only` で、そのパスと、そのパスを指すほかのノートについて確かめる。並べていないファイルの直しは中身に入らないので、ほかのノートを直したらそのノートも並べる。記録の全体は確かめないので、全体は `karo:land`・`karo:checkout` の引数なしの karo-check が確かめる。
 
    <example>
 
