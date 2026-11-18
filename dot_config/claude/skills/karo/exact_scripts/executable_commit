@@ -1,20 +1,26 @@
 #!/usr/bin/env bash
 # Commit only the given paths of the karo record, after rumdl fmt on each .md, git diff --cached --check,
 # and karo-check --only on the staged paths, removed ones included, so a note that links to or lists a
-# removed or renamed path fails too. A failed check unstages the paths, leaves the files as written, and
-# prints "NG <subject>" after the reason; a commit prints "OK <short hash> <subject>".
-# usage: commit <subject> <body> <path>...   (paths from KARO_HOME; the body says why)
-# Environment: KARO_HOME (default ~/karo). Runs inside the sandbox: it writes only KARO_HOME and its .git.
+# removed or renamed path fails too. karo-check reads what the commit will hold (HEAD with the given paths
+# as written, put out to a temporary folder), so a change left out of the paths does not make it pass.
+# A failed check unstages the paths, leaves the files as written, and prints "NG <subject>" after the
+# reason; a commit prints "OK <short hash> <subject>".
+# usage: commit <subject> <body> <path>...   (paths from KARO_HOME, each under a folder in record-folders
+#        beside this script; the body says why)
+# Environment: KARO_HOME (default ~/karo). Runs inside the sandbox: it writes only KARO_HOME, its .git, and
+# a temporary folder under TMPDIR that it removes.
 set -u
 [ $# -ge 3 ] && [ -n "$2" ] || { echo "usage: commit <subject> <body (why)> <path>..." >&2; exit 2; }
 subject=$1 body=$2; shift 2
 bin=$(cd "$(dirname "$0")" && pwd)
+read -r -a folders < "$bin/record-folders"
 cd "${KARO_HOME:-$HOME/karo}" || exit 2
 for p; do
   case $p in *[$'\n\t']*) echo "NG $subject: not a record path: a path with a tab or a newline"; exit 1 ;; esac
   case $p in *..*|/*|*//*) echo "NG $subject: not a record path: $p"; exit 1 ;; esac
-  case $p in standup/?*|source/?*|investigation/?*|project/?*|doc/?*) ;;
-    *) echo "NG $subject: not a record path: $p"; exit 1 ;; esac
+  record=0
+  for d in "${folders[@]}"; do [[ $p == "$d"/?* ]] && record=1; done
+  (( record )) || { echo "NG $subject: not a record path: $p"; exit 1; }
 done
 ng() { git reset -q -- "$@"; echo "NG $subject"; exit 1; }
 for p; do case $p in *.md) [ -f "$p" ] && rumdl fmt --silent "$p" ;; esac; done
@@ -23,6 +29,10 @@ only=()
 while IFS= read -r -d '' p; do only+=(--only "$p"); done < <(git diff --cached --name-only --no-renames -z -- "$@")
 (( ${#only[@]} )) || { echo "OK - $subject (no change)"; exit 0; }
 git diff --cached --check -- "$@" || ng "$@"
-out=$("$bin/karo-check" "${only[@]}" . 2>&1) || { printf '%s\n' "$out"; ng "$@"; }
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/karo-commit.XXXXXX") || ng "$@"
+trap 'rm -rf "$tmp"' EXIT
+{ GIT_INDEX_FILE=$tmp/index git read-tree HEAD && GIT_INDEX_FILE=$tmp/index git add -- "$@" \
+  && GIT_INDEX_FILE=$tmp/index git checkout-index -a --prefix="$tmp/tree/"; } || ng "$@"
+out=$("$bin/karo-check" "${only[@]}" "$tmp/tree" 2>&1) || { printf '%s\n' "$out"; ng "$@"; }
 git commit -q -m "$subject" -m "$body" -- "$@" || ng "$@"
 git log -1 --format='OK %h %s'

@@ -157,9 +157,21 @@ ng "a removal that leaves a link stops" $'investigation/2026-01-02-next.md\tlink
 git -C "$v" checkout -q -- investigation/2026-01-02-old.md
 mv "$v/investigation/2026-01-02-old.md" "$v/investigation/2026-01-02-new-name.md"
 sed -i.bak 's#investigation/2026-01-02-old.md#investigation/2026-01-02-new-name.md#' "$v/investigation/2026-01-02-next.md" && rm "$v/investigation/2026-01-02-next.md.bak"
+# The check reads what the commit holds: the link fixed in the working tree but not listed stops it.
+run "t-test0001: 名前を変える" "本文" investigation/2026-01-02-old.md investigation/2026-01-02-new-name.md
+ng "a link fixed but not listed stops" $'investigation/2026-01-02-next.md\tlink target missing: investigation/2026-01-02-old.md'
 run "t-test0001: 名前を変える" "本文" investigation/2026-01-02-old.md investigation/2026-01-02-new-name.md investigation/2026-01-02-next.md
 if [[ $code -eq 0 && $out == "OK "* && -z $(git -C "$v" status --porcelain -- investigation) ]]; then pass "a rename with its link fixed commits"; else fail "a rename with its link fixed: exit $code: $out: $(git -C "$v" status --porcelain)"; fi
 before=$(head_)
+
+# The record folders are one list, record-folders beside the scripts: with a folder added to a copy of it,
+# commit takes a path there and karo-check checks the note.
+alt=$tmp/bin
+cp -R "$bin" "$alt" && printf 'standup source investigation project doc thread\n' > "$alt/record-folders"
+mkdir -p "$v/thread" && printf '## a\n' > "$v/thread/t-test0001-demo.md"
+out=$("$alt/commit" "t-test0001: thread" "本文" thread/t-test0001-demo.md 2>&1); code=$?
+ng "a folder added to record-folders is a record folder" $'thread/t-test0001-demo.md\tno frontmatter'
+rm "$v/thread/t-test0001-demo.md"
 
 # rumdl leaves reviews alone, so git diff --check catches a blank line at the end of one.
 printf '\n' >> "$v/project/repo/github.com/acme/demo/review/t-test0001-1.md"

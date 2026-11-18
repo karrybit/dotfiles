@@ -3,8 +3,8 @@
 # (frontmatter, place, path links, stale_after), then the checks that belong to the karo structure (the
 # forms of dates and task IDs; the project vocabulary; wiki links; and the task database, .beads, kept out
 # of git). It is the one implementation of the record checks, run at three depths:
-#   after an edit   post-edit runs --only <the edited file>
-#   at a commit     commit runs --only <the staged paths>, removed ones included
+#   after an edit   post-edit runs --only <the edited file> and stops on that file's problems alone
+#   at a commit     commit runs --only <the staged paths>, removed ones included, on what the commit holds
 #   whole           karo:setup, karo:checkout, and karo:land run it without --only
 # An --only run vouches for the given paths and the files whose checks read them, not for the rest of the
 # record or for .beads; its count line says "in the --only scope" so it is not read as a whole run's.
@@ -12,7 +12,7 @@
 # digits, a child with ".<n>" added (karo-a2v.1, t-a1b2c3d4, ABC-12). Tasks live in the task database,
 # which karo-check does not read, so only the form is checked.
 # usage: karo-check [--only <path>]... [<karo dir>]
-# Default: KARO_HOME, or ~/karo when unset (only its record folders get the karo checks). The schema is <karo dir>/rule/frontmatter-schema.yaml.
+# Default: KARO_HOME, or ~/karo when unset (only its record folders, listed in record-folders beside this script, get the karo checks). The schema is <karo dir>/rule/frontmatter-schema.yaml.
 # --only limits the check to the given vault-relative paths (changed, added, or removed files; for a rename, both
 # paths). okf-lint gets the same paths; the karo checks also read, for a removed project file, the notes
 # listing it as a project. A file brought in is checked in full.
@@ -32,7 +32,10 @@ fi
 only=()
 while [[ ${1:-} == --only ]]; do only+=("${2#./}"); shift 2; done
 vault=${1:-${KARO_HOME:-$HOME/karo}}
-lint=$(cd "$(dirname "$0")" && pwd)/okf-lint
+bin=$(cd "$(dirname "$0")" && pwd)
+lint=$bin/okf-lint
+# The record folders, the one list commit takes its record paths from too
+read -r -a folders < "$bin/record-folders"
 cd "$vault" || exit 2
 SCHEMA=$PWD/rule/frontmatter-schema.yaml
 [[ -f $SCHEMA ]] || { echo "karo-check: no schema at $SCHEMA" >&2; exit 2; }
@@ -62,7 +65,6 @@ FS=$'\x1f' LS=$'\x1e'
 export FS LS
 excl=$(yq '.exclude | join("|")' "$SCHEMA")
 types=$'\n'$(yq '.types | keys | .[]' "$SCHEMA")$'\n'
-folders=(standup source project investigation doc)
 existing=()
 for d in "${folders[@]}"; do [[ -d $d ]] && existing+=("$d"); done
 # The project vocabulary: the path names of the project notes, <vcs>/<org>/<repo> for
