@@ -50,3 +50,8 @@
 # The crit eval's branch case has no port-from-target grader. The evals folder
 # is not exact_, so the removed grader stays on a machine otherwise.
 .config/claude/skills/karrybit/evals/crit/plugin-eval/branch/graders/port-from-target.md
+
+# okf-lint is a script of the karo plugin, and its eval is karo's evals/okf-lint.
+# The evals folder is not exact_, so the karrybit copy stays on a machine
+# otherwise.
+.config/claude/skills/karrybit/evals/okf-lint
