@@ -9,7 +9,8 @@ allowed_tools: [Read, Glob, Grep, Skill]
 どのタスクがボトルネックになってるか知りたい。さっき `bv --robot-insights --format json` を走らせたら、終了コード 0 でこれが返ってきた。
 
 ```json
-{"generated_at":"2026-11-18T01:00:00Z","data_hash":"","source_authority":{"state":"unknown","claim_safe":false,"readiness":"provisional","loaded":0,"failed":1,
-  "sources":[{"status":"failed","error":"failed to read beads directory: open .beads: no such file or directory"}]},
- "Bottlenecks":null,"Keystones":null,"status":{}}
+{"generated_at":"2026-11-18T01:00:00Z","data_hash":"empty","source_authority":{"state":"partial","claim_safe":false,"readiness":"provisional","loaded":1,"failed":0,"valid":0,"errors":1,
+  "sources":[{"source_path":".beads/issues.jsonl","status":"loaded","error":null,"valid":0,"errors":1}]},
+ "Bottlenecks":[],"Keystones":[],
+ "status":{"PageRank":{"state":"computed"},"Betweenness":{"state":"computed"},"Cycles":{"state":"computed"}}}
 ```
