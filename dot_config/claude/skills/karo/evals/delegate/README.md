@@ -23,6 +23,6 @@ The cases grant no `Bash` and remove `Agent`, so a run can load skills but canno
 Measured on the karo copy (`--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`):
 
 - Every grader is a regression guard for the goal route through `delegate`; there is no arm without the plugin, since the route is what the cases check.
-- With the plugin and `karrybit:goal` at 64728ab, every grader passes 3/3 in both cases.
-- `vague-held` passed 1/3 with the `karrybit:goal` before 64728ab: two runs planned to take a Markdown lint or CI check found later as goal 2's predicate and start it without asking. This rests on one measurement of three runs.
+- With the plugin and `karrybit:goal` at b7c01c7, every grader passes 3/3 in both cases.
+- `vague-held` passed 1/3 with the `karrybit:goal` before b7c01c7: two runs planned to take a Markdown lint or CI check found later as goal 2's predicate and start it without asking. This rests on one measurement of three runs.
 - The scenarios say that `Skill` works: with a scenario that says only that commands cannot run, one run of three described the `karrybit:goal` call instead of making it and wrote a condition without an attempt limit.

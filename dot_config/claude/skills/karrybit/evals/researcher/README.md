@@ -41,7 +41,7 @@ The copy holds the whole `karrybit` plugin, so the agent's `skills:` resolves `k
 
 ## What the Suite Separates
 
-Measured at the commit that adds this suite, against an archive copy (`--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`), one measurement:
+Measured at da33726 against an archive copy (`--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`), one measurement, with the kept runs graded by `grade.py` at 7ca2a7f:
 
 - With the agent, every grader and both `grade.py` assertions pass 3/3 in both cases, and the agent, not the main session, writes the note in every run.
 - Without the plugin, `reading-table`, `unreadable-row` (`other-repo`), and `report-items` pass 0/3: the session writes the note without the `karrybit:research` table and report items. The other graders, including `no-frontmatter`, `no-record-paths`, `no-commit`, `no-bd`, `ran-check`, and `grade.py`'s, pass 3/3 either way and guard against regressions only.
