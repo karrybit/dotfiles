@@ -15,10 +15,15 @@
 # message (a question, a part-way report, or a pause on its own background
 # work).
 #
+# An agent that stops idle or done with an AskUserQuestion open, which herdr
+# does not always see as blocked, makes --wait print "status: question" and
+# each question with its options at once.
+#
 # A stop --wait has printed is not printed again: --wait notes the stop's
-# session and herdr's completion_seq, and a later --wait on the same stop
-# waits for the next one. Run again after a pause, it hands over the agent's
-# next stop, even one that ended before it started.
+# session, herdr's completion_seq, and the open question's tool_use ID, and a
+# later --wait on the same stop waits for the next one. Run again after a
+# pause, it hands over the agent's next stop, even one that ended before it
+# started.
 #
 # A blocked or unknown agent (one whose pane is gone) prints the state alone;
 # an agent whose pane someone is watching ends idle, not done. When herdr
@@ -40,7 +45,7 @@ fi
 [ $# -eq 1 ] || usage
 name=$(printf '%s' "$1" | tr -c 'a-z0-9_-' -)
 
-report() {
+transcript() {
   session=$(printf '%s' "$agent" | jq -r .result.agent.agent_session.value)
   # The session ID names the transcript file, so it may hold no path.
   case $session in
@@ -50,8 +55,22 @@ report() {
   # Claude Code names a project directory after its cwd with every
   # non-alphanumeric character replaced by "-".
   project=$(printf '%s' "$cwd" | tr -c 'A-Za-z0-9' '-')
-  jq -rs '[.[] | select(.type == "assistant") | .message.content[]? | select(.type == "text") | .text] | last // ""' \
-    "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/$project/$session.jsonl"
+  printf '%s\n' "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/$project/$session.jsonl"
+}
+report() {
+  file=$(transcript) || return 1
+  jq -rs '[.[] | select(.type == "assistant") | .message.content[]? | select(.type == "text") | .text] | last // ""' "$file"
+}
+# question: when the agent's last tool call is an AskUserQuestion with no
+# result yet, print its tool_use ID and then each question with its options.
+# Claude Code writes a tool call to the transcript before the tool runs, so
+# the call is there while the question waits for an answer.
+question() {
+  file=$(transcript) || return 1
+  jq -rs '[.[] | select(.type == "user") | .message.content | arrays | .[] | select(.type == "tool_result") | .tool_use_id] as $answered
+    | [.[] | select(.type == "assistant") | .message.content[]? | select(.type == "tool_use")] | last
+    | select(.name == "AskUserQuestion" and (.id | IN($answered[]) | not))
+    | .id, (.input.questions[]? | .question, (.options[]? | "- \(.label)"))' "$file"
 }
 
 if [ -z "$wait" ]; then
@@ -79,14 +98,27 @@ while :; do
     idle | done) ;;
     *) echo "status: $status"; exit 0 ;;
   esac
-  stop=$(printf '%s' "$agent" | jq -r '.result.agent | "\(.agent_session.value) \(.completion_seq)"')
-  if [ "${stop#* }" != null ] && [ "$stop" = "$(cat "$seen" 2>/dev/null)" ]; then
+  seq=$(printf '%s' "$agent" | jq -r .result.agent.completion_seq)
+  # A missing transcript is an error line, not a report.
+  if ! asked=$(question 2>&1); then
+    echo "status: error"
+    printf '%s\n' "$asked"
+    exit 1
+  fi
+  # The open question's tool_use ID is part of the stop, so a question asked
+  # after a stop already handed over, under the same completion_seq, is new.
+  qid=$(printf '%s\n' "$asked" | head -n 1)
+  stop="$(printf '%s' "$agent" | jq -r .result.agent.agent_session.value) $seq${qid:+ $qid}"
+  if [ "$seq" != null ] && [ "$stop" = "$(cat "$seen" 2>/dev/null)" ]; then
     # The agent's next turn may begin and end before this wait starts, so
     # the wait is short and the loop looks at the stop again.
     herdr agent wait "$name" --until working --until blocked --until unknown --timeout 60000 >/dev/null || true
     continue
   fi
-  # The report is read first, so a missing transcript is an error line, not a report.
+  if [ -n "$asked" ]; then
+    text=$(printf '%s\n' "$asked" | tail -n +2)
+    hand_over question
+  fi
   if ! text=$(report 2>&1); then
     echo "status: error"
     printf '%s\n' "$text"

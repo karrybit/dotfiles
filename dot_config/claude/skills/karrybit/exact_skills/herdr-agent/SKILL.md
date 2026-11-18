@@ -85,11 +85,13 @@ agent-ctl send --goal <条件> <名前>
 
 - 指示を送って `working` を確かめたあとに、`<scripts>/agent-report --wait <名前>` を単独で、Bash の background 実行で、`timeout` を `86400000`（24 時間）にして走らせる。`timeout` を付けないと、Claude Code は background のコマンドを 30 分で止める。`working` を確かめる前に走らせると、まだ指示を受けていない `idle` の Agent ですぐ返る。
 - `--wait` は、Agent が `idle` か `done` で止まると返る。最後の発言に `## 変更の要約` の行（`karrybit:completion-report` の最初の見出し）があればすぐに返り、なければターンの合間かもしれないので 1 分待ち、Agent が作業に戻らなければ `no-report` で返る。ブリーフと送る指示には「完了の報告は karrybit:completion-report に従う」と書く。
+- `--wait` は、transcript の最後の tool 呼び出しが答えのない AskUserQuestion なら、Herdr が `idle` か `done` と出していても、すぐに `question` で返る。
 - `--wait` は、一度返した停止をもう一度は返さない。同じ停止のまま走らせ直すと、Agent が次に止まるまで待つ（走らせ直す前に終わっていた停止は、すぐに返す）。
 - 待つ間は、終了の通知を待ち、foreground では呼び出し側の次の作業を進める。
 - 終了の通知が来たら、出力の 1 行目の `status:` で分ける。
   - `idle` か `done`: 2 行目からが Agent の完了の報告なので、呼び出し側に渡す。
   - `no-report`: Agent が見出しのない発言のまま 1 分止まった。2 行目からが最後の発言なので読む。自分の裏の作業（テストや評価の実行、サブエージェント）を待っているだけなら、`agent-report --wait` を走らせ直す。質問か途中の報告なら、呼び出し側が答えか次の指示を決めて `agent-ctl send` で送る。完了の報告の書き忘れなら、`karrybit:completion-report` の見出しで報告を書くよう `agent-ctl send` で送る。送ったときは、`working` を確かめてから待ち直す。どれか決められないときは、最後の発言を人に伝える。
+  - `question`: Agent が AskUserQuestion を開いて答えを待っている。2 行目からが問いと選択肢のラベルなので読み、「止まった Agent に答える」に進み、`working` を確かめてから待ち直す。
   - `blocked`: 「止まった Agent に答える」に進み、`working` を確かめてから待ち直す。
   - `working`（待つのに失敗して早く返った）: `agent-report --wait` を走らせ直す。2 回続いたら、`herdr agent get <Agent 名>` の結果を人に伝える。
   - `unknown` か `error`（pane が閉じた、Herdr が答えない）: `herdr agent get <Agent 名>` の結果を人に伝える。

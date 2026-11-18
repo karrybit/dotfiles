@@ -2,8 +2,9 @@
 # Show what agent-report prints, with herdr replaced by a stub and transcripts in a temporary
 # config folder: the last assistant text alone, and with --wait the agent's state after the wait,
 # followed by the report when the last message holds the completion report's heading,
-# "status: no-report" when an agent without it does not work again within a minute, the next stop
-# when the stop it finds was handed over already, and "status: error" when herdr fails. A name
+# "status: no-report" when an agent without it does not work again within a minute, "status:
+# question" and the question when an AskUserQuestion is open, the next stop when the stop it finds
+# was handed over already, and "status: error" when herdr fails. A name
 # holding characters herdr does not take reaches herdr with each turned into "-".
 # usage: agent-report-test   (tests the agent-report beside this script; its files go to a
 #        temporary directory that is removed)
@@ -52,6 +53,10 @@ text() { jq -cn --arg t "$1" '{type: "assistant", message: {content: [{type: "te
 printf '%s\n' "$(text first)" "$user" "$tool" "$(text $'## 変更の要約\nthe report')" > "$tmp/stub/report.jsonl"
 printf '%s\n' "$(text first)" "$user" "$(text $'## 変更の要約\nreport of b')" > "$tmp/stub/report-b.jsonl"
 printf '%s\n' "$(text first)" "$user" "$(text 'waiting for the run; ## 変更の要約 comes after it')" > "$tmp/stub/pause.jsonl"
+ask='{"type":"assistant","message":{"content":[{"type":"tool_use","id":"toolu_q1","name":"AskUserQuestion","input":{"questions":[{"question":"Which one?","header":"Pick","multiSelect":false,"options":[{"label":"A","description":"a"},{"label":"B","description":"b"}]}]}}]}}'
+answer='{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"toolu_q1","content":"The user answered: A"}]}}'
+printf '%s\n' "$(text 'checking the docs')" "$ask" '{"type":"system"}' > "$tmp/stub/question.jsonl"
+printf '%s\n' "$(text 'checking the docs')" "$ask" "$answer" "$(text $'## 変更の要約\nthe report')" > "$tmp/stub/answered.jsonl"
 export PATH=$tmp/fake:$PATH HOME=$tmp/home CLAUDE_CONFIG_DIR=$tmp/claude STUB_LOG=$tmp/log STUB_DIR=$tmp/stub
 report=$'## 変更の要約\nthe report'
 pause='waiting for the run; ## 変更の要約 comes after it'
@@ -99,6 +104,34 @@ if [[ $code -eq 0 && $out == "status: idle"$'\n'"$report" ]]; then pass "--wait 
 states b5 "idle pause" "unknown -"
 run --wait b5
 if [[ $code -eq 0 && $out == "status: unknown" ]]; then pass "--wait on an agent whose pane is gone before the report prints the state alone"; else fail "--wait gone: $code $out ($calls)"; fi
+
+# An agent that does not work again ends each case on a "status:" line, before the fix as after it.
+asked=$'status: question\nWhich one?\n- A\n- B'
+states q1 "idle question"
+STUB_NO_RESUME=1 run --wait q1
+if [[ $code -eq 0 && $out == "$asked" && $calls == "agent wait q1 $stop;agent get q1;" ]]; then pass "--wait on an idle agent with an AskUserQuestion open prints question and the question at once"; else fail "--wait question: $code $out ($calls)"; fi
+states q2 "done question"
+STUB_NO_RESUME=1 run --wait q2
+if [[ $code -eq 0 && $out == "$asked" ]]; then pass "--wait on a done agent with an AskUserQuestion open prints question too"; else fail "--wait done question: $code $out ($calls)"; fi
+states q3 "idle pause"
+STUB_NO_RESUME=1 run --wait q3
+states q3 "idle question" "unknown -"
+STUB_NO_RESUME=1 run --wait q3
+if [[ $code -eq 0 && $out == "$asked" && $calls == "agent wait q3 $stop;agent get q3;" ]]; then pass "--wait run again after no-report prints a question asked under the same completion_seq"; else fail "--wait question after no-report: $code $out ($calls)"; fi
+states q4 "idle question"
+STUB_NO_RESUME=1 run --wait q4
+states q4 "idle question" "idle report 2"
+run --wait q4
+if [[ $code -eq 0 && $out == "status: idle"$'\n'"$report" && $calls == "agent wait q4 $stop;agent get q4;agent wait q4 $resume 60000;agent wait q4 $stop;agent get q4;" ]]; then pass "--wait on a question it printed before waits for the next stop"; else fail "--wait question again: $code $out ($calls)"; fi
+states q5 "idle answered"
+run --wait q5
+if [[ $code -eq 0 && $out == "status: idle"$'\n'"$report" ]]; then pass "--wait on an agent whose question was answered prints the report"; else fail "--wait answered: $code $out ($calls)"; fi
+states q6 "blocked question"
+run --wait q6
+if [[ $code -eq 0 && $out == "status: blocked" ]]; then pass "--wait on a blocked agent with an AskUserQuestion open prints the state alone"; else fail "--wait blocked question: $code $out"; fi
+states q7 "idle question"
+run q7
+if [[ $code -eq 0 && $out == "checking the docs" ]]; then pass "taking the report without --wait prints the last assistant text while a question is open"; else fail "plain question: $code $out"; fi
 
 states c1 "idle pause" "idle report 2"
 states c2 "idle pause" "idle report-b 2"
