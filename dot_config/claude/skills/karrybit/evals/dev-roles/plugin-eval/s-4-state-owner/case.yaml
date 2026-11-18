@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: s-4-state-owner
+context:
+  scaffold_script: fixture.sh

@@ -172,6 +172,13 @@
         "fixtures/export-api-v3"
       ],
       "assertions": []
+    },
+    {
+      "name": "s-4-state-owner",
+      "files": [
+        "fixtures/order-status"
+      ],
+      "assertions": []
     }
   ]
 }
