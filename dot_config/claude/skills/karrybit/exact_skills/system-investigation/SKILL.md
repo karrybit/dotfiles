@@ -27,7 +27,7 @@ description: 既存のコードベースとシステムの構造・処理の経�
 ## pstack の使い方
 
 - pstack のフォルダ `<pstack>` は、`claude plugin list --json` の出力で `id` が `pstack@` で始まる項目の `installPath` にする。
-- 表で `how` か `why` を選んだら、リポジトリが小さくても、`<pstack>/skills/how/SKILL.md` か `<pstack>/skills/why/SKILL.md` を Read ツールで開いて、その手順に従う。pstack の `how` と `why` は `disable-model-invocation` のため、Skill ツールでは呼べない。
+- 表で `how` か `why` を選んだら、リポジトリが小さくても、`<pstack>/skills/how/SKILL.md` か `<pstack>/skills/why/SKILL.md` を Read ツールで開いて、その手順を、指定どおりの subagent の起動も含めて最後まで行う。pstack の `how` と `why` は `disable-model-invocation` のため、Skill ツールでは呼べない。
 - pstack が subagent に渡す prompt には、問いと止める条件と、下の「証拠の規則」を足す。
 - Read ツールがその SKILL.md を開けなかったときだけ、直接読んで調べ、答えに pstack を使えなかったことと Read のエラーを書く。
 

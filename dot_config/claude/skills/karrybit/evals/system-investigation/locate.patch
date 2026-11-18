@@ -4,4 +4,4 @@
  
 -- pstack のフォルダ `<pstack>` は、`claude plugin list --json` の出力で `id` が `pstack@` で始まる項目の `installPath` にする。
 +- pstack のフォルダ `<pstack>` は `${CLAUDE_PLUGIN_ROOT}/vendor/pstack` にする。
- - 表で `how` か `why` を選んだら、リポジトリが小さくても、`<pstack>/skills/how/SKILL.md` か `<pstack>/skills/why/SKILL.md` を Read ツールで開いて、その手順に従う。pstack の `how` と `why` は `disable-model-invocation` のため、Skill ツールでは呼べない。
+ - 表で `how` か `why` を選んだら、リポジトリが小さくても、`<pstack>/skills/how/SKILL.md` か `<pstack>/skills/why/SKILL.md` を Read ツールで開いて、その手順を、指定どおりの subagent の起動も含めて最後まで行う。pstack の `how` と `why` は `disable-model-invocation` のため、Skill ツールでは呼べない。
