@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Show that post-edit runs rumdl fmt on each .md written under KARO_HOME and fmcheck only on a record note
-# there: a broken record note exits 2 with its problem on stderr, a valid one and a .md outside the record
-# folders (a worktree under .claude/ among them) pass, and a file outside KARO_HOME is left untouched.
+# Show that post-edit runs rumdl fmt on each .md written under KARO_HOME and karo-check --only on that file
+# alone: a broken record note exits 2 with its problem on stderr, a valid one passes while another note is
+# broken, a .md outside the record folders and a hidden path pass, a check that cannot run exits 2 with
+# its reason, and a file outside KARO_HOME or reached through .. is left untouched.
 # usage: post-edit-test [<karo dir>]   (default KARO_HOME or ~/karo, read only: the vault takes its .rumdl.toml and
 #        rule/frontmatter-schema.yaml; the vault goes to a temporary directory and is removed)
 set -uo pipefail
@@ -44,6 +45,14 @@ fixed "rumdl formats a .md outside the record folders" "$v/README.md"
 edit "a worktree under KARO_HOME is not checked" "$v/.claude/worktrees/w/standup/2026-01-02.md" $'## 例' 0 ""
 edit "a file that is not .md is left alone" "$v/standup/2026-01-02.txt" $'## 例' 0 ""
 kept "rumdl leaves a file that is not .md" "$v/standup/2026-01-02.txt"
+mkdir -p "$v/doc" && printf -- '---\ntype: Bogus\n---\n\n## 例\n' > "$v/doc/broken.md"
+edit "only the edited file is checked" "$v/standup/2026-01-03.md" "${note//01-01/01-03}" 0 ""
+rm "$v/doc/broken.md"
+edit "a path that climbs out of KARO_HOME is not checked" "$v/standup/../../wt2/standup/2026-01-02.md" $'## 例' 0 ""
+kept "rumdl leaves a path that climbs out of KARO_HOME" "$tmp/wt2/standup/2026-01-02.md"
+mv rule/frontmatter-schema.yaml rule/schema.yaml
+edit "a check that cannot run exits 2 with its reason" "$v/standup/2026-01-04.md" "${note//01-01/01-04}" 2 "karo-check: no schema"
+mv rule/schema.yaml rule/frontmatter-schema.yaml
 edit "a file outside KARO_HOME is not checked" "$tmp/wt/standup/2026-01-02.md" $'## 例' 0 ""
 kept "rumdl leaves a file outside KARO_HOME" "$tmp/wt/standup/2026-01-02.md"
 

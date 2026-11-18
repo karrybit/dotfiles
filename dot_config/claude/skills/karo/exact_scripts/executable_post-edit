@@ -1,12 +1,16 @@
 #!/bin/sh
-# PostToolUse hook for Edit|Write: runs rumdl fmt on a .md file written under KARO_HOME, and then fmcheck
-# (beside this script) on it from KARO_HOME, which checks only a record note. A problem goes to Claude on
-# stderr with exit 2; the edit is already made, and the commit script stops it from landing.
+# PostToolUse hook for Edit|Write: runs rumdl fmt on a .md file written under KARO_HOME, and then
+# karo-check --only on it from KARO_HOME. rumdl's fix is silent and never fails the hook; a karo-check
+# problem goes to Claude on stderr with exit 2. The edit is already made, and the commit script stops it
+# from landing. A path that climbs with .. is left alone, since it may lead out of KARO_HOME, and a hidden
+# path (a worktree under .claude/) is only formatted, since karo-check does not read it.
 # Environment: KARO_HOME (default ~/karo).
 karo=${KARO_HOME:-$HOME/karo}
 f=$(jq -r '.tool_input.file_path // empty')
-case $f in "$karo"/*.md) ;; *) exit 0 ;; esac
+case $f in */../*) exit 0 ;; "$karo"/*.md) ;; *) exit 0 ;; esac
 rumdl fmt "$f" >/dev/null 2>&1
+p=${f#"$karo"/}
+case /$p in */.*) exit 0 ;; esac
 bin=$(cd "$(dirname "$0")" && pwd)
 cd "$karo" || exit 0
-out=$("$bin/fmcheck" "${f#"$karo"/}" 2>&1) || { printf '%s\n' "$out" >&2; exit 2; }
+out=$("$bin/karo-check" --only "$p" 2>&1) || { printf '%s\n' "$out" >&2; exit 2; }

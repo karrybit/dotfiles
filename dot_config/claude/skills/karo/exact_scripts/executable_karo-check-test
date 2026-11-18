@@ -2,7 +2,7 @@
 # Show that karo-check can tell a valid vault from a broken one: a small valid vault must pass, each
 # broken note in a copy of it must be reported, and a copy of the real vault with one note broken must fail.
 # The cases break what the karo checks and the karo schema decide, and how okf-lint's results are counted with
-# them; okf-lint's own checks are tested by okf-lint-test beside okf-lint.
+# them; okf-lint's own checks are tested by okf-lint-test beside this script.
 # usage: karo-check-test [<karo dir>]   (default KARO_HOME or ~/karo, read only: the small vault takes its
 #        rule/frontmatter-schema.yaml, and the real vault is its copy; the copies go to a temporary
 #        directory and are removed)
@@ -41,6 +41,10 @@ cases=(
   'meeting notes outside source/meeting/|source/2026-01-01-demo.md	path does not match Meeting Notes|mv source/meeting/2026-01-01-demo.md source/2026-01-01-demo.md'
   'review name without a task ID|path does not match Review|mv project/repo/github.com/acme/demo/review/t-test0001-1.md project/repo/github.com/acme/demo/review/demo.md'
   'document without description|missing description|sed -i.bak "/^description:/d" doc/demo.md'
+  'missing date and projects|investigation/2026-01-01-example.md	missing projects|sed -i.bak "/^date:/d; /^projects:/,/^  - all/d" investigation/2026-01-01-example.md'
+  'unparseable frontmatter|doc/demo.md	unparseable frontmatter|sed -i.bak "s/^description: .*/description: a: b/" doc/demo.md'
+  'date not YYYY-MM-DD|doc/demo.md	date is not YYYY-MM-DD|sed -i.bak "s/^date: 2026-01-01/date: 2026-1-1/" doc/demo.md'
+  'removed note still linked|doc/demo.md	link target missing: project/repo/github.com/acme/demo.md|rm project/repo/github.com/acme/demo.md'
 )
 for c in "${cases[@]}"; do
   name=${c%%|*}; rest=${c#*|}; want=${rest%%|*}; cmd=${rest#*|}
@@ -49,6 +53,16 @@ for c in "${cases[@]}"; do
   out=$("$bin/karo-check" "$copy" 2>&1); code=$?
   if [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -q -- "$want"; then pass "$name"; else fail "$name: exit $code, want /$want/: $out"; fi
 done
+
+# What karo-check does not read passes: an unclosed [[ and wiki links in code, an excluded original, a
+# .md outside the record folders without frontmatter, and a file that is not .md.
+copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"
+printf '\n[[meet] と `[[a]]`\n\n```\n[[b]]\n```\n' >> "$copy/doc/demo.md"
+mkdir -p "$copy/investigation/2026-01-01-example/sources" "$copy/thread"
+printf '## 原文\n\n[[x]]\n' > "$copy/investigation/2026-01-01-example/sources/a.md"
+printf '## 例\n' > "$copy/thread/t-test0001-demo.md"
+printf '例\n' > "$copy/doc/demo.txt"
+if out=$("$bin/karo-check" "$copy" 2>&1); then pass "what karo-check does not read passes"; else fail "what karo-check does not read: $out"; fi
 
 # okf-lint's problems are counted with the karo checks' problems, once each, under karo-check's count line.
 copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"
@@ -62,9 +76,11 @@ else
   fail "okf-lint and karo problems counted together: exit $code: $out"
 fi
 
-# Without okf-lint or a schema, or when okf-lint finds an argument or schema error, karo-check stops without a count.
-out=$(HOME=$tmp/nohome "$bin/karo-check" "$ok" 2>&1); code=$?
-if [[ $code -eq 2 && $out == "karo-check: okf-lint not found at "* && $out != *$'\n'* ]]; then pass "missing okf-lint stops"; else fail "missing okf-lint: exit $code: $out"; fi
+# An --only run says so in its count lines, so it is not read as a whole run.
+out=$("$bin/karo-check" --only doc/demo.md "$ok" 2>&1); code=$?
+if [[ $code -eq 0 ]] && printf '%s\n' "$out" | rg -qxF 'karo-check: 0 problem(s) in the --only scope'; then pass "only: the count line names the scope"; else fail "only: count line: exit $code: $out"; fi
+
+# Without a schema, or when okf-lint finds an argument or schema error, karo-check stops without a count.
 copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"; rm "$copy/rule/frontmatter-schema.yaml"
 out=$("$bin/karo-check" "$copy" 2>&1); code=$?
 if [[ $code -eq 2 && $out == "karo-check: no schema at "* && $out != *$'\n'* ]]; then pass "missing schema stops"; else fail "missing schema: exit $code: $out"; fi
@@ -76,15 +92,15 @@ if [[ $code -eq 2 && $out == *"has no types map"* && $out != *"karo-check: "* ]]
 # problems it is and nothing more, and no command in it runs.
 # hostile <name> <expected problem count> <expected problem (fixed string)> <line in investigation/2026-01-01-example.md> <replacement> [<--only path>]
 hostile() {
-  local name=$1 n=$2 want=$3 old=$4 new=$5 c out code args=()
+  local name=$1 n=$2 want=$3 old=$4 new=$5 c out code args=() in=
   copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"
   c=$(<"$copy/investigation/2026-01-01-example.md")
   [[ $c == *"$old"* ]] || { fail "$name: could not break the copy"; return; }
   printf '%s%s%s\n' "${c%%"$old"*}" "$new" "${c#*"$old"}" > "$copy/investigation/2026-01-01-example.md"
-  [[ -n ${6:-} ]] && args=(--only "$6")
+  [[ -n ${6:-} ]] && { args=(--only "$6"); in=" in the --only scope"; }
   out=$("$bin/karo-check" ${args[@]+"${args[@]}"} "$copy" 2>&1); code=$?
   if [[ -e $copy/pwned ]]; then fail "$name: a command in a value ran"
-  elif [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -qF -- "$want" && printf '%s\n' "$out" | rg -qxF "karo-check: $n problem(s)"; then pass "$name"
+  elif [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -qF -- "$want" && printf '%s\n' "$out" | rg -qxF "karo-check: $n problem(s)$in"; then pass "$name"
   else fail "$name: exit $code, want $n problem(s) with '$want': $out"; fi
 }
 hostile 'status with a newline and a forged @info' 2 'unknown project: nope' '  - all' $'  - nope\nstatus: "x\\n@info|Bogus"'
@@ -120,6 +136,9 @@ printf '[[secret]]\n' > "$tmp/outside.md"
 ln -s "$tmp/outside.md" "$tmp/linked/doc/link.md"
 out=$("$bin/karo-check" --only doc/link.md "$tmp/linked" 2>&1)
 if printf '%s\n' "$out" | rg -qF '[[secret]]'; then fail "only: a symbolic link is read through: $out"; else pass "only: a symbolic link is not read through"; fi
+# A given hidden path, such as a worktree under .claude/, is left out as a whole run leaves it out.
+mkdir -p "$tmp/linked/.claude/worktrees/w/doc" && printf '[[hidden]]\n' > "$tmp/linked/.claude/worktrees/w/doc/a.md"
+if out=$("$bin/karo-check" --only .claude/worktrees/w/doc/a.md "$tmp/linked" 2>&1); then pass "only: a hidden path is not read"; else fail "only: a hidden path: $out"; fi
 
 # A task ID is a prefix of a letter and letters or digits, then one or more hyphenated parts of letters or
 # digits, a child with ".<n>" added, whatever the prefix; an ID out of the form fails.

@@ -122,10 +122,44 @@ rm "$v/investigation/2026-01-02-new.md"
 printf '\n欠けの前の追記\n' >> "$v/investigation/2026-01-01-demo.md"
 printf -- '---\ntype: Investigation\ndescription: 例。\n---\n\n## 例\n' > "$v/investigation/2026-01-02-bad.md"
 run "t-test0001: 欠け" "本文" investigation/2026-01-01-demo.md investigation/2026-01-02-bad.md
-ng "fmcheck's problem stops" $'investigation/2026-01-02-bad.md\tmissing date'
+ng "karo-check's problem stops" $'investigation/2026-01-02-bad.md\tmissing date'
 if git -C "$v" diff --quiet -- investigation/2026-01-01-demo.md; then fail "the stopped write is kept: the file was reset"; else pass "the stopped write is kept"; fi
 git -C "$v" checkout -q -- investigation/2026-01-01-demo.md
 rm "$v/investigation/2026-01-02-bad.md"
+
+# A file name git would quote (not ASCII) is checked like any other.
+printf -- '---\ntype: Investigation\ndescription: 例。\n---\n\n## 例\n' > "$v/investigation/2026-01-02-調査.md"
+run "t-test0001: 名前" "本文" investigation/2026-01-02-調査.md
+ng "a bad note with a name that is not ASCII stops" $'investigation/2026-01-02-調査.md\tmissing date'
+rm "$v/investigation/2026-01-02-調査.md"
+
+# A name with a space commits; a path with a newline is refused before anything is staged.
+printf -- '---\ntype: Investigation\ndescription: 例。\ndate: 2026-01-02\nprojects:\n  - all\n---\n\n## 例\n' > "$v/investigation/2026-01-02-a b.md"
+run "t-test0001: 空白" "本文" "investigation/2026-01-02-a b.md"
+if [[ $code -eq 0 && $out == "OK "* ]]; then pass "a name with a space commits"; else fail "a name with a space: exit $code: $out"; fi
+before=$(head_)
+run "t-test0001: 改行" "本文" $'investigation/2026-01-02-a\nb.md'
+ng "a path with a newline is refused" "not a record path"
+
+# A rename or a removal that leaves a link to the old path stops, and the files stay as they are; with
+# the link fixed and listed too, the rename commits.
+printf -- '---\ntype: Investigation\ndescription: 例。\ndate: 2026-01-02\nprojects:\n  - all\n---\n\n## 例\n' > "$v/investigation/2026-01-02-old.md"
+printf -- '---\ntype: Investigation\ndescription: 例。\ndate: 2026-01-02\nprojects:\n  - all\n---\n\n## 例\n\n[前の調べ物](investigation/2026-01-02-old.md)\n' > "$v/investigation/2026-01-02-next.md"
+run "t-test0001: 足す" "本文" investigation/2026-01-02-old.md investigation/2026-01-02-next.md
+before=$(head_)
+mv "$v/investigation/2026-01-02-old.md" "$v/investigation/2026-01-02-new-name.md"
+run "t-test0001: 名前を変える" "本文" investigation/2026-01-02-old.md investigation/2026-01-02-new-name.md
+ng "a rename that leaves a link stops" $'investigation/2026-01-02-next.md\tlink target missing: investigation/2026-01-02-old.md'
+if [[ -f $v/investigation/2026-01-02-new-name.md && ! -e $v/investigation/2026-01-02-old.md ]]; then pass "the stopped rename is kept"; else fail "the stopped rename: $(git -C "$v" status --porcelain)"; fi
+rm "$v/investigation/2026-01-02-new-name.md"
+run "t-test0001: 消す" "本文" investigation/2026-01-02-old.md
+ng "a removal that leaves a link stops" $'investigation/2026-01-02-next.md\tlink target missing: investigation/2026-01-02-old.md'
+git -C "$v" checkout -q -- investigation/2026-01-02-old.md
+mv "$v/investigation/2026-01-02-old.md" "$v/investigation/2026-01-02-new-name.md"
+sed -i.bak 's#investigation/2026-01-02-old.md#investigation/2026-01-02-new-name.md#' "$v/investigation/2026-01-02-next.md" && rm "$v/investigation/2026-01-02-next.md.bak"
+run "t-test0001: 名前を変える" "本文" investigation/2026-01-02-old.md investigation/2026-01-02-new-name.md investigation/2026-01-02-next.md
+if [[ $code -eq 0 && $out == "OK "* && -z $(git -C "$v" status --porcelain -- investigation) ]]; then pass "a rename with its link fixed commits"; else fail "a rename with its link fixed: exit $code: $out: $(git -C "$v" status --porcelain)"; fi
+before=$(head_)
 
 # rumdl leaves reviews alone, so git diff --check catches a blank line at the end of one.
 printf '\n' >> "$v/project/repo/github.com/acme/demo/review/t-test0001-1.md"
