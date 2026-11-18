@@ -27,7 +27,7 @@ description: 'HTML の解説を git の外の store（`$KARO_DATA_HOME/html/<UUI
 - `source` は、元の資料が git の資料かどうかで次の 2 つの形のどちらかにする。
   - git の資料: `kind` は `git`。`repository` はリモートの URL（`git remote get-url origin`）で、リモートがなければ ghq の形の `local/<owner>/<repo>`。`path` はリポジトリの中の相対パス。`revision` は読んだ commit の 40 桁（`git rev-parse <commit>`）。
   - git でない資料: `kind` は資料の種類（`confluence`、`web` など）、`location` は URL、`version` はページの版の番号（取れたときだけ）。
-- 任意は、`tasks`（解説を頼まれたタスク ID）、`projects`（`karo:frontmatter` skill の `projects` の行の値）。
+- 任意は、`tasks`（解説を頼まれたタスク ID）、`projects`（`karo:record` skill の `frontmatter.md` の「フィールド」の `projects` の行の値）。
 - 入れるのは上の項目の値だけにする。HTML の本文、絶対パス、秘密、個人名は入れない。
 
 <example>
@@ -77,7 +77,7 @@ description: 'HTML の解説を git の外の store（`$KARO_DATA_HOME/html/<UUI
 4. `karrybit:explain` skill を Skill tool で呼び、その手順を最後まで進める。渡す値は次のとおり。
    - HTML の書き先: `<一時フォルダ>/index.html`。
    - 控えのファイル: `<一時フォルダ>/metadata.json`。書き方の規則は上の「metadata.json」。入れる値は、3 の id と `created_at`、1 の `source`、頼まれたタスクとプロジェクトで、`title` は HTML の題にする。検査は上の「metadata.json」の検査のコマンド。
-   - 説明の文書の書き先: オーナーが説明の文書も残すよう頼んだときだけ渡す。書き先は `$KARO_HOME/doc/<話題>.md`、フロントマターは `karo:frontmatter` skill の種類の表の `Document` の行（sources は元の資料と版）、検査は `<karo-check> --only doc/<話題>.md`。`$KARO_HOME` の記録なので、書いたあとは `karo:record` skill に従う。
+   - 説明の文書の書き先: オーナーが説明の文書も残すよう頼んだときだけ渡す。書き先は `$KARO_HOME/doc/<話題>.md`、フロントマターは `karo:record` skill の `frontmatter.md` の「種類」の `Document` の行（sources は元の資料と版）、検査は `<karo-check> --only doc/<話題>.md`。`$KARO_HOME` の記録なので、書いたあとは `karo:record` skill に従う。
    - 頼まれた内容の原文: 頼まれた発言の本文と時刻。今のセッションにない過去の発言は、`karo:recall` skill で引く。
    - 呼び出し側が元の資料の場所・版・読み方を渡したときは、それもそのまま渡す。
 

@@ -1,14 +1,11 @@
----
-name: frontmatter
-description: '$KARO_HOME のノートのフロントマター（type、項目の埋め方、置き場所）の書き方と、状態が変わったときに直すフィールド。ノートを作る・直すとき、フロントマターを書くとき、karo-check がフロントマターの問題を出したときに使う。'
-user-invocable: false
----
-
 # 記録のフロントマター
 
+記録のノートを作るとき、ノートのフロントマターを書くか直すとき、karo-check がフロントマターの問題を出したとき、調べ物の依頼にノートの規則として渡すときに読む。
+
 - `$KARO_HOME` の記録のフォルダ（`$KARO_HOME/AGENTS.md` の「書き込み先」の表のフォルダ）のノートは、1 行目から OKF（Open Knowledge Format v0.2）の YAML フロントマターを持つ。
-- 層・鮮度の考え方（何をいつ書くか）は `karrybit:data-information-design` skill にあり、この skill は karo のフィールドの書き方を持つ。
-- 種類ごとの必須のフィールドと置き場所は `$KARO_HOME/rule/frontmatter-schema.yaml` が正本で、`~/.config/claude/skills/karo/scripts/karo-check` がそれで確かめる。schema のキー（`types`・`layers`・`paths`・`exclude`）の意味は `karrybit:okf-lint` skill の「schema の形」にある。
+- 層・鮮度の考え方（何をいつ書くか）は `karrybit:data-information-design` skill にあり、このファイルは karo のフィールドの書き方を持つ。
+- 種類ごとの必須のフィールドと置き場所の正本は `$KARO_HOME/rule/frontmatter-schema.yaml` で、下の「種類」の表の置き場所はその読みやすい形。食い違ったら schema に合わせる。schema のキー（`types`・`layers`・`paths`・`lineage`・`files`・`exclude`）の意味は karo の `scripts/okf-lint` の冒頭にある。
+- `~/.config/claude/skills/karo/scripts/karo-check` が、schema と下の「フィールド」の `date`・`tasks`・`projects` の形と wiki link を確かめる。確かめることの範囲は `scripts/karo-check` の冒頭にある。
 - 対象はこれらのフォルダの `.md` すべてで、対象にしないものは `frontmatter-schema.yaml` の `exclude` にある（imozuru が書く `investigation/YYYY-MM-DD-<話題>/sources/` の原文など）。
 
 ## フィールド
@@ -56,4 +53,4 @@ user-invocable: false
 | ノートが別のタスクにも使われるようになった | `tasks` にそのタスク ID を足す |
 | タスクの状態・優先度・担当が変わった | なし（`bd` で変える。`karo:tasks` skill） |
 
-- 表の出来事が起きたら、`$KARO_HOME/AGENTS.md` の「記録の更新」の書き込みと一緒にフィールドを直し、同じ commit に入れる。完了条件: 表の右の列のフィールドを直したファイルが、その commit に入っている。
+- 表の出来事が起きたら、`$KARO_HOME/AGENTS.md` の「記録の更新」の書き込みと一緒にフィールドを直し、同じ commit に入れる。表の右の列のフィールドを直したファイルを、その commit のパスに並べる。

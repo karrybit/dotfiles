@@ -40,7 +40,7 @@ description: '$KARO_HOME のタスク・判断待ち・決定を Beads（bd）�
 
 ### 置き場所と書く人
 
-- DB は `$KARO_HOME/.beads` の 1 つで、`$KARO_HOME` の git には入れない（`bd init --stealth`。karo-check が確かめる）。プロジェクトは label `project:<名前>` で分ける。`<名前>` はノートの `projects` の値と同じ形（`karo:frontmatter` skill。例 `project:github.com/acme/demo`）。
+- DB は `$KARO_HOME/.beads` の 1 つで、`$KARO_HOME` の git には入れない（`bd init --stealth`。karo-check が確かめる）。プロジェクトは label `project:<名前>` で分ける。`<名前>` はノートの `projects` の値と同じ形（`karo:record` skill の `frontmatter.md` の「フィールド」。例 `project:github.com/acme/demo`）。
 - ID・type・status・設定は bd の既定のまま使う。
 - `bd` で書くのは karo だけにする。作業 Agent と Review Agent のブリーフの制約には「`bd` を実行しない。タスクの状態を変えない」の 1 行を入れ、Agent の完了報告は karo が `bd comment` で入れる。
 
