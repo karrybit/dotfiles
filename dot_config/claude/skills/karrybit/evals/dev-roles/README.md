@@ -51,7 +51,7 @@ Both plugin copies hold the whole `karrybit` plugin, so the agents' `skills:` re
 - `fixtures/slug`: a one-file library whose `slugify` drops digits (D-2).
 - `fixtures/export-api`: export functions without `get_export` (I-1, R-4, and the `base` commit of V-1, V-2, and V-3). `fixtures/export-api-v1` adds a `get_export` without the tenant comparison and a test named `test_other_tenant_is_denied` that passes another tenant's `tenant_id`, so it looks like AC-3 coverage while only the authorization check runs; `fixtures/export-api-v2` adds the correct one, with tests for the caller's own export, a missing ID, another tenant's export, and, on a store that fails when read, another tenant's ID and a member. Their `fixture.sh` commits `export-api`, tags it `base`, and commits the v1 or v2 copy on top.
 - `fixtures/period-filter`: a period filter whose code and docstring include the end, while `docs/spec.md` and the failing test exclude it (I-2).
-- `canary.patch`: removes every `## ` section except `## 出典` from four agents, keeping the frontmatter and the role paragraph; `system-designer` already has only its frontmatter and role paragraph, so the canary leaves it as it is; apply it with `patch -p1 -d <plugin copy>/agents`. Each belief's action is restated in the steps, the report items, and the completion gates, so a canary that removes only `## 信条` keeps those rules.
+- `canary.patch`: removes every `## ` section except `## 出典` from the five agents, keeping the frontmatter and the role paragraph; apply it with `patch -p1 -d <plugin copy>/agents`. Each belief's action is restated in the steps, the report items, and the completion gates, so a canary that removes only `## 信条` keeps those rules.
 - `evals.json`, `grade.py`: the script assertions above, run by `scripts/grade-kept`. `evals.json` lists every case so `grade-kept` finds a fixture for each; `grade.py` grades the six cases that have assertions. `grade-kept` lays out runs by fixture name, so run it on a result file whose cases have distinct fixtures (R-4 shares `export-api` with I-1).
 
 ## Settings for This Suite
@@ -64,7 +64,7 @@ Both plugin copies hold the whole `karrybit` plugin, so the agents' `skills:` re
 
 1. Build the two plugin copies from the checkout to evaluate, in a `DIR` outside the repository whose path has no `eval`, `test`, or `scratchpad`:
    `chezmoi archive -S <checkout> --format tar ~/.config/claude/skills/karrybit | tar -x -C DIR/with`, then `cp -R DIR/with DIR/canary` and `patch -p1 -d DIR/canary/.config/claude/skills/karrybit/agents -i <checkout>/dot_config/claude/skills/karrybit/evals/dev-roles/canary.patch`.
-   Completion: `rg -c '^## ' DIR/canary/.config/claude/skills/karrybit/agents` prints a count of 1 (`## 出典`) for each of the four agents other than `system-designer`, which has no `## ` section.
+   Completion: `rg -c '^## ' DIR/canary/.config/claude/skills/karrybit/agents` prints a count of 1 (`## 出典`) for each of the five agents.
 2. Run `v-1-missing-tenant-check` once with `--runs 1 --ablation none` against `DIR/with`.
    Completion: the run's `error` is `null`, and its trace shows the verifier ran the tests with exit code 0.
 3. For each role, run its first case (R-1, S-1, D-1, I-1, V-1) three times against `DIR/with` (two arms) and against `DIR/canary` (`--ablation none`), select it with `--case`, and run `grade-kept` for I-1 and V-1. Read the result against the table below before running that role's other cases with `--tag`.
