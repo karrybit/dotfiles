@@ -48,4 +48,22 @@ All cases share `fixtures/orders`, built by `fixtures/orders/build.sh` into four
 
 ## What the Suite Separates
 
-Not yet measured.
+Measured with `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`, three runs per arm, and pstack 0.15.36. Each cell is a grader's passes, leaving out `no-edit` and `no-write`, which pass every run of every arm. "d208033" and "bb12130" are the with-arm on the skill at that commit; bb12130 asks for pstack's procedure in full and routes every why question to `why`. "direct" ran on pstack alone at ba31538's suite.
+
+| Case | Grader | d208033 | baseline | bb12130 | direct |
+| --- | --- | --- | --- | --- | --- |
+| SI-1 | `path-traced` | 3/3 | 3/3 | 3/3 | 3/3 |
+| SI-1 | `cites-lines` | 3/3 | 1/3 | 3/3 | 2/3 |
+| SI-2 | `states`, `cites-infra` | 3/3, 3/3 | 3/3, 3/3 | 3/3, 3/3 | - |
+| SI-3 | `reason`, `cites-source` | 3/3, 3/3 | 3/3, 3/3 | 3/3, 3/3 | 3/3, 3/3 |
+| SI-4 | `how-and-why` | 2/3 | 0/3 | 2/3 | 1/3 |
+| SI-5 | `contradiction` | 3/3 | 2/3 | 3/3 | - |
+| SI-6 | `no-invented-reason` | 3/3 | 3/3 | 3/3 | - |
+| SI-6 | `uses-why` | 0/3 | - | 3/3 | - |
+| SI-7 | `answer`, `no-pstack`, `no-agent` | 3/3 each | 3/3 each | 3/3 each | - |
+| SI-7 | `skill-fired` | 0/3 | - | 0/3 | - |
+
+- Summed `costUsd` over three runs, d208033 against baseline: SI-1 0.61 and 0.34, SI-2 0.62 and 0.43, SI-3 0.48 and 0.24, SI-4 0.53 and 0.26, SI-5 0.52 and 0.31, SI-6 0.47 and 0.35, SI-7 0.18 and 0.13. At bb12130: SI-1 2.38, SI-2 2.30, SI-3 0.48, SI-4 0.61, SI-5 1.88, SI-6 0.44, SI-7 0.18. direct: SI-1 0.46, SI-3 0.55, SI-4 0.39.
+- At d208033 no with-arm run started a subagent. At bb12130 every run of SI-1, SI-2, and SI-5 started one explainer, which accounts for their higher cost, and no run of SI-3, SI-4, or SI-6 started `why`'s investigators: the replies say the ADR and commits held the answer. No direct run started a subagent either.
+- Every failing `how-and-why` run that was read (d208033's one, the baseline's three, and direct's two) could not run `git` (see "Settings for This Suite") and said the commit body was unread, so the SI-4 gap measures finding a working `git` more than the skill's rules. The failing SI-5 baseline run reports a gap between the ADR and the worker's code and leaves out `docs/architecture.md`.
+- SI-7 does not fire the skill; it guards that a one-function question stays cheap.
