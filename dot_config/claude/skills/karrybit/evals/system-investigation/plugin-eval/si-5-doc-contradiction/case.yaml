@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: si-5-doc-contradiction
+context:
+  scaffold_script: fixture.sh
