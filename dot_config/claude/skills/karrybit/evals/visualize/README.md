@@ -9,6 +9,7 @@ Three roles keep the answers from leaking out of the source or the answer key:
 | Role | Runs as | Sees | Writes |
 | --- | --- | --- | --- |
 | Question setter | a new subagent with `setter.md`, once per source and version | the source only | `questions.md` and `key.md` |
+| Opportunity spotter | a new subagent with `spotter.md`, once per source | the source only | `opportunities.md` |
 | Answerer | `ask.sh` with `answerer.md`, once per HTML (or explanation document) | `questions.md` and the page as screenshots, or `document.md` | `out.json` |
 | Matcher | `ask.sh` with `matcher.md`, once per answer set | `key.md` and the answers, without the version label | `out.json` |
 
@@ -17,6 +18,7 @@ Three roles keep the answers from leaking out of the source or the answer key:
 ## Files
 
 - `setter.md`: the request template for the question setter.
+- `spotter.md`: the request template for the opportunity spotter, which lists, with an importance, the places in the source where a figure beside the text would make a relation easier to see, trace, compare, or bound. Every `rubric.md` evaluator of the source gets the same `opportunities.md`, so its 観点 5 and gate S8 judge every version against the same list.
 - `answerer.md`, `answerer.schema.json`: the answerer's prompt and output schema (answer, where it was found, which element type, how a figure helped, where it hesitated).
 - `matcher.md`, `matcher.schema.json`: the matcher's prompt and output schema (`正答`, `部分`, `誤り`, `答えなし`, points hit, misconception, whether the misconception came from a figure).
 - `shoot.mjs`: opens a page in headless Chrome at 1280×900 with reduced motion, opens every `<details>`, and saves one screenshot per 800 px of scroll; it stops with an error when a screen is not at its scroll position. Chrome cannot start inside the command sandbox, so run it outside.
@@ -24,8 +26,8 @@ Three roles keep the answers from leaking out of the source or the answer key:
 
 ## Running
 
-1. Fill `setter.md` for the source and version and hand it to a new subagent; keep `questions.md` and `key.md` outside every folder given to an answerer. Have the owner read the question list once and replace one or two questions, then freeze both files.
-   Completion: `questions.md` and `key.md` hold the same ids in the same order.
+1. Fill `setter.md` for the source and version and hand it to a new subagent; keep `questions.md` and `key.md` outside every folder given to an answerer. Have the owner read the question list once and replace one or two questions, then freeze both files. Fill `spotter.md` for the source and hand it to another new subagent; have the owner read `opportunities.md` once, then freeze it.
+   Completion: `questions.md` and `key.md` hold the same ids in the same order, and every opportunity in `opportunities.md` has an importance.
 2. For each HTML, run `node shoot.mjs <page.html> <dir>/view`, copy `questions.md` into `<dir>/view`, and run `bash ask.sh <dir>/view answerer.md answerer.schema.json claude-sonnet-5-5 1.5` three times, each in its own `<dir>` holding the same screenshots. For the explanation-document control, put the Markdown in `<dir>/view` as `document.md` instead of the screenshots.
    Completion: `<dir>/view/out.json` holds one answer per question, and the summary shows 0 denied calls.
 3. For each answer set, copy `key.md` and `<dir>/view/out.json` (as `answers.json`) into `<dir>/match`, and run `bash ask.sh <dir>/match matcher.md matcher.schema.json claude-opus-5-5 0.5`.
@@ -55,3 +57,4 @@ Each input ran three times; the cells give the mean and the range.
 - The answerer is a model, not a person. It reads every word on a screen, so it gains less from a figure's layout than a person does and can answer from a list just as well; a gap in correct answers understates a gap in human comprehension.
 - The setter and the producer of the HTML may be the same model, so their questions can resemble each other; the owner's replacement in Running step 1 offsets this.
 - Screenshots show the page with every `<details>` open and no other interaction.
+- The spotter is a model too and can miss an opportunity; each `rubric.md` evaluator adds the ones it finds, and a missed opportunity it reports beyond the frozen list counts only when it states the reader's harm.
