@@ -38,7 +38,7 @@ user-invocable: false
 | `project/misc/<theme>/YYYY-MM-DD-<資料名>.md` | `Playbook` | 下書きのあいだは `status: draft` |
 | `project/design/YYYY-MM-DD-design-doc-<話題>.md` | `Design Doc` | `date` はファイル名。`status` は書かない |
 | `project/repo/<vcs>/<org>/<repo>/review/` | `Review` | `tasks` はファイル名のタスク ID。`resource` はレビューした PR |
-| `source/meeting/YYYY-MM-DD-<MTG>.md` | `Meeting Notes` | `sources` に議事録・資料ごとの URL と名前 |
+| `source/meeting/YYYY-MM-DD-<MTG>.md` | `Meeting Notes` | 1 つのファイルに 1 つの MTG だけを置き、本文の `## ` の見出しの 1 つをその MTG の名前にする。`sources` には、その MTG の議事録と資料だけを、1 つずつ URL と名前で書く |
 | `investigation/YYYY-MM-DD-<話題>.md` | `Investigation` | `sources` に読んだ外の原文 |
 | `doc/<話題>.md` | `Document` | `sources` に外の元の資料 |
 | `investigation/YYYY-MM-DD-<話題>/map.md` | `Research Map` | `description` は `題:` のあとの文（`題:` は付けない） |

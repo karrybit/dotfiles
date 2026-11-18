@@ -33,6 +33,10 @@
 .config/claude/skills/karo/skills/review/PROVENANCE.md
 .config/claude/skills/karo/skills/setup/PROVENANCE.md
 
+# The karo plugin has no subagents. The source has no agents folder, so
+# nothing makes chezmoi remove a deployed one otherwise.
+.config/claude/skills/karo/agents
+
 # The command that opens the karo workspace is karo.
 .local/bin/cos
 

@@ -76,8 +76,9 @@
   it; keep owner-specific values out of it and read them from the caller's
   arguments or from `$KARO_CONFIG_HOME/config.yaml`,
   `$KARO_HOME/rule/<skill>.md`, and `$KARO_HOME/project/repo/<name>.md`,
-  each with a default for when the file is missing. Its subagents are in its
-  `exact_agents/`, called `karo:<agent>`. Its hooks are in its
+  each with a default for when the file is missing. It has no subagents: a
+  karo skill hands work to a `karrybit` subagent and passes the karo rules in
+  the request. Its hooks are in its
   `exact_hooks/hooks.json`, which Claude Code merges with the project's
   settings hooks, so keep them out of the project's settings: a hook in both
   runs twice.

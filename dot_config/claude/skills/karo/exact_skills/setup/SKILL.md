@@ -18,7 +18,7 @@ description: 別のマシンで、karo と $KARO_HOME の仕組みが動くか�
    ```
 
    完了条件: 出力が空か、`missing:` の行の一覧をオーナーに示している。
-2. `claude plugin list` を実行し、`karrybit@skills-dir` と `karo@skills-dir` が読み込まれているか、`imozuru` の plugin（`karo:researcher` が使う）が入っているかを確かめる。`$KARO_HOME/rule/checkin.md` と `$KARO_HOME/rule/checkout.md` があれば、そこで使う plugin と外のサービスの接続も確かめる（ファイルがなければ確かめない）。
+2. `claude plugin list` を実行し、`karrybit@skills-dir` と `karo@skills-dir` が読み込まれているか、`imozuru` の plugin（`karrybit:researcher` が分野を探る調査で使う）が入っているかを確かめる。`$KARO_HOME/rule/checkin.md` と `$KARO_HOME/rule/checkout.md` があれば、そこで使う plugin と外のサービスの接続も確かめる（ファイルがなければ確かめない）。
    完了条件: 確かめた plugin と接続のそれぞれについて、読み込まれているか、足りないことをオーナーに示している。
 3. `~/.config/claude/skills/karo/scripts/settings-test $KARO_HOME/.claude/settings.json` を単独で実行する。karo の hook は karo の `hooks/hooks.json` が登録するので、settings に同じ hook があると `FAIL` になる（hook が 2 回走る）。`FAIL` の行は、オーナーが `$KARO_HOME/.claude/settings.json` を直す（sandbox はその場所を書かせない）。
    完了条件: `settings-test: 0 failure(s)` が出たか、`FAIL` の行の一覧をオーナーに示している。
