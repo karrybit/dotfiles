@@ -1,5 +1,5 @@
 {
   "name": "karo",
-  "description": "Skills and scripts for the karo record repository at KARO_HOME, default ~/karo (Beads tasks and decisions, record commits and checks, check-in and check-out, delegation), called as /karo:<skill>. Enabled only by the settings of the project that uses it.",
+  "description": "Skills and scripts for the karo record repository at KARO_HOME, default ~/karo (Beads tasks and decisions, past conversations through cass, record commits and checks, check-in and check-out, delegation), called as /karo:<skill>. Enabled only by the settings of the project that uses it.",
   "defaultEnabled": false
 }

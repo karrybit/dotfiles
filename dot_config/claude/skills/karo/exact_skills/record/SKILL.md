@@ -6,7 +6,7 @@ user-invocable: false
 
 # 記録を書いて commit する
 
-- 記録のファイルは、`$KARO_HOME/AGENTS.md` の「書き込み先」の表の記録のファイル。タスク・判断待ち・決定は記録のファイルに書かず、`bd` で書く（`karo:beads` skill）。
+- 記録のファイルは、`$KARO_HOME/AGENTS.md` の「書き込み先」の表の記録のファイル。タスク・判断待ち・決定は記録のファイルに書かず、`bd` で書く（`karo:tasks` skill）。過去の会話も書き写さず、要るときは cass で引く（`karo:recall` skill）。
 - 下の `<scripts>` は `~/.config/claude/skills/karo/scripts` で、この `~/` の形のまま書く。
 
 ## 書く

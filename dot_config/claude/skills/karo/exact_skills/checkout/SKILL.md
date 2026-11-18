@@ -5,7 +5,7 @@ description: 一日の終わりに、karo が今日を振り返り、明日や�
 
 # Checkout
 
-- 記録の書き込みは、手順 4 の 1 つの commit にまとめる（`karo:record` skill）。タスクは Beads（`bd`）にあり、`bd` は `karo:beads` skill の「呼び方」に従い、1 つずつ単独のコマンドで実行する。
+- 記録の書き込みは、手順 4 の 1 つの commit にまとめる（`karo:record` skill）。タスクは Beads（`bd`）にあり、`bd` は `karo:tasks` skill の「呼び方」に従って実行する。
 
 ## 手順
 

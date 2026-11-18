@@ -7,11 +7,11 @@ description: Agent の成果物をレビューに回す手順。実装 Agent の
 
 - 取り込む前にオーナーが差分を読む作業は、「1」の 3 の既定と、`$KARO_HOME/rule/review.md` の「オーナーが差分を読む作業」の節で決まる。
 - 作業場所と取り込みの方法は、`karo:delegate` skill の「作業場所と取り込み」で決まる。
-- タスクの状態は、取り込むまで `in_progress` のままにし、レビューの段階は `bd comment <タスクID> --file <本文のファイル> --json` の comment で残す。comment の本文は、このセッションの scratchpad のファイルに書き、先頭の語（`報告:`・`レビュー依頼:`・`変更依頼:`・`承認:`・`メモ:`）は `karo:beads` skill の「comment の語」に従う。
+- タスクの状態とレビューの段階は、`karo:tasks` skill の「項目の対応」と「comment の語」のとおり、`bd comment <タスクID> --file <本文のファイル> --json` の comment で残す（取り込むまで `in_progress` のまま）。
 
 ## 1. 完了報告を受け取る
 
-1. 完了報告を読む。完了報告は、`karo:delegate` skill の「終わるのを待つ」の agent-report の通知の出力の 2 行目からにある。通知がないとき（会話を再開したあとなど）は、`<scripts>/agent-report <タスクID>` を単独で実行して読む（`<scripts>` は `karo:delegate` skill の冒頭）。完了報告に、`karrybit:completion-report` のひな形の見出しと、ブリーフの「完了時の報告」で足した見出しがそろっているかを確かめる。見出しが欠けていたら、`karo:delegate` skill の追加指示で埋めさせる。見出しがそろったら、完了報告の要旨（commit、テスト結果、残課題）と、Agent の worktree と branch（`karo:delegate` skill の冒頭の控えの `place` と `branch`）を `報告:` の comment で書く。残課題のうち別の仕事にするものは、`karo:beads` skill の「タスクを進める」の 1・2 で `bd create --deps discovered-from:<タスクID>` で作る。
+1. 完了報告を読む。完了報告は、`karo:delegate` skill の「終わるのを待つ」の agent-report の通知の出力の 2 行目からにある。通知がないとき（会話を再開したあとなど）は、`<scripts>/agent-report <タスクID>` を単独で実行して読む（`<scripts>` は `karo:delegate` skill の冒頭）。完了報告に、`karrybit:completion-report` のひな形の見出しと、ブリーフの「完了時の報告」で足した見出しがそろっているかを確かめる。見出しが欠けていたら、`karo:delegate` skill の追加指示で埋めさせる。見出しがそろったら、完了報告の要旨（commit、テスト結果、残課題）と、Agent の worktree と branch（`karo:delegate` skill の冒頭の控えの `place` と `branch`）を `報告:` の comment で書く。残課題のうち別の仕事にするものは、`karo:tasks` skill の「タスクを進める」の 1・2 で `bd create --deps discovered-from:<タスクID>` で作る。
    完了条件: 完了報告の項目がそろい、`報告:` の comment の JSON が出ている。
 2. PR があれば、`karrybit:publish-check` に PR の番号と worktree を渡して、ブランチ名、commit メッセージ、差分、PR の本文を調べさせる。`$KARO_HOME/rule/publish-terms.md` があれば、追加で探す語と形のファイルとして一緒に渡す。見つかったものは、レビューに回す前に `karo:delegate` skill の追加指示で元の Agent に直させる（commit メッセージは rebase で直させる）。そのリポジトリにもとからある語で直さないものは、3 の差分と一緒にオーナーに伝える。
    完了条件: `karrybit:publish-check` の報告が `見つかったもの: 0` か、残ったものすべてに直さない理由がある。
@@ -30,6 +30,7 @@ description: Agent の成果物をレビューに回す手順。実装 Agent の
    - 調べる観点: 既存アーキテクチャとの整合、呼び出し元と依存先への影響、既存実装との重複、関連ドキュメントとの不整合、テストや変更すべき箇所の漏れ
    - 指摘ごとに根拠のファイルパスと行番号を書く
    - 調べた範囲と調べていない範囲を分けて書き、調べていない範囲については問題の有無を書かない
+   - `bd` を実行しない。タスクの状態を変えない
    - 完了の報告は karrybit:completion-report に従い、結果は足す見出し「レビューの結果」に書く
 
    完了条件: 依頼のファイルがある。

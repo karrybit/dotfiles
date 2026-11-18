@@ -6,7 +6,7 @@ description: 一日の始まりに、Daily Standup として karo から報告�
 # Checkin
 
 - この skill は、`$KARO_HOME` の記録、Beads（`bd`）、Herdr から材料を集め、報告し、記録に残す手順を持つ。外の情報源（タスクの管理、チャット、予定表など）の取り方は、`$KARO_HOME/rule/checkin.md` の「外の情報源」の節にある。
-- `bd` は、`karo:beads` skill の「呼び方」に従い、1 つずつ単独のコマンドで実行する。
+- `bd` は、`karo:tasks` skill の「呼び方」に従って実行する。
 
 ## 手順
 
@@ -22,7 +22,7 @@ description: 一日の始まりに、Daily Standup として karo から報告�
    完了条件: `in_progress` のタスクの assignee と `herdr agent list` の名前のある Agent のすべてについて、Herdr の状態か「不明」（Herdr にいない assignee）が手元にあり、上の `bd` の出力がすべて手元にある（動いたタスクがなければ `bd show` は要らない）。「外の情報源」の節の源のそれぞれについて、結果か「取得できなかった」が手元にある（節がなければ、外の情報源を使わなかったことが手元にある）。
 2. 下の「報告の項目」を、前回からの変化とオーナーが対応すべきことを先にして、短く報告する。各項目にはタスク ID を付ける。
    完了条件: 5 つの項目がすべて報告にある。
-3. オーナーがその場で決めたことは、`karo:beads` skill の「判断待ちと決定」のとおり `bd` に書く。必要なら `karo:delegate` skill で Agent に指示する。
+3. オーナーがその場で決めたことは、`karo:tasks` skill の「判断待ちと決定」のとおり `bd` に書く。必要なら `karo:delegate` skill で Agent に指示する。
    完了条件: オーナーが決めたことごとに、`bd show <決定> --json` の close_reason に決定の文があるか、そのタスクに `決定:` の comment がある。
 4. 報告内容と決まったことを `$KARO_HOME/standup/YYYY-MM-DD.md` に追記し（ファイルがなければ `karo:record` skill の「書く」のとおりフロントマターから作る）、本文に Checkin の記録であることを書いて commit する（`karo:record` skill）。`$KARO_STATE_HOME/state.md` は Edit で更新し、commit に入れない。
    完了条件: commit が `OK` の行を出した。

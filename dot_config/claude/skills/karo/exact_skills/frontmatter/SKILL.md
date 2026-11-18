@@ -50,10 +50,10 @@ user-invocable: false
 | 出来事 | 直すフィールド |
 | --- | --- |
 | standup に追記した | なし |
-| 決定を新しい決定で置き換えた | なし（`bd supersede`。`karo:beads` skill の「判断待ちと決定」） |
+| 決定を新しい決定で置き換えた | なし（`bd supersede`。`karo:tasks` skill の「判断待ちと決定」） |
 | 下書きが仕上がった | `status: draft` の行を消す |
 | 調査や資料が新しいものに置き換わった | 古いほうに `status: deprecated` |
 | ノートが別のタスクにも使われるようになった | `tasks` にそのタスク ID を足す |
-| タスクの状態・優先度・担当が変わった | なし（`bd` で変える。`karo:beads` skill） |
+| タスクの状態・優先度・担当が変わった | なし（`bd` で変える。`karo:tasks` skill） |
 
 - 表の出来事が起きたら、`$KARO_HOME/AGENTS.md` の「記録の更新」の書き込みと一緒にフィールドを直し、同じ commit に入れる。完了条件: 表の右の列のフィールドを直したファイルが、その commit に入っている。
