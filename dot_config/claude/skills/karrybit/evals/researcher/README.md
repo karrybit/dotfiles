@@ -26,7 +26,7 @@ The copy holds the whole `karrybit` plugin, so the agent's `skills:` resolves `k
   - `report-check-line`: the reply has `check-note: 0 problem(s)`.
   - `reading-table`, `facts` (both decisions and both action items, and the undecided topic not written as decided), `report-items` (the five items, the check's last line, and the files to commit).
 - Both cases also have `role-fired`, a `tool_used` grader on `Agent` with `researcher`, marked `arm: with-only`, and `no-commit` and `no-bd`, regex graders on the trace that find no Bash command running `git commit` or `bd`. The trace holds the subagent's tool calls, so these graders see what the agent ran.
-- `grade.py` (run by `scripts/grade-kept`): `note-only`, the note is the only path that differs from the fixture; `check-passes`, `bin/check-note` exits 0 on the note (`record-rules`).
+- `grade.py` (run by `scripts/grade-kept`): `note-only`, the note is the only path that differs from the fixture; `check-passes`, the fixture's own `bin/check-note` exits 0 on the run's note (`record-rules`); `grade-kept` runs outside the sandbox, so `grade.py` runs no script from the workspace.
 
 ## Files
 

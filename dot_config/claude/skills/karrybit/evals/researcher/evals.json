@@ -9,7 +9,7 @@
       "name": "record-rules",
       "files": ["fixtures/records"],
       "note": "source/meeting/2026-11-17-weekly-sync.md",
-      "check": ["sh", "bin/check-note", "source/meeting/2026-11-17-weekly-sync.md"]
+      "check": "fixtures/records/bin/check-note"
     }
   ]
 }
