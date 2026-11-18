@@ -178,7 +178,52 @@
       "files": [
         "fixtures/order-status"
       ],
-      "assertions": []
+      "assertions": [
+        {
+          "id": "design-only",
+          "type": "script",
+          "text": "Every changed path is under docs/design/"
+        }
+      ]
+    },
+    {
+      "name": "i-5-structure-improvement",
+      "files": [
+        "fixtures/report-wrapper"
+      ],
+      "assertions": [
+        {
+          "id": "tests-pass",
+          "type": "script",
+          "text": "The run's tests pass"
+        }
+      ]
+    },
+    {
+      "name": "i-6-outside-the-diff",
+      "files": [
+        "fixtures/field-rename"
+      ],
+      "assertions": [
+        {
+          "id": "tests-pass",
+          "type": "script",
+          "text": "The run's tests pass"
+        }
+      ]
+    },
+    {
+      "name": "v-4-outside-the-diff",
+      "files": [
+        "fixtures/field-rename-v1"
+      ],
+      "assertions": [
+        {
+          "id": "worktree-unchanged",
+          "type": "script",
+          "text": "No path differs from HEAD"
+        }
+      ]
     }
   ]
 }

@@ -130,6 +130,8 @@ def check(assertion, repo, changed):
         return "app/period.py" in changed
     if assertion == "worktree-unchanged":
         return not changed
+    if assertion == "design-only":
+        return all(p.startswith("docs/design/") for p in changed)
     raise ValueError(f"unknown assertion {assertion}")
 
 
