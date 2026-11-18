@@ -136,7 +136,7 @@ description: '$KARO_HOME のタスク・判断待ち・決定を Beads（bd）�
 | 並べて進める計画 | `bv --robot-plan --format json` | `.plan.tracks[]` |
 | 1 つのタスクを止めている鎖 | `bv --robot-blocker-chain <ID> --format json` | `.result.root_blockers[]`、`.result.chain[]` |
 
-- 出力を使うのは、`.source_authority.state` が `complete` で `.source_authority.claim_safe` が true のときだけにする。bv は Beads を読めなくても終了コード 0 で返し、そのときはこの 2 つが `unknown` と false になる。
+- 出力を使うのは、`.source_authority.state` が `complete` で `.source_authority.claim_safe` が true のときだけにする。bv は、Beads の一部の行を読めなくても終了コード 0 で返し（state が `partial`）、Beads を見つけられないときも JSON を出す（state が `unknown`）。どちらも claim_safe は false になる。
 - 使う指標の `.status.<指標>.state` が `computed` でなければ（`skipped` など）、その指標は計算されていないと書く。
 - 出力が上の条件を満たさないとき、bv が失敗したとき、bv がないときは、「bv の分析は取れなかった」と理由（state か、エラーの 1 行）を書き、`bd ready`・`bd blocked` で答えられる範囲だけを答える。順位とボトルネックは、bd の一覧から推して埋めない。
 - 分析を報告するときは、bv の推薦であることと、`generated_at` と、絞った範囲（`--label`）を添える。
