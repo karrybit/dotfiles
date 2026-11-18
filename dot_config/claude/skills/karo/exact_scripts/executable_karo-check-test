@@ -16,12 +16,12 @@ fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
 pass() { printf 'ok\t%s\n' "$1"; }
 
 ok=$tmp/ok
-mkdir -p "$ok"/{standup,source/meeting,project/repo/github.com/acme/demo/review,investigation,doc,rule}
+mkdir -p "$ok"/{standup,source/meeting,project/repo/github.com/acme/demo/review,project/design,investigation,doc,rule}
 cp "$vault/rule/frontmatter-schema.yaml" "$ok/rule/" || exit 2
 printf -- '---\ntype: Project\ndescription: 例のプロジェクト。\nprojects:\n  - github.com/acme/demo\n---\n\n## demo\n' > "$ok/project/repo/github.com/acme/demo.md"
-# A project's reviews and Design Docs sit in the folder named after it.
+# A project's reviews sit in the folder named after it, and Design Docs sit in project/design/.
 printf -- '---\ntype: Review\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - github.com/acme/demo\n---\n\n## 結論\n\n承認\n' > "$ok/project/repo/github.com/acme/demo/review/t-test0001-1.md"
-printf -- '---\ntype: Design Doc\ndescription: 例の設計。\ndate: 2026-01-01\nprojects:\n  - github.com/acme/demo\nsources:\n  - https://example.invalid/design\n---\n\n## 例\n' > "$ok/project/repo/github.com/acme/demo/2026-01-01-design-doc-example.md"
+printf -- '---\ntype: Design Doc\ndescription: 例の設計。\ndate: 2026-01-01\nprojects:\n  - github.com/acme/demo\nsources:\n  - https://example.invalid/design\n---\n\n## 例\n' > "$ok/project/design/2026-01-01-design-doc-example.md"
 printf -- '---\ntype: Document\ndescription: 例の資料。\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - github.com/acme/demo\n---\n\n## 例\n\nt-test0001 の [demo](project/repo/github.com/acme/demo.md)\n' > "$ok/doc/demo.md"
 printf -- '---\ntype: Investigation\ndescription: 例の調べ物。\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - all\n---\n\n## 例\n' > "$ok/investigation/2026-01-01-example.md"
 # A day's standup is standup/<day>.md, and a meeting's notes sit in source/meeting/.

@@ -36,7 +36,7 @@ user-invocable: false
 | `standup/YYYY-MM-DD.md` | `Standup` | `date` はファイル名。`tasks` は報告で挙げたタスク |
 | `project/repo/<vcs>/<org>/<repo>.md`、`project/misc/<theme>.md` | `Project` | `resource` はリポジトリの URL（`misc/` は書かない）。`<vcs>/<org>/<repo>` は `resource` の URL のホストとパスで、リモートのないリポジトリは `local/<owner>/<repo>`。`projects` は自分の名前 |
 | `project/misc/<theme>/YYYY-MM-DD-<資料名>.md` | `Playbook` | 下書きのあいだは `status: draft` |
-| `project/repo/<vcs>/<org>/<repo>/YYYY-MM-DD-design-doc-<話題>.md` | `Design Doc` | `date` はファイル名。`status` は書かない |
+| `project/design/YYYY-MM-DD-design-doc-<話題>.md` | `Design Doc` | `date` はファイル名。`status` は書かない |
 | `project/repo/<vcs>/<org>/<repo>/review/` | `Review` | `tasks` はファイル名のタスク ID。`resource` はレビューした PR |
 | `source/meeting/YYYY-MM-DD-<MTG>.md` | `Meeting Notes` | `sources` に議事録・資料ごとの URL と名前 |
 | `investigation/YYYY-MM-DD-<話題>.md` | `Investigation` | `sources` に読んだ外の原文 |
