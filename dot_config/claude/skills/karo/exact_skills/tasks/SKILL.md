@@ -75,8 +75,8 @@ description: '$KARO_HOME のタスク・判断待ち・決定を Beads（bd）�
 
 1. 新しい仕事を受けたら、`bd search '<語>' --json`（title）と `bd list --all --desc-contains '<語>' --json`（本文）で、閉じたタスクも含めて似たタスクを探す。
    完了条件: 似たタスクがあればそこに comment か notes で足してある。なければ 2 に進む。
-2. `bd create '<title>' -t task -p 2 -l project:<名前> --acceptance '<受け入れ条件>' --body-file <本文> --json` で作る。分けた仕事は `--parent <ID>`、作業の中で見つかった仕事は `--deps discovered-from:<ID>`、順序は `bd dep add` で表す。
-   完了条件: ID が返り、`bd show <ID> --json` に title・description・label がある。
+2. `bd create '<title>' -t task -p 2 -l project:<名前> --acceptance '<受け入れ条件>' --body-file <本文> --json` で作る。分けた仕事は `--parent <ID>`、作業の中で見つかった仕事は `--deps discovered-from:<ID>` で表す。先のタスクが閉じるまで着手できないときだけ、作ったあとに `bd dep add <新> <先> --json` で新しいタスクを先のタスクの後ろに置く（`bd create --deps blocks:<先>` は逆の向きで、先のタスクが新しいタスクを待つ）。着手はできて、閉じる前に要るだけのもの（merge の順、dev での確かめ）は受け入れ条件に書き、`bd dep add <新> <先> --type related --json` でつなぐ。
+   完了条件: ID が返り、`bd show <ID> --json` に title・description・label があり、blocks の依存は閉じるまで着手できない先のタスクだけを指す。
 3. 委任するときは、Agent を起動する前に `bd update <ID> --claim --actor <Agent 名> --json` で claim する。status が `deferred` のタスクは、先に `bd undefer <ID> --json` で `open` に戻す。claim が断られたら（ほかの名前が持っている）委任せずにオーナーに伝え、起動に失敗したら `bd unclaim <ID> --if-assignee <Agent 名> --json` で戻す。
    完了条件: `bd show <ID> --json` の status が `in_progress` で、assignee が Agent 名。
 4. Agent の完了報告を受けたら、`報告:` の comment を書く。status は `in_progress` のままにし、残課題は 1・2 で `--deps discovered-from:<ID>` を付けて新しいタスクにする。
@@ -118,7 +118,7 @@ description: '$KARO_HOME のタスク・判断待ち・決定を Beads（bd）�
 
 ### 今の状況を読む
 
-- 今のタスクの状況は、まず SessionStart の hook の出力（`in_progress`・判断待ち・ready・件数）から答え、hook の出力にない項目と、このセッションで書いたあとの状態だけを `bd` で引く。
+- 作業・タスク・順序・並列・次にやることを答える返事は、その返事の中で引いた `bd` か bv（下の「分析する（bv）」）の出力から書く（SessionStart の hook の出力はセッションを始めたときの写しで、そのあとの変化を含まない）。
 - 仕事を選ぶときは `bd ready --exclude-type decision --json` を使う。
 - 開いているタスクだけを探すときは `bd list --status open,in_progress,blocked,deferred --json` を使い、プロジェクトに絞るときは `--label project:<名前>` を足す。
 - 判断待ちは `bd human list --status open --json`、止まっているタスクは `bd blocked --json` で引く。
