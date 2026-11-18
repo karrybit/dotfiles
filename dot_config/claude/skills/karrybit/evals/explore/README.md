@@ -11,7 +11,7 @@ Behavior cases for comparing versions of the `explore` skill. Run them with the 
 ## Settings for This Suite
 
 - Cases grant `Agent`, `Bash`, `Write`, and `Edit`, so that `no-agent` and `no-write` can fail, and have no scaffold: run them with `--allow-tools Bash Write Edit`.
-- `explore` reads no sibling skill: build the wrapper with `skill-wrap <karrybit>/exact_skills/exact_explain/explore <ref> DIR/kit`.
+- `explore` reads no sibling skill: build the wrapper with `skill-wrap <karrybit>/exact_skills/exact_explanation/explore <ref> DIR/kit`.
 
 ## What the Suite Separates
 

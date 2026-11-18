@@ -19,7 +19,7 @@ Behavior cases for comparing versions of the `organize` skill. Run them with the
 ## Settings for This Suite
 
 - `plugin-eval/` cases grant `Bash`, `Write`, and `Edit`: run them with `--scaffold --allow-tools Bash Write Edit`. `plugin-eval-holdout/` grants no gated tool, so its subagent stops at its first write and its graders read only the request.
-- `organize` reads no sibling skill: build the wrapper with `skill-wrap <karrybit>/exact_skills/exact_explain/organize <ref> DIR/kit`.
+- `organize` reads no sibling skill: build the wrapper with `skill-wrap <karrybit>/exact_skills/exact_explanation/organize <ref> DIR/kit`.
 - Run `plugin-eval-holdout/` with `--eval-dir evals-holdout` against a wrapper.
 
 ## What the Suite Separates

@@ -17,7 +17,7 @@ Behavior cases for comparing versions of the `research` skill. Run them with the
 ## Settings for This Suite
 
 - Cases grant `Bash`, `Write`, and `Edit`: run them with `--scaffold --allow-tools Bash Write Edit`.
-- `research` reads no sibling skill: build the wrapper with `skill-wrap <karrybit>/exact_skills/exact_research/research <ref> DIR/kit`.
+- `research` reads no sibling skill: build the wrapper with `skill-wrap <karrybit>/exact_skills/exact_inquiry/research <ref> DIR/kit`.
 
 ## What the Suite Separates
 
