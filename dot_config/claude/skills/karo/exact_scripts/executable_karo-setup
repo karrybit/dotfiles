@@ -49,7 +49,8 @@ fi
 [[ ${1:-} == --check ]] && { echo "karo-setup: required tools found" >&2; exit 0; }
 
 plugin=$(cd "$(dirname "$0")/.." && pwd)
-home=${KARO_HOME:-$HOME/karo}
+. "${0%/*}/../lib/karo-env"
+home=$KARO_HOME
 mkdir -p "$home" && cd "$home" || exit 2
 [[ -e .git ]] || git init -q -b main || exit 2
 

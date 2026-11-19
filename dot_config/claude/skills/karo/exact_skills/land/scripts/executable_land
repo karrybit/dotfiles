@@ -1,5 +1,5 @@
 #!/bin/sh
-# Lands a delegated agent's branch on the main of ~/karo. karo runs it
+# Lands a delegated agent's branch on the main of $KARO_HOME. karo runs it
 # outside the sandbox (sandbox.excludedCommands), because rebasing and
 # fast-forwarding a branch that changes .claude/settings.json or .claude/skills
 # replaces files the sandbox never lets a command write.
@@ -7,22 +7,23 @@
 #   land <branch> --rebase  rebases the branch onto main inside its worktree;
 #                           main does not move. On a conflict the rebase is
 #                           aborted and the conflicting files are listed.
-#   land <branch>           fast-forwards main of ~/karo to the branch, or
+#   land <branch>           fast-forwards main of $KARO_HOME to the branch, or
 #                           stops when main is not an ancestor of it.
 #
 # Nothing is changed unless every check passes: the caller's working directory
-# and that of the Claude Code process it runs under are ~/karo, ~/karo is on main with no uncommitted change to a tracked file, the
-# branch is named <semantics>/agent/<title> and checked out in a worktree of
-# ~/karo directly in ~/.local/state/karo/worktrees that has no uncommitted change
-# either. Every failure is one line on stderr and exit code 1; a usage error
-# exits 2.
+# and that of the Claude Code process it runs under are $KARO_HOME, $KARO_HOME
+# is on main with no uncommitted change to a tracked file, the branch is named
+# <semantics>/agent/<title> and checked out in a worktree of $KARO_HOME
+# directly in $KARO_STATE_HOME/worktrees that has no uncommitted change either.
+# Every failure is one line on stderr and exit code 1; a usage error exits 2.
 #
-# No environment variable, KARO_HOME and KARO_STATE_HOME included, moves the
-# folders or the Claude Code look-up: land-test runs a copy of this script in
-# which the karo_path line and the callers line are replaced, so each stays on
-# one line of its own. Nor does any config file: land runs outside the sandbox
-# on whatever these folders hold, so they are the fixed layout karo is written
-# for, not a setting.
+# KARO_HOME and KARO_STATE_HOME move the folders, through lib/karo-env, which
+# gives their defaults. land runs outside the sandbox, so their values come
+# only from the environment Claude Code started with and from its settings,
+# which no command in the sandbox can change; a call that puts a value before
+# the name does not match the exclusion and runs in the sandbox. No config
+# file is read. land-test runs a copy of this script in which the callers line
+# is replaced, so it stays on one line of its own.
 set -eu
 
 usage() {
@@ -41,11 +42,11 @@ stop() {
 }
 oneline() { printf '%s' "$1" | tr '\n' ' ' | cut -c 1-300; }
 
-# Sandboxed agents can write the .git of ~/karo and their own worktree, so every
-# git here runs no hooks, fsmonitor, automatic maintenance or submodule update
-# (command-line config outranks every config file), and safe_git lets git run
-# only when the repository's own config (local and worktree scope) holds no
-# key that makes git run a command.
+# Sandboxed agents can write the .git of $KARO_HOME and their own worktree, so
+# every git here runs no hooks, fsmonitor, automatic maintenance or submodule
+# update (command-line config outranks every config file), and safe_git lets
+# git run only when the repository's own config (local and worktree scope)
+# holds no key that makes git run a command.
 unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR GIT_OBJECT_DIRECTORY
 export GIT_OPTIONAL_LOCKS=0 GIT_CONFIG_COUNT=5 \
   GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/dev/null \
@@ -54,7 +55,8 @@ export GIT_OPTIONAL_LOCKS=0 GIT_CONFIG_COUNT=5 \
   GIT_CONFIG_KEY_3=maintenance.auto GIT_CONFIG_VALUE_3=false \
   GIT_CONFIG_KEY_4=submodule.recurse GIT_CONFIG_VALUE_4=false
 
-karo_path=$HOME/karo worktrees_path=$HOME/.local/state/karo/worktrees
+. "${0%/*}/../../../lib/karo-env"
+karo_path=$KARO_HOME worktrees_path=$KARO_STATE_HOME/worktrees
 karo=$(cd "$karo_path" 2>/dev/null && pwd -P) || stop "$karo_path is not a folder"
 worktrees=$(cd "$worktrees_path" 2>/dev/null && pwd -P) || stop "$worktrees_path is not a folder"
 
@@ -79,10 +81,10 @@ claude_cwds() {
   done
 }
 # An agent's settings exclude this command from its sandbox too, so only a call
-# made from ~/karo under Claude Code sessions that all run in ~/karo, which is
-# karo, is taken. The agent's own Claude Code process keeps the worktree it
-# started in, whatever folder the call itself runs in, and stays among the
-# ancestors of any Claude Code it starts in ~/karo.
+# made from $KARO_HOME under Claude Code sessions that all run in $KARO_HOME,
+# which is karo, is taken. The agent's own Claude Code process keeps the
+# worktree it started in, whatever folder the call itself runs in, and stays
+# among the ancestors of any Claude Code it starts in $KARO_HOME.
 [ "$(pwd -P)" = "$karo" ] || stop "run it from $karo"
 callers=$(claude_cwds)
 [ -n "$callers" ] || stop "no Claude Code process is among the callers"
@@ -100,7 +102,7 @@ if ! printf '%s' "$branch" | grep -Eq '^(feat|fix|docs|refactor|perf|test|build|
   stop "the branch must be <semantics>/agent/<title>"
 fi
 
-# ~/karo is a main checkout, so its .git is a folder that names no other
+# $KARO_HOME is a main checkout, so its .git is a folder that names no other
 # repository; a link or a commondir or gitdir file in it would send git to
 # config that was never checked.
 { [ -d "$karo/.git" ] && [ ! -L "$karo/.git" ]; } || stop "$karo/.git is not a folder"
@@ -110,13 +112,14 @@ for f in commondir gitdir; do
 done
 
 # Agents can rewrite a worktree's .git file and the commondir and gitdir files
-# under ~/karo/.git at any moment, also between a check here and the git that
-# follows it. So no git here finds its repository through those files: every
-# call names the git folder, the common folder and the work tree itself.
-# The only config git then reads from the repository is ~/karo/.git/config,
-# which sandboxed commands cannot write, and config.worktree in the worktree's
-# git folder, which they can; config.worktree is read only when
-# extensions.worktreeConfig is set, so that key is refused.
+# under $KARO_HOME/.git at any moment, also between a check here and the git
+# that follows it. So no git here finds its repository through those files:
+# every call names the git folder, the common folder and the work tree itself.
+# The only config git then reads from the repository is
+# $KARO_HOME/.git/config, which sandboxed commands cannot write, and
+# config.worktree in the worktree's git folder, which they can;
+# config.worktree is read only when extensions.worktreeConfig is set, so that
+# key is refused.
 # git_at <git folder> <work tree> <args>: run git there.
 git_at() {
   at_dir=$1 at_tree=$2
@@ -152,9 +155,9 @@ wt=$(printf '%s\n' "$listing" | awk -v b="branch refs/heads/$branch" '/^worktree
 [ -d "$wt" ] || stop "the worktree is not a folder: $wt"
 wt=$(cd "$wt" && pwd -P)
 [ "${wt%/*}" = "$worktrees" ] || stop "the worktree is not directly in $worktrees: $wt"
-# The worktree's git folder is the one in ~/karo/.git/worktrees whose gitdir
+# The worktree's git folder is the one in $KARO_HOME/.git/worktrees whose gitdir
 # file names it. The files are read as text only; the folder found is a real
-# folder directly in ~/karo/.git/worktrees whatever they say.
+# folder directly in $KARO_HOME/.git/worktrees whatever they say.
 gitdir=
 for d in "$karo"/.git/worktrees/*; do
   { [ -d "$d" ] && [ ! -L "$d" ] && [ -f "$d/gitdir" ]; } || continue

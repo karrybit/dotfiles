@@ -98,9 +98,8 @@
   when one is unset, the scripts use `~/karo` and `karo` under
   `${XDG_DATA_HOME:-~/.local/share}`, `${XDG_CONFIG_HOME:-~/.config}`, and
   `${XDG_STATE_HOME:-~/.local/state}`. The karrybit plugin reads none of them
-  and takes paths from its caller. The `land` skill's script reads no
-  variable: it runs outside the sandbox on fixed folders. Nor does the
-  `herdr-agent` skill's `agent-ctl`, whose ledger is the fixed file
+  and takes paths from its caller. The `herdr-agent` skill's `agent-ctl`
+  reads no variable: its ledger is the fixed file
   `~/.local/state/herdr-agent/ledger`.
 - `run_onchange_04_prune-skills.sh.tmpl` removes skills deployed directly
   under `~/.config/claude/skills/` whose source entry is gone, which chezmoi
