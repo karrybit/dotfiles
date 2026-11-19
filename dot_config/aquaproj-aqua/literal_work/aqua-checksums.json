@@ -21,8 +21,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/apple/pkl/0.33.0/pkl-macos-aarch64",
-      "checksum": "E39C157DF0F00A35D34B46270A768784EDCAF509AAFBF743849B27B4C83EF83B",
+      "id": "github_release/github.com/apple/pkl/0.33.1/pkl-macos-aarch64",
+      "checksum": "6F93DDF6524A5771BD4B6EBDE11010C6DFEE8E3A8906FFEBAA8F52F8A0BA16B7",
       "algorithm": "sha256"
     },
     {
@@ -166,8 +166,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/rvben/rumdl/v0.3.4/rumdl-v0.3.4-aarch64-apple-darwin.tar.gz",
-      "checksum": "51F7BCE0D56EA632ED65E7E42A99EFFB7CE7A23923FE0738ECDA0E1D11BCB788",
+      "id": "github_release/github.com/rvben/rumdl/v0.3.5/rumdl-v0.3.5-aarch64-apple-darwin.tar.gz",
+      "checksum": "7CAEB6C0264970479C0C0185C936463255B7B6048E675A647DFBEBAB337F91FE",
       "algorithm": "sha256"
     },
     {
@@ -211,8 +211,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "http/awscli.amazonaws.com/AWSCLIV2-2.41.0.pkg",
-      "checksum": "E4212731CF74EC59A049F6097412FE2C9D0553E0DBEE71CB24611E829B2ED403",
+      "id": "http/awscli.amazonaws.com/AWSCLIV2-2.41.1.pkg",
+      "checksum": "FCC64D3B7C5425A7E236BFB2FABA4CBDFA580F888C7165268715E474D9D1408D",
       "algorithm": "sha256"
     },
     {
@@ -246,8 +246,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.588.0/registry.yaml",
-      "checksum": "BC6F4385719B0ACCFB43FC1BE4A8813C63F245AAC3F89EC8A84081CF047B87E5",
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.589.0/registry.yaml",
+      "checksum": "E785A69E1CEF8A92F09079E96B7156FA4515255FEE4D58C1E9DCDAB23D96DCA2",
       "algorithm": "sha256"
     }
   ]
