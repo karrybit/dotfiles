@@ -7,34 +7,7 @@ description: '$KARO_HOME のタスク・判断待ち・決定を Beads（bd）�
 
 - タスク・判断待ち・決定とその状態の正本は Beads（`bd`）で、状態を変えるのは `bd` だけにする。bv は同じタスクの集合を読んで分析し、その出力は推薦と診断にとどめる（下の「分析する（bv）」）。
 - Agent の起動と操作は `karo:delegate`、成果物のレビューは `karo:review`、`$KARO_HOME` への取り込みは `karo:land` の skill の手順にある。この skill は、それらに伴うタスクの状態と記録の書き方を決める。
-- bd のコマンドの一覧は SessionStart の hook が出す `bd prime` と `bd <コマンド> --help` に、bv のコマンドは `bv --robot-help` と `bv --robot-capabilities` にある。下の「bd の既定の挙動」が `--help` と食い違って見えたら `--help` を正とし、「karo での使い方」が `bd prime` の勧めと食い違って見えたら「karo での使い方」に従う。
-
-## bd の既定の挙動
-
-`bd prime` に出ず、「karo での使い方」が前提にするものを書く。
-
-### 書く
-
-- `bd create` は、本文（description）なしでも issue を作る。
-- `bd update --claim` は、status が `deferred` の issue を拒む。`bd undefer` で `open` に戻すと claim できる。
-- `bd close` は、claim の持ち主と違う actor からの close を拒み、`--force` を付けると閉じる。
-- `bd close --reason` は close_reason に理由を残し、`bd update --status closed` は理由を残さない。
-- `bd human respond` は、comment を足して閉じ、close_reason を `Responded` にする。
-- `bd supersede <旧> --with <新>` は旧を閉じ、`bd show <旧>` に SUPERSEDED BY を出す。
-
-### 依存
-
-- `--parent` の子は、親の blocker にならない。
-- `--type related` の依存は、`bd ready` に効かない。
-
-### 読む
-
-- `bd show --json` は comment を省き、`--include-comments` を付けると含める。
-- `bd ready` は、type が `decision` の issue も出す。
-- `bd search` は title と ID を部分一致で探し、閉じた issue も出す。本文は `--desc-contains` で探す。
-- `bd list` は既定で閉じた issue を省き、`--all` を付けると含める。
-- `bd stale` の `--limit` の既定は 50 件。
-- `bd doctor` は、embedded の Dolt では `--check` の `artifacts`・`conventions`・`pollution` だけが動く。
+- bd のコマンドの一覧と挙動は SessionStart の hook が出す `bd prime` と `bd <コマンド> --help` に、bv のコマンドは `bv --robot-help` と `bv --robot-capabilities` にある。「karo での使い方」が `bd prime` の勧めと食い違って見えたら「karo での使い方」に従う。
 
 ## karo での使い方
 
@@ -105,9 +78,9 @@ description: '$KARO_HOME のタスク・判断待ち・決定を Beads（bd）�
 - 判断待ちの問いから決定までを、1 つの decision の bead で持つ。判断待ちは label `human` があり開いている bead、決定は閉じて close_reason に決定の文がある bead で、開いている decision を決まったこととして扱わない。
 - 規則・`state.md`・ノートから決定を指すときは、`決定 <ID>` と書く。今の判断待ちと効く決定の引き方は、`$KARO_HOME/rule/information-design.md` の「探す」の表にある。
 
-1. 判断が必要になったら、`bd create '<問い 1 文>' -t decision -l human -l project:<名前> --body-file <本文> --json` で作る。本文は「問い」「選択肢と推奨」「出典」（上の「comment の語」の会話の出典の形）の節にする。全プロジェクトに効く問いは label `project:all` にする。タスクを止めるなら、`bd dep add <タスク> <決定> --json` で blocker にする（`--parent` の子は blocker にならない。上の「依存」）。
+1. 判断が必要になったら、`bd create '<問い 1 文>' -t decision -l human -l project:<名前> --body-file <本文> --json` で作る。本文は「問い」「選択肢と推奨」「出典」（上の「comment の語」の会話の出典の形）の節にする。全プロジェクトに効く問いは label `project:all` にする。タスクを止めるなら、`bd dep add <タスク> <決定> --json` で blocker にする（`--parent` の子は blocker にならない）。
    完了条件: `bd human list --status open --json` に出る。
-2. オーナーが決めたら、`bd update <決定> --title '<決めたこと 1 文>' --body-file <全文> --json` で、本文を「決定」「理由」「検討した選択肢」「影響」「出典」の節にする。続けて `bd close <決定> --reason '決定: <1 文>' --json` で閉じる（`bd human respond` の close_reason は上の「書く」のとおり `Responded` になる）。
+2. オーナーが決めたら、`bd update <決定> --title '<決めたこと 1 文>' --body-file <全文> --json` で、本文を「決定」「理由」「検討した選択肢」「影響」「出典」の節にする。続けて `bd close <決定> --reason '決定: <1 文>' --json` で閉じる（`bd human respond` は close_reason を `Responded` にし、決定の文を残さない）。
    完了条件: `bd show <決定> --json` の close_reason に決定の文があり、止めていたタスクが `bd ready` に戻っている。
 3. 判断待ちを経ずにオーナーが決めたことは、1 を label `human` なしの `bd create -t decision` にして、2 を続ける。
    完了条件: 2 と同じ。
@@ -119,10 +92,21 @@ description: '$KARO_HOME のタスク・判断待ち・決定を Beads（bd）�
 ### 今の状況を読む
 
 - 作業・タスク・順序・並列・次にやることを答える返事は、その返事の中で引いた `bd` か bv（下の「分析する（bv）」）の出力から書く（SessionStart の hook の出力はセッションを始めたときの写しで、そのあとの変化を含まない）。
-- 仕事を選ぶときは `bd ready --exclude-type decision --json` を使う。
-- 開いているタスクだけを探すときは `bd list --status open,in_progress,blocked,deferred --json` を使い、プロジェクトに絞るときは `--label project:<名前>` を足す。
-- 判断待ちは `bd human list --status open --json`、止まっているタスクは `bd blocked --json` で引く。
-- 健全性は、`bd doctor --check artifacts --json`（`conventions`・`pollution` も同じ形）と、`bd list`・`bd create` が通ることで確かめる。
+- 状況は下の表のコマンドで引く。karo:checkin・karo:checkout・`$KARO_HOME/AGENTS.md`・`$KARO_HOME/rule/information-design.md` はこの節を指し、コマンドを写さない。プロジェクトに絞るときは `--label project:<名前>` を足す。
+
+| 問い | コマンド |
+| --- | --- |
+| 開いているタスク | `bd list --status open,in_progress,blocked,deferred --limit 0 --json`（type が `decision` のものは判断待ち） |
+| 判断待ち | `bd human list --status open --json` |
+| 着手できる仕事 | `bd ready --exclude-type decision --json` |
+| 止まっているタスク | `bd blocked --json` |
+| ある日から動いたタスク | `bd list --all --updated-after <日付> --limit 0 --json` の ID を、`bd show <ID>... --json --include-comments` に渡して、状態の変化と comment を読む（動いたタスクがなければ `bd show` は要らない） |
+| ある日から閉じたタスク | `bd list --all --closed-after <日付> --limit 0 --json` |
+| ある日から作ったタスク | `bd list --all --created-after <日付> --limit 0 --json` |
+| 7 日以上動いていないタスク | `bd stale --days 7 --limit 0 --json` |
+| 健全性 | `bd doctor --check artifacts --json`（`conventions`・`pollution` も同じ形）と、`bd list`・`bd create` が通ること |
+
+- Agent とタスクを突き合わせるときは、`herdr agent list` の各 Agent の `name` と `agent_status` を、開いているタスクのうち `in_progress` の assignee と、Agent 名（`karo:herdr-agent` skill の「起動する」の `<名前>` と Agent 名の対応）で突き合わせる。Herdr にいない assignee の状態は「不明」とし、下の「回復」で直す。突き合わせの完了条件は、`in_progress` の assignee と `herdr agent list` の名前のある Agent のすべてについて、Herdr の状態か「不明」が手元にあること。
 
 ### 分析する（bv）
 
@@ -150,8 +134,8 @@ description: '$KARO_HOME のタスク・判断待ち・決定を Beads（bd）�
 
 ### 回復
 
-- セッション開始時の突き合わせ（`$KARO_HOME/AGENTS.md` の「セッション開始時と compact 後」の 3）で、`in_progress` の assignee が `herdr agent list` にいなければ、`herdr agent get <名前>` で確かめてから `bd unclaim <ID> --if-assignee <名前> --json` を実行し、オーナーに報告する。
+- 上の「今の状況を読む」の突き合わせで、`in_progress` の assignee が `herdr agent list` にいなければ、`herdr agent get <名前>` で確かめてから `bd unclaim <ID> --if-assignee <名前> --json` を実行し、オーナーに報告する。
 - Agent を取り込まずに止めたときは、`bd unclaim <ID> --if-assignee <Agent 名> --json` で claim を外す。
 - 外の回答待ちなどで止まったタスクは、`bd update <ID> --status blocked --json` と `メモ:` の comment にする。オーナーの判断が要るなら、上の「判断待ちと決定」の 1 で decision の bead を作る。
-- 長く動いていないタスクは、checkin で `bd stale --days 7 --limit 0 --json` を 1 回だけ見る。
+- 長く動いていないタスクは、checkin で上の「今の状況を読む」の表の「7 日以上動いていないタスク」を 1 回だけ見る。
 - `bd list` が DB を開けないときは、`bd backup restore --force`（`ask`）でバックアップから戻す前に、オーナーに報告する。

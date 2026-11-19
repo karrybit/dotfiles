@@ -14,12 +14,10 @@ description: 一日の始まりに、Daily Standup として karo から報告�
    - 前回の Standup: `$KARO_HOME/standup/` の `YYYY-MM-DD.md` の最新ファイルの日付を基準にする。
    - そのファイルに `karo:checkout` skill が残した `### 明日やること` の候補。今日の推奨アクションの候補にする。
    - その日付以降の `$KARO_HOME` の `git log --since='<その日付> 00:00'` の件名と本文。
-   - その日付以降に動いたタスク: `bd list --all --updated-after <その日付> --limit 0 --json` の ID を、`bd show <ID>... --json --include-comments` に渡して、状態の変化と comment を読む。
-   - 開いているタスクは `bd list --status open,in_progress,blocked,deferred --limit 0 --json`、判断待ちは `bd human list --status open --json`、7 日以上動いていないタスクは `bd stale --days 7 --limit 0 --json`。
-   - `herdr agent list`。各 Agent の `name` と `agent_status` を、開いているタスクのうち `in_progress` の `assignee` と名前で突き合わせる。
+   - `karo:tasks` skill の「今の状況を読む」の表の、「ある日から動いたタスク」（その日付から）、「開いているタスク」、「判断待ち」、「7 日以上動いていないタスク」と、その節の Agent とタスクの突き合わせ。
    - 外の情報源: `$KARO_HOME/rule/checkin.md` の「外の情報源」の節にある源ごとに、節に書かれた取り方で取る。ファイルか節がなければ、外の情報源は使わない。
 
-   完了条件: `in_progress` のタスクの assignee と `herdr agent list` の名前のある Agent のすべてについて、Herdr の状態か「不明」（Herdr にいない assignee）が手元にあり、上の `bd` の出力がすべて手元にある（動いたタスクがなければ `bd show` は要らない）。「外の情報源」の節の源のそれぞれについて、結果か「取得できなかった」が手元にある（節がなければ、外の情報源を使わなかったことが手元にある）。
+   完了条件: 表の 4 つの行の出力と、突き合わせの完了条件を満たした結果が手元にある。「外の情報源」の節の源のそれぞれについて、結果か「取得できなかった」が手元にある（節がなければ、外の情報源を使わなかったことが手元にある）。
 2. 下の「報告の項目」を、前回からの変化とオーナーが対応すべきことを先にして、短く報告する。各項目にはタスク ID を付ける。
    完了条件: 5 つの項目がすべて報告にある。
 3. オーナーがその場で決めたことは、`karo:tasks` skill の「判断待ちと決定」のとおり `bd` に書く。必要なら `karo:delegate` skill で Agent に指示する。
