@@ -77,7 +77,8 @@
   reach subfolders. Keep `herdr-agent` and `crit` directly in
   `exact_skills/`, since settings rules and other plugins' scripts call their scripts
   as `~/.config/claude/skills/karrybit/skills/<skill>/scripts/…`.
-- Skills and scripts that know the layout of the karo record repository
+- Skills and scripts that know the layout of the karo record repository,
+  and the `herdr-agent` skill that starts and closes karo's Herdr agents,
   live in the `karo` plugin at `dot_config/claude/skills/karo/`, deployed and
   loaded the same way as `karo@skills-dir`. Its manifest sets
   `defaultEnabled: false`, so it loads only where a project's settings enable
@@ -96,7 +97,9 @@
   `${XDG_DATA_HOME:-~/.local/share}`, `${XDG_CONFIG_HOME:-~/.config}`, and
   `${XDG_STATE_HOME:-~/.local/state}`. The karrybit plugin reads none of them
   and takes paths from its caller. The `land` skill's script reads no
-  variable: it runs outside the sandbox on fixed folders.
+  variable: it runs outside the sandbox on fixed folders. Nor does the
+  `herdr-agent` skill's `agent-ctl`, whose ledger is the fixed file
+  `~/.local/state/herdr-agent/ledger`.
 - `run_onchange_04_prune-skills.sh.tmpl` removes skills deployed directly
   under `~/.config/claude/skills/` whose source entry is gone, which chezmoi
   does not do on its own. It only removes skills recorded in its own manifest,
