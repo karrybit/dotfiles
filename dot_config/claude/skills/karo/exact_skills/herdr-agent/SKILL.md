@@ -19,7 +19,7 @@ description: Herdr で別のセッションの Claude Code の Agent を起動�
 | --- | --- |
 | `permissions.allow` | `Bash(<scripts>/agent-ctl *)`、`Bash(<scripts>/agent-report *)`、`Bash(<scripts>/safe-key *)` |
 | `sandbox.excludedCommands` | `<scripts>/agent-ctl *`、`<scripts>/agent-report *`、`<scripts>/safe-key *` |
-| `env` の `HERDR_AGENT_NAME_PATTERN`（必須） | 名前が合うべき ERE（`^` と `$` で囲む）。`agent-ctl` のすべてと `safe-key enter` が使い、未設定なら `safe-key enter` は何も送らない |
+| `env` の `HERDR_AGENT_NAME_PATTERN`（必須） | 名前が合うべき ERE（`^` と `$` で囲み、herdr が断る大文字を通さない）。`agent-ctl` のすべてと `safe-key enter` が使い、未設定なら `safe-key enter` は何も送らない |
 | `env` の `HERDR_AGENT_BRANCH_PATTERN`（任意） | `worktree` と `herdr-worktree` で作るブランチが合うべき ERE |
 | `env` の `HERDR_AGENT_BRANCH_DENY`（任意） | そのブランチが合ってはいけない ERE |
 

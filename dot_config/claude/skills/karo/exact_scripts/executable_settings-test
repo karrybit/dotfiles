@@ -6,7 +6,8 @@
 # ones that must leave the sandbox in sandbox.excludedCommands, no rule or exclusion for tb-view,
 # terminal-browser or open, which take any page, so only crit-open and view-open, which check the
 # page first, open it outside the sandbox, the herdr-agent skill's agent-ctl,
-# agent-report and safe-key allowed and out of the sandbox with HERDR_AGENT_NAME_PATTERN set, and
+# agent-report and safe-key allowed and out of the sandbox with HERDR_AGENT_NAME_PATTERN set to a
+# pattern that lets no upper-case letter through, and
 # herdr's own close, prompt and key commands not allowed. The hooks are karo's own hooks/hooks.json, which Claude Code merges with
 # the settings' hooks: it must run call-check by a PreToolUse hook on Bash and post-edit by a
 # PostToolUse hook on Edit|Write, and no settings hook may name a karo script or repeat one of its
@@ -62,6 +63,10 @@ for s in agent-ctl agent-report safe-key; do
   check "$karo/skills/herdr-agent/scripts/$s * is in sandbox.excludedCommands" "$settings" 'any(.sandbox.excludedCommands[]?; . == $c)' --arg c "$karo/skills/herdr-agent/scripts/$s *"
 done
 check "env sets HERDR_AGENT_NAME_PATTERN" "$settings" '.env.HERDR_AGENT_NAME_PATTERN // "" | length > 0'
+# herdr takes no upper-case letter in an agent name, and agent-ctl refuses one, so the pattern holds no
+# upper-case letter, range or class that would let one through.
+check "HERDR_AGENT_NAME_PATTERN lets no upper-case letter through" "$settings" \
+  '.env.HERDR_AGENT_NAME_PATTERN // "" | test("[A-Z]|\\[:(upper|alpha|alnum):\\]") | not'
 # rule_matches <rule> <command>: a Bash rule's pattern matches the whole command, "*" standing in for
 # any text, and a trailing " *" also matching the bare command.
 rule_matches() {
