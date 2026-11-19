@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# Show that post-edit runs rumdl fmt on each .md written under KARO_HOME and karo-check --only on it, and
-# stops only on the written file's problems: a broken record note exits 2 with its problem on stderr, a
-# valid one passes while another note is broken, even one that reads it, a .md outside the record folders
-# and a hidden path pass, a check that cannot run exits 2 with its reason, and a file outside KARO_HOME
-# or reached through .. is left untouched.
+# Show that post-edit runs rumdl fmt on each .md written in KARO_HOME or a worktree of it and karo-check
+# --only on it, and stops only on the written file's problems: a broken record note exits 2 with its
+# problem on stderr, in KARO_HOME and in a worktree, a valid one passes while another note is broken, even
+# one that reads it, a .md outside the record folders and a hidden path pass, a check that cannot run
+# exits 2 with its reason, rumdl leaves the notes that were not edited, and a file outside KARO_HOME, in
+# another repository, or reached through .. is left untouched.
 # usage: post-edit-test [<karo dir>]   (default KARO_HOME or ~/karo, read only: the vault takes its .rumdl.toml and
 #        rule/frontmatter-schema.yaml; the vault goes to a temporary directory and is removed)
 set -uo pipefail
@@ -20,6 +21,8 @@ v=$tmp/karo
 export KARO_HOME=$v
 mkdir -p "$v/rule"
 cp "$karo/.rumdl.toml" "$v/" && cp "$karo/rule/frontmatter-schema.yaml" "$v/rule/" || exit 2
+git -C "$v" init -q && git -C "$v" add .rumdl.toml rule \
+  && git -C "$v" -c user.name=test -c user.email=test@example.invalid commit -q -m init || exit 2
 cd "$v" || exit 2
 
 # edit <name> <file> <content> <want exit> <want stderr, or empty for none>: writes the file with a trailing
@@ -43,7 +46,7 @@ edit "a broken record note exits 2 with its problem" "$v/standup/2026-01-02.md" 
 fixed "rumdl formats a broken record note" "$v/standup/2026-01-02.md"
 edit "a .md outside the record folders is not checked" "$v/README.md" $'## 例' 0 ""
 fixed "rumdl formats a .md outside the record folders" "$v/README.md"
-edit "a worktree under KARO_HOME is not checked" "$v/.claude/worktrees/w/standup/2026-01-02.md" $'## 例' 0 ""
+edit "a hidden path under KARO_HOME is not checked" "$v/.claude/worktrees/w/standup/2026-01-02.md" $'## 例' 0 ""
 edit "a file that is not .md is left alone" "$v/standup/2026-01-02.txt" $'## 例' 0 ""
 kept "rumdl leaves a file that is not .md" "$v/standup/2026-01-02.txt"
 mkdir -p "$v/doc" && printf -- '---\ntype: Bogus\n---\n\n## 例\n' > "$v/doc/broken.md"
@@ -59,6 +62,19 @@ edit "a check that cannot run exits 2 with its reason" "$v/standup/2026-01-04.md
 mv rule/schema.yaml rule/frontmatter-schema.yaml
 edit "a file outside KARO_HOME is not checked" "$tmp/wt/standup/2026-01-02.md" $'## 例' 0 ""
 kept "rumdl leaves a file outside KARO_HOME" "$tmp/wt/standup/2026-01-02.md"
+
+# A worktree of the record is checked from its own root: its broken note, which KARO_HOME does not hold,
+# exits 2 with its problem. rumdl formats only the edited file, not another note in the worktree.
+w=$tmp/worktrees/w
+git -C "$v" worktree add -q -b w "$w" || exit 2
+mkdir -p "$w/doc" && printf -- '---\ntype: Document\n---\n\n## 例 \n' > "$w/doc/other.md"
+edit "a broken note in a worktree of the record exits 2 with its problem" "$w/standup/2026-01-07.md" $'## 例' 2 $'standup/2026-01-07.md\tno frontmatter'
+fixed "rumdl formats the edited note in a worktree" "$w/standup/2026-01-07.md"
+kept "rumdl leaves a note in the worktree that was not edited" "$w/doc/other.md"
+edit "a valid note in a worktree of the record passes" "$w/standup/2026-01-08.md" "${note//01-01/01-08}" 0 ""
+git init -q "$tmp/other" || exit 2
+edit "a .md in another repository is not checked" "$tmp/other/standup/2026-01-02.md" $'## 例' 0 ""
+kept "rumdl leaves a .md in another repository" "$tmp/other/standup/2026-01-02.md"
 
 echo "post-edit-test: $failed failure(s)"
 [[ $failed -eq 0 ]]
