@@ -23,5 +23,5 @@ Measured on wrappers holding only this skill, with `karrybit:skill-eval`'s suite
 
 - `test-goal-condition` passes 9 of 9 and 8 of 9 runs of the skill in two measurements, and 8 of 9 in each of a version without the rule to build the predicate from the workspace's existing checks. The differences rest on one run: one failing run wrote its own one-line check instead of `bin/parse-test`, another joined a second condition to it.
 - At b7c01c7, which builds a predicate only from a check whose passing shows the goal is met, every grader passes 3/3 in one measurement.
-- The case runs in a known workspace, so the rule that stops a goal whose workspace is unknown is not exercised. Its `csvtool` has no Markdown lint, so the rule that keeps a format check from being a readability predicate is exercised only by `evals/delegate` in the karo plugin.
+- The case runs in a known workspace, so the rule that stops a goal whose workspace is unknown is not exercised. Its `csvtool` has no Markdown lint, so the rule that keeps a format check from being a readability predicate is not exercised either.
 - The other graders pass every run of both versions. They guard against regressions and do not separate versions.
