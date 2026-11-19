@@ -2,9 +2,9 @@
 
 記録のノートを作るとき、ノートのフロントマターを書くか直すとき、karo-check がフロントマターの問題を出したとき、調べ物の依頼にノートの規則として渡すときに読む。
 
-- `$KARO_HOME` の記録のフォルダ（`$KARO_HOME/AGENTS.md` の「書き込み先」の表のフォルダ）のノートは、1 行目から OKF（Open Knowledge Format v0.2）の YAML フロントマターを持つ。
+- `$KARO_HOME` の記録のフォルダ（この skill の `SKILL.md` の「書き込み先」の表のフォルダ）のノートは、1 行目から OKF（Open Knowledge Format v0.2）の YAML フロントマターを持つ。
 - 層・鮮度の考え方（何をいつ書くか）は `karrybit:data-information-design` skill にあり、このファイルは karo のフィールドの書き方を持つ。
-- 種類ごとの必須のフィールドと置き場所の正本は `$KARO_HOME/rule/frontmatter-schema.yaml` で、下の「種類」の表の置き場所はその読みやすい形。食い違ったら schema に合わせる。schema のキー（`types`・`layers`・`paths`・`lineage`・`files`・`exclude`）の意味は karo の `scripts/okf-lint` の冒頭にある。
+- 種類ごとの必須のフィールドと置き場所の正本は karo plugin の `scripts/frontmatter-schema.yaml`（karo-check が読む。`$KARO_HOME` に schema のファイルがあっても読まない）で、下の「種類」の表の置き場所はその読みやすい形。食い違ったら schema に合わせる。schema のキー（`types`・`layers`・`paths`・`lineage`・`files`・`exclude`）の意味は karo の `scripts/okf-lint` の冒頭にある。
 - `~/.config/claude/skills/karo/scripts/karo-check` が、schema と下の「フィールド」の `date`・`tasks`・`projects` の形と wiki link を確かめる。確かめることの範囲は `scripts/karo-check` の冒頭にある。
 - 対象はこれらのフォルダの `.md` すべてで、対象にしないものは `frontmatter-schema.yaml` の `exclude` にある（imozuru が書く `investigation/YYYY-MM-DD-<話題>/sources/` の原文など）。
 
@@ -42,7 +42,7 @@
 | `doc/<話題>.md` | `Document` | `sources` に外の元の資料 |
 | `investigation/YYYY-MM-DD-<話題>/map.md` | `Research Map` | `description` は `題:` のあとの文（`題:` は付けない） |
 
-- どれにも当てはまらないノートの `type` の追加をオーナーが承認したら、`frontmatter-schema.yaml` の `types`・`layers`・`paths` を同じ commit で直し、この表に行を足す karo の直しをオーナーに伝える（この表は karo の skill にあり、`$KARO_HOME` の commit には入らない）。
+- どれにも当てはまらないノートは、今ある種類のどれかで書く。種類は karo plugin の schema とこの表が決め、`$KARO_HOME` の側では足せない。新しい種類が要るときは、karo plugin の直し（schema の `types`・`layers`・`paths` とこの表）としてオーナーに伝える。
 
 ## 追記したとき・状態が変わったとき
 
@@ -55,4 +55,4 @@
 | ノートが別のタスクにも使われるようになった | `tasks` にそのタスク ID を足す |
 | タスクの状態・優先度・担当が変わった | なし（`bd` で変える。`karo:tasks` skill） |
 
-- 表の出来事が起きたら、`$KARO_HOME/AGENTS.md` の「記録の更新」の書き込みと一緒にフィールドを直し、同じ commit に入れる。表の右の列のフィールドを直したファイルを、その commit のパスに並べる。
+- 表の出来事が起きたら、この skill の `SKILL.md` の「記録の更新」の書き込みと一緒にフィールドを直し、同じ commit に入れる。表の右の列のフィールドを直したファイルを、その commit のパスに並べる。

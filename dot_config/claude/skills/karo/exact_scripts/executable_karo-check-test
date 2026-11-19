@@ -3,9 +3,8 @@
 # broken note in a copy of it must be reported, and a copy of the real vault with one note broken must fail.
 # The cases break what the karo checks and the karo schema decide, and how okf-lint's results are counted with
 # them; okf-lint's own checks are tested by okf-lint-test beside this script.
-# usage: karo-check-test [<karo dir>]   (default KARO_HOME or ~/karo, read only: the small vault takes its
-#        rule/frontmatter-schema.yaml, and the real vault is its copy; the copies go to a temporary
-#        directory and are removed)
+# usage: karo-check-test [<karo dir>]   (default KARO_HOME or ~/karo, read only: the real vault is its
+#        copy; the copies go to a temporary directory and are removed)
 set -uo pipefail
 vault=${1:-${KARO_HOME:-$HOME/karo}}
 bin=$(cd "$(dirname "$0")" && pwd)
@@ -16,8 +15,7 @@ fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
 pass() { printf 'ok\t%s\n' "$1"; }
 
 ok=$tmp/ok
-mkdir -p "$ok"/{standup,source/meeting,project/repo/github.com/acme/demo/review,project/design,investigation,doc,decisions,rule}
-cp "$vault/rule/frontmatter-schema.yaml" "$ok/rule/" || exit 2
+mkdir -p "$ok"/{standup,source/meeting,project/repo/github.com/acme/demo/review,project/design,investigation,doc,decisions}
 printf -- '---\ntype: Project\ndescription: 例のプロジェクト。\nprojects:\n  - github.com/acme/demo\n---\n\n## demo\n' > "$ok/project/repo/github.com/acme/demo.md"
 # A project's reviews sit in the folder named after it, and Design Docs sit in project/design/.
 printf -- '---\ntype: Review\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - github.com/acme/demo\n---\n\n## 結論\n\n承認\n' > "$ok/project/repo/github.com/acme/demo/review/t-test0001-1.md"
@@ -87,12 +85,19 @@ fi
 out=$("$bin/karo-check" --only doc/demo.md "$ok" 2>&1); code=$?
 if [[ $code -eq 0 ]] && printf '%s\n' "$out" | rg -qxF 'karo-check: 0 problem(s) in the --only scope'; then pass "only: the count line names the scope"; else fail "only: count line: exit $code: $out"; fi
 
-# Without a schema, or when okf-lint finds an argument or schema error, karo-check stops without a count.
-copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"; rm "$copy/rule/frontmatter-schema.yaml"
-out=$("$bin/karo-check" "$copy" 2>&1); code=$?
-if [[ $code -eq 2 && $out == "karo-check: no schema at "* && $out != *$'\n'* ]]; then pass "missing schema stops"; else fail "missing schema: exit $code: $out"; fi
+# The schema is the plugin's: a schema file left in the karo dir, even a broken one, is not read.
+copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"; mkdir -p "$copy/rule"
 printf 'exclude: []\n' > "$copy/rule/frontmatter-schema.yaml"
-out=$("$bin/karo-check" "$copy" 2>&1); code=$?
+if out=$("$bin/karo-check" "$copy" 2>&1); then pass "a schema file in the karo dir is not read"; else fail "a schema file in the karo dir: $out"; fi
+# Without the plugin's schema, or when okf-lint finds an argument or schema error, karo-check stops
+# without a count. The cases run a copy of this folder whose schema is missing or broken.
+nobin=$tmp/bin
+mkdir -p "$nobin"
+for f in "$bin"/*; do [[ ${f##*/} == frontmatter-schema.yaml ]] || ln -s "$f" "$nobin/"; done
+out=$("$nobin/karo-check" "$ok" 2>&1); code=$?
+if [[ $code -eq 2 && $out == "karo-check: no schema at "* && $out != *$'\n'* ]]; then pass "missing schema stops"; else fail "missing schema: exit $code: $out"; fi
+printf 'exclude: []\n' > "$nobin/frontmatter-schema.yaml"
+out=$("$nobin/karo-check" "$ok" 2>&1); code=$?
 if [[ $code -eq 2 && $out == *"has no types map"* && $out != *"karo-check: "* ]]; then pass "okf-lint schema error stops"; else fail "okf-lint schema error: exit $code: $out"; fi
 
 # Frontmatter values are data: a value holding "|", a newline, a glob, or shell syntax is reported as the

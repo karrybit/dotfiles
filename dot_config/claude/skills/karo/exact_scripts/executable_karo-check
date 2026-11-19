@@ -12,7 +12,8 @@
 # digits, a child with ".<n>" added (karo-a2v.1, t-a1b2c3d4, ABC-12). Tasks live in the task database,
 # which karo-check does not read, so only the form is checked.
 # usage: karo-check [--only <path>]... [<karo dir>]
-# Default: KARO_HOME, or ~/karo when unset (only its record folders, listed in record-folders beside this script, get the karo checks). The schema is <karo dir>/rule/frontmatter-schema.yaml.
+# Default: KARO_HOME, or ~/karo when unset (only its record folders, listed in record-folders beside this script, get the karo checks). The schema is frontmatter-schema.yaml beside this script, the karo
+# plugin's own, so a schema file in the karo dir is not read.
 # --only limits the check to the given vault-relative paths (changed, added, or removed files; for a rename, both
 # paths). okf-lint gets the same paths; the karo checks also read, for a removed project file, the notes
 # listing it as a project. A file brought in is checked in full.
@@ -37,7 +38,7 @@ lint=$bin/okf-lint
 # The record folders, the one list commit takes its record paths from too
 read -r -a folders < "$bin/record-folders"
 cd "$vault" || exit 2
-SCHEMA=$PWD/rule/frontmatter-schema.yaml
+SCHEMA=$bin/frontmatter-schema.yaml
 [[ -f $SCHEMA ]] || { echo "karo-check: no schema at $SCHEMA" >&2; exit 2; }
 problems=0
 stale=0

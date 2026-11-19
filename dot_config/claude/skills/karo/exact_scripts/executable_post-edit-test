@@ -5,8 +5,8 @@
 # one that reads it, a .md outside the record folders and a hidden path pass, a check that cannot run
 # exits 2 with its reason, rumdl leaves the notes that were not edited, and a file outside KARO_HOME, in
 # another repository, or reached through .. is left untouched.
-# usage: post-edit-test [<karo dir>]   (default KARO_HOME or ~/karo, read only: the vault takes its .rumdl.toml and
-#        rule/frontmatter-schema.yaml; the vault goes to a temporary directory and is removed)
+# usage: post-edit-test [<karo dir>]   (default KARO_HOME or ~/karo, read only: the vault takes its .rumdl.toml;
+#        the vault goes to a temporary directory and is removed)
 set -uo pipefail
 exec </dev/null
 karo=${1:-${KARO_HOME:-$HOME/karo}}
@@ -19,9 +19,9 @@ pass() { printf 'ok\t%s\n' "$1"; }
 
 v=$tmp/karo
 export KARO_HOME=$v
-mkdir -p "$v/rule"
-cp "$karo/.rumdl.toml" "$v/" && cp "$karo/rule/frontmatter-schema.yaml" "$v/rule/" || exit 2
-git -C "$v" init -q && git -C "$v" add .rumdl.toml rule \
+mkdir -p "$v"
+cp "$karo/.rumdl.toml" "$v/" || exit 2
+git -C "$v" init -q && git -C "$v" add .rumdl.toml \
   && git -C "$v" -c user.name=test -c user.email=test@example.invalid commit -q -m init || exit 2
 cd "$v" || exit 2
 
@@ -32,7 +32,7 @@ edit() {
   local name=$1 f=$2 rc=$4 want=$5 err code
   mkdir -p "$(dirname "$f")" && printf '%s ' "$3" > "$f"
   err=$(jq -n --arg f "$f" '{hook_event_name: "PostToolUse", tool_name: "Write", tool_input: {file_path: $f}}' \
-    | "$bin/post-edit" 2>&1 >/dev/null); code=$?
+    | "${post_edit_bin:-$bin}/post-edit" 2>&1 >/dev/null); code=$?
   if [[ $code -eq $rc && ( -z $want && -z $err || -n $want && $err == *"$want"* ) ]]; then pass "$name"; else fail "$name: exit $code: $err"; fi
 }
 # fixed <name> <file>: rumdl removed the trailing space; kept <name> <file>: it is still there.
@@ -57,9 +57,12 @@ edit "a broken note that reads the edited file does not stop it" "$v/standup/202
 rm "$v/doc/reader.md"
 edit "a path that climbs out of KARO_HOME is not checked" "$v/standup/../../wt2/standup/2026-01-02.md" $'## 例' 0 ""
 kept "rumdl leaves a path that climbs out of KARO_HOME" "$tmp/wt2/standup/2026-01-02.md"
-mv rule/frontmatter-schema.yaml rule/schema.yaml
+# A copy of this folder without the plugin's schema makes karo-check unable to run.
+post_edit_bin=$tmp/bin
+mkdir -p "$post_edit_bin"
+for s in "$bin"/*; do [[ ${s##*/} == frontmatter-schema.yaml ]] || ln -s "$s" "$post_edit_bin/"; done
 edit "a check that cannot run exits 2 with its reason" "$v/standup/2026-01-04.md" "${note//01-01/01-04}" 2 "karo-check: no schema"
-mv rule/schema.yaml rule/frontmatter-schema.yaml
+post_edit_bin=
 edit "a file outside KARO_HOME is not checked" "$tmp/wt/standup/2026-01-02.md" $'## 例' 0 ""
 kept "rumdl leaves a file outside KARO_HOME" "$tmp/wt/standup/2026-01-02.md"
 
