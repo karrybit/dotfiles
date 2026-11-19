@@ -58,9 +58,9 @@ done
 # .md outside the record folders without frontmatter, and a file that is not .md.
 copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"
 printf '\n[[meet] と `[[a]]`\n\n```\n[[b]]\n```\n' >> "$copy/doc/demo.md"
-mkdir -p "$copy/investigation/2026-01-01-example/sources" "$copy/thread"
+mkdir -p "$copy/investigation/2026-01-01-example/sources" "$copy/scrap"
 printf '## 原文\n\n[[x]]\n' > "$copy/investigation/2026-01-01-example/sources/a.md"
-printf '## 例\n' > "$copy/thread/t-test0001-demo.md"
+printf '## 例\n' > "$copy/scrap/t-test0001-demo.md"
 printf '例\n' > "$copy/doc/demo.txt"
 if out=$("$bin/karo-check" "$copy" 2>&1); then pass "what karo-check does not read passes"; else fail "what karo-check does not read: $out"; fi
 

@@ -104,10 +104,10 @@ mkdir -p "$v/journal" && printf -- '---\ntype: Standup\ndate: 2026-11-18\n---\n\
 run "t-test0001: journal" "本文" journal/2026-11-18-standup.md
 ng "journal/ is outside the record" "not a record path: journal/2026-11-18-standup.md"
 rm "$v/journal/2026-11-18-standup.md"
-mkdir -p "$v/thread" && printf '# a\n' > "$v/thread/t-test0001-demo.md"
-run "t-test0001: thread" "本文" thread/t-test0001-demo.md
-ng "thread/ is outside the record" "not a record path: thread/t-test0001-demo.md"
-rm "$v/thread/t-test0001-demo.md"
+mkdir -p "$v/scrap" && printf '# a\n' > "$v/scrap/t-test0001-demo.md"
+run "t-test0001: scrap" "本文" scrap/t-test0001-demo.md
+ng "a folder not in record-folders is outside the record" "not a record path: scrap/t-test0001-demo.md"
+rm "$v/scrap/t-test0001-demo.md"
 printf -- '---\ntype: Standup\ndate: 2026-11-19\n---\n\n## 報告\n' > "$v/standup/2026-11-19-standup.md"
 run "t-test0001: standup の名前" "本文" standup/2026-11-19-standup.md
 ng "a standup named YYYY-MM-DD-standup.md" $'standup/2026-11-19-standup.md\tpath does not match Standup'
@@ -192,11 +192,11 @@ before=$(head_)
 # The record folders are one list, record-folders beside the scripts: with a folder added to a copy of it,
 # commit takes a path there and karo-check checks the note.
 alt=$tmp/bin
-cp -R "$bin" "$alt" && printf 'standup source investigation project doc thread\n' > "$alt/record-folders"
-mkdir -p "$v/thread" && printf '## a\n' > "$v/thread/t-test0001-demo.md"
-out=$("$alt/commit" "t-test0001: thread" "本文" thread/t-test0001-demo.md 2>&1); code=$?
-ng "a folder added to record-folders is a record folder" $'thread/t-test0001-demo.md\tno frontmatter'
-rm "$v/thread/t-test0001-demo.md"
+cp -R "$bin" "$alt" && printf 'standup source investigation project doc scrap\n' > "$alt/record-folders"
+mkdir -p "$v/scrap" && printf '## a\n' > "$v/scrap/t-test0001-demo.md"
+out=$("$alt/commit" "t-test0001: scrap" "本文" scrap/t-test0001-demo.md 2>&1); code=$?
+ng "a folder added to record-folders is a record folder" $'scrap/t-test0001-demo.md\tno frontmatter'
+rm "$v/scrap/t-test0001-demo.md"
 
 # rumdl leaves reviews alone, so git diff --check catches a blank line at the end of one.
 printf '\n' >> "$v/project/repo/github.com/acme/demo/review/t-test0001-1.md"
