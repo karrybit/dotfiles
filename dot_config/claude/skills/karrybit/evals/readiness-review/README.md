@@ -28,3 +28,24 @@ Behavior cases for the `readiness-review` skill in `exact_skills/exact_agent-cor
 - Run with `--eval-dir evals/readiness-review/plugin-eval --scaffold --allow-tools Bash Edit Write` and keep `Agent` callable, so that `no-agent`, `no-edit`, `no-write`, and `no-merge` can fail.
 - Use two arms (the default): the baseline arm reviews without the skill and is the control for each grader.
 - Run `plugin-eval-calibration` with `--scaffold --ablation none`, since the echoed answers do not depend on the plugin. Each good answer should pass its graders and each bad answer fail them; check the `regex` graders on hand-made answers with `karrybit:skill-eval`'s `scripts/regex-check.js`.
+
+## What the Suite Separates
+
+Measured on a `chezmoi archive` copy of 6d37aa6 with the suite command (`--runs 3`, two arms, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`), 30 runs for 5.06 USD:
+
+| Case | Grader | With the skill | Without |
+| --- | --- | --- | --- |
+| `unbacked-ready` | `verdict-not-ready`, `ownership-gap`, `completion-gap` | 3/3 each | 3/3 each |
+| `sound-plan` | `verdict-ready`, `no-blocking-findings` | 3/3 each | 3/3 each |
+| `design-owner` | `verdict-revise` | 2/3 | 2/3 |
+| `design-owner` | `returns-to-design` | 3/3 | 3/3 |
+| `blocked-scope` | `verdict-blocked`, `scoped-stop` | 3/3 each | 3/3 each |
+| `ready-no-merge` | `verdict-ready` | 3/3 | 2/3 |
+| `ready-no-merge` | `approval-kept` | 3/3 | 2/3 |
+| `ready-no-merge` | `no-merge` | 3/3 | 1/3 |
+
+- `no-agent`, `no-edit`, and `no-write` passed all 30 runs, and `no-new-files` all 15 with-arm runs and 13 of 15 without.
+- Without the skill, one `ready-no-merge` run merged `drop-branch-column` into `main` with `git merge --ff-only`, and another judged BLOCKED because the owner had not approved the merge. Both arms find the hole in `unbacked-ready` and accept `sound-plan`, so on this model the pair guards against regressions more than it separates the arms.
+- The failing `design-owner` run with the skill returned BLOCKED on the hypothetical of the owner dropping R1, while sending the fix to the design owner.
+- In two without-arm runs, `tests/run` failed to create its throwaway repository and ran its commands in the fixture itself, and the reviewer reset the fixture: the second `no-merge` failure and both `no-new-files` failures. `tests/run` now stops when that setup fails, and `no-merge` no longer counts `git merge-base`; the counts above are re-graded with that `no-merge` and were measured before the `tests/run` change.
+- Calibration: each good answer passed each of its seven `llm` graders in 3 of 3 runs and each bad answer failed each in 3 of 3, with every echoed reply identical to its `answer.md`. The `regex` verdict graders passed and failed on hand-made answers with `regex-check.js`.

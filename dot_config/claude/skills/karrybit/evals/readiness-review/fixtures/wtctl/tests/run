@@ -5,8 +5,8 @@ tests="$(cd "$(dirname "$0")" && pwd)"
 bin="$tests/../bin"
 rm -rf "$tests/work"
 trap 'rm -rf "$tests/work"' EXIT
-git init -q "$tests/work"
-cd "$tests/work"
+git init -q "$tests/work" || exit 1
+cd "$tests/work" || exit 1
 git -c user.name=t -c user.email=t@example.invalid commit -q --allow-empty -m init
 failures=0
 check() {
