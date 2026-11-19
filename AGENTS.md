@@ -94,13 +94,14 @@
   settings hooks, so keep them out of the project's settings: a hook in both
   runs twice.
 - The karo plugin finds its folders through `KARO_HOME` (the record
-  repository), `KARO_DATA_HOME`, `KARO_CONFIG_HOME`, and `KARO_STATE_HOME`;
-  when one is unset, the scripts use `~/karo` and `karo` under
+  repository), `KARO_DATA_HOME`, `KARO_CONFIG_HOME`, `KARO_STATE_HOME`, and
+  `HERDR_AGENT_STATE_HOME` (the `herdr-agent` skill's ledger and stop notes);
+  when one is unset, the scripts use `~/karo`, `karo` under
   `${XDG_DATA_HOME:-~/.local/share}`, `${XDG_CONFIG_HOME:-~/.config}`, and
-  `${XDG_STATE_HOME:-~/.local/state}`. The karrybit plugin reads none of them
-  and takes paths from its caller. The `herdr-agent` skill's `agent-ctl`
-  reads no variable: its ledger is the fixed file
-  `~/.local/state/herdr-agent/ledger`.
+  `${XDG_STATE_HOME:-~/.local/state}`, and `herdr-agent` under
+  `${XDG_STATE_HOME:-~/.local/state}`. The plugin's `lib/karo-env` sets these
+  defaults, and its scripts and hook commands read them from there. The
+  karrybit plugin reads none of them and takes paths from its caller.
 - `run_onchange_04_prune-skills.sh.tmpl` removes skills deployed directly
   under `~/.config/claude/skills/` whose source entry is gone, which chezmoi
   does not do on its own. It only removes skills recorded in its own manifest,

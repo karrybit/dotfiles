@@ -103,7 +103,7 @@ agent-ctl send --goal <条件> <名前>
 
 ### 閉じる
 
-- 片付けるときは、`<scripts>/agent-ctl close <名前>` を単独で走らせる。`close` は `start` が控え（`~/.local/state/herdr-agent/ledger`）に書いた Agent だけを片付け、控えにない名前は 1 行で断る。断られた Agent は、人が手で片付ける。
+- 片付けるときは、`<scripts>/agent-ctl close <名前>` を単独で走らせる。`close` は `start` が控え（`$HERDR_AGENT_STATE_HOME/ledger`。既定は `${XDG_STATE_HOME:-~/.local/state}/herdr-agent/ledger`）に書いた Agent だけを片付け、控えにない名前は 1 行で断る。断られた Agent は、人が手で片付ける。
 - `close` は、控えにある workspace（`tab` では tab）の label が名前であること、呼び出し側の workspace（`tab` では tab）でないこと、`working`・`blocked` の Agent がいないことを確かめる。`tab` のほかは、さらに submodule がないこと、未 commit の変更がないこと、場所の種類ごとの取り込み済みの条件（「起動する」の表）を確かめる。
 - worktree を消す場所では、すべての確かめを通ったあとに、`close` が `git clean -fdX` で ignored なファイル（`.venv`、`node_modules`、cache、`.claude/` の下の Claude Code の記録）を消してから worktree を消す。確かめのどれかで止まったときは、何も消さない。
 - JSON は `{name, kind, workspace, place, parent}` で、`tab` と `parent_kept`（閉じなかった親の workspace と理由）が付くことがある。`parent_kept` があれば、それも人に伝える。

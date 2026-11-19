@@ -23,7 +23,11 @@
 # session, herdr's completion_seq, and the waiting calls' tool_use IDs, and a
 # later --wait on the same stop waits for the next one; agent-ctl close
 # removes the note with the agent. Run again after a pause, it hands over
-# the agent's next stop, even one that ended before it started.
+# the agent's next stop, even one that ended before it started. The notes are
+# in $HERDR_AGENT_STATE_HOME/stops, which lib/karo-env sets; agent-report
+# runs outside the sandbox, so the value comes only from Claude Code's env
+# and settings at start, and a call that sets it before the name runs in the
+# sandbox.
 #
 # A blocked or unknown agent (one whose pane is gone) prints the state alone;
 # an agent whose pane someone is watching ends idle, not done. When herdr
@@ -89,7 +93,8 @@ if [ -z "$wait" ]; then
   report
   exit 0
 fi
-seen=$HOME/.local/state/herdr-agent/stops/$name
+. "${0%/*}/../../../lib/karo-env"
+seen=$HERDR_AGENT_STATE_HOME/stops/$name
 # hand_over <status>: note the stop and print it with the message.
 hand_over() {
   mkdir -p "${seen%/*}"

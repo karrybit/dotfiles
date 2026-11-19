@@ -43,8 +43,11 @@
 # The caller's settings may set three EREs: HERDR_AGENT_NAME_PATTERN, which a
 # <name> as given must match, and HERDR_AGENT_BRANCH_PATTERN and
 # HERDR_AGENT_BRANCH_DENY, which a new branch must and must not match. A new
-# branch never holds the agent's name as a word. The ledger is one file at a
-# fixed path; HERDR_AGENT_TEST_LEDGER points it elsewhere only directly
+# branch never holds the agent's name as a word. The ledger is the file
+# $HERDR_AGENT_STATE_HOME/ledger, which lib/karo-env sets; agent-ctl runs
+# outside the sandbox, so the value comes only from Claude Code's env and
+# settings at start, and a call that sets it before the name runs in the
+# sandbox. HERDR_AGENT_TEST_LEDGER points the ledger elsewhere only directly
 # inside a folder agent-ctl-test made with mktemp.
 set -eu
 
@@ -280,7 +283,8 @@ merged_on_origin() {
 # workspace herdr worktree create opened for it ({parent: true, workspace,
 # repo_key}). Lines are appended, and a line is dropped by writing the rest to
 # a temporary file in the same folder and moving it over the ledger.
-ledger=$HOME/.local/state/herdr-agent/ledger
+. "${0%/*}/../../../lib/karo-env"
+ledger=$HERDR_AGENT_STATE_HOME/ledger
 if [ -n "${HERDR_AGENT_TEST_LEDGER:-}" ]; then
   test_dir=$(cd "${HERDR_AGENT_TEST_LEDGER%/*}" 2>/dev/null && pwd -P || true)
   tmp_root=$(cd "${TMPDIR:-/tmp}" && pwd -P)

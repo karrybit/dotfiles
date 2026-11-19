@@ -4,7 +4,8 @@
 # followed by the report when the last message holds the completion report's heading,
 # "status: no-report" when an agent without it does not work again within a minute,
 # "status: awaiting-answer" and the calls when tool calls after the last text have no result, the
-# next stop when the stop it finds was handed over already, and "status: error" when herdr fails.
+# next stop when the stop it finds was handed over already, noted in $HERDR_AGENT_STATE_HOME/stops,
+# and "status: error" when herdr fails.
 # A name holding characters herdr does not take reaches herdr with each turned into "-".
 # usage: agent-report-test   (tests the agent-report beside this script; its files go to a
 #        temporary directory that is removed)
@@ -62,7 +63,8 @@ printf '%s\n' "$(text 'checking the docs')" "$ask" "$answer" "$(text $'## 変更
 printf '%s\n' "$(text 'checking the docs')" "$ask" '{"type":"user","message":{"content":"continue"}}' "$(text $'## 変更の要約\nthe report')" > "$tmp/stub/stale.jsonl"
 printf '%s\n' "$(text 'checking the docs')" "$ask" "$bash" "$ran" > "$tmp/stub/parallel.jsonl"
 printf '%s\n' "$(text 'running the tests')" "$bash" > "$tmp/stub/approval.jsonl"
-export PATH=$tmp/fake:$PATH HOME=$tmp/home CLAUDE_CONFIG_DIR=$tmp/claude STUB_LOG=$tmp/log STUB_DIR=$tmp/stub
+export PATH=$tmp/fake:$PATH HOME=$tmp/home CLAUDE_CONFIG_DIR=$tmp/claude STUB_LOG=$tmp/log STUB_DIR=$tmp/stub \
+  HERDR_AGENT_STATE_HOME=$tmp/state
 report=$'## 変更の要約\nthe report'
 pause='waiting for the run; ## 変更の要約 comes after it'
 stop='--until idle --until done --until blocked --until unknown'
@@ -76,6 +78,7 @@ run a1
 if [[ $code -eq 0 && $out == "$report" && $calls == "agent get a1;" ]]; then pass "prints the last assistant text without waiting"; else fail "plain: $code $out ($calls)"; fi
 run --wait a1
 if [[ $code -eq 0 && $out == "status: idle"$'\n'"$report" && $calls == "agent wait a1 $stop;agent get a1;" ]]; then pass "--wait on an idle agent with the heading prints the state and the report"; else fail "--wait idle: $code $out ($calls)"; fi
+if [[ -s $tmp/state/stops/a1 && ! -e $tmp/home/.local/state/herdr-agent ]]; then pass "--wait notes the stop in \$HERDR_AGENT_STATE_HOME/stops"; else fail "stop note: $(cd "$tmp" && fd -H . state home 2>&1 | paste -sd ' ' -)"; fi
 run a1
 if [[ $out == "$report" ]]; then pass "taking the report again without --wait prints the same report"; else fail "twice: $out"; fi
 states a1 "idle report" "idle report-b 2"

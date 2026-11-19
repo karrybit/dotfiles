@@ -3,8 +3,7 @@
 # by bash, it gives the defaults under HOME, follows XDG_*, keeps KARO_* and HERDR_AGENT_STATE_HOME that
 # are set, and karo_config prints a config.yaml value or, with the file or the key missing, the given
 # value (in the caller's environment, since yq may need HOME to run); and no script outside lib/ nor
-# hooks.json spells a default out itself, except agent-ctl and agent-report, which do not read
-# lib/karo-env.
+# hooks.json spells a default out itself.
 # usage: karo-env-test   (writes only a temporary directory, which it removes)
 set -uo pipefail
 exec </dev/null
@@ -43,8 +42,7 @@ for sh in /bin/sh bash; do
   check "$sh: karo_config gives the value for a missing file" '[]' "$(config "$tmp/empty" .uncounted)"
 done
 
-left=$(cd "$plugin" && rg -n '\$HOME/(karo|\.local/state)' scripts skills/*/scripts hooks/hooks.json \
-  -g '!skills/herdr-agent/scripts/agent-ctl' -g '!skills/herdr-agent/scripts/agent-report')
+left=$(cd "$plugin" && rg -n '\$HOME/(karo|\.local/state)' scripts skills/*/scripts hooks/hooks.json)
 check "no script outside lib/ nor hooks.json spells out a default under HOME" "" "$left"
 
 echo "karo-env-test: $failed failure(s)"
