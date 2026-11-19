@@ -1,0 +1,12 @@
+#!/bin/bash
+# Usage: wt-new <name>
+# Creates the worktree .worktrees/<name> on a new branch wt/<name> and records it in the ledger.
+set -eu
+. "$(dirname "$0")/wt-lib"
+name=$1
+ledger=$(ledger_path)
+branch="wt/$name"
+path="$top/.worktrees/$name"
+git -C "$top" worktree add -q -b "$branch" "$path"
+mkdir -p "$(dirname "$ledger")"
+printf '%s\t%s\n' "$name" "$path" >> "$ledger"

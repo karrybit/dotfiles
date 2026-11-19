@@ -1,0 +1,8 @@
+#!/bin/bash
+# Usage: wt-list
+# Prints the name and branch of each worktree that wt-new created.
+set -eu
+. "$(dirname "$0")/wt-lib"
+ledger=$(ledger_path)
+[ -f "$ledger" ] || exit 0
+cut -f1,3 "$ledger"
