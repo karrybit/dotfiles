@@ -18,7 +18,6 @@
 | `tasks` | 必須のキー。タスク ID のブロック形式のリスト（`  - karo-a2v`）。タスク ID のない仕事は外のチケットのキー（`ABC-123`）。当たるものがなければ `tasks: []` |
 | `projects` | 必須のキー。プロジェクトの名前のブロック形式のリスト。当たるものがなければ `projects: []`。値は Project のノートの、`project/repo/` か `project/misc/` より後ろのパスから `.md` を除いたもの（`github.com/acme/demo`、`work`） |
 | `status` | 下書きは `draft`、置き換わったものは `deprecated`。仕上がったもの（Accepted の Decision Record を含む）には書かない |
-| `supersedes` | 置き換えた古いノートの、`$KARO_HOME` からのパス。karo-check は確かめないので、そのパスのファイルがあることを書くときに確かめる |
 | `resource` | ノートが表す実物の URL（リポジトリ、PR） |
 | `sources` | `- { id, resource, title }` のリスト。外の原文（議事録、Slack、資料、ドキュメント）の URL |
 
@@ -50,7 +49,7 @@
 | 出来事 | 直すフィールド |
 | --- | --- |
 | standup に追記した | なし |
-| 決定を新しい決定で置き換えた | Decision Record は、新しいほうに `supersedes`、古いほうに `status: deprecated` と、`## 状態` の節の `Superseded` の行。Beads の決定は直すフィールドなし（`bd supersede`。`karo:tasks` skill の「判断待ちと決定」） |
+| 決定を新しい決定で置き換えた | Decision Record は、古いほうに `status: deprecated` と、`## 状態` の節の `Superseded` の行。Beads の決定は直すフィールドなし（`bd supersede`。`karo:tasks` skill の「判断待ちと決定」） |
 | 下書きが仕上がった | `status: draft` の行を消す |
 | 調査や資料が新しいものに置き換わった | 古いほうに `status: deprecated` |
 | ノートが別のタスクにも使われるようになった | `tasks` にそのタスク ID を足す |

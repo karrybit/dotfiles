@@ -114,7 +114,7 @@ user-invocable: false
 | `doc/` の資料の最新版 | `cat doc/<話題>.md`。前の版は `git log -p -- doc/<話題>.md` |
 | 外に作ったもの・送った文面 | `bd list --all --notes-contains '<ID か URL の一部か相手>' --json`、続けて `bd list --all --desc-contains '<同じ語>' --json`、続けて `rg -n '<同じ語>' standup source` |
 | 調査の原文 | `investigation/YYYY-MM-DD-<話題>/map.md` の論点から原文の行へ。`rg -n '<語>' investigation/YYYY-MM-DD-<話題>/sources` |
-| 下書き・置き換え済み | `rg -lUP '\A---\n(?:(?!---\n).*\n)*?status: (?:draft\|deprecated)' -g '!investigation/*/sources/**' .`。Decision Record の置き換え先は `supersedes` と古い記録の「状態」の節 |
+| 下書き・置き換え済み | `rg -lUP '\A---\n(?:(?!---\n).*\n)*?status: (?:draft\|deprecated)' -g '!investigation/*/sources/**' .`。Decision Record の置き換え先は古い記録の「状態」の節 |
 
 ## Decision Record を書く
 
@@ -131,7 +131,7 @@ user-invocable: false
 | `## 影響` | 期待する効果、制約、トレードオフ |
 | `## 参照` | 関わるタスクの ID、記録へのパスのリンク、cass の出典（`karo:recall` skill の「出典」の形） |
 
-- 決定を変えるときは、新しい記録を書き、フロントマターの `supersedes` に古い記録のパスを書く。古い記録は消さずに、`frontmatter.md` の「追記したとき・状態が変わったとき」の表の「決定を新しい決定で置き換えた」の行のとおり直し、2 つを同じ commit に入れる。誤字と事実の誤りの訂正は、古い記録を Edit で直すだけにする。
+- 決定を変えるときは、新しい記録を書き、その `## 参照` に古い記録のリンクを書く。古い記録は消さずに、`frontmatter.md` の「追記したとき・状態が変わったとき」の表の「決定を新しい決定で置き換えた」の行のとおり直し、2 つを同じ commit に入れる。誤字と事実の誤りの訂正は、古い記録を Edit で直すだけにする。
 - 判断待ちの decision の bead から決まった決定は、記録を書いてから、bead を `bd close <決定> --reason '決定: decisions/<記録>.md' --json` で閉じる。決定の全文は記録にだけ置き、bead には書き写さない。
 - Decision Record は理由を持ち、karo が今従う規則は持たない。規則は、オーナーの仕事の仕方なら `$KARO_HOME/AGENTS.md`・`$KARO_HOME/rule/` に、karo の仕組みなら karo plugin に書き、規則の行から記録のパスを指す。
 

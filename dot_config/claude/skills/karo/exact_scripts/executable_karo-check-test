@@ -25,9 +25,9 @@ printf -- '---\ntype: Investigation\ndescription: 例の調べ物。\ndate: 2026
 printf -- '---\ntype: Standup\ndescription: 例の日。\ndate: 2026-01-01\ntasks: []\nprojects: []\n---\n\n## Checkin（2026-01-01）\n\n- 例\n' > "$ok/standup/2026-01-01.md"
 printf -- '---\ntype: Meeting Notes\ndescription: 例の MTG。\ndate: 2026-01-01\ntasks: []\nprojects:\n  - github.com/acme/demo\nsources:\n  - { id: notes, resource: https://example.invalid/notes, title: 例の議事録 }\n---\n\n## 例の MTG\n\n- 決定: 例\n' > "$ok/source/meeting/2026-01-01-demo.md"
 
-# A decision record sits in decisions/; the one it replaces stays there as deprecated, named by supersedes.
+# A decision record sits in decisions/; the one it replaces stays there as deprecated.
 printf -- '---\ntype: Decision Record\ndescription: 例の古い決定。\ndate: 2026-01-01\ntasks: []\nstatus: deprecated\nprojects:\n  - github.com/acme/demo\n---\n\n## 状態\n\nSuperseded（[新しい決定](decisions/2026-01-02-example.md)）\n' > "$ok/decisions/2026-01-01-example.md"
-printf -- '---\ntype: Decision Record\ndescription: 例の決定。\ndate: 2026-01-02\ntasks: []\nprojects:\n  - github.com/acme/demo\nsupersedes: decisions/2026-01-01-example.md\n---\n\n## 状態\n\nAccepted\n' > "$ok/decisions/2026-01-02-example.md"
+printf -- '---\ntype: Decision Record\ndescription: 例の決定。\ndate: 2026-01-02\ntasks: []\nprojects:\n  - github.com/acme/demo\n---\n\n## 状態\n\nAccepted\n' > "$ok/decisions/2026-01-02-example.md"
 
 if out=$("$bin/karo-check" "$ok" 2>&1); then pass "valid vault passes"; else fail "valid vault fails: $out"; fi
 
