@@ -6,7 +6,8 @@
 # `bd show` finds a task with exactly that ID, so names such as `<prefix>-setup` do not count. The
 # second stop of a turn (stop_hook_active), a session elsewhere, a missing prefix, input it cannot read,
 # and a bd that fails all let the reply through: it always exits 0.
-[ "${CLAUDE_PROJECT_DIR:-}" = "${KARO_HOME:-$HOME/karo}" ] || exit 0
+. "${0%/*}/../lib/karo-env"
+[ "${CLAUDE_PROJECT_DIR:-}" = "$KARO_HOME" ] || exit 0
 prefix=$(yq -r '.["issue-prefix"] // ""' "$CLAUDE_PROJECT_DIR/.beads/config.yaml" 2>/dev/null) || exit 0
 [ -n "$prefix" ] || exit 0
 ids=$(jq -r --arg p "$prefix" '

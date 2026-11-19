@@ -15,7 +15,8 @@ set -u
 subject=$1 body=$2; shift 2
 bin=$(cd "$(dirname "$0")" && pwd)
 read -r -a folders < "$bin/record-folders"
-cd "${KARO_HOME:-$HOME/karo}" || exit 2
+. "${0%/*}/../lib/karo-env"
+cd "$KARO_HOME" || exit 2
 for p; do
   case $p in *[$'\n\t']*) echo "NG $subject: not a record path: a path with a tab or a newline"; exit 1 ;; esac
   case $p in *..*|/*|*//*) echo "NG $subject: not a record path: $p"; exit 1 ;; esac

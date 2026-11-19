@@ -36,7 +36,8 @@ for tool in yq fd rg; do
 done
 only=()
 while [[ ${1:-} == --only ]]; do only+=("${2#./}"); shift 2; done
-vault=${1:-${KARO_HOME:-$HOME/karo}}
+. "${0%/*}/../lib/karo-env"
+vault=${1:-$KARO_HOME}
 bin=$(cd "$(dirname "$0")" && pwd)
 # The record folders, the one list commit takes its record paths from too
 read -r -a folders < "$bin/record-folders"

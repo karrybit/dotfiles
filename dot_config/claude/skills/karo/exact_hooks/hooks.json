@@ -34,7 +34,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ \"$CLAUDE_PROJECT_DIR\" != \"${KARO_HOME:-$HOME/karo}\" ] || [ ! -d \"$CLAUDE_PROJECT_DIR/.beads\" ] || { cd \"$CLAUDE_PROJECT_DIR\" || exit 0; echo '## bd: in_progress'; bd list --status in_progress --limit 0 --json | jq -r '.[]? | [.id, .status, (.assignee // \"-\"), ((.labels // []) | map(select(startswith(\"project:\"))) | join(\",\")), .title] | @tsv'; echo '## bd: 判断待ち'; bd human list --status open; echo '## bd: ready'; bd ready --exclude-type decision --limit 10 --json | jq -r '.[]? | [.id, .priority, ((.labels // []) | map(select(startswith(\"project:\"))) | join(\",\")), .title] | @tsv'; echo '## bd: 件数'; bd count --by-status; }"
+            "command": ". \"${CLAUDE_PLUGIN_ROOT}/lib/karo-env\"; [ \"$CLAUDE_PROJECT_DIR\" != \"$KARO_HOME\" ] || [ ! -d \"$CLAUDE_PROJECT_DIR/.beads\" ] || { cd \"$CLAUDE_PROJECT_DIR\" || exit 0; echo '## bd: in_progress'; bd list --status in_progress --limit 0 --json | jq -r '.[]? | [.id, .status, (.assignee // \"-\"), ((.labels // []) | map(select(startswith(\"project:\"))) | join(\",\")), .title] | @tsv'; echo '## bd: 判断待ち'; bd human list --status open; echo '## bd: ready'; bd ready --exclude-type decision --limit 10 --json | jq -r '.[]? | [.id, .priority, ((.labels // []) | map(select(startswith(\"project:\"))) | join(\",\")), .title] | @tsv'; echo '## bd: 件数'; bd count --by-status; }"
           }
         ]
       }
@@ -85,7 +85,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ \"$CLAUDE_PROJECT_DIR\" != \"${KARO_HOME:-$HOME/karo}\" ] || date '+発言の時刻: %Y-%m-%d %H:%M'"
+            "command": ". \"${CLAUDE_PLUGIN_ROOT}/lib/karo-env\"; [ \"$CLAUDE_PROJECT_DIR\" != \"$KARO_HOME\" ] || date '+発言の時刻: %Y-%m-%d %H:%M'"
           }
         ]
       }

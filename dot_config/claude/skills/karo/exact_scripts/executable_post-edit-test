@@ -9,7 +9,8 @@
 #        the vault goes to a temporary directory and is removed)
 set -uo pipefail
 exec </dev/null
-karo=${1:-${KARO_HOME:-$HOME/karo}}
+. "${0%/*}/../lib/karo-env"
+karo=${1:-$KARO_HOME}
 bin=$(cd "$(dirname "$0")" && pwd)
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/post-edit-test.XXXXXX") || exit 2
 trap 'rm -rf "$tmp"' EXIT
@@ -59,7 +60,7 @@ edit "a path that climbs out of KARO_HOME is not checked" "$v/standup/../../wt2/
 kept "rumdl leaves a path that climbs out of KARO_HOME" "$tmp/wt2/standup/2026-01-02.md"
 # A copy of this folder whose karo-check is a stub that cannot run stands in for a check that cannot run.
 post_edit_bin=$tmp/bin
-mkdir -p "$post_edit_bin"
+mkdir -p "$post_edit_bin" && cp -R "$bin/../lib" "$tmp/"
 for s in "$bin"/*; do [[ ${s##*/} == karo-check ]] || ln -s "$s" "$post_edit_bin/"; done
 printf '#!/bin/sh\necho "karo-check: cannot run yq" >&2\nexit 2\n' > "$post_edit_bin/karo-check" && chmod +x "$post_edit_bin/karo-check"
 edit "a check that cannot run exits 2 with its reason" "$v/standup/2026-01-04.md" "${note//01-01/01-04}" 2 "karo-check: cannot run"

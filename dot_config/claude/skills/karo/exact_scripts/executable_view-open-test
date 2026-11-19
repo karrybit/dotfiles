@@ -28,7 +28,7 @@ failed=0
 fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
 pass() { printf 'ok\t%s\n' "$1"; }
 
-mkdir "$tmp/bin" && cp "$bin/view-open" "$tmp/bin/" || exit 2
+mkdir "$tmp/bin" && cp "$bin/view-open" "$tmp/bin/" && cp -R "$bin/../lib" "$tmp/" || exit 2
 vo=$tmp/bin/view-open stub=$tmp/bin/tb-view
 id=0f6c7d9e-3b1a-4c52-9e34-5a8d1b7c2e40
 mkdir -p "$tmp/karo/doc/abc/1" "$tmp/media" "$tmp/folder.png" "$tmp/data/html/$id/sub" \

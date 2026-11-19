@@ -15,8 +15,9 @@
 # ${XDG_DATA_HOME:-~/.local/share}/karo).
 set -eu
 
-karo=${KARO_HOME:-$HOME/karo}
-store=${KARO_DATA_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/karo}/html
+. "${0%/*}/../lib/karo-env"
+karo=$KARO_HOME
+store=$KARO_DATA_HOME/html
 usage() {
   echo "usage: view-open [--no-merge] <absolute path of an .html or .svg under $karo/doc, a $store/<UUID>/index.html, or a .png .jpg .jpeg .webp .gif .mp4 .webm> [<name of letters, digits, . _ -, starting with a letter or digit>]" >&2
   exit 2

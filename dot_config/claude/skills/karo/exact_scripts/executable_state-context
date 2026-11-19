@@ -21,9 +21,10 @@ set -uo pipefail
 mode=${1:-}
 [[ $mode == session-start || $mode == pre-compact || $mode == agents ]] || { echo "usage: state-context session-start|pre-compact|agents" >&2; exit 1; }
 input=$(cat)
-home=${KARO_HOME:-$HOME/karo}
+. "${0%/*}/../lib/karo-env"
+home=$KARO_HOME
 [[ ${CLAUDE_PROJECT_DIR:-} == "$home" && -f $home/AGENTS.md ]] || exit 0
-state_home=${KARO_STATE_HOME:-${XDG_STATE_HOME:-$HOME/.local/state}/karo}
+state_home=$KARO_STATE_HOME
 state=$state_home/state.md
 max=8000
 changed() { date -r "$state" '+%Y-%m-%d %H:%M'; }
@@ -55,8 +56,7 @@ if [[ $mode == pre-compact ]]; then
 fi
 
 printf 'KARO_HOME=%s KARO_DATA_HOME=%s KARO_CONFIG_HOME=%s KARO_STATE_HOME=%s\n' "$home" \
-  "${KARO_DATA_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/karo}" \
-  "${KARO_CONFIG_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/karo}" "$state_home"
+  "$KARO_DATA_HOME" "$KARO_CONFIG_HOME" "$state_home"
 if [[ ! -f $state ]]; then
   printf '%s がない。進めている作業は Beads の一覧と herdr agent list から読み、karo:record skill の「state.md を書く」で state.md を作る。\n' "$state"
 elif (( $(jq -Rs length "$state") > max )); then

@@ -5,7 +5,8 @@
 # usage: karo-check-test [<karo dir>]   (default KARO_HOME or ~/karo, read only: the real vault is its
 #        copy; the copies go to a temporary directory and are removed)
 set -uo pipefail
-vault=${1:-${KARO_HOME:-$HOME/karo}}
+. "${0%/*}/../lib/karo-env"
+vault=${1:-$KARO_HOME}
 bin=$(cd "$(dirname "$0")" && pwd)
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/karo-check-test.XXXXXX") || exit 2
 trap 'rm -rf "$tmp"' EXIT

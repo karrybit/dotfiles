@@ -7,5 +7,6 @@
 # usage: session-rules   (the hook input JSON on stdin, not read)
 set -uo pipefail
 exec </dev/null
-[[ ${CLAUDE_PROJECT_DIR:-} == "${KARO_HOME:-$HOME/karo}" ]] || exit 0
+. "${0%/*}/../lib/karo-env"
+[[ ${CLAUDE_PROJECT_DIR:-} == "$KARO_HOME" ]] || exit 0
 cat "$(cd "$(dirname "$0")/.." && pwd)/hooks/session-rules.md"

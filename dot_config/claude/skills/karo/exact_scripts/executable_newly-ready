@@ -5,7 +5,8 @@
 # owner. bd prints an object with "unblocked" only when the close made a task ready, and the plain
 # array of closed issues otherwise. Any other command, session, or output gives nothing. It only
 # informs: it always exits 0.
-[ "${CLAUDE_PROJECT_DIR:-}" = "${KARO_HOME:-$HOME/karo}" ] || exit 0
+. "${0%/*}/../lib/karo-env"
+[ "${CLAUDE_PROJECT_DIR:-}" = "$KARO_HOME" ] || exit 0
 jq -c '
   select(.tool_input.command // "" | test("\\bbd close\\b"))
   | .tool_response.stdout // "" | fromjson? | objects | .unblocked // []

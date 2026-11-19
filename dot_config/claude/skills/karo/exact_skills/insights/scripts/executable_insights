@@ -55,14 +55,13 @@ case $day in
   [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) ;;
   *) usage ;;
 esac
-karo=$(cd "${KARO_HOME:-$HOME/karo}" && pwd -P)
+. "${0%/*}/../../../lib/karo-env"
+karo=$(cd "$KARO_HOME" && pwd -P)
 projects=${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects
 # Claude Code names a project folder after its cwd with every non-alphanumeric
 # character replaced by "-".
 karoproj=$projects/$(printf '%s' "$karo" | tr -c 'A-Za-z0-9' '-')
-uncounted='[]'
-config=${KARO_CONFIG_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/karo}/config.yaml
-[ ! -f "$config" ] || uncounted=$(yq -o=json -I=0 '.uncounted // []' "$config")
+uncounted=$(karo_config .uncounted '[]')
 
 # The $ names below are jq variables, not shell ones.
 # shellcheck disable=SC2016

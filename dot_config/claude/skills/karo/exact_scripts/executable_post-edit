@@ -8,7 +8,8 @@
 # lead out of the checkout, and a hidden path in the checkout (under .claude/, say) is only formatted,
 # since karo-check does not read it.
 # Environment: KARO_HOME (default ~/karo).
-karo=${KARO_HOME:-$HOME/karo}
+. "${0%/*}/../lib/karo-env"
+karo=$KARO_HOME
 f=$(jq -r '.tool_input.file_path // empty')
 case $f in */../*) exit 0 ;; *.md) ;; *) exit 0 ;; esac
 bin=$(cd "$(dirname "$0")" && pwd)
