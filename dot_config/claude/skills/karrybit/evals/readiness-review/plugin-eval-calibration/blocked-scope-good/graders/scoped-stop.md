@@ -1,7 +1,7 @@
 ---
 type: llm
 ---
-Facts about the fixture. The plan has three goals. G1 adds `wt-list --json` and touches only `bin/wt-list` and a new `tests/json`; it reads the ledger through `ledger_path` and does not depend on G2. G2 moves the ledger to the XDG state folder, decided by the owner as D-1, and also migrates the existing `state/ledger.tsv` to the new place on first use. `docs/decisions.md` records D-2 as undecided and the owner's to make, due next week: whether to migrate the existing ledger or drop it and ask people to clean up, with a concern that folders with the same name in different repositories could mix ledgers. G3 updates the README for G2 and starts after G2.
+Facts about the fixture. The plan has three goals. G1 adds `wt-list --json`, which prints the same name and branch as plain `wt-list` does today, leaves the stale-branch issue #3 to a separate plan, and touches only `bin/wt-list` and a new `tests/json`; it reads the ledger through `ledger_path` and does not depend on G2. G2 moves the ledger to the XDG state folder, decided by the owner as D-1, and also migrates the existing `state/ledger.tsv` to the new place on first use. `docs/decisions.md` records D-2 as undecided and the owner's to make, due next week: whether to migrate the existing ledger or drop it and ask people to clean up, with a concern that folders with the same name in different repositories could mix ledgers. G3 updates the README for G2 and starts after G2.
 
 The response is the reviewer's final message.
 

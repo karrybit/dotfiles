@@ -5,7 +5,7 @@
 
 ## Goal
 
-- G1: `wt-list` に `--json` を足す。触るのは `bin/wt-list` と、新しく足す `tests/json`。ledger の場所は `ledger_path` から読むので、G2 と関わらない。
+- G1: `wt-list` に `--json` を足す。`--json` は、今の `wt-list` と同じ name と branch を JSON で出す。branch が古くなる #3 は、この計画の範囲の外で、別の計画で直す。触るのは `bin/wt-list` と、新しく足す `tests/json`。ledger の場所は `ledger_path` から読むので、G2 と関わらない。
 - G2: `bin/wt-lib` の `ledger_path` を `${XDG_STATE_HOME:-$HOME/.local/state}/wtctl/<リポジトリのフォルダ名>.tsv` に変える（D-1）。最初に呼ばれたとき、今の `state/ledger.tsv` を新しい場所へ移す。触るのは `bin/wt-lib` と `tests/run`。
 - G3: `README.md` の ledger の場所の説明を、G2 に合わせて直す。G2 の後。
 
