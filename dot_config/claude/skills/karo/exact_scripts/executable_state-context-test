@@ -6,10 +6,13 @@
 # state.md and one over 8,000 characters each give a notice and exit 0; items marked "（… 時点）" bring a request to check them
 # against Beads and Herdr, and a state.md without the mark brings none; only compact asks to call the
 # skills again; on manual and auto PreCompact the hook exits 0 with no block decision and tells the
-# summary to leave state.md out, with its last change or the notice that it is missing; a session outside
+# summary to leave state.md out, with its last change or the notice that it is missing; on every source the
+# in_progress assignees that herdr lists come as agents to wait for again, each with its status and its
+# agent-report --wait command, and none comes when no assignee is in Herdr or herdr fails; a session outside
 # KARO_HOME gets nothing.
 # usage: state-context-test   (KARO_HOME, KARO_STATE_HOME and the Beads go to a temporary directory,
-#        which is removed; bd is a stub that logs its arguments, so no real Beads is read)
+#        which is removed; bd is a stub that logs its arguments and herdr a stub that prints
+#        STUB_AGENTS, so no real Beads or Herdr is read)
 set -uo pipefail
 exec </dev/null
 root=$(cd "$(dirname "$0")/.." && pwd)
@@ -23,8 +26,9 @@ pass() { printf 'ok\t%s\n' "$1"; }
 export KARO_HOME=$tmp/karo KARO_STATE_HOME=$tmp/state CLAUDE_PLUGIN_ROOT=$root CLAUDE_PROJECT_DIR=$tmp/karo
 mkdir -p "$KARO_HOME/.beads" "$KARO_STATE_HOME" "$tmp/bin" || exit 2
 printf '# karo\n' > "$KARO_HOME/AGENTS.md"
-printf '#!/bin/sh\necho "bd $*" >> "%s/bd.log"\n[ "$1" = list ] || [ "$1" = ready ] && echo "[]"\nexit 0\n' "$tmp" > "$tmp/bin/bd"
-chmod +x "$tmp/bin/bd"
+printf '#!/bin/sh\necho "bd $*" >> "%s/bd.log"\n[ "$1" = list ] || [ "$1" = ready ] && echo "${STUB_TASKS:-[]}"\nexit 0\n' "$tmp" > "$tmp/bin/bd"
+printf '#!/bin/sh\n[ -z "${STUB_HERDR_FAIL:-}" ] || exit 1\n[ "$1 $2" = "agent list" ] && printf %%s "{\\"result\\":{\\"type\\":\\"agent_list\\",\\"list\\":${STUB_AGENTS:-[]}}}"\nexit 0\n' > "$tmp/bin/herdr"
+chmod +x "$tmp/bin/bd" "$tmp/bin/herdr"
 export PATH=$tmp/bin:$PATH
 state=$KARO_STATE_HOME/state.md
 sample='# state
@@ -74,7 +78,7 @@ under() { local n; for n in $lens; do (( n <= $1 )) || return 1; done; }
 printf '%s\n' "$sample" > "$state"
 for source in startup resume clear compact fork; do
   run SessionStart "{\"source\":\"$source\"}"
-  check "$source: two SessionStart hooks run and exit 0" '[[ $codes == "0 0 " ]]'
+  check "$source: three SessionStart hooks run and exit 0" '[[ $codes == "0 0 0 " ]]'
   check "$source: state.md comes once" '[[ $(count "^- 記録の検査を速くする$") -eq 1 && $(count "^## state.md の終わり$") -eq 1 ]]'
   check "$source: the KARO_* values come once" '[[ $(count "^KARO_HOME=$KARO_HOME ") -eq 1 ]]'
   check "$source: no bd prime is run or printed" '! grep -q prime "$tmp/bd.log" && [[ $(count "bd prime") -eq 0 ]]'
@@ -83,6 +87,24 @@ for source in startup resume clear compact fork; do
   if [[ $source == compact ]]; then want=1; else want=0; fi
   check "$source: the request to call the skills again comes $want time(s)" '[[ $(count "Skill tool で呼び直す") -eq $want ]]'
 done
+
+# Each in_progress assignee that herdr lists, "." matching herdr's "-", comes once with its status;
+# an assignee herdr does not list and an agent with no task do not.
+wait_cmd='~/.config/claude/skills/karo/skills/herdr-agent/scripts/agent-report --wait'
+export STUB_TASKS='[{"id":"t-1","assignee":"a1b2.1"},{"id":"t-2","assignee":"t-2"},{"id":"t-3","assignee":"gone"},{"id":"t-4"}]'
+export STUB_AGENTS='[{"name":"a1b2-1","agent_status":"working"},{"name":"t-2","agent_status":"idle"},{"name":"other","agent_status":"working"}]'
+for source in startup resume clear compact fork; do
+  run SessionStart "{\"source\":\"$source\"}"
+  check "$source: the agents to wait for again come once, with their status and command" \
+    'zero && [[ $(count "^## 待ち直す Agent$") -eq 1 ]] && under 10000 &&
+      [[ $(count "^- a1b2.1（working）: \`$wait_cmd a1b2.1\`$") -eq 1 && $(count "^- t-2（idle）: \`$wait_cmd t-2\`$") -eq 1 ]] &&
+      [[ $(count "^- .*agent-report --wait") -eq 2 ]]'
+done
+STUB_AGENTS='[{"name":"other","agent_status":"working"}]' run SessionStart '{"source":"resume"}'
+check "no assignee in Herdr gives no agents hook output" 'zero && [[ $lens =~ ^[0-9]+\ 0\  ]] && [[ $(count "待ち直す") -eq 0 ]]'
+STUB_HERDR_FAIL=1 run SessionStart '{"source":"resume"}'
+check "a failing herdr gives no agents hook output" 'zero && [[ $lens =~ ^[0-9]+\ 0\  ]] && [[ $(count "待ち直す") -eq 0 ]]'
+unset STUB_TASKS STUB_AGENTS
 
 printf '%s\n' "${sample//（2026-01-01 10:00 時点）/}" > "$state"
 run SessionStart '{"source":"resume"}'
@@ -119,7 +141,7 @@ for trigger in manual auto; do
 done
 
 CLAUDE_PROJECT_DIR=$tmp/elsewhere
-run SessionStart '{"source":"startup"}'
+STUB_TASKS='[{"assignee":"t-2"}]' STUB_AGENTS='[{"name":"t-2","agent_status":"working"}]' run SessionStart '{"source":"startup"}'
 check "a session outside KARO_HOME gets no SessionStart output" 'zero && [[ $out =~ ^[[:space:]]*$ ]]'
 run PreCompact '{"trigger":"auto","custom_instructions":null}'
 check "a session outside KARO_HOME gets no PreCompact output" 'zero && [[ $out =~ ^[[:space:]]*$ ]]'

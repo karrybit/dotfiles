@@ -9,11 +9,17 @@
 # pre-compact (PreCompact, manual and auto): instructions for the compaction summary, which leave
 # state.md's content out (SessionStart puts the file back) and keep what changed after its last change.
 # It never blocks compaction: it exits 0, and 1 on a usage error, never 2.
+# agents (SessionStart, as a hook of its own so it has its own 10,000 characters): the agents to wait
+# for again, the in_progress assignees of KARO_HOME's Beads that are in `herdr agent list` (an assignee
+# matching the Herdr name with each character herdr does not take turned into "-"), each with its
+# agent_status and the agent-report --wait command, since a wait in the background ends with the
+# session; nothing when there is none or bd or herdr fails. Waiting for each again misses no stop and
+# repeats none, as agent-report --wait hands over a stop only once.
 # The rules for state.md are in the record skill's "state.md を書く".
-# usage: state-context session-start|pre-compact   (the hook input JSON on stdin)
+# usage: state-context session-start|pre-compact|agents   (the hook input JSON on stdin)
 set -uo pipefail
 mode=${1:-}
-[[ $mode == session-start || $mode == pre-compact ]] || { echo "usage: state-context session-start|pre-compact" >&2; exit 1; }
+[[ $mode == session-start || $mode == pre-compact || $mode == agents ]] || { echo "usage: state-context session-start|pre-compact|agents" >&2; exit 1; }
 input=$(cat)
 home=${KARO_HOME:-$HOME/karo}
 [[ ${CLAUDE_PROJECT_DIR:-} == "$home" && -f $home/AGENTS.md ]] || exit 0
@@ -21,6 +27,21 @@ state_home=${KARO_STATE_HOME:-${XDG_STATE_HOME:-$HOME/.local/state}/karo}
 state=$state_home/state.md
 max=8000
 changed() { date -r "$state" '+%Y-%m-%d %H:%M'; }
+
+if [[ $mode == agents ]]; then
+  cd "$home" 2>/dev/null && [[ -d .beads ]] || exit 0
+  tasks=$(bd list --status in_progress --limit 0 --json 2>/dev/null) || exit 0
+  herdr=$(herdr agent list 2>/dev/null) || exit 0
+  jq -r --argjson herdr "$herdr" '
+    ([$herdr.result[]? | arrays | .[] | {key: .name, value: .agent_status}] | from_entries) as $status
+    | [.[]? | .assignee // empty | select($status[gsub("[^a-z0-9_-]"; "-")])] | unique
+    | select(length > 0)
+    | "## 待ち直す Agent",
+      "このセッションで走らせている agent-report --wait がなければ、karo:herdr-agent skill の「終わるのを待つ」のとおり、次のコマンドをそれぞれ単独で、Bash の background 実行で、timeout を 86400000 にして走らせる（待ちの background はセッションが終わると消える。一度返した停止はもう返さないので、全員を待ち直してよい）。",
+      (.[] | "- \(.)（\($status[gsub("[^a-z0-9_-]"; "-")])）: `~/.config/claude/skills/karo/skills/herdr-agent/scripts/agent-report --wait \(.)`")' \
+    <<<"$tasks" 2>/dev/null
+  exit 0
+fi
 
 if [[ $mode == pre-compact ]]; then
   echo 'state.md の中身は要約に写さない（compact のあと、SessionStart の hook が最新の state.md を入れ直す）。'
