@@ -16,7 +16,7 @@
 #   turns          karo turns (one per prompt from the owner, a peer or a task
 #                  notification) with tool calls, not counting AskUserQuestion,
 #                  Write/Edit to a scratchpad, and runs of the scripts the
-#                  skills call as steps (karo's scripts/commit,
+#                  skills call as steps (karo's scripts/commit, scripts/crit-open,
 #                  scripts/karo-check, and scripts/view-open, the karo land
 #                  skill's land, the karo
 #                  insights skill's insights, the karrybit crit skill's
@@ -72,7 +72,7 @@ def day: ts | strflocaltime("%Y-%m-%d");
 def hm: ts | strflocaltime("%H:%M");
 def session: split("/") | last | sub("\\.jsonl$"; "") | .[:8];
 def text: .content | if type == "string" then . else (map(.text? // "") | join("")) end;
-def step: test("^~/\\.config/claude/skills/karo/(scripts/(commit|karo-check|view-open)|skills/(land/scripts/land|insights/scripts/insights|herdr-agent/scripts/(agent-ctl|agent-report)))( |$)|^~/\\.config/claude/skills/karrybit/skills/(crit/scripts/crit-open|herdr-agent/scripts/(agent-ctl|agent-report))( |$)")
+def step: test("^~/\\.config/claude/skills/karo/(scripts/(commit|crit-open|karo-check|view-open)|skills/(land/scripts/land|insights/scripts/insights|herdr-agent/scripts/(agent-ctl|agent-report)))( |$)|^~/\\.config/claude/skills/karrybit/skills/(crit/scripts/crit-open|herdr-agent/scripts/(agent-ctl|agent-report))( |$)")
   or (. as $c | any($uncounted[]; . as $re | $c | test($re)));
 def counted: .name == "AskUserQuestion" or (.name == "Bash" and (.input.command | tostring | step))
   or ((.name == "Write" or .name == "Edit") and (.input.file_path | tostring | test("/scratchpad/")))
