@@ -112,6 +112,25 @@ agent-ctl send --goal <条件> <名前>
 - origin の先頭の commit が手元にないブランチ（ほかから push された、origin で squash merge された）とは比べないので、そのブランチにだけ入っている commit で止まったら、fetch してから呼び直す。
 - 取り込まれていない commit で止まったら、取り込んでから呼び直す。
 
+## karo が答えてよいダイアログ
+
+karo が呼び出し側のとき、下の「止まった Agent に答える」の 2 に渡す「答えてよいダイアログの一覧」はこの節にする。
+
+- 次のどれかにあたる承認のダイアログには、karo が Yes を答える。
+  - 読むだけのコマンド。
+  - Agent の worktree、scratchpad、Agent が試しのために作った workspace（label が `-test` で終わるもの）、使い捨ての herdr のセッションの中だけで済む操作。その workspace を閉じることも含む。
+  - Agent の worktree の中で、git が追跡しているファイルを `git rm`（`-r` を含む）で消すか、`git mv` で worktree の中の別のパスに移す操作のうち、`-f` も `--force` も付けないもの。消したファイルも移す前のパスも git の履歴から戻せる。
+- 次のものは、画面の内容を AskUserQuestion にしてオーナーに尋ね、オーナーの答えを karo が「止まった Agent に答える」の 3 で送る: push、上にあたらない削除と移動（`-f` か `--force` を付けた `git rm` と `git mv`、追跡していないファイルや ignored のファイルの削除、`rm -rf`、worktree の外の削除）、外への送信、karo の pane に触るもの、`view - ` の pane へのキー、秘密の情報を読むもの、内容がわからないもの、どれにあたるか迷うもの、起動時の信頼のダイアログ、Agent の AskUserQuestion。
+- オーナーには、ほかの workspace や pane へ移らずに、karo のセッションの中で答えてもらう。
+- ダイアログに答えたら、答えたコマンドの要旨を、その Agent のタスクの Beads に `メモ:` の comment で書く（`karo:tasks` skill の「comment の語」）。
+
+## pane で開く・閉じる
+
+- 閉じてよいのは karo が作った tab・pane・workspace だけにする。karo 自身の pane（`$HERDR_PANE_ID`）とオーナーが作ったものは残す。
+- オーナーが画像（.png .jpg .jpeg .webp .gif）か動画（.mp4 .webm）を見たいと頼んだときと、`karo:explain` が解説を見せるときは `~/.config/claude/skills/karo/scripts/view-open <絶対パス> [<短い名前>]` を、`karrybit:crit` が review の URL を返したとき（開き直したときも）は URL のポートを `~/.config/claude/skills/karo/scripts/crit-open <ポート>` に渡して、単独の Bash で実行し、出力の pane の ID を控える。
+- view-open は `view - <名前>`、crit-open は `view - crit` の pane に開き、右に terminal-browser の pane があれば tab として足す。crit-open は、その URL を表示している tab がすでにあれば、開かずにその tab だけを reload して `crit-open: reloaded <URL>` を出す。新しい pane で開くのは、オーナーがそう頼んだときだけにする（先頭に `--no-merge`）。0 でない終了コードで終わったときは、パスか URL をオーナーに伝える。
+- karo が開いた `view - ` で始まる label の pane は、オーナーが閉じてと言ったときに `herdr pane close <pane の ID>` で閉じ、キーは送らない（`Ctrl+C` も送らない）。
+
 ## 止まった Agent に答える
 
 1. `herdr agent read <Agent 名>` で画面を読む。承認のダイアログは、コマンドの全文を読み、スクリプトを動かすものはそのスクリプトの中身も読む。AskUserQuestion は、問いのタブの行、選択肢の並びとカーソルの位置、画面の下のキーの案内を読み、`awaiting-answer` の出力の問いと選択肢の説明と合わせる。

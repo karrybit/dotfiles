@@ -67,7 +67,7 @@ description: 'Herdr 上の Agent に仕事を委任する手順。オーナー�
    完了条件: ブリーフのファイルがある。
 3. `bd update <タスクID> --claim --actor <Agent 名> --json` を単独で実行し、Agent 名でタスクを claim する。status が `deferred` のときと claim が断られたときは、`karo:tasks` skill の「タスクを進める」の 3 に従う。
    完了条件: JSON の `status` が `in_progress`、`assignee` が Agent 名。
-4. `<scripts>/agent-ctl start <タスクID> <ブリーフ> <場所>` を単独で実行する（`<場所>` は「作業場所と取り込み」）。`status` が `working` でなければ、`karo:herdr-agent` の「止まった Agent に答える」に進み、答えてよいかは AGENTS.md の「Herdr の操作」で決める。Agent を起動できなかったときは、`bd unclaim <タスクID> --if-assignee <Agent 名> --json` で claim を戻す。
+4. `<scripts>/agent-ctl start <タスクID> <ブリーフ> <場所>` を単独で実行する（`<場所>` は「作業場所と取り込み」）。`status` が `working` でなければ、`karo:herdr-agent` の「止まった Agent に答える」に進み、答えてよいかは `karo:herdr-agent` の「karo が答えてよいダイアログ」で決める。Agent を起動できなかったときは、`bd unclaim <タスクID> --if-assignee <Agent 名> --json` で claim を戻す。
    完了条件: JSON の `status` が `working`。
 5. 下の「終わるのを待つ」に従って待ち、その場でオーナーに返す。
    完了条件: background の agent-report が走っている。
@@ -100,14 +100,14 @@ description: 'Herdr 上の Agent に仕事を委任する手順。オーナー�
 ## 終わるのを待つ
 
 - `karo:herdr-agent` の「終わるのを待つ」の手順で、`<scripts>/agent-report --wait <名前>` を background で走らせ、foreground ではオーナーの次の依頼を受ける。
-- 通知の 1 行目が `idle` か `done` なら、2 行目からの完了報告を持って `karo:review` skill に進む。`blocked` なら、答えてよいかを AGENTS.md の「Herdr の操作」で決める。`awaiting-answer` なら、2 行目からの待っている呼び出しを読む。承認のダイアログは `blocked` と同じく AGENTS.md の「Herdr の操作」で答えてよいかを決め、AskUserQuestion の問いのうち答えが依頼とブリーフから決まらないものはオーナーに尋ねてから、herdr-agent の「止まった Agent に答える」で答えを送る。`no-report` なら、2 行目からの Agent の最後の発言を読み、Agent の質問のうち、答えが依頼とブリーフから決まらないものはオーナーに尋ねてから送る。そのほかの状態と `no-report` の送り方は herdr-agent の手順で扱い、そこで人に伝えるとある結果はオーナーに報告する。
+- 通知の 1 行目が `idle` か `done` なら、2 行目からの完了報告を持って `karo:review` skill に進む。`blocked` なら、答えてよいかを `karo:herdr-agent` の「karo が答えてよいダイアログ」で決める。`awaiting-answer` なら、2 行目からの待っている呼び出しを読む。承認のダイアログは `blocked` と同じく `karo:herdr-agent` の「karo が答えてよいダイアログ」で答えてよいかを決め、AskUserQuestion の問いのうち答えが依頼とブリーフから決まらないものはオーナーに尋ねてから、herdr-agent の「止まった Agent に答える」で答えを送る。`no-report` なら、2 行目からの Agent の最後の発言を読み、Agent の質問のうち、答えが依頼とブリーフから決まらないものはオーナーに尋ねてから送る。そのほかの状態と `no-report` の送り方は herdr-agent の手順で扱い、そこで人に伝えるとある結果はオーナーに報告する。
 - Agent が停止条件に当たって止まったと報告したら、再開を自分で決めずに、理由と変更案を手順の承認者に出し、承認を得てから Agent に再開を頼む。
 
 完了条件: 指示を送ったすべての Agent について、background の agent-report が走っているか、終わったことを確かめている。
 
 ## Agent を終了する
 
-- 役目を終えた Agent は、AGENTS.md の「委任・レビュー・Checkin・Checkout」の恒常的な許可に従い、オーナーの承認を待たずに終了し、結果だけを報告する。
+- 役目を終えた Agent は、karo の決まり（SessionStart の hook が入れる文）の「委任と取り込み」に従い、オーナーの承認を待たずに終了し、結果だけを報告する。
 - 取り込まれていない commit や未 commit の変更が残っているときは、終了せずにオーナーに報告する。
 
 1. `<scripts>/agent-ctl close <タスクID>` を単独で実行する（`karo:herdr-agent` の「閉じる」）。worktree に残った Git の管理外のファイル（`.venv`、`node_modules`、cache など）は、`close` がすべての確かめを通ったあとに worktree と一緒に消す。止まったら、その行と `parent_kept` をオーナーに報告する。

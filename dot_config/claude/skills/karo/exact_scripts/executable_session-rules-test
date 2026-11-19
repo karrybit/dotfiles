@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Show that karo's rules reach a session in KARO_HOME once and no other session: hooks.json runs
+# session-rules from one SessionStart hook with the same matcher as state-context, a mocked hook input in
+# KARO_HOME prints hooks/session-rules.md once and whole, a session elsewhere gets nothing, and the text
+# stays under the 10,000 characters Claude Code passes on from a hook's output.
+# usage: session-rules-test
+set -uo pipefail
+exec </dev/null
+bin=$(cd "$(dirname "$0")" && pwd)
+plugin=$(cd "$bin/.." && pwd)
+rules=$plugin/hooks/session-rules.md
+failed=0
+fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
+pass() { printf 'ok\t%s\n' "$1"; }
+
+hooks=$plugin/hooks/hooks.json
+n=$(jq '[.hooks.SessionStart[] | .hooks[] | select(.command | test("/scripts/session-rules$"))] | length' "$hooks")
+want=$(jq -r '.hooks.SessionStart[] | select(any(.hooks[]; .command | test("/scripts/state-context session-start$"))) | .matcher' "$hooks")
+got=$(jq -r '.hooks.SessionStart[] | select(any(.hooks[]; .command | test("/scripts/session-rules$"))) | .matcher' "$hooks")
+if [[ $n -eq 1 && -n $want && $got == "$want" ]]; then pass "one SessionStart hook runs session-rules, matcher $got"; else fail "hooks.json: $n hook(s), matcher '$got', want '$want'"; fi
+
+input='{"hook_event_name":"SessionStart","source":"startup","session_id":"test","cwd":"/k"}'
+out=$(printf '%s' "$input" | env KARO_HOME=/k CLAUDE_PROJECT_DIR=/k "$bin/session-rules"); code=$?
+if [[ $code -eq 0 && $out == "$(<"$rules")" && $(printf '%s\n' "$out" | rg -c '^# karo の決まり$') -eq 1 ]]; then
+  pass "a session in KARO_HOME gets the rules once"
+else
+  fail "in KARO_HOME: exit $code, $(printf '%s\n' "$out" | rg -c '^# karo の決まり$') heading(s)"
+fi
+out=$(printf '%s' "$input" | env -u KARO_HOME HOME=/h CLAUDE_PROJECT_DIR=/h/karo "$bin/session-rules"); code=$?
+if [[ $code -eq 0 && $out == "$(<"$rules")" ]]; then pass "KARO_HOME defaults to ~/karo"; else fail "default KARO_HOME: exit $code"; fi
+out=$(printf '%s' "$input" | env KARO_HOME=/k CLAUDE_PROJECT_DIR=/elsewhere "$bin/session-rules"); code=$?
+if [[ $code -eq 0 && -z $out ]]; then pass "a session elsewhere gets nothing"; else fail "elsewhere: exit $code: ${out:0:80}"; fi
+
+# jq counts characters whatever the locale, where wc -m may count bytes.
+chars=$(jq -Rs 'length' < "$rules")
+if [[ $chars -lt 10000 ]]; then pass "the rules are $chars characters, under 10,000"; else fail "the rules are $chars characters"; fi
+
+echo "session-rules-test: $failed failure(s)" >&2
+[[ $failed -eq 0 ]]

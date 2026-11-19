@@ -89,5 +89,5 @@ description: 'HTML の解説を git の外の store（`$KARO_DATA_HOME/html/<UUI
 
 ## 見せる
 
-- オーナーが解説を見たいと言ったら、`<root>/<id>/index.html` を、名前を `<id の先頭 8 文字>` にして、`$KARO_HOME/AGENTS.md` の「Herdr の操作」の pane の開き方で開く。
+- オーナーが解説を見たいと言ったら、`<root>/<id>/index.html` を、名前を `<id の先頭 8 文字>` にして、`karo:herdr-agent` skill の「pane で開く・閉じる」の開き方で開く。
 - view-open が 0 でない終了コードで終わったときと、オーナーが view-open の実行の確認を断ったときは、`index.html` のパスをオーナーに伝える。

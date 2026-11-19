@@ -1,12 +1,12 @@
 ---
 name: record
-description: '$KARO_HOME の記録のファイルを Edit・Write で書き、karo の commit の script で commit する手順と、ノートのフロントマターの書き方（type、項目の埋め方、置き場所、状態が変わったときに直すフィールド）と、karo の長い目の決定の Decision Record の書き方と置き換え方と、karo の今の状態の state.md の形と書き直す時機と、NG の直し方と、調べ物を karrybit:researcher のサブエージェントに頼むときに依頼に書く karo の規則。記録のファイルを書くとき、ノートのフロントマターを書くか直すとき、オーナーが karo の運用・設計の方針を決めたか変えたとき、委任・取り込み・終了を記録するとき、state.md を書き直すとき、commit か karo-check が問題を出したとき、調べ物や MTG の記録づくりを頼むときに使う。'
+description: '$KARO_HOME の記録の置き場所（書き込み先・情報源）と探し方の表、状態が変わったときに書くものの表、記録のファイルを Edit・Write で書き、karo の commit の script で commit する手順と、ノートのフロントマターの書き方（type、項目の埋め方、置き場所、状態が変わったときに直すフィールド）と、karo の長い目の決定の Decision Record の書き方と置き換え方と、karo の今の状態の state.md の形と書き直す時機と、NG の直し方と、調べ物を karrybit:researcher のサブエージェントに頼むときに依頼に書く karo の規則。記録のファイルを書くとき、記録を探すとき、ノートのフロントマターを書くか直すとき、オーナーが karo の運用・設計の方針を決めたか変えたとき、委任・取り込み・終了を記録するとき、state.md を書き直すとき、commit か karo-check が問題を出したとき、調べ物や MTG の記録づくりを頼むときに使う。'
 user-invocable: false
 ---
 
 # 記録を書いて commit する
 
-- 記録のファイルは、`$KARO_HOME/AGENTS.md` の「書き込み先」の表の記録のファイル。タスク・判断待ち・タスクかプロジェクトに閉じた決定は記録のファイルに書かず、`bd` で書く（`karo:tasks` skill）。karo 自身の長い目の運用・設計の決定は、下の「Decision Record を書く」で `$KARO_HOME/decisions/` に書く。過去の会話も書き写さず、要るときは cass で引く（`karo:recall` skill）。
+- 記録のファイルは、下の「書き込み先」の表の記録のファイル。タスク・判断待ち・タスクかプロジェクトに閉じた決定は記録のファイルに書かず、`bd` で書く（`karo:tasks` skill）。karo 自身の長い目の運用・設計の決定は、下の「Decision Record を書く」で `$KARO_HOME/decisions/` に書く。過去の会話も書き写さず、要るときは cass で引く（`karo:recall` skill）。
 - 下の `<scripts>` は `~/.config/claude/skills/karo/scripts` で、この `~/` の形のまま書く。
 - ノートを作る前と、ノートのフロントマターを書くか直す前に、この skill のフォルダの `frontmatter.md` を読む。フィールドの書き方、種類ごとの置き場所と埋め方、状態が変わったときに直すフィールドがある。
 
@@ -18,6 +18,103 @@ user-invocable: false
 - `state.md` は、下の「state.md を書く」に従って書く。
 - 運用の出来事（タスクを持たない依頼で記録を変えたこと）は、commit の本文に書く。
 - 長い本文（サブエージェントの調査の結果、imozuru の原文）は、そのサブエージェントや imozuru に `$KARO_HOME` の書き先へ直接書かせ、終わったらそのパスを commit に渡す。
+
+## 書き込み先
+
+この表と下の「情報源」の表が、情報ごとの正本の置き場所を決める。パスは `$` で始まるものを除き `$KARO_HOME` からのパス。
+
+| 場所 | 内容 |
+| --- | --- |
+| `.beads`（Beads。`bd` で書く） | タスク・判断待ち・タスクかプロジェクトに閉じた決定と、タスクの出来事（claim・close の event と comment。レビューの要旨も comment）。書き方は `karo:tasks` skill |
+| `decisions/YYYY-MM-DD-<話題>.md` | karo 自身の長い目の運用・設計の決定（Decision Record）と、その理由。下の「Decision Record を書く」 |
+| `$KARO_STATE_HOME/state.md` | karo の今の状態。git の外。下の「state.md を書く」 |
+| `standup/YYYY-MM-DD.md` | checkin（Daily Standup）と checkout の記録 |
+| `source/meeting/YYYY-MM-DD-<MTG>.md` | 1 つの MTG の決定・宿題と、議事録への参照 |
+| `investigation/YYYY-MM-DD-<話題>.md` | 調べた結果と出典 |
+| `investigation/YYYY-MM-DD-<話題>/` | imozuru で集めた調査の原文（`sources/`）と map.md。同じ名前の調査ノートの隣に置く |
+| `project/repo/<vcs>/<org>/<repo>.md` | リポジトリの運用の約束。`<vcs>/<org>/<repo>` はホストからの形（例 `github.com/acme/demo`、リモートのないリポジトリは `local/<owner>/<repo>`） |
+| `project/repo/<vcs>/<org>/<repo>/review/` | レビューの原本（新しくは書かない） |
+| `project/design/YYYY-MM-DD-design-doc-<話題>.md` | Design Doc。実現したいこと（機能）ごとに 1 本で、複数のリポジトリをまたいでよい。下の「置き場所の補足」のとおり反映したら消す |
+| `project/misc/<theme>.md` | リポジトリを持たない話題の運用の約束 |
+| `project/misc/<theme>/YYYY-MM-DD-<資料名>.md` | その話題の手順。直しても名前を変えない |
+| `doc/<話題>.md` | 話題ごとにまとめた資料（人に渡すものも、karo やオーナーが読み返すものも） |
+| `$KARO_DATA_HOME/html/<UUID>/` | HTML の解説。git の外で、commit しない。書き方は `karo:explain` skill |
+
+- 記録は 3 つの層に分ける。Bronze は観察の原本（review、`investigation/*/sources/`、外の原文の URL）、Silver は比べられる形に整えて事実の正を 1 か所に持つ記録（Beads、`decisions/`、`source/meeting/`、`investigation/`、`project/repo/*.md`、`project/misc/<theme>.md`）、Gold は判断や行動のための出力で Silver から作り直す（`state.md`、`standup/`、`doc/`、`project/misc/<theme>/`、`project/design/`）。種類と層・置き場所の対応の正本は karo の `scripts/frontmatter-schema.yaml`。
+- このセッションで初めて記録の置き場所を決める前と、置き場所が決まっていない種類の情報を書く前と、記録を探す前に、`karrybit:data-information-design` skill を使い、その skill が受け取る値（層の置き場所、置き場所の補足、探す表、検証）はこの節と下の「置き場所の補足」「探す」から渡す。
+
+### 情報源
+
+| 知りたいこと | 情報源 |
+| --- | --- |
+| Agent の実行状態と、タスク・workspace・pane・worktree・branch の対応 | `karo:tasks` skill の「今の状況を読む」の突き合わせ。取得できなければ「不明」と報告する |
+| 終えた Agent の worktree と branch | そのタスクの Beads の `報告:` の comment |
+| タスク・担当・判断待ち・タスクかプロジェクトに閉じた決定 | SessionStart の hook が出す Beads の一覧、`bd`（`karo:tasks` skill） |
+| karo 自身の長い目の決定と理由 | `decisions/` の Decision Record（下の「探す」） |
+| 経緯と理由 | 下の「探す」の手順と `git log` |
+| 今のセッションにも記録にもない過去の会話 | cass。当たりは過去の証拠で、今の決定の正本ではない（`karo:recall` skill） |
+| 会議や議論の内容 | `source/meeting/` の MTG の記録と、オーナーが接続した外のサービス（読む範囲は `$KARO_HOME/AGENTS.md` にあればそれに従う） |
+
+### 置き場所の補足
+
+| 情報 | 書き方 |
+| --- | --- |
+| 外の原文（チャット、議事録、チケット、PR） | 使うノートの `sources` か、記録の commit の本文に URL を書く |
+| 外に送った文面 | そのタスクの bead の notes に、要旨 1 行と送った先の permalink を書く（`karo:tasks` skill の「項目の対応」） |
+| MTG で決まったこと | `source/meeting/YYYY-MM-DD-<MTG>.md` の「決定」「宿題」の見出しの下 |
+| 調べた結果の中のオーナーに決めてほしいこと | decision の bead を起票し、その ID をノートに書き添える |
+| 機能の設計の案（ADR と spec に反映する前） | Design Doc（日付は作った日）。決定は反映先のリポジトリの ADR に、今の仕様は spec に反映し、その PR の URL をすべてタスクの comment に書いてから、Design Doc を消す。反映先は、その機能が変えるリポジトリのすべて |
+| プロジェクトの運用の約束 | 今の状態と効く決定の一覧は書かない（Beads の label `project:<name>` で引き、karo 自身の長い目の決定は `decisions/` で引く） |
+| 外の原文の lineage | フロントマターの `sources` に `{ id, resource, title }`。Investigation は本文で読んだものをここに写す |
+| 本文の中のノートへのリンク | `[<名前>](<$KARO_HOME からのパス>)`（例: `[リリースの手順](project/misc/work/2026-01-05-release.md)`） |
+
+## 記録の更新
+
+- 状態が変わったら、次の作業に移る前に、下の表のとおり `bd` で書き、記録のファイルを書いて下の「commit する」で commit する。`bd` と commit を実行するまで、その変化は完了していない。
+- 表の出来事が下の「state.md を書く」の「書き直す時機」に当たるときは、同じ返事の中で `state.md` も直す。
+
+| 出来事 | `bd` で行うこと（`karo:tasks` skill） | 書いて commit するファイル |
+| --- | --- | --- |
+| オーナーから仕事を頼まれた | タスクを作る（その場で終えた仕事も作り、終えたら閉じる） | なし（運用の依頼は下の箇条） |
+| 委任した | Agent の名前で claim する | なし |
+| Agent の完了を確認した | `報告:` の comment（Agent の worktree と branch を書く） | なし |
+| レビュー結果を受け取った・中継した | `レビュー依頼:`・`変更依頼:`・`承認:`・`判定:` の comment（`karo:review` skill） | なし |
+| 作業を取り込んだ（karo の land、push、PR の merge） | タスクを閉じる | なし |
+| 判断が必要になった | decision の bead を作り、タスクの blocker にする | なし |
+| オーナーが決めた | decision の bead を閉じるか、`決定:` の comment。karo の長い目の方針なら、閉じる理由に Decision Record のパスだけを書く | karo の長い目の方針なら、`decisions/` の Decision Record |
+| Agent を終了した | 取り込まずに止めたときは claim を外す | なし |
+
+- どのタスクにも属さない運用の依頼（Agent の終了、状況の確認、karo の記録や規則の直し）では、Beads のタスクを作らない。記録を変えるときは返事を送る前に commit し、本文に、依頼が触れたタスク ID か `karo`、何をなぜしたか（規則を足したときはその理由）、出典 `会話 YYYY-MM-DD HH:MM` を書く。
+- タスクのない外のチケットの依頼は、運用の依頼として扱わず、Beads に新しいタスクを作る。
+- 返事の要らないメモ（「メモ: ○○」）は、関わるタスクの Beads の `メモ:` の comment にし（当たるタスクがなければタスクを作る）、記録したことだけを返す。
+- 閉じたタスクと決定は Beads に残す（消すか畳むコマンドは settings の `deny` が止める）。
+
+## 探す
+
+- コマンドは `$KARO_HOME` で実行する。`bd` は単独の呼び出しにする（`karo:tasks` skill の「呼び方」）。
+- 全文検索は、Beads は `karo:tasks` skill の「タスクを進める」の 1、ファイルは `rg -n '<語>' standup source investigation decisions`、commit の本文は `git log -i --grep '<語>'` で行う。
+- タスク ID の正規表現は `[A-Za-z][A-Za-z0-9]*(-[A-Za-z0-9]+)+(\.[0-9]+)*` にする。
+
+| 問い | 手順（1 行が 1 回の呼び出し） |
+| --- | --- |
+| セッション開始・compact 後 | SessionStart の hook の出力（`state.md`、Beads の一覧）。Beads の一覧がなければ、`karo:tasks` skill の「今の状況を読む」の「開いているタスク」と「判断待ち」 |
+| タスクの今の一覧 | `karo:tasks` skill の「今の状況を読む」の表 |
+| タスクの経緯と今の状態 | `bd show <タスクID> --json --include-comments`、続けて `bd history <タスクID> --events --json`、続けて `rg -n <タスクID> "${KARO_STATE_HOME:-${XDG_STATE_HOME:-$HOME/.local/state}/karo}/state.md"; rg -lUP '\A---\n(?:(?!---\n).*\n)*?tasks:\n(?:  - .+\n)*  - <タスクID>\n' -g '!investigation/*/sources/**' .` |
+| 過去の会話 | `karo:recall` skill |
+| タスクの分析（依存・ボトルネック・次の候補） | `karo:tasks` skill の「分析する（bv）」 |
+| ある日からの出来事 | `karo:tasks` skill の「今の状況を読む」の「ある日から動いたタスク」、続けて `git log --since YYYY-MM-DD` |
+| 委任するプロジェクトに効く決定と運用 | `cat project/*/<name>.md`、続けて `bd list --all --type decision --status closed --label-any project:<name>,project:all --json`、続けて `bd dep list <それらの ID> --direction up --type supersedes --json`（返った ID は置き換え済み）。karo の仕組みを変える委任では、下の「karo の今の長い目の決定」も読む |
+| karo の今の長い目の決定 | `rg -L '^status: deprecated$' decisions`。理由と出典はそのファイルの本文 |
+| karo の長い目の決定を語で探す | `rg -n '<語>' decisions` |
+| タスクとプロジェクトの決定を語で探す | `bd list --all --type decision --desc-contains '<語>' --json` |
+| Beads の決定の理由と出典 | `bd show <決定の ID> --json` |
+| MTG で決まったこと | `rg -n -A6 '^#+ (決定\|宿題)' source/meeting/YYYY-MM-DD-*.md` |
+| プロジェクトの現状 | `cat project/*/<name>.md`、開いているタスクは「タスクの今の一覧」に `--label project:<name>` を足す |
+| HTML の解説（作る前） | `karo:explain` skill の 1 と 2 |
+| `doc/` の資料の最新版 | `cat doc/<話題>.md`。前の版は `git log -p -- doc/<話題>.md` |
+| 外に作ったもの・送った文面 | `bd list --all --notes-contains '<ID か URL の一部か相手>' --json`、続けて `bd list --all --desc-contains '<同じ語>' --json`、続けて `rg -n '<同じ語>' standup source` |
+| 調査の原文 | `investigation/YYYY-MM-DD-<話題>/map.md` の論点から原文の行へ。`rg -n '<語>' investigation/YYYY-MM-DD-<話題>/sources` |
+| 下書き・置き換え済み | `rg -lUP '\A---\n(?:(?!---\n).*\n)*?status: (?:draft\|deprecated)' -g '!investigation/*/sources/**' .`。Decision Record の置き換え先は `supersedes` と古い記録の「状態」の節 |
 
 ## Decision Record を書く
 
@@ -36,7 +133,7 @@ user-invocable: false
 
 - 決定を変えるときは、新しい記録を書き、フロントマターの `supersedes` に古い記録のパスを書く。古い記録は消さずに、`frontmatter.md` の「追記したとき・状態が変わったとき」の表の「決定を新しい決定で置き換えた」の行のとおり直し、2 つを同じ commit に入れる。誤字と事実の誤りの訂正は、古い記録を Edit で直すだけにする。
 - 判断待ちの decision の bead から決まった決定は、記録を書いてから、bead を `bd close <決定> --reason '決定: decisions/<記録>.md' --json` で閉じる。決定の全文は記録にだけ置き、bead には書き写さない。
-- Decision Record は理由を持ち、karo が今従う規則は持たない。規則は `$KARO_HOME/AGENTS.md`・`$KARO_HOME/rule/`・skill に書き、規則の行から記録のパスを指す。
+- Decision Record は理由を持ち、karo が今従う規則は持たない。規則は、オーナーの仕事の仕方なら `$KARO_HOME/AGENTS.md`・`$KARO_HOME/rule/` に、karo の仕組みなら karo plugin に書き、規則の行から記録のパスを指す。
 
 ## state.md を書く
 
@@ -82,13 +179,13 @@ user-invocable: false
 | 項目 | 書くこと |
 | --- | --- |
 | ノートの書き先 | 調べた結果は `$KARO_HOME/investigation/YYYY-MM-DD-<話題>.md`、MTG の記録は MTG ごとに `$KARO_HOME/source/meeting/YYYY-MM-DD-<MTG>.md` |
-| 情報源のアクセスの制約 | `$KARO_HOME/AGENTS.md` の「情報源」の節（外のサービスは読むだけ、MTG の議事録を読む範囲）に従うこと |
+| 情報源のアクセスの制約 | 外のサービスは読むだけにすること。`$KARO_HOME/AGENTS.md` に外のサービスや MTG の議事録を読む範囲の決まりがあれば、その文を写して書く |
 | ノートの規則 | 書く前に `frontmatter.md`（この skill のフォルダ。依頼には絶対パスで書く）を Read で読み、その「フィールド」と、書き先の種類の行（調べ物は `Investigation`、MTG は `Meeting Notes`、imozuru の map.md は `Research Map`）に従うこと |
 | 検査 | `~/.config/claude/skills/karo/scripts/karo-check --only <ノートの $KARO_HOME からのパス>` を `~/` の形のまま単独で実行する（imozuru を使ったら `--only investigation/YYYY-MM-DD-<話題>/map.md` も足す）。合格は、終了コードが 2 でなく、出力に `<ノートのパス><TAB>` で始まる行が `stale since` の行のほかにないこと。ほかのノートの行は数えないので、件数の行（`karo-check: <件数> problem(s) in the --only scope`）が 0 でなくてもよい。終了コード 2 は検査そのものの失敗（引数か schema の誤り、yq・fd・rg を動かせない） |
 | 追加の skill | 分野や論点を探る調査には `imozuru:imozuru` を使ってよく、原文の保存先はノートと同じ名前のフォルダ `$KARO_HOME/investigation/YYYY-MM-DD-<話題>/` |
 | 分担 | ノートの commit は karo が commit の script で行い、判断待ち（decision の bead）は karo が `bd` で作る。サブエージェントは commit も `bd` もしない |
 
-- 報告を受けたら、`$KARO_HOME/AGENTS.md` の「委任・レビュー・Checkin・Checkout」の表の調べ物の行で受け入れを決め、報告の「commit に入れるファイル」を下の「commit する」で 1 つの commit にする。
+- 報告を受けたら、ノートの結論を左右する主張のどれもが、確かめた出典の箇所か、「未確認」の印と結論への影響を持つかを確かめる。どちらもない主張があればやり直させ、なければ報告の「commit に入れるファイル」を下の「commit する」で 1 つの commit にしてからオーナーに報告する。
 
 ## commit する
 

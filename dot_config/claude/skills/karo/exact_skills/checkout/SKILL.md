@@ -15,7 +15,7 @@ description: 一日の終わりに、karo が今日を振り返り、明日や�
    - 引数なしの `~/.config/claude/skills/karo/scripts/karo-check` を単独のコマンドで実行した出力。
 
    完了条件: 表の 4 つの行の出力と、突き合わせの完了条件を満たした結果と、karo-check の問題と stale の一覧が手元にある。
-2. Agent を片付ける。動いている Agent のうち役目を終えた Agent（AGENTS.md の「委任・レビュー・Checkin・Checkout」の定義）を、`karo:delegate` skill の「Agent を終了する」の 1 で閉じ、その 2 に当たるときは 2 も行う。`working` の Agent は閉じずに一覧にする。
+2. Agent を片付ける。動いている Agent のうち役目を終えた Agent（karo の決まり（SessionStart の hook が入れる文）の「委任と取り込み」の定義）を、`karo:delegate` skill の「Agent を終了する」の 1 で閉じ、その 2 に当たるときは 2 も行う。`working` の Agent は閉じずに一覧にする。
    完了条件: 役目を終えた Agent ごとに `close` の JSON か止まった理由が手元にあり、`working` の Agent の一覧が手元にある。
 3. 下の「報告の項目」を短く報告する。各項目にはタスク ID を付ける。
    完了条件: 5 つの項目がすべて報告にある。

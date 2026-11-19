@@ -60,7 +60,7 @@ in_home() { env -i HOME="$tmp/$1" PATH="$stubs" GIT_CONFIG_NOSYSTEM=1 "${@:2}"; 
 # database made once with the karo prefix; karo-check finds no problem.
 run empty "$stubs"
 k=$tmp/empty/karo
-if [[ $code -eq 0 && -f $k/AGENTS.md && -f $k/rule/frontmatter-schema.yaml && -f $k/.claude/settings.json && -d $k/.beads ]]; then
+if [[ $code -eq 0 && -f $k/AGENTS.md && -f $k/rule/review.md && -f $k/.claude/settings.json && -d $k/.beads ]]; then
   pass "empty HOME: skeleton copied"
 else
   fail "empty HOME: exit $code: $out"
@@ -102,7 +102,7 @@ mkdir -p "$tmp/kept/karo/.claude"
 printf '# mine\n' > "$tmp/kept/karo/AGENTS.md"
 printf '{"env":{"MINE":"1"}}\n' > "$tmp/kept/karo/.claude/settings.local.json"
 run kept "$stubs"
-if [[ $code -eq 0 && $(cat "$tmp/kept/karo/AGENTS.md") == '# mine' && -f $tmp/kept/karo/rule/frontmatter-schema.yaml ]] \
+if [[ $code -eq 0 && $(cat "$tmp/kept/karo/AGENTS.md") == '# mine' && -f $tmp/kept/karo/rule/review.md ]] \
   && [[ -z $(in_home kept git -C "$tmp/kept/karo" ls-files AGENTS.md) ]] \
   && [[ $(cat "$tmp/kept/karo/.claude/settings.local.json") == '{"env":{"MINE":"1"}}' ]]; then
   pass "AGENTS.md and settings.local.json already there are kept"

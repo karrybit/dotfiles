@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Print karo's own rules, hooks/session-rules.md of this plugin, for a SessionStart hook of a session in
+# the record repository at KARO_HOME (default ~/karo), and nothing for a session anywhere else. The
+# rules are a fixed text that changes with the plugin; the record repository's AGENTS.md and rule/ hold
+# the owner's own way of working. The text stays under the 10,000 characters Claude Code passes on from
+# a hook's output, which session-rules-test checks.
+# usage: session-rules   (the hook input JSON on stdin, not read)
+set -uo pipefail
+exec </dev/null
+[[ ${CLAUDE_PROJECT_DIR:-} == "${KARO_HOME:-$HOME/karo}" ]] || exit 0
+cat "$(cd "$(dirname "$0")/.." && pwd)/hooks/session-rules.md"

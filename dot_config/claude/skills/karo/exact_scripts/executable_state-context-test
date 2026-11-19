@@ -78,7 +78,8 @@ under() { local n; for n in $lens; do (( n <= $1 )) || return 1; done; }
 printf '%s\n' "$sample" > "$state"
 for source in startup resume clear compact fork; do
   run SessionStart "{\"source\":\"$source\"}"
-  check "$source: three SessionStart hooks run and exit 0" '[[ $codes == "0 0 0 " ]]'
+  check "$source: four SessionStart hooks run and exit 0" '[[ $codes == "0 0 0 0 " ]]'
+  check "$source: karo's rules come once" '[[ $(count "^# karo の決まり$") -eq 1 ]]'
   check "$source: state.md comes once" '[[ $(count "^- 記録の検査を速くする$") -eq 1 && $(count "^## state.md の終わり$") -eq 1 ]]'
   check "$source: the KARO_* values come once" '[[ $(count "^KARO_HOME=$KARO_HOME ") -eq 1 ]]'
   check "$source: no bd prime is run or printed" '! grep -q prime "$tmp/bd.log" && [[ $(count "bd prime") -eq 0 ]]'
@@ -118,7 +119,7 @@ check "a state.md of 8,000 characters comes whole and the hook stays under 10,00
 printf '%s\n' "${big}い" > "$state"
 run SessionStart '{"source":"startup"}'
 check "a state.md over 8,000 characters gives a notice and its path, not its body" \
-  'zero && [[ $(count "8000 字を超えるので出さない") -eq 1 && $(count "^## state.md の終わり$") -eq 0 ]] && under 2000'
+  'zero && [[ $(count "8000 字を超えるので出さない") -eq 1 && $(count "^## state.md の終わり$") -eq 0 ]] && (( ${lens%% *} <= 2000 ))'
 
 rm "$tmp/state/state.md"
 for source in startup resume clear compact fork; do

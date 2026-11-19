@@ -22,10 +22,11 @@
 #                  insights skill's insights, the karo herdr-agent skill's
 #                  agent-ctl and agent-report, and every command matching a regular
 #                  expression in the uncounted: list of
-#                  $KARO_CONFIG_HOME/config.yaml): AGENTS.md leaves the calls a skill
-#                  requires out of karo's two. A run is a command that
-#                  starts with the script's ~ path, the one form AGENTS.md
-#                  allows, so a command that only reads a script still counts.
+#                  $KARO_CONFIG_HOME/config.yaml): the owner's AGENTS.md leaves the
+#                  calls a skill requires out of karo's two. A run is a command that
+#                  starts with the script's ~ path, the one form karo's session rules
+#                  (hooks/session-rules.md) allow, so a command that only reads a
+#                  script still counts.
 #   over_limit     the turns with more than 2 such calls: session, start time,
 #                  kind, calls, and calls per tool.
 #   approvals      per group: prompted (a permission dialog was answered yes),
