@@ -14,7 +14,7 @@ user-invocable: false
 
 - 新しいファイルは Write で、今あるファイルへの追記と直しは Edit で、`$KARO_HOME` の下の絶対パスに書く（`$KARO_HOME` の値は SessionStart の hook が出す）。
 - Edit・Write のあと、post-edit の hook が `.md` を rumdl で整え、`<scripts>/karo-check --only <そのファイル>` で確かめる。hook が問題を返したら、そのファイルを直してから commit する。hook が返すのは書いたファイルの問題か検査そのものの失敗だけで、そのファイルを指すほかのノートの問題は commit が止める。
-- standup（`standup/YYYY-MM-DD.md`）がまだなければ、Write で `type: Standup` と `date` のフロントマターから作る（`frontmatter.md` の「種類」の `Standup` の行）。
+- standup（`standup/YYYY-MM-DD.md`）がまだなければ、Write で `type: Standup`・`date`・`description` のフロントマターから作る（`frontmatter.md` の「種類」の `Standup` の行）。
 - `state.md` は、下の「state.md を書く」に従って書く。
 - 運用の出来事（タスクを持たない依頼で記録を変えたこと）は、commit の本文に書く。
 - 長い本文（サブエージェントの調査の結果、imozuru の原文）は、そのサブエージェントや imozuru に `$KARO_HOME` の書き先へ直接書かせ、終わったらそのパスを commit に渡す。
@@ -40,7 +40,7 @@ user-invocable: false
 | `doc/<話題>.md` | 話題ごとにまとめた資料（人に渡すものも、karo やオーナーが読み返すものも） |
 | `$KARO_DATA_HOME/html/<UUID>/` | HTML の解説。git の外で、commit しない。書き方は `karo:explain` skill |
 
-- 記録は 3 つの層に分ける。Bronze は観察の原本（review、`investigation/*/sources/`、外の原文の URL）、Silver は比べられる形に整えて事実の正を 1 か所に持つ記録（Beads、`decisions/`、`source/meeting/`、`investigation/`、`project/repo/*.md`、`project/misc/<theme>.md`）、Gold は判断や行動のための出力で Silver から作り直す（`state.md`、`standup/`、`doc/`、`project/misc/<theme>/`、`project/design/`）。種類と層・置き場所の対応の正本は karo の `scripts/frontmatter-schema.yaml`。
+- 記録は 3 つの層に分ける。Bronze は観察の原本（review、`investigation/*/sources/`、外の原文の URL）、Silver は比べられる形に整えて事実の正を 1 か所に持つ記録（Beads、`decisions/`、`source/meeting/`、`investigation/`、`project/repo/*.md`、`project/misc/<theme>.md`）、Gold は判断や行動のための出力で Silver から作り直す（`state.md`、`standup/`、`doc/`、`project/misc/<theme>/`、`project/design/`）。層は置き場所で決まり、karo-check は層を確かめない。
 - このセッションで初めて記録の置き場所を決める前と、置き場所が決まっていない種類の情報を書く前と、記録を探す前に、`karrybit:data-information-design` skill を使い、その skill が受け取る値（層の置き場所、置き場所の補足、探す表、検証）はこの節と下の「置き場所の補足」「探す」から渡す。
 
 ### 情報源

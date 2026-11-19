@@ -70,7 +70,7 @@ else
 fi
 
 # A standup in standup/ and a meeting's notes in source/meeting/ are committed.
-printf -- '---\ntype: Standup\ndate: 2026-11-18\n---\n\n## 報告\n' > "$v/standup/2026-11-18.md"
+printf -- '---\ntype: Standup\ndescription: 例の日。\ndate: 2026-11-18\n---\n\n## 報告\n' > "$v/standup/2026-11-18.md"
 run "t-test0001: standup" "本文" standup/2026-11-18.md
 if [[ $code -eq 0 && $out == "OK "* ]]; then pass "a standup commits"; else fail "a standup: exit $code: $out"; fi
 printf -- '---\ntype: Meeting Notes\ndescription: 例。\ndate: 2026-11-18\nprojects:\n  - all\nsources:\n  - https://example.invalid/a\n---\n\n## 例\n' > "$v/source/meeting/2026-11-18-weekly.md"
@@ -114,10 +114,10 @@ mkdir -p "$v/scrap" && printf '# a\n' > "$v/scrap/t-test0001-demo.md"
 run "t-test0001: scrap" "本文" scrap/t-test0001-demo.md
 ng "a folder not in record-folders is outside the record" "not a record path: scrap/t-test0001-demo.md"
 rm "$v/scrap/t-test0001-demo.md"
-printf -- '---\ntype: Standup\ndate: 2026-11-19\n---\n\n## 報告\n' > "$v/standup/2026-11-19-standup.md"
-run "t-test0001: standup の名前" "本文" standup/2026-11-19-standup.md
-ng "a standup named YYYY-MM-DD-standup.md" $'standup/2026-11-19-standup.md\tpath does not match Standup'
-rm "$v/standup/2026-11-19-standup.md"
+printf -- '---\ntype: Standup\ndate: 2026-11-19\n---\n\n## 報告\n' > "$v/standup/2026-11-19.md"
+run "t-test0001: description のない standup" "本文" standup/2026-11-19.md
+ng "a note without a description" $'standup/2026-11-19.md\tmissing description'
+rm "$v/standup/2026-11-19.md"
 
 printf '## 例\n\n例\n' > "$v/investigation/2026-01-02-new.md"
 run "t-test0002: 新しい調べ物" "本文" investigation/2026-01-02-new.md

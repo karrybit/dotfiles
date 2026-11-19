@@ -73,9 +73,11 @@ for a in "" "$schema" "$schema $tmp/none" "--only"; do
   run ${argv[@]+"${argv[@]}"}
   if [[ $code -eq 2 ]]; then pass "usage error: okf-lint $a"; else fail "usage error: okf-lint $a: exit $code: $out"; fi
 done
-printf 'exclude: []\n' > "$tmp/no-types.yaml"
-fresh; run "$tmp/no-types.yaml" "$copy"
-if [[ $code -eq 2 ]]; then pass "schema without types is an error"; else fail "schema without types: exit $code: $out"; fi
+for bad in 'types: [Log]' 'required: date'; do
+  printf '%s\n' "$bad" > "$tmp/bad.yaml"
+  fresh; run "$tmp/bad.yaml" "$copy"
+  if [[ $code -eq 2 ]]; then pass "schema error: $bad"; else fail "schema error $bad: exit $code: $out"; fi
+done
 # A tool that cannot run is named, not mistaken for a schema error or for a folder without notes.
 for tool in yq fd rg; do
   mkdir "$tmp/broken-$tool"
@@ -103,8 +105,6 @@ if [[ $code -eq 0 ]] && printf '%s\n' "$out" | rg -qF $'notes/a0-watering.md\tst
 cases=(
   'no frontmatter where a type lives|logs/2030-01-02.md	no frontmatter|printf "## 2030-01-02\\n" > logs/2030-01-02.md'
   'unparseable frontmatter|logs/2030-01-02.md	unparseable frontmatter|printf -- "---\\ntype: [Log\\n---\\n" > logs/2030-01-02.md'
-  'missing type|areas/beds.md	missing type|sed -i.bak "/^type:/d" areas/beds.md'
-  'unknown type|areas/beds.md	unknown type: Bogus|sed -i.bak "s/^type: Area/type: Bogus/" areas/beds.md'
   'missing required field|notes/a1-watering.md	missing owner|sed -i.bak "/^owner:/d" notes/a1-watering.md'
   'empty required field|notes/a1-watering.md	missing owner|sed -i.bak "s/^owner: .*/owner: \"\"/" notes/a1-watering.md'
   'bad status|notes/a1-watering.md	bad status|sed -i.bak "s/^owner: gardener/owner: gardener\\nstatus: old/" notes/a1-watering.md'
@@ -129,6 +129,45 @@ for c in "${cases[@]}"; do
   run "$schema" "$copy"
   if [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -qF -- "$want"; then pass "$name"; else fail "$name: exit $code, want '$want': $out"; fi
 done
+
+# A note without a type, or with a type not in types, passes and still gets the checks that need no type.
+# <name>|<expected problem, or "pass">|<shell command run inside the copy>
+untyped=(
+  'note without a type passes|pass|sed -i.bak "/^type:/d" areas/beds.md'
+  'note with a type not in types passes|pass|sed -i.bak "s/^type: Area/type: Bogus/" areas/beds.md'
+  'note without a type anywhere passes|pass|mkdir misc && printf -- "---\\ndescription: x\\n---\\n" > misc/x.md'
+  'untyped note: supersedes still checked|notes/a1-watering.md	supersedes missing: notes/a9-gone.md|sed -i.bak "s/^type: Note/type: Bogus/; s#a0-watering#a9-gone#" notes/a1-watering.md'
+  'untyped note: derived_from still checked|notes/a1-watering.md	derived_from missing: areas/plots.md|sed -i.bak "/^type:/d; s#  - areas/beds.md#  - areas/plots.md#" notes/a1-watering.md'
+  'untyped note: links still checked|areas/beds.md	link target missing: logs/2030-01-09.md|sed -i.bak "/^type:/d; s#(logs/2030-01-01.md#(logs/2030-01-09.md#" areas/beds.md'
+)
+for c in "${untyped[@]}"; do
+  name=${c%%|*}; rest=${c#*|}; want=${rest%%|*}; cmd=${rest#*|}
+  fresh
+  (cd "$copy" && eval "$cmd" && rm -f ./*.bak ./*/*.bak) || { fail "$name: could not break the copy"; continue; }
+  run "$schema" "$copy"
+  if [[ $want == pass ]]; then
+    if [[ $code -eq 0 ]]; then pass "$name"; else fail "$name: exit $code: $out"; fi
+  elif [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -qF -- "$want"; then pass "$name"; else fail "$name: exit $code, want '$want': $out"; fi
+done
+
+# required: the fields every note requires, typed or not; a schema of required alone needs no types.
+printf 'required: [date, description]\n' > "$tmp/required.yaml"
+req=$tmp/req
+mkdir -p "$req/a"
+printf -- '---\ndate: 2030-01-01\ndescription: x\n---\n' > "$req/a/both.md"
+printf -- '---\ntype: Anything\ndate: 2030-01-01\ndescription: x\n---\n' > "$req/a/typed.md"
+run "$tmp/required.yaml" "$req"
+if [[ $code -eq 0 ]]; then pass "required: notes with the fields pass, typed or not"; else fail "required: valid: exit $code: $out"; fi
+printf -- '---\ndate: 2030-01-01\n---\n' > "$req/a/no-description.md"
+printf -- '---\ntype: Anything\ndescription: ""\n---\n' > "$req/a/no-date.md"
+run "$tmp/required.yaml" "$req"
+if [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -qxF $'a/no-description.md\tmissing description' \
+  && printf '%s\n' "$out" | rg -qxF $'a/no-date.md\tmissing date' && printf '%s\n' "$out" | rg -qxF $'a/no-date.md\tmissing description' \
+  && printf '%s\n' "$out" | rg -qxF 'okf-lint: 3 problem(s)'; then
+  pass "required: a missing or empty field is reported"
+else
+  fail "required: broken: exit $code: $out"
+fi
 
 # Frontmatter values are data: a value holding "|", a newline, a glob, or shell syntax is reported as the
 # problems it is and nothing more, and no command in it runs.
@@ -157,8 +196,8 @@ hostile 'only: derived_from with "|"' 'derived_from missing: areas/beds.md|x' ' 
 # --only: a problem in a given file or in a file that depends on it is found; one elsewhere is not.
 # <name>|<expected problem, or "pass">|<--only paths, space-separated>|<shell command run inside the copy>
 scoped=(
-  'only: problem in a given file|areas/beds.md	unknown type: Bogus|areas/beds.md|sed -i.bak "s/^type: Area/type: Bogus/" areas/beds.md'
-  'only: problem in another file is left out|pass|logs/2030-01-01.md|sed -i.bak "s/^type: Area/type: Bogus/" areas/beds.md'
+  'only: problem in a given file|notes/a1-watering.md	missing owner|notes/a1-watering.md|sed -i.bak "/^owner:/d" notes/a1-watering.md'
+  'only: problem in another file is left out|pass|guides/watering.md|sed -i.bak "/^owner:/d" notes/a1-watering.md'
   'only: removed file named by derived_from|notes/a1-watering.md	derived_from missing: logs/2030-01-01.md#09:00|logs/2030-01-01.md|rm logs/2030-01-01.md'
   'only: removed file linked|summary.md	link target missing: guides/watering.md|guides/watering.md|rm guides/watering.md'
   'only: renamed file still linked|logs/2030-01-01.md	link target missing: areas/beds.md|areas/beds.md areas/plots.md|mv areas/beds.md areas/plots.md'

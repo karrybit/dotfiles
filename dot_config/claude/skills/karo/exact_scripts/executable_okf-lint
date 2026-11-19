@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2016  # yq, awk, and rg programs are single-quoted on purpose
-# Check the Markdown notes in a folder against a frontmatter schema: each note carries the fields its type
-# requires, sits where its type lives, and keeps its lineage and its path links resolvable. Notes past their
+# Check the Markdown notes in a folder against a frontmatter schema: each note carries the fields every note
+# requires and the fields its type requires, sits where its type lives, and keeps its lineage and its path
+# links resolvable. Notes past their
 # stale_after are reported without failing. It knows nothing of the caller's own rules; karo-check runs it
 # first and adds the karo checks. okf-lint-test beside it shows each check.
 # usage: okf-lint [--only <path>]... <schema.yaml> <folder>
 #
-# The schema (YAML), every key but types optional:
-#   types     type name -> list of the fields it requires; type itself is required of every note
+# The schema (YAML), every key optional:
+#   required  list of the fields every note requires
+#   types     type name -> list of the fields it requires; a note without a type, or with a type not in
+#             types, gets no type check, and the type keys below apply to the types in types
 #   paths     type -> POSIX ERE that the note's path from <folder> matches; a type without one may sit anywhere
 #   layers    type -> bronze, silver, or gold; a type with another value is not compared by layer
 #   lineage   list of the types that need sources or derived_from
@@ -15,8 +18,8 @@
 #   exclude   list of POSIX EREs of paths not read
 # A note is a .md file outside exclude whose first line is ---, or whose path matches a type's paths; other
 # .md files (a README) and the files fd skips (hidden ones, those .gitignore matches) are not read.
-# Each note is a problem when it has no or unreadable frontmatter, no type, a type not in types, or an
-# empty required field; a status other than draft, stable, or deprecated; a stale_after that is not an
+# Each note is a problem when it has no or unreadable frontmatter, or a missing or empty field that every
+# note or its type requires; a status other than draft, stable, or deprecated; a stale_after that is not an
 # ISO 8601 datetime with seconds and an offset (2030-01-01T00:00:00+09:00 or ...Z); a path its type's paths
 # does not match; no sources or derived_from for a lineage type; a derived_from item (read up to "#") that
 # is missing or in a higher layer (bronze < silver < gold) than the note; or a supersedes that is missing.
@@ -46,7 +49,8 @@ for tool in yq fd rg; do
 done
 SCHEMA=$(cd "$(dirname "${args[0]}")" && pwd)/$(basename "${args[0]}")
 cd "${args[1]}" || exit 2
-[[ $(yq '.types | tag' "$SCHEMA" 2>/dev/null) == '!!map' ]] || { echo "okf-lint: $SCHEMA has no types map" >&2; exit 2; }
+[[ $(yq '.types // {} | tag' "$SCHEMA" 2>/dev/null) == '!!map' ]] || { echo "okf-lint: $SCHEMA has a types that is not a map" >&2; exit 2; }
+[[ $(yq '.required // [] | tag' "$SCHEMA" 2>/dev/null) == '!!seq' ]] || { echo "okf-lint: $SCHEMA has a required that is not a list" >&2; exit 2; }
 # Frontmatter values are split on these two control characters, which yq replaces in every value it
 # prints; values never reach arithmetic, word splitting, or globbing.
 FS=$'\x1f' LS=$'\x1e'
@@ -61,7 +65,7 @@ excl=$(yq '(.exclude // []) | join("|")' "$SCHEMA")
 s_type=(); s_layer=(); s_path=(); s_lineage=()
 while IFS='|' read -r k l n p; do
   s_type+=("$k"); s_layer+=("$l"); s_lineage+=("$n"); s_path+=("$p")
-done < <(yq '. as $s | (.types | keys)[] as $k | [$k, ($s.layers[$k] // ""), (($s.lineage // []) | contains([$k]) | tostring), ($s.paths[$k] // "")] | join("|")' "$SCHEMA")
+done < <(yq '. as $s | ((.types // {}) | keys)[] as $k | [$k, ($s.layers[$k] // ""), (($s.lineage // []) | contains([$k]) | tostring), ($s.paths[$k] // "")] | join("|")' "$SCHEMA")
 f_name=(); f_layer=()
 while IFS='|' read -r k l; do f_name+=("$k"); f_layer+=("$l"); done < <(yq '.files // {} | to_entries | .[] | .key + "|" + .value' "$SCHEMA")
 type_layer() { local i; for i in "${!s_type[@]}"; do [[ ${s_type[$i]} == "$1" ]] && { echo "${s_layer[$i]}"; return; }; done; }
@@ -104,15 +108,14 @@ done < <(fd -t f -e md . | sort)
 # variable only over the first branch of a comma, so the two branches sit in one group.
 export DT='^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$'
 expr='
-  load(strenv(SCHEMA)).types as $t
+  load(strenv(SCHEMA)) as $s
+  | ($s.types // {}) as $t
   | . as $d
-  | (.type // "") as $ty
+  | (.type // "" | tostring) as $ty
   | ((.stale_after // "") | tostring) as $sa
   | ($sa | test(strenv(DT))) as $sa_ok
   | (([
-      (if $ty == "" then "missing type" else null end),
-      (if $ty != "" and ($t | has($ty) | not) then "unknown type: " + $ty else null end),
-      (($t[$ty] // [])[] | (if ($d[.] == null or $d[.] == "" or $d[.] == []) then "missing " + . else null end)),
+      (((($s.required // []) + ($t[$ty] // [])) | unique)[] | (if ($d[.] == null or $d[.] == "" or $d[.] == []) then "missing " + . else null end)),
       (if ($d | has("status")) and (($d.status | tostring | test("^(draft|stable|deprecated)$")) | not) then "bad status" else null end),
       (if ($d | has("stale_after")) and ($sa_ok | not) then "stale_after needs an offset datetime: YYYY-MM-DDTHH:MM:SS and Z or +HH:MM" else null end)
     ] | map(select(. != null)) | .[] | sub("[[:cntrl:]]"; " ")),
@@ -155,13 +158,15 @@ layer_of() { # <path> -> layer of the note or of the file the schema lists
 for i in "${!n_path[@]}"; do
   f=${n_path[$i]}; ty=${n_type[$i]}
   ti=$(type_index "$ty")
-  (( ti < 0 )) && continue
-  # place and name follow the type
-  pat=${s_path[$ti]}
-  [[ -n $pat && ! $f =~ $pat ]] && report "$f" "path does not match $ty: $pat"
-  # lineage is present where the type needs it, resolves, and never points to a higher layer
-  [[ ${s_lineage[$ti]} == true && ${n_lin[$i]} == 0 ]] && report "$f" "no sources or derived_from"
-  mine=$(rank "${s_layer[$ti]}")
+  mine=0
+  # a type in types decides the place and name, the lineage it needs, and the layer
+  if (( ti >= 0 )); then
+    pat=${s_path[$ti]}
+    [[ -n $pat && ! $f =~ $pat ]] && report "$f" "path does not match $ty: $pat"
+    [[ ${s_lineage[$ti]} == true && ${n_lin[$i]} == 0 ]] && report "$f" "no sources or derived_from"
+    mine=$(rank "${s_layer[$ti]}")
+  fi
+  # derived_from resolves and never points to a higher layer
   IFS=$LS read -r -a ds < <(printf '%s\n' "${n_derived[$i]}")
   for d in ${ds[@]+"${ds[@]}"}; do
     path=${d%%#*}

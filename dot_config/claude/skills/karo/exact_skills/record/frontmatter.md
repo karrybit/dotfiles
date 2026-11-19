@@ -4,19 +4,20 @@
 
 - `$KARO_HOME` の記録のフォルダ（この skill の `SKILL.md` の「書き込み先」の表のフォルダ）のノートは、1 行目から OKF（Open Knowledge Format v0.2）の YAML フロントマターを持つ。
 - 層・鮮度の考え方（何をいつ書くか）は `karrybit:data-information-design` skill にあり、このファイルは karo のフィールドの書き方を持つ。
-- 種類ごとの必須のフィールドと置き場所の正本は karo plugin の `scripts/frontmatter-schema.yaml`（karo-check が読む。`$KARO_HOME` に schema のファイルがあっても読まない）で、下の「種類」の表の置き場所はその読みやすい形。食い違ったら schema に合わせる。schema のキー（`types`・`layers`・`paths`・`lineage`・`files`・`exclude`）の意味は karo の `scripts/okf-lint` の冒頭にある。
-- `~/.config/claude/skills/karo/scripts/karo-check` が、schema と下の「フィールド」の `date`・`tasks`・`projects` の形と wiki link を確かめる。確かめることの範囲は `scripts/karo-check` の冒頭にある。
+- どのノートも `date` と `description` を持つ。`type`・`tasks`・`projects` は任意で、`tasks` と `projects` はノートを作るきっかけになったタスクとプロジェクトを `rg` で引けるように、あれば書く。
+- 必須のフィールドの正本は karo plugin の `scripts/frontmatter-schema.yaml` の `required`（karo-check が読む。`$KARO_HOME` に schema のファイルがあっても読まない）。種類ごとの必須と置き場所は検査しない。
+- `~/.config/claude/skills/karo/scripts/karo-check` が、必須のフィールド、`date` の形、あれば `tasks` の ID の形と `projects` の名前、リンク、wiki link を確かめる。確かめることの範囲は `scripts/karo-check` の冒頭にある。
 - 対象はこれらのフォルダの `.md` すべてで、対象にしないものは `frontmatter-schema.yaml` の `exclude` にある（imozuru が書く `investigation/YYYY-MM-DD-<話題>/sources/` の原文など）。
 
 ## フィールド
 
 | フィールド | 書き方 |
 | --- | --- |
-| `type` | 下の表の値 |
-| `description` | 1 文の要約。ファイル名の言い換えでなく、中身の結論か目的を書く |
-| `date` | `YYYY-MM-DD`、引用符なし。ノートの日（standup の日、決めた日、MTG の日、調べた日） |
-| `tasks` | タスク ID のブロック形式のリスト（`  - karo-a2v`）。タスク ID のない仕事は外のチケットのキー（`ABC-123`） |
-| `projects` | プロジェクトの名前のブロック形式のリスト。値は Project のノートの、`project/repo/` か `project/misc/` より後ろのパスから `.md` を除いたもの（`github.com/acme/demo`、`work`） |
+| `description` | 必須。1 文の要約。ファイル名の言い換えでなく、中身の結論か目的を書く |
+| `date` | 必須。`YYYY-MM-DD`、引用符なし。ノートの日（standup の日、決めた日、MTG の日、調べた日、Project のノートを作った日） |
+| `type` | 任意。下の「種類」の表の値 |
+| `tasks` | 任意。タスク ID のブロック形式のリスト（`  - karo-a2v`）。タスク ID のない仕事は外のチケットのキー（`ABC-123`） |
+| `projects` | 任意。プロジェクトの名前のブロック形式のリスト。値は Project のノートの、`project/repo/` か `project/misc/` より後ろのパスから `.md` を除いたもの（`github.com/acme/demo`、`work`） |
 | `status` | 下書きは `draft`、置き換わったものは `deprecated`。仕上がったもの（Accepted の Decision Record を含む）には書かない |
 | `supersedes` | 置き換えた古いノートの、`$KARO_HOME` からのパス |
 | `resource` | ノートが表す実物の URL（リポジトリ、PR） |
@@ -28,6 +29,8 @@
 - フロントマターのあとに空行を置き、本文を `## ` の見出しから始める。
 
 ## 種類
+
+置き場所ごとの `type` の値と埋め方の目安。karo-check は種類と置き場所を確かめない。
 
 | 置き場所 | `type` | 埋め方 |
 | --- | --- | --- |
@@ -42,7 +45,7 @@
 | `doc/<話題>.md` | `Document` | `sources` に外の元の資料 |
 | `investigation/YYYY-MM-DD-<話題>/map.md` | `Research Map` | `description` は `題:` のあとの文（`題:` は付けない） |
 
-- どれにも当てはまらないノートは、今ある種類のどれかで書く。種類は karo plugin の schema とこの表が決め、`$KARO_HOME` の側では足せない。新しい種類が要るときは、karo plugin の直し（schema の `types`・`layers`・`paths` とこの表）としてオーナーに伝える。
+- どれにも当てはまらないノートは、`type` を書かずに `date` と `description` だけで書いてよい。
 
 ## 追記したとき・状態が変わったとき
 

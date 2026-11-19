@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Check the karo records: first the general checks of okf-lint (beside this script) against the schema
-# (frontmatter, place, path links, stale_after), then the checks that belong to the karo structure (the
+# (frontmatter and the fields every note requires, path links, stale_after), then the checks that belong to the karo structure (the
 # forms of dates and task IDs; the project vocabulary; wiki links; and the task database, .beads, kept out
 # of git). It is the one implementation of the record checks, run at three depths:
 #   after an edit   post-edit runs --only <the edited file> and stops on that file's problems alone
@@ -64,8 +64,7 @@ done < <(printf '%s\n' "$lint_out")
 # prints; values never reach arithmetic, word splitting, or globbing.
 FS=$'\x1f' LS=$'\x1e'
 export FS LS
-excl=$(yq '.exclude | join("|")' "$SCHEMA")
-types=$'\n'$(yq '.types | keys | .[]' "$SCHEMA")$'\n'
+excl=$(yq '(.exclude // []) | join("|")' "$SCHEMA")
 existing=()
 for d in "${folders[@]}"; do [[ -d $d ]] && existing+=("$d"); done
 # The project vocabulary: the path names of the project notes, <vcs>/<org>/<repo> for
@@ -125,9 +124,7 @@ while IFS= read -r f; do
   done < <(printf '%s\n' "$out")
   [[ -z $info ]] && continue
   IFS=$FS read -r ty projects < <(printf '%s\n' "$info")
-  # okf-lint reports a missing or unknown type
-  [[ -n $ty && $types == *$'\n'"$ty"$'\n'* ]] || continue
-  # projects come from the project vocabulary or are 'all'
+  # projects, when a note has them, come from the project vocabulary or are 'all'
   IFS=$LS read -r -a ps < <(printf '%s\n' "$projects")
   for p in ${ps[@]+"${ps[@]}"}; do
     [[ $p == all || $vocab == *" $p "* ]] || report "$f" "unknown project: $p"

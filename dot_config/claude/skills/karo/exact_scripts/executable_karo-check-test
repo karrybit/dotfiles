@@ -16,14 +16,14 @@ pass() { printf 'ok\t%s\n' "$1"; }
 
 ok=$tmp/ok
 mkdir -p "$ok"/{standup,source/meeting,project/repo/github.com/acme/demo/review,project/design,investigation,doc,decisions}
-printf -- '---\ntype: Project\ndescription: 例のプロジェクト。\nprojects:\n  - github.com/acme/demo\n---\n\n## demo\n' > "$ok/project/repo/github.com/acme/demo.md"
+printf -- '---\ntype: Project\ndescription: 例のプロジェクト。\ndate: 2026-01-01\nprojects:\n  - github.com/acme/demo\n---\n\n## demo\n' > "$ok/project/repo/github.com/acme/demo.md"
 # A project's reviews sit in the folder named after it, and Design Docs sit in project/design/.
-printf -- '---\ntype: Review\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - github.com/acme/demo\n---\n\n## 結論\n\n承認\n' > "$ok/project/repo/github.com/acme/demo/review/t-test0001-1.md"
+printf -- '---\ntype: Review\ndescription: 例のレビュー。\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - github.com/acme/demo\n---\n\n## 結論\n\n承認\n' > "$ok/project/repo/github.com/acme/demo/review/t-test0001-1.md"
 printf -- '---\ntype: Design Doc\ndescription: 例の設計。\ndate: 2026-01-01\nprojects:\n  - github.com/acme/demo\nsources:\n  - https://example.invalid/design\n---\n\n## 例\n' > "$ok/project/design/2026-01-01-design-doc-example.md"
 printf -- '---\ntype: Document\ndescription: 例の資料。\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - github.com/acme/demo\n---\n\n## 例\n\nt-test0001 の [demo](project/repo/github.com/acme/demo.md)\n' > "$ok/doc/demo.md"
 printf -- '---\ntype: Investigation\ndescription: 例の調べ物。\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - all\n---\n\n## 例\n' > "$ok/investigation/2026-01-01-example.md"
 # A day's standup is standup/<day>.md, and a meeting's notes sit in source/meeting/.
-printf -- '---\ntype: Standup\ndate: 2026-01-01\n---\n\n## Checkin（2026-01-01）\n\n- 例\n' > "$ok/standup/2026-01-01.md"
+printf -- '---\ntype: Standup\ndescription: 例の日。\ndate: 2026-01-01\n---\n\n## Checkin（2026-01-01）\n\n- 例\n' > "$ok/standup/2026-01-01.md"
 printf -- '---\ntype: Meeting Notes\ndescription: 例の MTG。\ndate: 2026-01-01\nprojects:\n  - github.com/acme/demo\nsources:\n  - { id: notes, resource: https://example.invalid/notes, title: 例の議事録 }\n---\n\n## 例の MTG\n\n- 決定: 例\n' > "$ok/source/meeting/2026-01-01-demo.md"
 
 # A decision record sits in decisions/; the one it replaces stays there as deprecated, named by supersedes.
@@ -35,18 +35,15 @@ if out=$("$bin/karo-check" "$ok" 2>&1); then pass "valid vault passes"; else fai
 # <name>|<expected problem>|<shell command run inside the copy>
 cases=(
   'unknown project|unknown project: nope|sed -i.bak "s#  - github.com/acme/demo#  - nope#" doc/demo.md'
+  'unknown project in a note without a type|doc/demo.md	unknown project: nope|sed -i.bak "/^type:/d; s#  - github.com/acme/demo#  - nope#" doc/demo.md'
+  'bad task ID in a note with a type the schema does not name|doc/demo.md	bad task id: karo_a2v|sed -i.bak "s/^type: Document/type: Bogus/; s/  - t-test0001/  - karo_a2v/" doc/demo.md'
   'wiki link|wiki link, write a path link: \[\[demo\]\]|sed -i.bak "s#\[demo\](project/repo/github.com/acme/demo.md)#[[demo]]#" doc/demo.md'
   'no frontmatter where no type lives|investigation/2026-01-01-demo/notes.md	no frontmatter|mkdir -p investigation/2026-01-01-demo && printf "## no frontmatter\\n" > investigation/2026-01-01-demo/notes.md'
-  # The required fields and paths in the karo schema, which okf-lint checks
-  'standup named YYYY-MM-DD-standup.md|standup/2026-01-01-standup.md	path does not match Standup|mv standup/2026-01-01.md standup/2026-01-01-standup.md'
-  'standup in journal/|journal/2026-01-01-standup.md	path does not match Standup|mkdir journal && mv standup/2026-01-01.md journal/2026-01-01-standup.md'
-  'meeting notes outside source/meeting/|source/2026-01-01-demo.md	path does not match Meeting Notes|mv source/meeting/2026-01-01-demo.md source/2026-01-01-demo.md'
-  'decision record named without a date|decisions/example.md	path does not match Decision Record|mv decisions/2026-01-02-example.md decisions/example.md'
-  'decision record without projects|decisions/2026-01-02-example.md	missing projects|sed -i.bak "/^projects:/,/^  - github.com\/acme\/demo/d" decisions/2026-01-02-example.md'
+  # The fields every note requires in the karo schema, date and description, which okf-lint checks
   'replaced decision record removed|decisions/2026-01-02-example.md	supersedes missing: decisions/2026-01-01-example.md|rm decisions/2026-01-01-example.md'
-  'review name without a task ID|path does not match Review|mv project/repo/github.com/acme/demo/review/t-test0001-1.md project/repo/github.com/acme/demo/review/demo.md'
   'document without description|missing description|sed -i.bak "/^description:/d" doc/demo.md'
-  'missing date and projects|investigation/2026-01-01-example.md	missing projects|sed -i.bak "/^date:/d; /^projects:/,/^  - all/d" investigation/2026-01-01-example.md'
+  'missing date|investigation/2026-01-01-example.md	missing date|sed -i.bak "/^date:/d" investigation/2026-01-01-example.md'
+  'empty description|standup/2026-01-01.md	missing description|sed -i.bak "s/^description: .*/description: \"\"/" standup/2026-01-01.md'
   'unparseable frontmatter|doc/demo.md	unparseable frontmatter|sed -i.bak "s/^description: .*/description: a: b/" doc/demo.md'
   'date not YYYY-MM-DD|doc/demo.md	date is not YYYY-MM-DD|sed -i.bak "s/^date: 2026-01-01/date: 2026-1-1/" doc/demo.md'
   'removed note still linked|doc/demo.md	link target missing: project/repo/github.com/acme/demo.md|rm project/repo/github.com/acme/demo.md'
@@ -57,6 +54,24 @@ for c in "${cases[@]}"; do
   (cd "$copy" && eval "$cmd" && rm -f ./*.bak ./*/*.bak) || { fail "$name: could not break the copy"; continue; }
   out=$("$bin/karo-check" "$copy" 2>&1); code=$?
   if [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -q -- "$want"; then pass "$name"; else fail "$name: exit $code, want /$want/: $out"; fi
+done
+
+# type, tasks and projects are optional, and a note may sit in any record folder under any name: a note
+# with a date and a description passes without them.
+# <name>|<shell command run inside the copy>
+optional=(
+  'note without a type|sed -i.bak "/^type:/d" doc/demo.md'
+  'note with a type the schema does not name|sed -i.bak "s/^type: Document/type: Bogus/" doc/demo.md'
+  'note without tasks and projects|sed -i.bak "/^tasks:/,/^  - github.com\/acme\/demo/d" doc/demo.md'
+  'standup under another name|mv standup/2026-01-01.md standup/2026-01-01-standup.md'
+  'review named without a task ID|mv project/repo/github.com/acme/demo/review/t-test0001-1.md project/repo/github.com/acme/demo/review/demo.md'
+  'note with date and description alone|printf -- "---\\ndate: 2026-01-03\\ndescription: x\\n---\\n" > decisions/anything.md'
+)
+for c in "${optional[@]}"; do
+  name=${c%%|*}; cmd=${c#*|}
+  copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"
+  (cd "$copy" && eval "$cmd" && rm -f ./*.bak ./*/*.bak) || { fail "$name: could not change the copy"; continue; }
+  if out=$("$bin/karo-check" "$copy" 2>&1); then pass "$name passes"; else fail "$name: $out"; fi
 done
 
 # What karo-check does not read passes: an unclosed [[ and wiki links in code, an excluded original, a
@@ -87,7 +102,7 @@ if [[ $code -eq 0 ]] && printf '%s\n' "$out" | rg -qxF 'karo-check: 0 problem(s)
 
 # The schema is the plugin's: a schema file left in the karo dir, even a broken one, is not read.
 copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"; mkdir -p "$copy/rule"
-printf 'exclude: []\n' > "$copy/rule/frontmatter-schema.yaml"
+printf 'types: [Bogus]\n' > "$copy/rule/frontmatter-schema.yaml"
 if out=$("$bin/karo-check" "$copy" 2>&1); then pass "a schema file in the karo dir is not read"; else fail "a schema file in the karo dir: $out"; fi
 # Without the plugin's schema, or when okf-lint finds an argument or schema error, karo-check stops
 # without a count. The cases run a copy of this folder whose schema is missing or broken.
@@ -96,9 +111,9 @@ mkdir -p "$nobin"
 for f in "$bin"/*; do [[ ${f##*/} == frontmatter-schema.yaml ]] || ln -s "$f" "$nobin/"; done
 out=$("$nobin/karo-check" "$ok" 2>&1); code=$?
 if [[ $code -eq 2 && $out == "karo-check: no schema at "* && $out != *$'\n'* ]]; then pass "missing schema stops"; else fail "missing schema: exit $code: $out"; fi
-printf 'exclude: []\n' > "$nobin/frontmatter-schema.yaml"
+printf 'types: [Bogus]\n' > "$nobin/frontmatter-schema.yaml"
 out=$("$nobin/karo-check" "$ok" 2>&1); code=$?
-if [[ $code -eq 2 && $out == *"has no types map"* && $out != *"karo-check: "* ]]; then pass "okf-lint schema error stops"; else fail "okf-lint schema error: exit $code: $out"; fi
+if [[ $code -eq 2 && $out == *"has a types that is not a map"* && $out != *"karo-check: "* ]]; then pass "okf-lint schema error stops"; else fail "okf-lint schema error: exit $code: $out"; fi
 
 # Frontmatter values are data: a value holding "|", a newline, a glob, or shell syntax is reported as the
 # problems it is and nothing more, and no command in it runs.
@@ -124,9 +139,9 @@ hostile 'only: project with "|"' 1 'unknown project: all|x' '  - all' '  - "all|
 # --only: a problem in a given file or in a file that depends on it is found; one elsewhere is not.
 # <name>|<expected problem, or "pass">|<--only paths, space-separated>|<shell command run inside the copy>
 scoped=(
-  'only: problem in a given file|unknown type: Bogus|project/repo/github.com/acme/demo.md|sed -i.bak "s/^type: Project/type: Bogus/" project/repo/github.com/acme/demo.md'
+  'only: problem in a given file|missing description|project/repo/github.com/acme/demo.md|sed -i.bak "/^description:/d" project/repo/github.com/acme/demo.md'
   'only: problem in another file is left out|pass|standup/2026-01-01.md|sed -i.bak "s#  - github.com/acme/demo#  - nope#" doc/demo.md'
-  'only: okf-lint problem in another file is left out|pass|standup/2026-01-01.md|sed -i.bak "s/^type: Project/type: Bogus/" project/repo/github.com/acme/demo.md'
+  'only: okf-lint problem in another file is left out|pass|standup/2026-01-01.md|sed -i.bak "/^description:/d" project/repo/github.com/acme/demo.md'
   'only: renamed project still listed|doc/demo.md	unknown project: github.com/acme/demo|project/repo/github.com/acme/demo.md project/repo/github.com/acme/demo2.md|sed -i.bak "s#\[demo\](project/repo/github.com/acme/demo.md)#demo#" doc/demo.md && mv project/repo/github.com/acme/demo.md project/repo/github.com/acme/demo2.md'
   'only: wiki link in a given file|wiki link, write a path link: \[\[demo\]\]|doc/demo.md|sed -i.bak "s#\[demo\](project/repo/github.com/acme/demo.md)#[[demo]]#" doc/demo.md'
 )
@@ -185,17 +200,17 @@ git -C "$copy" add -f .beads/db
 out=$("$bin/karo-check" "$copy" 2>&1); code=$?
 if [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -qxF $'.beads\ttask database tracked by git'; then pass ".beads tracked fails"; else fail ".beads tracked: exit $code: $out"; fi
 
-# A copy of the real vault with one note's type broken must fail on that note and on nothing else.
+# A copy of the real vault with one note's description removed must fail on that note and on nothing else.
 # cp keeps the file names byte for byte; tar on macOS rewrites them to NFD, which breaks the link paths.
 real=$tmp/real
 count() { "$bin/karo-check" "$1" 2>&1 | rg -c -v '^karo-check: |	stale since '; }
 if cp -R "$vault/." "$real" && rm -rf "$real/.git"; then
   before=$(count "$real")
-  target=$(cd "$real" && rg -l -x 'type: Project' project | sort | head -n 1)
-  sed -i.bak 's/^type: Project$/type: Bogus/' "$real/$target" && rm -f "$real/$target.bak"
+  target=$(cd "$real" && rg -l '^description: ' investigation -g '!*/sources/**' | sort | head -n 1)
+  sed -i.bak '/^description: /d' "$real/$target" && rm -f "$real/$target.bak"
   out=$("$bin/karo-check" "$real" 2>&1); code=$?
   after=$(count "$real")
-  if [[ $code -eq 1 && $after -eq $((before+1)) ]] && printf '%s\n' "$out" | rg -qF -- "$target	unknown type: Bogus"; then
+  if [[ $code -eq 1 && $after -eq $((before+1)) ]] && printf '%s\n' "$out" | rg -qF -- "$target	missing description"; then
     pass "broken copy of the real vault"
   else
     fail "broken copy of the real vault: exit $code, problems $before -> $after"
