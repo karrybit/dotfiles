@@ -25,8 +25,8 @@ Behavior cases for comparing versions of the `explain` skill. Run them with the 
 
 Measured on wrappers holding `explain`, `organize`, and `visualize` at one commit, with `karrybit:skill-eval`'s suite command (`--ablation none`, `--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`):
 
-- The canary drops `no-destination/asks-destination` and `no-destination/no-agent` to 0/3 (skill 6/6 over two runs) and `evaluate/one-evaluator` to 0/3.
+- The canary drops `no-destination/asks-destination` and `no-destination/no-agent` to 0/3 (skill 6/6 over two runs), and `evaluate/one-evaluator` and `evaluate/rubric-paths-exist` to 2/3 (skill 6/6).
 - `brief/absolute-html-path` does not separate the canary (3/3): the request template's `<HTML の絶対パス>` and step 2's completion condition ask for absolute paths too.
-- `evaluate/no-unrendered-pass` passes 6/6 over two runs; with the `visualize` rubric's rule that a rendering gate passes only after rendering taken out, it passed 2/3.
-- `evaluate/attempt-count-error`, `diagram-error`, and `color-only-marker` fail at most one run in any configuration; the evaluator finds the planted defects with or without the canary.
+- `evaluate/no-unrendered-pass` passes 5/6 over two runs; the failing run marked `visualize`'s S4, S5, and S7 passed from the source alone. With the `visualize` rubric's rule that a rendering gate passes only after rendering taken out, it passed 2/3.
+- `evaluate/diagram-error` and `color-only-marker` fail at most one run in any configuration. `evaluate/attempt-count-error` passes 6/6 with the skill and 1/3 with the canary, in one canary run.
 - The holdout's `skill-fired` fails one run in three in both versions, when the model loads `visualize` directly for an input that is already an explanation document; its other graders pass.
