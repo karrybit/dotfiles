@@ -56,17 +56,18 @@ sample='# state
 - decisions/2026-01-01-landing.md'
 
 # run <event> <input JSON>: runs every hook of the event in hooks.json whose matcher takes the input's
-# source or trigger, one after another, and sets out (all stdout), codes (exit codes) and lens (each
-# hook's stdout length in characters).
+# source or trigger, one after another, and sets out (all stdout), agents_out (the stdout of the
+# state-context agents hook), codes (exit codes) and lens (each hook's stdout length in characters).
 run() {
   local key cmd o
   key=$(jq -r '.source // .trigger' <<<"$2")
-  out='' codes='' lens=''
+  out='' agents_out='' codes='' lens=''
   : > "$tmp/bd.log"
   while IFS= read -r cmd; do
     o=$(bash -c "$cmd" <<<"$2"); codes+="$? "
     lens+="$(printf '%s' "$o" | jq -Rs length) "
     out+=$o$'\n'
+    [[ $cmd == *'/scripts/state-context agents' ]] && agents_out=$o
   done < <(jq -r --arg e "$1" --arg k "$key" \
     '.hooks[$e][]? | select((.matcher // "") as $m | $m == "" or ($k | test("^(" + $m + ")$"))) | .hooks[].command' "$hooks")
 }
@@ -102,9 +103,9 @@ for source in startup resume clear compact fork; do
       [[ $(count "^- .*agent-report --wait") -eq 2 ]]'
 done
 STUB_AGENTS='[{"name":"other","agent_status":"working"}]' run SessionStart '{"source":"resume"}'
-check "no assignee in Herdr gives no agents hook output" 'zero && [[ $lens =~ ^[0-9]+\ 0\  ]] && [[ $(count "待ち直す") -eq 0 ]]'
+check "no assignee in Herdr gives no agents hook output" 'zero && [[ $lens =~ ^[0-9]+\ 0\  ]] && [[ $(grep -c 待ち直す <<<"$agents_out") -eq 0 ]]'
 STUB_HERDR_FAIL=1 run SessionStart '{"source":"resume"}'
-check "a failing herdr gives no agents hook output" 'zero && [[ $lens =~ ^[0-9]+\ 0\  ]] && [[ $(count "待ち直す") -eq 0 ]]'
+check "a failing herdr gives no agents hook output" 'zero && [[ $lens =~ ^[0-9]+\ 0\  ]] && [[ $(grep -c 待ち直す <<<"$agents_out") -eq 0 ]]'
 unset STUB_TASKS STUB_AGENTS
 
 printf '%s\n' "${sample//（2026-01-01 10:00 時点）/}" > "$state"
