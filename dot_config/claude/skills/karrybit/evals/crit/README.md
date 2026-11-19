@@ -2,7 +2,7 @@
 
 Behavior cases for comparing versions of the `crit` skill. Run them with the `karrybit:skill-eval` skill against a wrapper plugin holding one version of this skill.
 
-The cases grant no `Bash`, so a run cannot start crit or open a browser; each case grades the answer.
+A run cannot start crit: in a run's sandbox the home folder is unreadable, and crit's binary sits under it. `pr-number` and `branch` grant no `Bash` and grade the answer. `url-only` grants `Bash` and gives the URL a started crit printed, so a run shows what the skill does with it.
 
 ## Files
 
@@ -11,10 +11,13 @@ The cases grant no `Bash`, so a run cannot start crit or open a browser; each ca
 - `plugin-eval/branch`: the user gives a branch that is not a PR and its worktree, and asks for the commands.
   - `worktree-command`: `cd /work/retry && crit`.
   - `no-range`: no `crit --range`, which would key the session to a SHA.
+- `plugin-eval/url-only`: crit already runs and printed its review URL, in a run with no Herdr and no karo plugin.
+  - `url-shown`: the answer shows `http://localhost:49809`.
+  - `no-pane`: no `Bash` call names `crit-open`, `tb-view`, `terminal-browser`, or `herdr`.
 
 ## Settings for This Suite
 
-- Cases grant no gated tool and have no scaffold: run them without `--scaffold` and `--allow-tools`.
+- No case has a scaffold: run them without `--scaffold`. `url-only` lists `Bash`: run with `--allow-tools Bash`.
 - `crit` reads no sibling skill: build the wrapper with `skill-wrap <karrybit>/exact_skills/crit <ref> DIR/kit`.
 
 ## What the Suite Separates
