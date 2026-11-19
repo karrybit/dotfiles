@@ -1,6 +1,6 @@
 ---
 name: insights
-description: karo と Agent の一日の働きを transcript と Beads（bd）から数えて診断し、規則・skill・ブリーフの直しの候補を挙げる手順。オーナーが /karo:insights を打ったとき、karo や Agent の違反・詰まり・費用を数えて診断してほしいと言ったときに使う。
+description: karo と Agent の一日の働きを transcript と Beads（bd）から数えて診断し、規則・skill・ブリーフの直しの候補を挙げる手順。オーナーが /karo:insights を打ったとき、karo や Agent の違反・詰まり・待ちを数えて診断してほしいと言ったときに使う。
 ---
 
 # Insights
@@ -12,11 +12,11 @@ description: karo と Agent の一日の働きを transcript と Beads（bd）�
 ## 手順
 
 1. `~/.config/claude/skills/karo/skills/insights/scripts/insights <日付>` を単独で実行する（日付を省くと今日。`$KARO_HOME` で `bd query` と `bd show` を読むだけの呼び出しをする）。
-   完了条件: 終了コード 0 の JSON が手元にあるか、失敗の出力が手元にある。失敗したら 2 を飛ばし、3 で 5 つの指標を「取れなかった」と理由つきで報告する。
+   完了条件: 終了コード 0 の JSON が手元にあるか、失敗の出力が手元にある。失敗したら 2 を飛ばし、3 で 4 つの指標を「取れなかった」と理由つきで報告する。
 2. 下の「確かめる例」を JSON から選び、下の「サブエージェントへの依頼」で、Agent tool の `general-purpose` のサブエージェントを background で起動する。報告の通知を受けてから、この節を standup に書く。
    完了条件: サブエージェントの報告が手元にあり、選んだ例のすべてに、規則の名前と、直しの候補か「直しは要らない」がある。
 3. 下の「報告の項目」を短く報告する。
-   完了条件: 5 つの指標と直しの候補がすべて報告にある（取れなかった指標は理由つき）。
+   完了条件: 4 つの指標と直しの候補がすべて報告にある（取れなかった指標は理由つき）。
 4. 3 の報告を本文にした `## Insights（<数えた日付>）` の節を今日の standup の末尾に足し、Insights の記録であることと standup のパスを本文に書いて commit する（`karo:record` skill）。
    完了条件: commit が `OK` の行を出した。
 
@@ -28,7 +28,6 @@ description: karo と Agent の一日の働きを transcript と Beads（bd）�
 | 2. 承認の拒否 | `approvals` | グループ（`karo`・`subagents`・`agents`）ごとに、`rejected_user`（オーナーの拒否）、`rejected_classifier`（auto mode の判定の拒否）、`prompted`（確認が出てオーナーが通した）。`prompt_wait_s` は、確認が出た呼び出しの、呼び出しから結果までの秒数の和で、実行の時間も入る |
 | 3. Agent の `blocked` | `agent_prompts` | Herdr の Agent ごとの、確認のダイアログで人を待った呼び出しの数と秒数。Herdr の状態の履歴は残らないので、ダイアログの待ちで代える。確認以外の止まり方（Agent が尋ねて `idle` になった）は入らないので、タスクの `報告:` の comment と突き合わせる |
 | 4. 待ち時間 | `karo_turn_s`、`delegations` | karo のターンの長さ（件数、合計、最大の秒）と、その日に初めて claim されたタスク（`started_at`）ごとの、claim から最初の comment か close の早いほうまでの分。`ended` が `null` の行は、まだそのどちらもない委任。同じタスクへの 2 回目からの委任（追加指示）は数えない |
-| 5. 費用とトークン | `tokens`、`session_cost` | トークンはグループとモデルごとの、その日の API メッセージの和。`session_cost` はセッションごとの累計の費用と始まりの時刻で、Claude Code がときどき書くだけなので、その日の費用ではない。その日の費用は「取れない」と報告する |
 
 - insights はその日の 0 時以降に変わった transcript だけを読み、時刻はこのマシンの時刻帯で日を分ける。
 - transcript は `cleanupPeriodDays`（既定 30 日）で消えるので、それより前の日は数えられない。
@@ -76,6 +75,6 @@ insights の JSON: <1 の出力>
 
 この順に並べる。
 
-- 5 つの指標の数（取れなかった指標は理由）
+- 4 つの指標の数（取れなかった指標は理由）
 - 確かめた例ごとの、場所、関わる規則、規則どおりか違反か
 - 直しの候補（どの規則・skill・ブリーフをどう直すか）と、オーナーに決めてほしいこと

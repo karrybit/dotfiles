@@ -2,9 +2,8 @@
 # Counts one day of karo and agent work from the Claude Code transcripts and the
 # task database (bd, run in KARO_HOME), and prints the counts as one JSON object
 # for the karo:insights skill.
-# It reads only structural fields; the output holds counts, seconds, tokens,
-# dollars, session IDs, agent names, times and tool names, never prompt,
-# command or result text.
+# It reads only structural fields; the output holds counts, seconds, session
+# IDs, agent names, times and tool names, never prompt, command or result text.
 #
 # Transcripts come in three groups: karo (the sessions in the project folder of
 # KARO_HOME), subagents (their <session>/subagents/), and agents (any other
@@ -41,11 +40,6 @@
 #                  the first comment or the close after its start, whichever
 #                  is earlier, and the minutes in between; ended is null
 #                  while it has neither.
-#   tokens         per group and model: input, output, cache_read and
-#                  cache_creation tokens of the day, one count per API message.
-#   session_cost   per session with a cost-state record: when it started and
-#                  its running total in dollars. Claude Code writes the total
-#                  now and then, not per day, so it is not the day's cost.
 #
 # usage: insights [YYYY-MM-DD]   (default: today)
 # Environment: KARO_HOME (default ~/karo), KARO_CONFIG_HOME (default ${XDG_CONFIG_HOME:-~/.config}/karo), CLAUDE_CONFIG_DIR (default ~/.claude).
@@ -84,10 +78,6 @@ def counted: .name == "AskUserQuestion" or (.name == "Bash" and (.input.command 
   or ((.name == "Write" or .name == "Edit") and (.input.file_path | tostring | test("/scratchpad/")))
   | not;
 [inputs | .f = input_filename] as $all
-| [$all | group_by(.f)[] | (map(select(.type == "cost-state")) | last) as $c | select($c)
-    | {group: $group, session: (.[0].f | session), name: $name,
-       started: ($c.startTime / 1000 | strflocaltime("%Y-%m-%d %H:%M")),
-       total_usd: ($c.totalCostUSD * 100 | round / 100)}] as $cost
 | (reduce ($all[] | select(.timestamp and day == $day)) as $r ({seen: {}, out: []};
     if $r.uuid and .seen[$r.uuid] then . else .seen[$r.uuid // ""] = true | .out += [$r] end)
   | .out | sort_by(ts)) as $d
@@ -117,15 +107,7 @@ def counted: .name == "AskUserQuestion" or (.name == "Bash" and (.input.command 
        else . end)
      | map({session, time, kind, calls: (.ids | length),
             tools: (.ids | [.[]] | group_by(.) | map({key: .[0], value: length}) | from_entries)}) end),
-   turn_ms: [$d[] | select(.type == "system" and .subtype == "turn_duration") | .durationMs],
-   tokens: ([$d[] | select(.type == "assistant" and .message.usage and .message.model != "<synthetic>")]
-     | group_by(.message.id) | map(last.message)
-     | group_by(.model) | map({key: .[0].model, value: {
-         input: (map(.usage.input_tokens // 0) | add),
-         output: (map(.usage.output_tokens // 0) | add),
-         cache_read: (map(.usage.cache_read_input_tokens // 0) | add),
-         cache_creation: (map(.usage.cache_creation_input_tokens // 0) | add)}}) | from_entries),
-   cost: $cost}
+   turn_ms: [$d[] | select(.type == "system" and .subtype == "turn_duration") | .durationMs]}
 '
 
 summarize() { # <group> <agent-name or ""> <file>...
@@ -189,8 +171,5 @@ def sumobj: reduce .[] as $o ({}; reduce ($o | to_entries[]) as $e (.; .[$e.key]
      | map({agent: .name, session, calls: (.approvals.prompted + .approvals.rejected_user), wait_s: .approvals.prompt_wait_s})),
    karo_turn_s: ($f | map(select(.group == "karo")) | map(.turn_ms) | add // [] | map(. / 1000 | floor)
      | {count: length, total: (add // 0), max: (max // 0)}),
-   delegations: $delegations,
-   tokens: ($f | group_by(.group) | map({key: .[0].group,
-     value: (reduce (.[].tokens | to_entries[]) as $e ({}; .[$e.key] = ([.[$e.key] // {}, $e.value] | sumobj)))}) | from_entries),
-   session_cost: ($f | map(.cost) | add // [])}
+   delegations: $delegations}
 '
