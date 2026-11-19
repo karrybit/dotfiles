@@ -82,6 +82,13 @@
 .config/claude/skills/karrybit/evals/researcher/plugin-eval/other-repo/graders/no-record-paths.md
 .config/claude/skills/karrybit/evals/researcher/plugin-eval/other-repo/graders/no-bd.md
 
+# crit-open and tb-view are karo's scripts, and the herdr-agent skill and its
+# eval are the karo plugin's. The crit skill folder and the evals folder are
+# not exact_, so these stay on a machine otherwise.
+.config/claude/skills/karrybit/skills/crit/scripts
+.config/claude/skills/karrybit/skills/crit/PROVENANCE.md
+.config/claude/skills/karrybit/evals/herdr-agent
+
 # The explain eval's brief case checks rubric paths with rubric-paths-exist
 # alone. The evals folder is not exact_, so the removed grader stays on a
 # machine otherwise.

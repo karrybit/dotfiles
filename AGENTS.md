@@ -74,9 +74,8 @@
   manifest's `skills`, since Claude Code scans only `skills/<skill>/` by
   default; the folder does not change the name `karrybit:<skill>`. Give each
   category folder the `exact_` prefix, since chezmoi's `exact_` does not
-  reach subfolders. Keep `herdr-agent` and `crit` directly in
-  `exact_skills/`, since settings rules and other plugins' scripts call their scripts
-  as `~/.config/claude/skills/karrybit/skills/<skill>/scripts/…`.
+  reach subfolders. `crit` sits directly in `exact_skills/`, where the
+  default `skills/<skill>/` scan loads it.
 - Skills and scripts that know the layout of the karo record repository,
   and the `herdr-agent` skill that starts and closes karo's Herdr agents,
   live in the `karo` plugin at `dot_config/claude/skills/karo/`, deployed and
