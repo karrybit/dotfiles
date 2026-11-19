@@ -69,7 +69,7 @@ Every grader is a regression guard for the Orchestrator's route through `orchest
 
 ## Measured Results
 
-Measured on a karo copy built from 6e3ae2a, with the orchestrate skill as at that commit (`--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`). Pass counts per grader:
+Measured on a karo copy whose `orchestrate` skill, karrybit skills, and suite cases match 5a9d035 (`--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`). Pass counts per grader, with the graders in this directory:
 
 | Case | Grader | Pass |
 | --- | --- | --- |
@@ -77,24 +77,24 @@ Measured on a karo copy built from 6e3ae2a, with the orchestrate skill as at tha
 | | `work-design-fired` | 1/3 |
 | | `plan-dag` | 1/3 |
 | `notify-stopped` | `orchestrate-fired`, `integrate-own`, `remove-own`, `branch-safe-delete` | 3/3 each |
-| | `keep-others` | 3/3 (1/3 under the earlier pattern, which also forbade removing `agent-b7e2` after integrating it) |
-| | `stopped-kept` | 1/3, under the earlier rubric with the same flaw; not judged again |
+| | `keep-others` | 3/3 |
+| | `stopped-kept` | not judged with this rubric |
 | `revise-repeat` | `orchestrate-fired`, `eight-items` | 3/3 each |
 | | `revise-route` | 2/3 |
 | `blocked-decision` | `orchestrate-fired`, `eight-items`, `scoped-wait` | 3/3 each |
 | `permission-session` | `orchestrate-fired`, `eight-items`, `permission-route` | 3/3 each |
-| | `no-beads-write`, `no-beads-edit` | 3/3 by call count (0 calls in every run); the run scored 0/3, since a grader with `max: 0` and no `min: 0` expects one call or more |
+| | `no-beads-write`, `no-beads-edit` | 3/3 (no `Write` or `Edit` call in any run) |
 | `resume-compact` | `orchestrate-fired`, `integrate-pending` | 3/3 each |
 | | `reads-state` | 2/3 |
 | | `no-redo` | 1/3 |
 | `finish-gate` | `orchestrate-fired` | 1/3 |
-| | `checks-all` | 3/3 (0/3 under the earlier pattern, which also asked for `git worktree list`, outside the brief's criteria) |
+| | `checks-all` | 3/3 |
 | | `scope-kept` | 1/3 |
 | `small-fix` | `orchestrate-fired`, `edited`, `no-subagent`, `no-escalation` | 3/3 each |
-| | `no-work-design`, `no-review` | 3/3 by call count, scored 0/3 for the same `min: 0` reason |
+| | `no-work-design`, `no-review` | 3/3 (no `Skill` call for either in any run) |
 
-- Counts marked "by call count" or with an earlier pattern were read from the result JSON's grader explanations and from the kept final replies with `regex-check.js`, without running the suite again.
-- `plugin-eval-calibration`: every good answer passed 3/3 and every bad answer failed 3/3.
+- `keep-others`, `checks-all`, and the four `min: 0` graders were scored from each run's recorded tool-call counts and final reply, with `regex-check.js` for the `regex` graders.
+- `plugin-eval-calibration`: every good answer passed 3/3 and every bad answer failed 3/3, except the `notify-stopped` pair, which has not been judged with the current `stopped-kept` rubric.
 - Cost: `plugin-eval-calibration` 3.20 USD, `--tag part-a` 2.35 USD, `--tag part-b` 1.76 USD.
 
 What the failing runs did:
