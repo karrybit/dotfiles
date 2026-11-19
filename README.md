@@ -255,8 +255,8 @@ and the wheel select entries; `Esc` or `Ctrl-C` quits.
 terminal-browser (`work` profile, the Homebrew cask in `Brewfile.work`) draws
 a browser in a Herdr pane. It comes from Homebrew, not aqua, because the copy
 aqua unpacks fails macOS's code signature check and macOS refuses to open it.
-The `karrybit:crit` skill's `crit-open` and the karo plugin's `view-open` open
-it through that skill's `tb-view`, which names the new pane `view - <name>`;
+The karo plugin's `crit-open` and `view-open` open it through the `tb-view`
+beside them, which names the new pane `view - <name>`;
 closing the pane ends its browser, and the daemon exits 15 seconds after the
 last one. Chezmoi keeps three of its files:
 

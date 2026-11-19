@@ -1,6 +1,6 @@
 ---
 name: crit
-description: crit を terminal-browser で開き、ユーザーが付けたコメントに返事をする手順。引数なしなら起動した場所のファイルを、GitHub の PR の URL を渡すとその PR を、PR になっていないブランチか commit を渡すとその差分を開く。ユーザーが /karrybit:crit を打ったとき、crit でコメントしたいと言ったときに使う。
+description: crit でレビューを起動して review の URL を返し、ユーザーが付けたコメントに返事をする手順。引数なしなら起動した場所のファイルを、GitHub の PR の URL を渡すとその PR を、PR になっていないブランチか commit を渡すとその差分を開く。ユーザーが /karrybit:crit を打ったとき、crit でコメントしたいと言ったときに使う。
 allowed-tools: Bash(crit .), Bash(crit --session *), Bash(crit comments *), Bash(crit comment *), Bash(crit stop), Bash(crit stop .), Bash(crit), Bash(crit --pr *), Bash(crit --range *), Read
 argument-hint: "[GitHub の PR の URL | PR になっていないブランチ | commit]"
 ---
@@ -32,7 +32,7 @@ argument-hint: "[GitHub の PR の URL | PR になっていないブランチ | 
 
 1. 上の表のコマンドを、Bash の `run_in_background: true` と `timeout: 86400000` で動かす（引数なし・PR・1 つの commit なら、先に「開くもの」の `crit stop` を動かす）。timeout を付けないと、Claude Code が 30 分で crit を止める。
    完了条件: crit の出力にある review の URL が手元にある。
-2. review の URL（`http://localhost:<ポート>`）のポートを crit-open に渡し、ほかのコマンドとつながない 1 回の Bash で動かす（どの対象でも）。crit-open は、レビューの画面を terminal-browser で、呼び出した Herdr の pane の隣の `view - crit` の pane に開く（出力と pane の扱いは下の「開いた pane」）。crit-open は、この plugin を配る場所の `~` の形の `~/.config/claude/skills/karrybit/skills/crit/scripts/crit-open <ポート>` で呼ぶ。terminal-browser は sandbox の中では起動しないので、crit-open は、settings でこの `~` の形を許可し sandbox の外で動く形として除外したときに動く（`${CLAUDE_SKILL_DIR}/scripts/crit-open-test <settings.json>` で確かめられる）。settings の規則はコマンドの文字列をそのまま照らすので、絶対パスで呼ぶと `~` の形の規則に合わず、つなぐと sandbox の中に残って terminal-browser が起動しない。crit-open が 0 でない終了コードで終わったとき（Herdr の外で動いているときなど）は、URL をユーザーに伝えて開いてもらう。そのうえで URL をユーザーに伝え、「コメントを付けて Finish Review を押してください」と返して、background の crit が終わるのを待つ。レビューのファイルは、crit が終わってから読む。
+2. crit の出力の review の URL（`http://localhost:<ポート>`）を返す。呼び出し側の規則（`CLAUDE.md`・`AGENTS.md`）に review の URL の開き方があれば、その規則のとおりに開く。なければ URL をユーザーに示し、ユーザーにブラウザで開いてもらう。そのうえで「コメントを付けて Finish Review を押してください」と返して、background の crit が終わるのを待つ。レビューのファイルは、crit が終わってから読む。
    完了条件: background の crit が終わった。
 3. crit の stdout を読み、その指示と、次に動かすコマンド（`crit --session <id>`）を控える。stderr の `approved: true` か `approved: false` を見る。stdout にコメントがなければ `crit comments --session <id> --json` で読む。
    完了条件: session の ID と、未解決のコメントの一覧（0 件でもよい）が手元にある。
@@ -42,19 +42,11 @@ argument-hint: "[GitHub の PR の URL | PR になっていないブランチ | 
    - コメントの解決はユーザーが決めるので、`--resolve` はユーザーが頼んだときだけ付ける。
 
    完了条件: 未解決のコメントすべてに返事がある。
-5. 引数なしと PR になっていないブランチなら、3 で控えた `crit --session <id>` を 1 と同じ形で動かす（ブランチは、足された commit が差分に出て、回が 1 つ進む）。PR と 1 つの commit なら、push された commit を差分に出すために 1 から開き直す。crit の出力の URL のポートが 2 で開いたものと違えば、2 と同じ形で crit-open を動かす。そのうえでユーザーに「crit に返事を書きました。表示された画面で確かめて Finish Review を押してください」とだけ返す。crit が終わったら 3 に戻る。
+5. 引数なしと PR になっていないブランチなら、3 で控えた `crit --session <id>` を 1 と同じ形で動かす（ブランチは、足された commit が差分に出て、回が 1 つ進む）。PR と 1 つの commit なら、push された commit を差分に出すために 1 から開き直す。crit の出力の URL のポートが 2 で返したものと違えば、2 と同じく新しい URL を返す。そのうえでユーザーに「crit に返事を書きました。表示された画面で確かめて Finish Review を押してください」とだけ返す。crit が終わったら 3 に戻る。
    完了条件: 3 で未解決のコメントが 0 件だった（ユーザーがコメントなしで Finish Review を押した）。
-
-## 開いた pane
-
-- crit-open は、新しい pane を開いたら `<pane の ID> view - crit` の 1 行を出す。右に terminal-browser の pane がすでにあれば、その pane に tab として足し、そう書いた 1 行を出す（その pane の名前は変わらない）。
-- ユーザーが新しい pane で開きたいと言ったときだけ、`crit-open --no-merge <ポート>` で呼ぶ。新しい pane は、label が `view - ` で始まる pane の下に積まれる（なければ右の split に開く）。
-- ユーザーが閉じてと言ったら、`herdr pane close <pane の ID>` を単独の Bash で実行して pane を閉じる。pane を閉じると、中のブラウザも終わる。ID は crit-open の出力か、`herdr pane list --workspace "$HERDR_WORKSPACE_ID"` の label が `view - ` で始まる pane から取る。
-- pane の中の操作はユーザーに任せ、pane にはキーを送らない（`Ctrl+C` も送らない）。
 
 ## 困ったとき
 
 - crit が `operation not permitted` で落ちたら、sandbox が `~/.crit` への書き込みか待ち受けを止めている。settings の `sandbox` に `filesystem.allowWrite` の `~/.crit` と `network.allowLocalBinding: true` があるかを確かめ、なければユーザーに足してもらう。
 - PR の差分ではなく checkout の作業ツリーが出て、crit の出力に `failed to apply focus` があれば、PR の SHA が手元になく、sandbox が crit の `git fetch` を止めている。`git -C <checkout> fetch origin` を sandbox の外で動かす承認をユーザーに求め、1 から開き直す。
-- Approve のあと「Approved — you can close this tab」と出たら、`view - crit` の pane を閉じるかをユーザーに尋ね、閉じてと言われたら「開いた pane」のとおり閉じる。
 - Claude Code が background の時間の上限（既定で 2 時間）で crit を止めたら、コメントは開いている crit の画面に残っているとユーザーに伝え、待ち続けるときは同じコマンドを 1 と同じ形で動かし直す。

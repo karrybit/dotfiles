@@ -89,6 +89,5 @@ description: 'HTML の解説を git の外の store（`$KARO_DATA_HOME/html/<UUI
 
 ## 見せる
 
-- オーナーが解説を見たいと言ったら、`~/.config/claude/skills/karo/scripts/view-open <root>/<id>/index.html <id の先頭 8 文字>` を単独の Bash で実行し、terminal-browser の `view - <id の先頭 8 文字>` の pane に開く。view-open は、新しい pane なら `<pane の ID> view - <名前>` を出し、右の terminal-browser の pane に tab として足したときはそう書いた 1 行を出す。オーナーが新しい pane で開きたいと言ったときだけ、`view-open --no-merge <パス> <名前>` で呼ぶ。
-- オーナーが閉じてと言ったら、`herdr pane close <pane の ID>` を単独の Bash で実行して閉じる（中のブラウザも終わる）。pane の中の操作はオーナーに任せ、キーは送らない。
+- オーナーが解説を見たいと言ったら、`<root>/<id>/index.html` を、名前を `<id の先頭 8 文字>` にして、`$KARO_HOME/AGENTS.md` の「Herdr の操作」の pane の開き方で開く。
 - view-open が 0 でない終了コードで終わったときと、オーナーが view-open の実行の確認を断ったときは、`index.html` のパスをオーナーに伝える。

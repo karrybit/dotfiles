@@ -51,7 +51,7 @@ a skill at all is in `instruction-maintenance.md`.
 - When a skill runs a script that the caller's settings must allow or exclude
   from the sandbox, write the `~/` path it is deployed to instead of
   `${CLAUDE_SKILL_DIR}`, since permission rules and `sandbox.excludedCommands`
-  match the command text as written (`crit-open` in the `crit` skill); call
+  match the command text as written (`agent-ctl` in the `herdr-agent` skill); call
   any other script there as `${CLAUDE_SKILL_DIR}/scripts/<name>`.
 
 ## Placement
