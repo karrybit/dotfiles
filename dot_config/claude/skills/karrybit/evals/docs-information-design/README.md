@@ -6,14 +6,11 @@ Behavior cases for comparing the skill against a no-skill baseline, across skill
 
 - `plugin-eval/`: the suite used to judge skill and suite changes, one directory per case (`prompt.md`, `case.yaml`, `fixture.sh`, `graders/`). Case names match `evals.json`; each `fixture.sh` copies its fixture from `fixtures/`.
 - `plugin-eval-holdout/`: cases kept out of suite work, run only to check a change before adopting it.
-- `plugin-eval-activation/`: `trigger-evals.json` as cases, tagged `fire` or `nofire`.
+- `plugin-eval-activation/`: should-trigger and near-miss should-not-trigger requests for the description, tagged `fire` or `nofire`.
 - `canary.patch`: removes from `SKILL.md` the equal-outcomes rule, the diff-boundary rule, and section 5. A grader that measures the skill passes less often on the canary than on the skill.
 - `fixtures/`: small repositories, one per case. Several deliberately reward leaving things alone (cases 4, 5, 7, 11).
-- `evals.json`: one case per fixture. `expected_output` describes one good outcome, not the only one; `assertions` are either `script` (checked by `grade.py`) or `judge` (needs a reader's judgment).
+- `evals.json`: one entry per `plugin-eval/` and `plugin-eval-holdout/` case, naming its fixture for `grade-kept`. `expected_output` describes one good outcome, not the only one; `assertions` are either `script` (checked by `grade.py`) or `judge` (needs a reader's judgment). A script assertion holds only what the case's graders cannot express.
 - `grade.py ITERATION_DIR`: runs the script assertions over `eval-<fixture>/<config>/repo`, where each repo is the fixture committed once and then edited by a run. Writes `grading.json` per run. `karrybit:skill-eval`'s `grade-kept` builds that layout from a `--keep-temp` run, for the assertions graders cannot express (searches across files, link resolution, files whose names are not known in advance).
-- `trigger-evals.json`: should-trigger and near-miss should-not-trigger queries for the description.
-
-For trigger tests with skill-creator's `run_eval`, run queries one at a time. Parallel workers each write an identically described command file into the same `.claude/commands/`, so the model often invokes a sibling's copy and the run counts it as not triggered.
 
 ## Settings for This Suite
 

@@ -51,7 +51,25 @@
 # is not exact_, so the removed grader stays on a machine otherwise.
 .config/claude/skills/karrybit/evals/crit/plugin-eval/branch/graders/port-from-target.md
 
-# okf-lint is a script of the karo plugin, and its eval is karo's evals/okf-lint.
-# The evals folder is not exact_, so the karrybit copy stays on a machine
-# otherwise.
+# okf-lint is a script of the karo plugin with no eval suite: okf-lint-test
+# checks the script. The evals folders are not exact_, so the removed suites
+# stay on a machine otherwise.
 .config/claude/skills/karrybit/evals/okf-lint
+.config/claude/skills/karo/evals/okf-lint
+
+# The docs-information-design suite tests the description with its
+# plugin-eval-activation cases and keeps a fixture only for a case that uses
+# it. The evals folder is not exact_, so the removed files stay on a machine
+# otherwise.
+.config/claude/skills/karrybit/evals/docs-information-design/trigger-evals.json
+.config/claude/skills/karrybit/evals/docs-information-design/fixtures/02-over-split-docs
+.config/claude/skills/karrybit/evals/docs-information-design/fixtures/03-mixed-responsibility
+.config/claude/skills/karrybit/evals/docs-information-design/fixtures/06-architecture-compress
+.config/claude/skills/karrybit/evals/docs-information-design/fixtures/08-audience-change
+.config/claude/skills/karrybit/evals/docs-information-design/fixtures/10-missing-info
+.config/claude/skills/karrybit/evals/docs-information-design/fixtures/13-add-feature-docs
+
+# The install-agent-extension exfil-hook case checks the vetting call with
+# vet-output-seen alone. The evals folder is not exact_, so the removed grader
+# stays on a machine otherwise.
+.config/claude/skills/karrybit/evals/install-agent-extension/plugin-eval/exfil-hook/graders/vet-script-ran.md

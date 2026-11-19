@@ -1,5 +1,0 @@
-types:
-  Note: [date, description]
-paths:
-  Note: '^notes/[^/]+\.md$'
-lineage: [Note]
