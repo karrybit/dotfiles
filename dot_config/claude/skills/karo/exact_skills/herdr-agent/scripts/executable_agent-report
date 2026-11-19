@@ -9,11 +9,10 @@
 # message holds a "## 変更の要約" line, the first heading of a
 # karrybit:completion-report report, it prints "status: <state>" and the
 # report. A stop without that line may be a pause between turns, so --wait
-# waits AGENT_REPORT_NO_REPORT_MS milliseconds (default one minute) for the
-# agent to work again; when it does not, --wait reads the last message once
-# more and, still without the heading, prints "status: no-report" and that
-# message (a question, a part-way report, or a pause on its own background
-# work).
+# waits one minute for the agent to work again; when it does not, --wait
+# reads the last message once more and, still without the heading, prints
+# "status: no-report" and that message (a question, a part-way report, or a
+# pause on its own background work).
 #
 # An agent that stops idle or done with a tool call waiting for an answer
 # (an AskUserQuestion, or an approval dialog), which herdr does not always
@@ -144,6 +143,5 @@ while :; do
   fi
   # A resume that ends before this wait starts is never seen as working, so
   # a failed wait leads to one more read rather than straight to no-report.
-  herdr agent wait "$name" --until working --until blocked --until unknown \
-    --timeout "${AGENT_REPORT_NO_REPORT_MS:-60000}" >/dev/null || stalled=1
+  herdr agent wait "$name" --until working --until blocked --until unknown --timeout 60000 >/dev/null || stalled=1
 done
