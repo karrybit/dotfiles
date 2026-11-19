@@ -473,10 +473,16 @@ if [ "$cmd" = close ]; then
   exit 0
 fi
 
-# wait_started: wait until the prompt just sent shows as working or blocked,
-# and set status to the agent's state.
-wait_started() {
-  herdr agent wait "$name" --until working --until blocked --timeout 15000 >/dev/null 2>&1 || true
+# send_prompt <text>: send the text, wait until it shows as working or
+# blocked, and set status to the agent's state. A wait that sees neither
+# (agent_prompt_stalled, timeout) ends after the text has gone in, so it does
+# not stop.
+send_prompt() {
+  sent=$(herdr agent prompt "$name" "$1" --wait --until working --until blocked --timeout 15000 2>&1) ||
+    case $(printf '%s' "$sent" | jq -r '.error.code // empty' 2>/dev/null || true) in
+      agent_prompt_stalled | timeout) ;;
+      *) stop "herdr agent prompt failed: $(oneline "$sent")" ;;
+    esac
   status=$(herdr_json .result.agent.agent_status agent get "$name")
 }
 
@@ -509,8 +515,7 @@ if [ "$cmd" = send ]; then
     working) [ -n "$interrupt" ] || stop "$name is working; wait for it, or send with --interrupt" ;;
     *) stop "$name is $status, not idle or done; nothing is sent" ;;
   esac
-  herdr_ok agent prompt "$name" "$text" >/dev/null
-  wait_started
+  send_prompt "$text"
   jq -nc --arg name "$name" --arg status "$status" '{name: $name, status: $status}'
   exit 0
 fi
@@ -614,8 +619,7 @@ until started=$(herdr agent start "$name" --kind claude --pane "$pane" -- "$@" 2
   attempt=$((attempt + 1))
   sleep 3
 done
-herdr_ok agent prompt "$name" "$(cat "$brief")" >/dev/null
-wait_started
+send_prompt "$(cat "$brief")"
 # A dialog the brief raised is not the caller's to answer by typing, and
 # /goal typed into it would be taken as the answer; unknown may be such a
 # dialog too.

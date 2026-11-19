@@ -423,7 +423,8 @@ else
 fi
 
 # --goal, --permission-mode, tab and send, against a herdr on PATH that logs each start, tab and
-# prompt, and reports the agent as $FAKE_STATUS in workspace $FAKE_WS.
+# prompt, fails a prompt with the error code $FAKE_PROMPT_ERROR, and reports the agent as $FAKE_STATUS
+# in workspace $FAKE_WS.
 mkdir -p "$tmp/fakelog"
 cat > "$tmp/fakelog/herdr" <<'EOF'
 #!/bin/sh
@@ -436,7 +437,9 @@ case "$1 $2" in
     echo '{"result":{"tab":{"tab_id":"wG:t2"},"root_pane":{"pane_id":"wG:p2"}}}' ;;
   "agent list") echo '{"result":{"type":"agent_list","list":[]}}' ;;
   "agent start") printf '%s\n' "$*" >> "$FAKE_LOG.start" ;;
-  "agent prompt") printf 'prompt %s\n' "$4" >> "$FAKE_LOG" ;;
+  "agent prompt")
+    printf 'prompt %s\n' "$4" >> "$FAKE_LOG"
+    [ -z "${FAKE_PROMPT_ERROR:-}" ] || { printf '{"error":{"code":"%s"}}\n' "$FAKE_PROMPT_ERROR"; exit 1; } ;;
   "agent get") jq -nc --arg s "$FAKE_STATUS" --arg w "${FAKE_WS:-wG}" \
     '{result: {agent: {agent_status: $s, workspace_id: $w, tab_id: "wG:t1", pane_id: "wG:p1", cwd: "/work"}}}' ;;
 esac
@@ -569,6 +572,15 @@ sends "an empty text gets refused" idle "exit2:is empty" g-sent-test $'\n '
 sends "a goal is sent as /goal" idle "prompt /goal all tests pass" --goal 'all tests pass' g-sent-test
 sends "a goal is not sent to a blocked agent" blocked "exit1:/goal is not sent" --goal 'all tests pass' g-sent-test
 sends "a goal condition that clears the goal gets refused" idle "exit2:would clear the goal" --goal clear g-sent-test
+# A wait that sees no turn start comes after the text went in; a refused prompt stops.
+FAKE_PROMPT_ERROR=agent_prompt_stalled sends "a prompt whose turn is not seen starting still reports" idle "prompt next step" g-sent-test "next step"
+FAKE_PROMPT_ERROR=timeout sends "a prompt whose wait times out still reports" idle "prompt next step" g-sent-test "next step"
+FAKE_PROMPT_ERROR=agent_blocked logged idle send g-sent-test "next step"
+if [[ $code -eq 1 && $out == *"herdr agent prompt failed"*agent_blocked* ]]; then
+  pass "send: a prompt herdr refuses stops"
+else
+  fail "send refused prompt: exit $code: $out"
+fi
 FAKE_WS=wX sends "an agent in another workspace gets nothing" idle "exit1:not in the workspace start made it in" g-sent-test "next step"
 log_env+=(HERDR_PANE_ID=wG:p1)
 sends "the caller's own pane gets nothing" idle "exit1:in the caller's own pane" g-sent-test "next step"
