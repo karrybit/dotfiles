@@ -7,7 +7,10 @@
 # existing image or video anywhere, and refuses everything else: no argument or three, a relative
 # path, a path with "..", an .html or .svg outside doc/ and the store's UUID folders, an extension
 # off the list, a missing file, a folder, and a name with characters other than letters, digits,
-# ".", "_", and "-", or starting with one of those three. It runs with HOME, KARO_HOME,
+# ".", "_", and "-", or starting with one of those three. A symlink, or a path through a symlinked
+# folder, opens only when its real path passes too, against the real doc/ and store, so a link in
+# doc/ or the store to an .html outside them, or an image name linked to an .html, is refused, and
+# KARO_HOME may itself be a symlink. It runs with HOME, KARO_HOME,
 # KARO_DATA_HOME, and XDG_DATA_HOME in a temporary directory that holds a copy of view-open beside
 # a tb-view stub logging what it is given (tb-view-test covers tb-view). settings-test checks that the settings
 # ask before each view-open and run it outside the sandbox.
@@ -44,6 +47,15 @@ for f in karo/doc/abc/1/index.html karo/doc/diagram.svg karo/page.html media/pag
   "xdg/karo/html/$id/index.html"; do
   : > "$tmp/$f"
 done
+id2=1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d id3=2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e
+mkdir "$tmp/data/html/$id2" "$tmp/data/html/$id3"
+ln -s ../../media/page.html "$tmp/karo/doc/out.html"
+ln -s ../../media "$tmp/karo/doc/outdir"
+ln -s abc/1/index.html "$tmp/karo/doc/in.html"
+ln -s ../../../media/page.html "$tmp/data/html/$id3/index.html"
+ln -s "../$id/index.html" "$tmp/data/html/$id2/index.html"
+ln -s page.html "$tmp/media/page.png"
+ln -s karo "$tmp/karo-link"
 
 unset XDG_DATA_HOME
 export FAKE_LOG=$tmp/log KARO_HOME=$tmp/karo KARO_DATA_HOME=$tmp/data
@@ -93,6 +105,10 @@ unset XDG_DATA_HOME
 opens "view - diagram-1.v_2|$tmp/media/a.png" "$tmp/media/a.png" diagram-1.v_2
 opens "view - browser|$tmp/media/a.png|--no-merge" --no-merge "$tmp/media/a.png"
 opens "view - shot|$tmp/media/a.png|--no-merge" --no-merge "$tmp/media/a.png" shot
+# A symlink passes when its real path passes too, and KARO_HOME may itself be a symlink.
+opens "view - browser|$tmp/karo/doc/in.html" "$tmp/karo/doc/in.html"
+opens "view - browser|$tmp/data/html/$id2/index.html" "$tmp/data/html/$id2/index.html"
+KARO_HOME=$tmp/karo-link opens "view - browser|$tmp/karo-link/doc/diagram.svg" "$tmp/karo-link/doc/diagram.svg"
 
 refused
 refused --no-merge
@@ -122,6 +138,10 @@ refused "$tmp/media/a.PNG"
 refused "$tmp/media/missing.png"
 refused "$tmp/folder.png"
 refused "file://$tmp/media/a.png"
+refused "$tmp/karo/doc/out.html"
+refused "$tmp/karo/doc/outdir/page.html"
+refused "$tmp/data/html/$id3/index.html"
+refused "$tmp/media/page.png"
 
 echo "view-open-test: $failed failure(s)" >&2
 [ "$failed" -eq 0 ]

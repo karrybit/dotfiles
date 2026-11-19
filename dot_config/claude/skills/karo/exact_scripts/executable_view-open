@@ -8,15 +8,29 @@
 # --no-merge opens a new pane instead of a tab in an existing one.
 # terminal-browser runs outside the sandbox, so pages that can run scripts
 # come only from doc/ and the store, where the explain skill keeps its HTML.
+# The real path, with symlinks resolved, must pass the same check against the
+# real doc/ and store, so a link cannot lead a page in from outside them.
 # usage: view-open [--no-merge] <absolute path> [<name>]
 # Environment: KARO_HOME (default ~/karo), KARO_DATA_HOME (default
 # ${XDG_DATA_HOME:-~/.local/share}/karo).
 set -eu
 
+karo=${KARO_HOME:-$HOME/karo}
 store=${KARO_DATA_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/karo}/html
 usage() {
-  echo "usage: view-open [--no-merge] <absolute path of an .html or .svg under ${KARO_HOME:-$HOME/karo}/docs, a $store/<UUID>/index.html, or a .png .jpg .jpeg .webp .gif .mp4 .webm> [<name of letters, digits, . _ -, starting with a letter or digit>]" >&2
+  echo "usage: view-open [--no-merge] <absolute path of an .html or .svg under $karo/doc, a $store/<UUID>/index.html, or a .png .jpg .jpeg .webp .gif .mp4 .webm> [<name of letters, digits, . _ -, starting with a letter or digit>]" >&2
   exit 2
+}
+h='[0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
+# check <path> <KARO_HOME> <store>: exits with the usage unless the path may open.
+check() {
+  case "$1" in
+    *..*) usage ;;
+    "$2"/doc/*.html | "$2"/doc/*.svg) ;;
+    "$3"/$h$h-$h-$h-$h-$h$h$h/index.html) ;;
+    /*.png | /*.jpg | /*.jpeg | /*.webp | /*.gif | /*.mp4 | /*.webm) ;;
+    *) usage ;;
+  esac
 }
 merge=
 if [ "${1:-}" = --no-merge ]; then merge=--no-merge; shift; fi
@@ -24,13 +38,9 @@ if [ "${1:-}" = --no-merge ]; then merge=--no-merge; shift; fi
 case "${2-browser}" in
   '' | [._-]* | *[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-]*) usage ;;
 esac
-h='[0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
-case "$1" in
-  *..*) usage ;;
-  "${KARO_HOME:-$HOME/karo}"/doc/*.html | "${KARO_HOME:-$HOME/karo}"/doc/*.svg) ;;
-  "$store"/$h$h-$h-$h-$h-$h$h$h/index.html) ;;
-  /*.png | /*.jpg | /*.jpeg | /*.webp | /*.gif | /*.mp4 | /*.webm) ;;
-  *) usage ;;
-esac
+check "$1" "$karo" "$store"
 [ -f "$1" ] || usage
+# A folder that does not exist keeps its given path, which no real path is under.
+check "$(realpath "$1")" "$(realpath "$karo" 2>/dev/null || echo "$karo")" \
+  "$(realpath "$store" 2>/dev/null || echo "$store")"
 exec "$(dirname "$0")/tb-view" "view - ${2-browser}" "$1" ${merge:+"$merge"}
