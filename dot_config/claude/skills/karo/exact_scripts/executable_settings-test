@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2016,SC2088  # the filters are jq, and the ~ paths are rule text, not paths to expand
-# Show that a project's settings.json holds what karo's scripts need from it: karo enabled, the scripts
+# Show that a project's settings hold what karo's scripts need from them: karo enabled, the scripts
 # a skill runs as one call allowed and kept out of ask and deny, view-open in ask and kept out of allow
 # and deny (each open asks first, since the page it opens can run scripts outside the sandbox), the
 # ones that must leave the sandbox in sandbox.excludedCommands, no rule or exclusion for tb-view,
@@ -14,21 +14,31 @@
 # commands,
 # since that hook would run twice. Each missing value is a FAIL line of its own. The rules use the ~
 # form, since permission rules and sandbox.excludedCommands match the command text as written.
-# usage: settings-test <settings.json>
+# The checks read the files' values merged the way Claude Code merges settings layers: arrays
+# joined without duplicates, objects merged key by key, and a later file's other values winning.
+# usage: settings-test <settings.json> [<settings.json>...]
 set -uo pipefail
 exec </dev/null
-[[ $# -eq 1 ]] || { echo "usage: settings-test <settings.json>" >&2; exit 2; }
-settings=$1
-hooks=$(cd "$(dirname "$0")/.." && pwd)/hooks/hooks.json
-for f in "$settings" "$hooks"; do
+[[ $# -ge 1 ]] || { echo "usage: settings-test <settings.json> [<settings.json>...]" >&2; exit 2; }
+hooks_file=$(cd "$(dirname "$0")/.." && pwd)/hooks/hooks.json
+for f in "$@" "$hooks_file"; do
   jq -e 'type == "object"' "$f" >/dev/null 2>&1 || { echo "settings-test: $f is not a JSON object" >&2; exit 2; }
 done
+# The JSON texts stay in variables, since the sandbox lets a caller write no temporary file.
+hooks=$(<"$hooks_file")
+settings=$(jq -s '
+  def merge($a; $b):
+    if ($a | type) == "object" and ($b | type) == "object" then
+      reduce ($b | keys_unsorted[]) as $k ($a; .[$k] = merge($a[$k]; $b[$k]))
+    elif ($a | type) == "array" and ($b | type) == "array" then $a + ($b - $a)
+    else $b end;
+  reduce .[] as $f ({}; merge(.; $f))' "$@")
 failed=0
 fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
 pass() { printf 'ok\t%s\n' "$1"; }
 
-# check <name> <file> <jq filter that must give true> [<jq options>...]
-check() { if jq -e "${@:4}" "$3" "$2" >/dev/null 2>&1; then pass "$1"; else fail "$1"; fi; }
+# check <name> <JSON text> <jq filter that must give true> [<jq options>...]
+check() { if jq -ne "${@:4}" --argjson json "$2" "\$json | $3" >/dev/null 2>&1; then pass "$1"; else fail "$1"; fi; }
 karo='~/.config/claude/skills/karo'
 # hook <event> <matcher wanted> <script>: a hook of the event in hooks.json whose matcher covers the
 # wanted one runs the script.
@@ -82,7 +92,7 @@ decision() {
   for list in deny ask allow; do
     while IFS= read -r rule; do
       if rule_matches "$rule" "$1"; then echo "$list"; return; fi
-    done < <(jq -r --arg l "$list" '(.permissions[$l] // [])[] | select(startswith("Bash("))' "$settings")
+    done < <(jq -nr --arg l "$list" --argjson json "$settings" '$json | (.permissions[$l] // [])[] | select(startswith("Bash("))')
   done
   echo none
 }
@@ -99,9 +109,9 @@ done
 hook PreToolUse Bash call-check
 hook PostToolUse 'Edit|Write' post-edit
 check "no settings hook names a karo script or repeats a hooks.json command" "$settings" '
-  [$plugin[0].hooks[][].hooks[].command] as $p
+  [$plugin.hooks[][].hooks[].command] as $p
   | all(.hooks[]?[]?.hooks[]?.command // ""; (test("skills/karo/scripts/") or IN($p[])) | not)' \
-  --slurpfile plugin "$hooks"
+  --argjson plugin "$hooks"
 
 echo "settings-test: $failed failure(s)" >&2
 [ "$failed" -eq 0 ]

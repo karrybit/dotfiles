@@ -217,8 +217,9 @@ The `karo:herdr-agent` skill
 Code agent in a workspace or tab of its own, sends it prompts, waits for its
 report, and closes only what it started. A project that uses it allows the
 skill's scripts in its `.claude/settings.json`; the skill's `SKILL.md` lists
-the rules, and the karo plugin's `scripts/settings-test <settings.json>`
-checks them.
+the rules, and the karo plugin's
+`scripts/settings-test <settings.json> [<settings.json>...]` checks them in
+the given files merged the way Claude Code merges settings layers.
 
 ### `karo`
 

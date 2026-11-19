@@ -27,7 +27,7 @@ description: Herdr で別のセッションの Claude Code の Agent を起動�
 - hook は settings に書かない。karo の plugin の `hooks/hooks.json` が PreToolUse に `call-check` を登録し、`<scripts>` を `~/` 以外の形で書いた呼び出しと、herdr をつないだ呼び出しを止める。
 - `env` は、sandbox の中の Agent が書き換えられない settings に置く。呼び出しの先頭に `VAR=x` を付けると `allow` の規則に合わなくなるので、env の値は呼び出しのたびに変えられない。
 - herdr 自体の `workspace close`・`tab close`・`worktree remove`・`agent prompt`・`agent send-keys`・`pane send-keys`・`pane send-text` は `allow` に入れない。scripts は確かめてから herdr を呼ぶので許可でき、herdr 自体は確認を出したままにする。
-- settings を確かめるときは、`~/.config/claude/skills/karo/scripts/settings-test <settings.json>` を走らせる。表の値の有無と、herdr 自体の上の操作が `allow` に当たらないことを確かめ、足りない行は 1 行ずつ `FAIL` で出る。
+- settings を確かめるときは、`~/.config/claude/skills/karo/scripts/settings-test <settings.json> [<settings.json>...]` に、その会話が読む settings のファイルをすべて渡して走らせる。settings-test は、渡したファイルを Claude Code と同じく配列をつないで合わせ、表の値の有無と、herdr 自体の上の操作が `allow` に当たらないことを確かめ、足りない行は 1 行ずつ `FAIL` で出る。
 
 ## Herdr を呼ぶときの決まり
 
