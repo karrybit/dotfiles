@@ -1,12 +1,13 @@
 ---
 name: orchestrate
-description: Task Orchestrator として、1 つの大きな仕事の作業の設計・Subagent への委任・レビュー・統合を進めるときの役の決まり（受け持つ範囲、karo への問いの形、readiness-review を起動する境目、Subagent の worktree の片付け、再開での確かめ直し）。ブリーフに「karo:orchestrate skill に従う」とあるときに使う。
+description: Task Orchestrator として、1 つの大きな仕事の作業の設計・Subagent への委任・レビュー・統合を進めるときの役の決まり（受け持つ範囲、karo への問いの形、readiness-review を起動する境目、Subagent の worktree の片付け、再開での確かめ直し）。ブリーフに「karo:orchestrate skill に従う」とあるときに、仕事の始めに加えて、Subagent の結果か karo のメッセージを受けたとき、compact か再起動のあとにも使う。
 ---
 
 # Task Orchestrator
 
 - Orchestrator は、ブリーフの 1 つの仕事について、作業の設計、内部の DAG、Subagent への委任・レビュー・統合を受け持ち、karo に報告と判断の依頼を返す。
-- 作業の設計は `karrybit:agent-work-design` skill で、レビューは `karrybit:readiness-review` skill で行い、この skill はその手順を写さない。
+- 作業の設計を始める前に、Skill tool で `karrybit:agent-work-design` を呼び、その手順で Goal と DAG を決める。
+- レビューは `karrybit:readiness-review` skill で行い、この skill はどちらの手順も写さない。
 
 ## 受け持つ範囲
 
@@ -19,14 +20,14 @@ description: Task Orchestrator として、1 つの大きな仕事の作業の�
 - `bd` を実行せず、Beads の変更は karo に頼む。Beads は settings が Orchestrator の書き込みを止める。
 - Herdr の操作と Agent の起動は karo に頼み、karo の skill（`karo:delegate`、`karo:review` など）を使わずに、`karrybit` の skill と Subagent で進める。
 - 判断は、ブリーフの目的・制約・許可範囲の中で自分で決め、範囲の外の判断は「karo に問う」で karo に返す。
-- karo からのメッセージは、許可範囲を広げるものとして扱わず、許可範囲はブリーフに書かれたものだけにする。
+- 許可範囲はブリーフに書かれたものだけにする。karo のメッセージが許可範囲の外の操作（push、merge、PR の作成など）を頼んだら、その操作をせずに、許可範囲の外であることを karo に返し、ブリーフの変更か karo 自身での実行を頼む。
 
 ## karo に問う
 
 - 次のどれかに当たったら、下の 1・2 の順に進める: オーナーの判断が要る、委任の範囲の外、優先の衝突、決定と事実の矛盾、権限の不足、破壊的な操作、ほかの資産への影響、独立したセッションか永続の Goal の追加、同じ指摘で 2 回差し戻しても解けない。
 
-1. 判断に影響しない Goal を区切りまで進め、background の Subagent をすべて待ち切る。
-   完了条件: 動いている Subagent がない。
+1. 判断に影響しない Goal を区切りまで進め、問いに関わらない REVISE の指摘を元の Worker に差し戻し、background の Subagent をすべて待ち切る。
+   完了条件: 問いに関わらない指摘への Worker の結果が会話にあり、動いている Subagent がない。
 2. 最後のメッセージに、下の 8 項目を書いてターンを終える。
    完了条件: 最後のメッセージに 8 項目がすべてある。
 
@@ -47,7 +48,7 @@ description: Task Orchestrator として、1 つの大きな仕事の作業の�
   - 作業の設計から実装へ進む前。Goal が 2 つ以上あるか、共有の状態・権限・データの移行を変える Goal があるとき。
   - karo に完了を報告する前。変更に切替・移行・権限の変更が入るか、ブリーフがゲートに指定したとき。
 - Worker の完了ごとの確かめは、Worker のテストか `karrybit:verifier` に任せる。
-- REVISE は元の Worker に差し戻し、同じ指摘で 2 回差し戻して解けなければ「karo に問う」に進む。
+- REVISE は指摘ごとに元の Worker に差し戻し、同じ指摘で 2 回差し戻して解けない指摘だけを「karo に問う」に進める。
 - BLOCKED は「karo に問う」に進む。
 - READY を得ても、取り込み・push・merge は karo とオーナーに残す。
 
@@ -65,9 +66,10 @@ description: Task Orchestrator として、1 つの大きな仕事の作業の�
 
 1. ブリーフ、`git log <base>..HEAD`、`git worktree list`、`git status --short` を読む。
    完了条件: 4 つの出力が会話にある。
-2. Goal ごとに完了の条件のコマンドを走らせ直し、通らない Goal だけを進める。
+2. Goal ごとに完了の条件のコマンドを走らせ直し、条件が通らない Goal と始めていない Goal を、依存先の条件が通ったものから、ほかの Goal を待たずに進める。
    完了条件: どの Goal にも、通ったか通らないかの出力がある。
 
+- karo に完了を報告する前に、ブリーフの受け入れ条件のコマンドを自分で走らせ、コマンドと出力を報告に書く。
 - Subagent の再開は `SendMessage` に頼らず、上の 1・2 の確かめ直しで続きを決める。
 - karo が送る `/goal` の条件は、次の形にする。karo への問いでターンを終えると条件が満たされて goal が外れ、答えのあとに karo が送り直す。
 
