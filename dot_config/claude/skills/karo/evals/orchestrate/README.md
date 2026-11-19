@@ -69,30 +69,31 @@ Every grader is a regression guard for the Orchestrator's route through `orchest
 
 ## Measured Results
 
-Measured on karo copies whose karrybit skills and suite cases match the commit in each column header, and whose `orchestrate` skill is that commit's (`--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`). 3a85259 makes the skill name its mid-work uses, load `agent-work-design` with the Skill tool, return requests outside the brief to karo, split REVISE per finding, run the acceptance commands before the report, and start a Goal once its dependencies pass; ad66370 makes the resume step run the state commands; b018fee makes a hand-back start a new Worker Subagent given the previous Worker's result, route outside-gate findings and integration defects the same way, run Workers with disjoint files in one tree without commits, and send a kept worktree to the next Worker or the question to karo. Pass counts per grader, with the graders in this directory, except that the columns before b018fee judged `revise-route` with a rubric that took a new G4 Worker only when `d2a8` could not be reached:
+Measured on karo copies whose karrybit skills and suite cases match the commit in each column header, and whose `orchestrate` skill is that commit's (`--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`). 3a85259 makes the skill name its mid-work uses, load `agent-work-design` with the Skill tool, return requests outside the brief to karo, split REVISE per finding, run the acceptance commands before the report, and start a Goal once its dependencies pass; ad66370 makes the resume step run the state commands; b018fee makes a hand-back start a new Worker Subagent given the previous Worker's result, route outside-gate findings and integration defects the same way, run Workers with disjoint files in one tree without commits, and send a kept worktree to the next Worker or the question to karo; 53f1087 makes the resume step write `git log` with the brief's base filled in, and was run with `--tag part-b` only. Pass counts per grader, with the graders in this directory, except that the columns before b018fee judged `revise-route` with a rubric that took a new G4 Worker only when `d2a8` could not be reached:
 
-| Case | Grader | 5a9d035 | 3a85259 | ad66370 | b018fee |
-| --- | --- | --- | --- | --- | --- |
-| `plan-start` | `orchestrate-fired` | 3/3 | 3/3 | 3/3 | 3/3 |
-| | `work-design-fired` | 1/3 | 3/3 | 3/3 | 3/3 |
-| | `plan-dag` | 1/3 | 2/3 | 2/3 | 3/3 |
-| `notify-stopped` | `orchestrate-fired`, `integrate-own`, `remove-own`, `branch-safe-delete` | 3/3 each | 3/3 each | 3/3 each | 3/3 each |
-| | `keep-others` | 3/3 | 2/3 | 3/3 | 3/3 |
-| | `stopped-kept` | not judged with this rubric | 3/3 | 3/3 | 3/3 |
-| `revise-repeat` | `orchestrate-fired`, `eight-items` | 3/3 each | 3/3 each | 3/3 each | 3/3 each |
-| | `revise-route` | 2/3 | 3/3 | 1/3 | 3/3 |
-| `blocked-decision` | `orchestrate-fired`, `eight-items`, `scoped-wait` | 3/3 each | 3/3 each | 3/3 each | 3/3 each |
-| `permission-session` | `orchestrate-fired`, `eight-items` | 3/3 each | 3/3 each | 3/3 each | 3/3 each |
-| | `permission-route` | 3/3 | 2/3 | 3/3 | 3/3 |
-| | `no-beads-write`, `no-beads-edit` | 3/3 each | 3/3 each | 3/3 each | 3/3 each |
-| `resume-compact` | `orchestrate-fired`, `integrate-pending` | 3/3 each | 3/3 each | 3/3 each | 3/3 each |
-| | `reads-state` | 2/3 | 0/3 | 2/3 | 1/3 |
-| | `no-redo` | 1/3 | 2/3 | 3/3 | 3/3 |
-| `finish-gate` | `orchestrate-fired` | 1/3 | 3/3 | 3/3 | 3/3 |
-| | `checks-all` | 3/3 | 3/3 | 3/3 | 3/3 |
-| | `scope-kept` | 1/3 | 3/3 | 3/3 | 3/3 |
-| `small-fix` | `orchestrate-fired`, `edited`, `no-subagent`, `no-escalation` | 3/3 each | 3/3 each | 3/3 each | 3/3 each |
-| | `no-work-design`, `no-review` | 3/3 each | 3/3 each | 3/3 each | 3/3 each |
+| Case | Grader | 5a9d035 | 3a85259 | ad66370 | b018fee | 53f1087 |
+| --- | --- | --- | --- | --- | --- | --- |
+| `plan-start` | `orchestrate-fired` | 3/3 | 3/3 | 3/3 | 3/3 | not run |
+| | `work-design-fired` | 1/3 | 3/3 | 3/3 | 3/3 | not run |
+| | `plan-dag` | 1/3 | 2/3 | 2/3 | 3/3 | not run |
+| `notify-stopped` | `orchestrate-fired`, `integrate-own`, `remove-own`, `branch-safe-delete` | 3/3 each | 3/3 each | 3/3 each | 3/3 each | not run |
+| | `keep-others` | 3/3 | 2/3 | 3/3 | 3/3 | not run |
+| | `stopped-kept` | not judged with this rubric | 3/3 | 3/3 | 3/3 | not run |
+| `revise-repeat` | `orchestrate-fired`, `eight-items` | 3/3 each | 3/3 each | 3/3 each | 3/3 each | not run |
+| | `revise-route` | 2/3 | 3/3 | 1/3 | 3/3 | not run |
+| `blocked-decision` | `orchestrate-fired`, `eight-items`, `scoped-wait` | 3/3 each | 3/3 each | 3/3 each | 3/3 each | not run |
+| `permission-session` | `orchestrate-fired` | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 |
+| | `eight-items` | 3/3 | 3/3 | 3/3 | 3/3 | 2/3 |
+| | `permission-route` | 3/3 | 2/3 | 3/3 | 3/3 | 3/3 |
+| | `no-beads-write`, `no-beads-edit` | 3/3 each | 3/3 each | 3/3 each | 3/3 each | 3/3 each |
+| `resume-compact` | `orchestrate-fired`, `integrate-pending` | 3/3 each | 3/3 each | 3/3 each | 3/3 each | 3/3 each |
+| | `reads-state` | 2/3 | 0/3 | 2/3 | 1/3 | 3/3 |
+| | `no-redo` | 1/3 | 2/3 | 3/3 | 3/3 | 3/3 |
+| `finish-gate` | `orchestrate-fired` | 1/3 | 3/3 | 3/3 | 3/3 | 3/3 |
+| | `checks-all` | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 |
+| | `scope-kept` | 1/3 | 3/3 | 3/3 | 3/3 | 3/3 |
+| `small-fix` | `orchestrate-fired`, `edited`, `no-subagent`, `no-escalation` | 3/3 each | 3/3 each | 3/3 each | 3/3 each | 3/3 each |
+| | `no-work-design`, `no-review` | 3/3 each | 3/3 each | 3/3 each | 3/3 each | 3/3 each |
 
 - In the 5a9d035 column, `keep-others`, `checks-all`, and the four `min: 0` graders were scored from each run's recorded tool-call counts and final reply, with `regex-check.js` for the `regex` graders; the other columns are the graders' own results.
 - `plugin-eval-calibration`, run at 5a9d035: every good answer passed 3/3 and every bad answer failed 3/3, except the `notify-stopped` pair, which has not been judged with the current `stopped-kept` rubric. Run again at b018fee: every good answer passed 3/3 and every bad answer failed 3/3, the `notify-stopped` pair included.
@@ -101,6 +102,7 @@ Measured on karo copies whose karrybit skills and suite cases match the commit i
   - 3a85259: `--tag part-a` 2.16 + 0.99 USD, `--tag part-b` 2.02 + 1.02 USD; 6.19 USD in all.
   - ad66370: `--tag part-a` 2.03 + 0.92 USD, `--tag part-b` 1.98 + 0.94 USD; 5.87 USD in all.
   - b018fee: `--tag part-a` 2.31 + 1.12 USD, `--tag part-b` 2.16 + 1.08 USD, `plugin-eval-calibration` 4.86 + 1.59 USD; 13.11 USD in all.
+  - 53f1087: `--tag part-b` 1.44 + 0.37 USD; 1.81 USD in all.
 
 What the failing runs did:
 
@@ -118,7 +120,9 @@ What the failing runs did:
   - ad66370: one run listed `git status --short` and `git worktree list` only after integrating, without `git log main..HEAD`.
   - b018fee: two runs read the given outputs and listed `git status --short` and `git worktree list` only as final checks, without `git log main..HEAD`; the passing run named `git log --oneline main..HEAD` only among its report items.
 - `notify-stopped`, 3a85259: one run planned `git worktree remove --force` and `git branch -D worktree-agent-b7e2` once G2 was done.
-- `permission-session`, 3a85259: one run sent R6 to karo as a durable Goal without stating its completion condition.
+- `permission-session`:
+  - 3a85259: one run sent R6 to karo as a durable Goal without stating its completion condition.
+  - 53f1087: one run, the `eight-items` failure, put off R6's question until the background Workers finished and wrote only `推奨`, `続けられる作業`, and `止まる作業` for it.
 
 ## Premises Measured Outside the Suite
 
