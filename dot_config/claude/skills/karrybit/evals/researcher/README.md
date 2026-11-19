@@ -39,3 +39,4 @@ Measured at da33726 against an archive copy (`--runs 3`, `--model claude-sonnet-
 
 - With the agent, every grader and `note-only` pass 3/3, and the agent, not the main session, writes the note in every run.
 - Without the plugin, `reading-table`, `unreadable-row`, and `report-items` pass 0/3: the session writes the note without the `karrybit:research` table and report items. The other graders, including `no-frontmatter`, `no-commit`, and `note-only`, pass 3/3 either way and guard against regressions only.
+- At d7e8a5b (`--runs 1`, the same models, `grade.py` not run), every grader passes with the agent, and `reading-table`, `unreadable-row`, and `report-items` fail without the plugin.

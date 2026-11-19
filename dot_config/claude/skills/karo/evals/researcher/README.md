@@ -29,7 +29,9 @@ The case asks the main session to hand the task to `karrybit:researcher` and to 
 
 ## What the Suite Separates
 
-Measured in `karrybit`'s `evals/researcher` at da33726 against an archive copy (`--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`), one measurement, with the kept runs graded by `grade.py` at 7ca2a7f, before `no-record-paths` was part of this case:
+Measured in `karrybit`'s `evals/researcher` at da33726 against an archive copy (`--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`), one measurement, with the kept runs graded by `grade.py` at 7ca2a7f; this case had no `no-record-paths` grader there:
 
 - With the agent, every grader and both `grade.py` assertions pass 3/3, and the agent, not the main session, writes the note in every run.
 - Without the plugin, `reading-table` and `report-items` pass 0/3. The other graders and `grade.py`'s pass 3/3 either way and guard against regressions only.
+
+On the karo copy at d7e8a5b (`--ablation none`, `--runs 1`, the same models), every grader passes in the one run, `no-record-paths` included. `no-record-paths` fails on a list of new files that adds a file under `investigation/` or a second file under `source/meeting/` (`scripts/regex-check.js`), and passes on one that holds only the note.
