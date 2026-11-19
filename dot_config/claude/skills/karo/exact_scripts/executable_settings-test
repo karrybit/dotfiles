@@ -2,8 +2,10 @@
 # shellcheck disable=SC2016,SC2088  # the filters are jq, and the ~ paths are rule text, not paths to expand
 # Show that a project's settings.json holds what karo's scripts need from it: karo enabled, the scripts
 # a skill runs as one call allowed and kept out of ask and deny, view-open in ask and kept out of allow
-# and deny (each open asks first, since the page it opens can run scripts outside the sandbox), and the
-# ones that must leave the sandbox in sandbox.excludedCommands. The hooks are karo's own hooks/hooks.json, which Claude Code merges with
+# and deny (each open asks first, since the page it opens can run scripts outside the sandbox), the
+# ones that must leave the sandbox in sandbox.excludedCommands, the herdr-agent skill's agent-ctl,
+# agent-report and safe-key allowed and out of the sandbox with HERDR_AGENT_NAME_PATTERN set, and
+# herdr's own close, prompt and key commands not allowed. The hooks are karo's own hooks/hooks.json, which Claude Code merges with
 # the settings' hooks: it must run call-check by a PreToolUse hook on Bash and post-edit by a
 # PostToolUse hook on Edit|Write, and no settings hook may name a karo script or repeat one of its
 # commands,
@@ -47,6 +49,42 @@ check "Bash($karo/scripts/view-open *) is in ask and in neither allow nor deny" 
   --arg r "$karo/scripts/view-open *"
 for command in "skills/land/scripts/land *" "scripts/view-open *"; do
   check "$karo/$command is in sandbox.excludedCommands" "$settings" 'any(.sandbox.excludedCommands[]?; . == $c)' --arg c "$karo/$command"
+done
+# The herdr-agent skill's scripts check before they call herdr, so they are allowed and leave the
+# sandbox; herdr's own close, prompt and key commands keep their prompt.
+for s in agent-ctl agent-report safe-key; do
+  check "Bash($karo/skills/herdr-agent/scripts/$s *) is allowed" "$settings" 'any(.permissions.allow[]?; . == $r)' --arg r "Bash($karo/skills/herdr-agent/scripts/$s *)"
+  check "$karo/skills/herdr-agent/scripts/$s * is in sandbox.excludedCommands" "$settings" 'any(.sandbox.excludedCommands[]?; . == $c)' --arg c "$karo/skills/herdr-agent/scripts/$s *"
+done
+check "env sets HERDR_AGENT_NAME_PATTERN" "$settings" '.env.HERDR_AGENT_NAME_PATTERN // "" | length > 0'
+# rule_matches <rule> <command>: a Bash rule's pattern matches the whole command, "*" standing in for
+# any text, and a trailing " *" also matching the bare command.
+rule_matches() {
+  jq -nr --arg rule "$1" --arg cmd "$2" '
+    ($rule | capture("^Bash\\((?<p>.*)\\)$").p) as $p
+    | ($p | gsub("(?<c>[.+?^${}()|\\[\\]\\\\])"; "\\\(.c)") | gsub("\\*"; ".*")) as $re
+    | ($cmd | test("^" + $re + "$")) or (($p | endswith(" *")) and $cmd == ($p | rtrimstr(" *")))' | rg -qx true
+}
+# decision <command>: what the settings decide for a command with no prompt from the mode, reading
+# the rules as the permissions docs describe them: deny, then ask, then allow, the first match winning.
+decision() {
+  local list rule
+  for list in deny ask allow; do
+    while IFS= read -r rule; do
+      if rule_matches "$rule" "$1"; then echo "$list"; return; fi
+    done < <(jq -r --arg l "$list" '(.permissions[$l] // [])[] | select(startswith("Bash("))' "$settings")
+  done
+  echo none
+}
+if rule_matches 'Bash(herdr agent send-keys * Enter)' 'herdr agent send-keys a1 C-c Enter'; then
+  pass 'a "*" in the middle of a rule also matches other keys before Enter'
+else
+  fail 'the rule reading does not let "*" match spaces'
+fi
+for c in 'herdr workspace close w1' 'herdr tab close w1:t2' 'herdr worktree remove --workspace w1' \
+  'herdr agent prompt a1 /clear' 'herdr agent send-keys a1 Enter' 'herdr pane send-keys w1:p2 q' 'herdr pane send-text w1:p2 yes'; do
+  got=$(decision "$c")
+  if [[ $got != allow ]]; then pass "not allowed ($got): $c"; else fail "permissions.allow lets through: $c"; fi
 done
 hook PreToolUse Bash call-check
 hook PostToolUse 'Edit|Write' post-edit

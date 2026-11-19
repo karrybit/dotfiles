@@ -7,19 +7,28 @@
 # A git rebase that asks to leave the sandbox stops (git rebase --abort passes): a branch of KARO_HOME is
 # rebased by the karo:land skill's scripts/land <branch> --rebase, which is the one way that rebases
 # with git's hooks off.
-# Quoted strings, backslash escapes and heredoc bodies are dropped before looking for git rebase, so
-# a search for the text or a script written through a heredoc is not mistaken for a call. This is
-# not a shell parser: a shape it cannot read passes.
+# A herdr call that touches the Herdr socket stops when it is joined to anything else (pipe, &&,
+# ||, ;, redirection other than an fd duplicate such as 2>&1, $(...), backquote, newline), and a
+# lone such call stops when it asks to leave the sandbox. A joined call stays in the sandbox, where
+# the socket is out of reach and herdr fails with "Operation not permitted"; a lone one already runs
+# outside it through sandbox.excludedCommands.
+# Quoted strings, backslash escapes and heredoc bodies are dropped before looking for git rebase and
+# herdr, so a search for the text, a jq filter or a script written through a heredoc is not mistaken
+# for a call. This is not a shell parser: a shape it cannot read passes.
 # usage: call-check < <PreToolUse hook input JSON>   (exit 2 with the reason on stderr to stop)
 verdict=$(jq -r --arg home "$HOME/" '
   (.tool_input.command // "") as $cmd
   | ($cmd
      | gsub("<<-?[ \t]*([\"'\''])?(?<t>[A-Za-z_][A-Za-z0-9_]*)[\"'\'']?(?<rest>[^\n]*)\n([\\s\\S]*?\n)?\\k<t>(?=\n|$)"; "<<H\(.rest)")
-     | gsub("\\\\.|'\''[^'\'']*'\''|\"(\\\\.|[^\"\\\\])*\""; "Q")) as $bare
+     | gsub("\\\\.|'\''[^'\'']*'\''|\"(\\\\.|[^\"\\\\])*\""; "Q")
+     | gsub("[0-9]*[<>]&[0-9-]+"; " ")) as $bare
   | if ($cmd | contains($home + ".config/claude/skills/karo/"))
       or ($cmd | test("\\$(HOME|\\{HOME\\})\"?/\\.config/claude/skills/karo/")) then "absolute"
     elif .tool_input.dangerouslyDisableSandbox == true
       and ($bare | test("(^|[\\s;&|(])git(\\s+-[cC]\\s+\\S+)*\\s+rebase(?![\\w-])(?!\\s+--abort)")) then "rebase"
+    elif ($bare | test("(^|[\\s;&|(`/])herdr\\s+(status|agent|workspace|worktree|tab|pane|api)(?![\\w-])") | not) then "pass"
+    elif ($bare | test("[|;<>\n`]|&&|\\$\\(")) then "herdr-joined"
+    elif .tool_input.dangerouslyDisableSandbox == true then "herdr-unsandboxed"
     else "pass" end')
 case $verdict in
   absolute)
@@ -32,5 +41,9 @@ EOF
 このコマンドは git rebase を sandbox の外で走らせようとしている。KARO_HOME のリポジトリのブランチの rebase は、karo が ~/.config/claude/skills/karo/skills/land/scripts/land <branch> --rebase を単独で実行して行う。Agent は sandbox の中で rebase し、unable to unlink old で落ちたら git rebase --abort で戻して作業を止め、karo に land --rebase を頼むと報告する。
 EOF
     exit 2 ;;
+  herdr-joined) what="このコマンドは herdr に別のコマンドかリダイレクトをつないでいる" ;;
+  herdr-unsandboxed) what="単独の herdr に dangerouslyDisableSandbox は要らない" ;;
+  *) exit 0 ;;
 esac
-exit 0
+printf '%s\n' "${what}。herdr は単独の呼び出しで実行する（パイプ・&&・||・;・リダイレクト・\$(...) をつながない。2>&1 はよい）。単独の呼び出しなら sandbox.excludedCommands で sandbox の外で動く。Operation not permitted（EPERM）は、つないだせいで sandbox に残ったためで、herdr の socket が塞がれているのではない。dangerouslyDisableSandbox を付けずに単独で呼び直し、出力の加工は次の呼び出しで行う。" >&2
+exit 2
