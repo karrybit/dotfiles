@@ -30,8 +30,8 @@ description: Agent の成果物をレビューに回す手順。実装 Agent の
    - 調べる観点: 既存アーキテクチャとの整合、呼び出し元と依存先への影響、既存実装との重複、関連ドキュメントとの不整合、テストや変更すべき箇所の漏れ
    - 指摘ごとに根拠のファイルパスと行番号を書く
    - 調べた範囲と調べていない範囲を分けて書き、調べていない範囲については問題の有無を書かない
-   - `bd` を実行しない。タスクの状態を変えない
-   - 完了の報告は karrybit:completion-report に従い、結果は足す見出し「レビューの結果」に書く
+   - 許可範囲: 読むだけで、ファイルを変えない
+   - `karo:delegate` skill の「依頼に毎回書く決まり」の行。足す見出しは「レビューの結果」で、結果をそこに書く
 
    完了条件: 依頼のファイルがある。
 2. `<scripts>/agent-ctl start --permission-mode plan <タスクID>-rv <依頼のファイル> tab <タスクID>` を単独で実行し、実装 Agent の workspace の別 tab で、読み取り専用の Agent を起動する（`<scripts>` と JSON の扱いは `karo:delegate` skill の冒頭と「新しいタスクを委任する」の 4。Review Agent は claim しない）。`working` になったら、`karo:delegate` skill の「終わるのを待つ」に従って `<タスクID>-rv` を待つ。

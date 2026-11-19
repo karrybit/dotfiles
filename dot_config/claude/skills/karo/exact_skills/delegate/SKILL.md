@@ -32,29 +32,36 @@ description: 'Herdr 上の Agent に仕事を委任する手順。オーナー�
 - ブランチ名は `<semantics>/agent/<title>` にする。semantics はリポジトリの commit の型（`feat`、`fix`、`docs` など）、title は変更の中身を表す kebab-case の英語にする（例: `feat/agent/retry-failed-upload`）。タスク ID と `cos` は入れない（settings の `env` の形を `agent-ctl` が確かめる）。
 - `$KARO_HOME` の worktree のディレクトリ名も、ブランチと同じ title にする。
 
+## 依頼に毎回書く決まり
+
+- Herdr の Agent のブリーフ、Review Agent の依頼、サブエージェントへの依頼には、毎回、次の行を書く。この節が決まりの正本で、ほかの skill と `$KARO_HOME` の規則はこの節を指す。
+  - `bd` を実行しない。タスクの状態を変えない
+  - ファイルを消すときは、変数を使った `rm -rf` を使わず、リテラルのパスにする
+  - stash を作らない
+  - sandbox の中で動かす。sandbox の外で動かしてよいのは、依頼に名前を書いたものだけにする
+  - 依頼に書いた許可範囲の中で動き、範囲の外の操作（push、merge、外への送信など）はしない
+  - 手段を徹底して simple & easy にし、既存のツールやライブラリで済むなら作らない
+  - 承認済みの手順の停止条件に当たったら、自分の判断で緩めずに止めて、当たった箇所（コマンド、パス、回数）を報告する
+  - 完了の報告は karrybit:completion-report に従う。依頼に固有の項目（受け入れ条件ごとの確かめなど）は、続けて、足す見出しとして並べる
+- sandbox の外で動く道具やコマンド（`claude plugin eval` など）を使わせる依頼では、書く前にオーナーに確かめ、オーナーが認めたものだけを名前で書く（Agent が承認のダイアログで止まるため）。
+
 ## 新しいタスクを委任する
 
 1. ブリーフを作る。項目は次の 8 つ。`bd show <タスクID> --json` の title・description・acceptance_criteria を元にし、オーナーの発言、`$KARO_HOME/investigation`、`$KARO_HOME/source/meeting` の MTG の記録、決定（decision の bead）、外の情報源から足し、出典を添える。タスクがまだ Beads になければ、`karo:tasks` skill の「タスクを進める」の 1・2 で `bd create` してから作る。ブリーフの 1 行目には、タスク ID だけを Beads の形のまま（`.` を `-` にせずに）書く（cass と bv がその ID で Agent のセッションを探す）。ブリーフの先頭の文字は `/` と `!` にしない（`agent-ctl` が断る）。
    - 目的: 何のための変更か
    - 背景: 関連する決定と出典へのリンク
    - 作業する場所: 作業場所とブランチ（「作業場所と取り込み」）。`$KARO_HOME` では「この worktree のブランチに commit し、`$KARO_HOME` の本体には書かない。終える前に main の最新に rebase する」と書く（止められたときは下の制約の行）。プロジェクトの節に「作業する場所の文」があれば、その文を書く
-   - 制約: 触ってよい範囲、守るべき既存設計。毎回、次も書く
-     - `bd` を実行しない。タスクの状態を変えない
-     - ファイルを消すときは、変数を使った `rm -rf` を使わず、リテラルのパスにする
-     - stash を作らない
+   - 制約: 触ってよい範囲、守るべき既存設計。毎回、「依頼に毎回書く決まり」の行のうち完了の報告の行を除くすべてと、次も書く
      - Herdr か Claude の起動を触る作業では、`karo:herdr-agent` skill の「Herdr を触る Agent のブリーフに足す決まり」に従う
      - `$KARO_HOME` では、`git rebase main` が `unable to unlink old` で落ちたら（sandbox がどの設定でも書かせない `.claude/settings.json` や `.claude/skills` を書き換える rebase）、sandbox の外でやり直さずに `git rebase --abort` で戻して作業を止め、karo に `land --rebase` を頼むと報告する
-     - 手段を徹底して simple & easy にし、既存のツールやライブラリで済むなら作らない
-     - 承認済みの手順の停止条件に当たったら、自分の判断で緩めずに止めて、当たった箇所（コマンド、パス、回数）を報告する
      - プロジェクトの節の「ブリーフの制約」の行
    - 受け入れ条件: 完了を判定できる条件。テストで確かめられる形にする
    - 許可範囲: 表かプロジェクトの節の「してよいこと」。merge と Ready for review への変更はしない
-   - 完了時の報告: 「完了の報告は karrybit:completion-report に従う」と書く。そのタスクに固有の項目（受け入れ条件ごとの確かめなど）があれば、続けて、足す見出しとして並べる
+   - 完了時の報告: 「依頼に毎回書く決まり」の完了の報告の行
    - 外に出す内容: ブランチ名、commit メッセージ、PR のタイトルと本文、コメントには、リポジトリから辿れる事実だけを書く。タスク ID、karo や Herdr の名前、ブリーフ、手元のパスやマシンの事情は書かない。GitHub の「Update branch」のような merge commit も作らず、main に追従するときは rebase する。PR を作らないリポジトリでは、commit メッセージに同じ規則を当てる
 
    受け入れ条件が決まらないときは、`karo:tasks` skill の「判断待ちと決定」の 1 で判断待ちの decision の bead を作ってタスクの blocker にし、オーナーに尋ねて、委任はそこで止める。
 
-   sandbox の外で動く道具やコマンド（`claude plugin eval` など）を Agent に使わせる作業では、ブリーフに書く前にオーナーに確かめ、オーナーが認めたものだけを名前でブリーフに書く（Agent が承認のダイアログで止まるため）。
    完了条件: 8 項目がすべて埋まり、受け入れ条件が完了か未完了かを判定できる。
 2. ブリーフを、このセッションの scratchpad（環境の説明にあるフォルダ）の `briefs/<タスクID>-brief.md` に書く。
    完了条件: ブリーフのファイルがある。

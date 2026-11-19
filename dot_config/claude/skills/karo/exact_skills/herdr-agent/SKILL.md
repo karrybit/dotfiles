@@ -84,7 +84,7 @@ agent-ctl send --goal <条件> <名前>
 ### 終わるのを待つ
 
 - 指示を送って `working` を確かめたあとに、`<scripts>/agent-report --wait <名前>` を単独で、Bash の background 実行で、`timeout` を `86400000`（24 時間）にして走らせる。`timeout` を付けないと、Claude Code は background のコマンドを 30 分で止める。`working` を確かめる前に走らせると、まだ指示を受けていない `idle` の Agent ですぐ返る。
-- `--wait` は、Agent が `idle` か `done` で止まると返る。最後の発言に `## 変更の要約` の行（`karrybit:completion-report` の最初の見出し）があればすぐに返り、なければターンの合間かもしれないので 1 分待ち、Agent が作業に戻らなければ `no-report` で返る。ブリーフと送る指示には「完了の報告は karrybit:completion-report に従う」と書く。
+- `--wait` は、Agent が `idle` か `done` で止まると返る。最後の発言に `## 変更の要約` の行（`karrybit:completion-report` の最初の見出し）があればすぐに返り、なければターンの合間かもしれないので 1 分待ち、Agent が作業に戻らなければ `no-report` で返る。ブリーフと送る指示には、`karo:delegate` skill の「依頼に毎回書く決まり」の完了の報告の行を書く。
 - `--wait` は、transcript の最後の発言のあとに結果のない tool 呼び出し（AskUserQuestion や承認のダイアログ）があれば、Herdr が `idle` か `done` と出していても、すぐに `awaiting-answer` で返る。
 - `--wait` は、一度返した停止をもう一度は返さない。同じ停止のまま走らせ直すと、Agent が次に止まるまで待つ（走らせ直す前に終わっていた停止は、すぐに返す）。
 - 待つ間は、終了の通知を待ち、foreground では呼び出し側の次の作業を進める。
