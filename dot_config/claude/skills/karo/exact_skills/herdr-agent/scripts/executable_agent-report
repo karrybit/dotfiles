@@ -22,9 +22,9 @@
 #
 # A stop --wait has printed is not printed again: --wait notes the stop's
 # session, herdr's completion_seq, and the waiting calls' tool_use IDs, and a
-# later --wait on the same stop waits for the next one. Run again after a
-# pause, it hands over the agent's next stop, even one that ended before it
-# started.
+# later --wait on the same stop waits for the next one; agent-ctl close
+# removes the note with the agent. Run again after a pause, it hands over
+# the agent's next stop, even one that ended before it started.
 #
 # A blocked or unknown agent (one whose pane is gone) prints the state alone;
 # an agent whose pane someone is watching ends idle, not done. When herdr

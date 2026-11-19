@@ -237,11 +237,18 @@ dir=$(worktree cc-writes)
 workspace ac0123-test "$dir"
 note_worktree ac0123-test "$id" "$dir"
 mkdir -p "$dir/.claude/.cc-writes" && touch "$dir/.claude/.cc-writes/a" "$dir/.claude/scheduled_tasks.lock"
+# agent-report's notes of handed-over stops, beside the ledger: close removes only this agent's.
+mkdir -p "$tmp/stops" && touch "$tmp/stops/ac0123-test" "$tmp/stops/ac0198-test"
 run ac0123-test
 if [[ $code -eq 0 ]] && ! exists "$id" && [[ ! -d $dir ]]; then
   pass "a done worktree with ignored files only under .claude/ is removed"
 else
   fail "worktree .claude: exit $code: $out"
+fi
+if [[ ! -e $tmp/stops/ac0123-test && -e $tmp/stops/ac0198-test ]]; then
+  pass "close removes agent-report's stop note of that agent and no other"
+else
+  fail "stop notes after close: $(cd "$tmp/stops" && fd | paste -sd ' ' -)"
 fi
 
 # An ignored .claude that is a link: status does not list it, so close removes the link with the

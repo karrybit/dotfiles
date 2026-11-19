@@ -466,6 +466,10 @@ if [ "$cmd" = close ]; then
   repo=$(field repo) base=$(field base) branch=$(field branch)
   own_pane
   if [ "$kind" = tab ]; then close_tab; else close_workspace; fi
+  # agent-report notes the last stop it handed over in stops/ beside the
+  # ledger; the note goes with the agent, so a later agent of that name
+  # starts with none.
+  rm -f "${ledger%/*}/stops/$name"
   exit 0
 fi
 
