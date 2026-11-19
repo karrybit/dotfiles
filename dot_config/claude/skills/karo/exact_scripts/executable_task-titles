@@ -1,0 +1,19 @@
+#!/bin/sh
+# Stop hook: in a session of the record repository at KARO_HOME (default ~/karo), sends the reply back
+# once when its text names a Beads task ID without ` (<title>)` right after it, outside code blocks and
+# inline code. The IDs are `<prefix>-<base36>` with optional `.<n>` parts, and the prefix is
+# issue-prefix in the repository's .beads/config.yaml. The second stop of a turn (stop_hook_active), a
+# session elsewhere, a missing prefix, and input it cannot read all let the reply through: it always
+# exits 0.
+[ "${CLAUDE_PROJECT_DIR:-}" = "${KARO_HOME:-$HOME/karo}" ] || exit 0
+prefix=$(yq -r '.["issue-prefix"] // ""' "$CLAUDE_PROJECT_DIR/.beads/config.yaml" 2>/dev/null) || exit 0
+[ -n "$prefix" ] || exit 0
+jq -c --arg p "$prefix" '
+  select(.stop_hook_active != true)
+  | .last_assistant_message | strings
+  | gsub("```[\\s\\S]*?(```|$)"; "") | gsub("`[^`\n]*`"; "")
+  | [match("(?<![0-9A-Za-z_.-])" + $p + "-[0-9a-z]+(\\.[0-9]+)*(?![0-9A-Za-z_-]|\\.[0-9]| \\()"; "g").string] | unique
+  | select(length > 0)
+  | {decision: "block",
+     reason: "返事に、タイトルを添えていないタスク ID がある: \(join(", "))。タスクに触れるところを `<タスクID> (<タスクのタイトル>)` の形にして、返事を書き直す。"}' 2>/dev/null
+exit 0

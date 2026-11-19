@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2016,SC2034  # check evals its condition, which reads reason
+# Show that karo's Stop hook, run from hooks.json with a hook input like Claude Code's, sends back a reply
+# that names a task ID without its title, with decision "block" and a reason naming that ID. A reply whose
+# IDs all come as `<ID> (<title>)`, IDs inside a code block or inline code, a second stop
+# (stop_hook_active), a session outside KARO_HOME, and a Beads without issue-prefix each give nothing
+# and exit 0.
+# usage: task-titles-test   (KARO_HOME and its .beads/config.yaml go to a temporary directory, which is
+#        removed; bd does not run)
+set -uo pipefail
+exec </dev/null
+root=$(cd "$(dirname "$0")/.." && pwd)
+hooks=$root/hooks/hooks.json
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/task-titles-test.XXXXXX") || exit 2
+trap 'rm -rf "$tmp"' EXIT
+failed=0
+fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
+pass() { printf 'ok\t%s\n' "$1"; }
+
+export KARO_HOME=$tmp/karo CLAUDE_PLUGIN_ROOT=$root CLAUDE_PROJECT_DIR=$tmp/karo
+mkdir -p "$KARO_HOME/.beads" "$tmp/bare/.beads" || exit 2
+printf 'issue-prefix: "demo"\n' >"$KARO_HOME/.beads/config.yaml"
+printf '# issue-prefix: ""\n' >"$tmp/bare/.beads/config.yaml"
+
+# run <reply> [<stop_hook_active>]: runs every Stop hook in hooks.json with a Stop hook input for the
+# reply, and sets out (all stdout) and codes (exit codes).
+run() {
+  local cmd input
+  input=$(jq -n --arg m "$1" --argjson a "${2:-false}" '{hook_event_name: "Stop", session_id: "s",
+    transcript_path: "/dev/null", cwd: env.CLAUDE_PROJECT_DIR, stop_hook_active: $a, last_assistant_message: $m}')
+  out='' codes=''
+  while IFS= read -r cmd; do
+    out+=$(bash -c "$cmd" <<<"$input"); codes+="$? "
+  done < <(jq -r '.hooks.Stop[]?.hooks[].command' "$hooks")
+}
+check() { if eval "$2"; then pass "$1"; else fail "$1: codes=$codes out=$out"; fi; }
+zero() { [[ $codes =~ ^(0 )+$ ]]; }
+silent() { zero && [[ -z $out ]]; }
+
+untitled='次は demo-a1b2 と demo-c3d4.1 を進める。demo-e5f6 (タイトルあり) は終わった。'
+run "$untitled"
+reason=$(jq -r 'select(.decision == "block") | .reason' <<<"$out" 2>/dev/null)
+check "a reply with untitled IDs exits 0 and gives decision block with a reason" 'zero && [[ -n $reason ]]'
+check "the reason names the untitled IDs and not the titled one" \
+  '[[ $reason == *demo-a1b2* && $reason == *demo-c3d4.1* && $reason != *demo-e5f6* ]]'
+
+run 'demo-a1b2 (ログインの修正) と demo-c3d4.1 (テストの追加) を進める。'
+check "a reply whose IDs all have titles gives nothing and exits 0" silent
+run $'`demo-a1b2` を見る。\n```\nbd show demo-c3d4.1\n```\n終わり。'
+check "IDs in inline code and a code block give nothing and exit 0" silent
+run "$untitled" true
+check "a second stop (stop_hook_active) gives nothing and exits 0" silent
+CLAUDE_PROJECT_DIR=$tmp/elsewhere run "$untitled"
+check "a session outside KARO_HOME gives nothing and exits 0" silent
+KARO_HOME=$tmp/bare CLAUDE_PROJECT_DIR=$tmp/bare run "$untitled"
+check "a Beads without issue-prefix gives nothing and exits 0" silent
+
+echo "task-titles-test: $failed failure(s)" >&2
+[ "$failed" -eq 0 ]
