@@ -92,7 +92,7 @@ done
 
 # Each in_progress assignee that herdr lists, "." matching herdr's "-", comes once with its status;
 # an assignee herdr does not list and an agent with no task do not.
-wait_cmd='~/.config/claude/skills/karo/skills/herdr-agent/scripts/agent-report --wait'
+wait_cmd='karo-agent-report --wait'
 export STUB_TASKS='[{"id":"t-1","assignee":"a1b2.1"},{"id":"t-2","assignee":"t-2"},{"id":"t-3","assignee":"gone"},{"id":"t-4"}]'
 export STUB_AGENTS='[{"name":"a1b2-1","agent_status":"working"},{"name":"t-2","agent_status":"idle"},{"name":"other","agent_status":"working"}]'
 for source in startup resume clear compact fork; do

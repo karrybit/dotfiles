@@ -9,7 +9,7 @@ description: Herdr で別のセッションの Claude Code の Agent を起動�
 
 - この skill は、Herdr の Agent の 5 つの操作（起動、指示の送信、終わるのを待つ、報告を取り出す、閉じる）と、止まった Agent に答える手順を受け持つ。
 - 呼び出し側は、Agent の名前、ブリーフのファイル、作業する場所、goal の条件、permission mode、答えてよいダイアログの一覧を決めて渡す。ブリーフの中身、報告の読み方、作業の取り込みは呼び出し側が持つ。
-- 下の `<scripts>` は `~/.config/claude/skills/karo/skills/herdr-agent/scripts` で、呼ぶときはこの `~/` の形のまま書く。settings の規則はコマンドの文字列をそのまま照らすので、絶対パスや `$HOME` で書くと規則に合わず、確認が出るか sandbox に残る（karo の `call-check` の hook が止める）。
+- scripts は karo の plugin の `bin/` にあり、`karo-agent-ctl` のように名前だけで呼ぶ。settings の規則はコマンドの文字列をそのまま照らすので、パスを付けて書くと規則に合わず、確認が出るか sandbox に残る（karo の `call-check` の hook が止める）。
 
 ## 呼び出し側が先に整える settings
 
@@ -17,17 +17,16 @@ description: Herdr で別のセッションの Claude Code の Agent を起動�
 
 | 場所 | 値 |
 | --- | --- |
-| `permissions.allow` | `Bash(<scripts>/agent-ctl *)`、`Bash(<scripts>/agent-report *)`、`Bash(<scripts>/safe-key *)` |
-| `sandbox.excludedCommands` | `<scripts>/agent-ctl *`、`<scripts>/agent-report *`、`<scripts>/safe-key *` |
+| `permissions.allow` | `Bash(karo-agent-ctl *)`、`Bash(karo-agent-report *)`、`Bash(karo-safe-key *)` |
+| `sandbox.excludedCommands` | `karo-agent-ctl *`、`karo-agent-report *`、`karo-safe-key *` |
 | `env` の `HERDR_AGENT_NAME_PATTERN`（必須） | 名前が合うべき ERE（`^` と `$` で囲み、herdr が断る大文字を通さない）。`agent-ctl` のすべてと `safe-key enter` が使い、未設定なら `safe-key enter` は何も送らない |
 | `env` の `HERDR_AGENT_BRANCH_PATTERN`（任意） | `worktree` と `herdr-worktree` で作るブランチが合うべき ERE |
 | `env` の `HERDR_AGENT_BRANCH_DENY`（任意） | そのブランチが合ってはいけない ERE |
 
-- 表の `<scripts>` は、上の `~/` の形の文字列に置き換えて書く。
-- hook は settings に書かない。karo の plugin の `hooks/hooks.json` が PreToolUse に `call-check` を登録し、`<scripts>` を `~/` 以外の形で書いた呼び出しと、herdr をつないだ呼び出しを止める。
+- hook は settings に書かない。karo の plugin の `hooks/hooks.json` が PreToolUse に `call-check` を登録し、`bin/` の scripts をパスで書いた呼び出しと、herdr をつないだ呼び出しを止める。
 - `env` は、sandbox の中の Agent が書き換えられない settings に置く。呼び出しの先頭に `VAR=x` を付けると `allow` の規則に合わなくなるので、env の値は呼び出しのたびに変えられない。
 - herdr 自体の `workspace close`・`tab close`・`worktree remove`・`agent prompt`・`agent send-keys`・`pane send-keys`・`pane send-text` は `allow` に入れない。scripts は確かめてから herdr を呼ぶので許可でき、herdr 自体は確認を出したままにする。
-- settings を確かめるときは、`~/.config/claude/skills/karo/scripts/settings-test <settings.json> [<settings.json>...]` に、その会話が読む settings のファイルをすべて渡して走らせる。settings-test は、渡したファイルを Claude Code と同じく配列をつないで合わせ、表の値の有無と、herdr 自体の上の操作が `allow` に当たらないことを確かめ、足りない行は 1 行ずつ `FAIL` で出る。
+- settings を確かめるときは、`karo-settings-test <settings.json> [<settings.json>...]` に、その会話が読む settings のファイルをすべて渡して走らせる。settings-test は、渡したファイルを Claude Code と同じく配列をつないで合わせ、表の値の有無と、herdr 自体の上の操作が `allow` に当たらないことを確かめ、足りない行は 1 行ずつ `FAIL` で出る。
 
 ## Herdr を呼ぶときの決まり
 
@@ -40,11 +39,11 @@ description: Herdr で別のセッションの Claude Code の Agent を起動�
 
 | 操作 | 呼び出し |
 | --- | --- |
-| 起動する | `<scripts>/agent-ctl start …` |
-| 指示を送る | `<scripts>/agent-ctl send …` |
-| 終わるのを待つ | `<scripts>/agent-report --wait <名前>`（background で走らせる） |
-| 報告を取り出す | `<scripts>/agent-report <名前>` |
-| 閉じる | `<scripts>/agent-ctl close <名前>` |
+| 起動する | `karo-agent-ctl start …` |
+| 指示を送る | `karo-agent-ctl send …` |
+| 終わるのを待つ | `karo-agent-report --wait <名前>`（background で走らせる） |
+| 報告を取り出す | `karo-agent-report <名前>` |
+| 閉じる | `karo-agent-ctl close <名前>` |
 
 - `agent-ctl` は、どの呼び出しも 1 行の JSON を出す。引数の誤りは終了コード 2 で、何も作らない。そのほかの失敗は `agent-ctl <操作> <名前>: <理由>` の 1 行で終了コード 1 になり、途中で止まったときは末尾の `(already done: …)` に済んだことが書かれる。止まった行は、呼び出し側の人に伝える。
 
@@ -83,7 +82,7 @@ agent-ctl send --goal <条件> <名前>
 
 ### 終わるのを待つ
 
-- 指示を送って `working` を確かめたあとに、`<scripts>/agent-report --wait <名前>` を単独で、Bash の background 実行で、`timeout` を `86400000`（24 時間）にして走らせる。`timeout` を付けないと、Claude Code は background のコマンドを 30 分で止める。`working` を確かめる前に走らせると、まだ指示を受けていない `idle` の Agent ですぐ返る。
+- 指示を送って `working` を確かめたあとに、`karo-agent-report --wait <名前>` を単独で、Bash の background 実行で、`timeout` を `86400000`（24 時間）にして走らせる。`timeout` を付けないと、Claude Code は background のコマンドを 30 分で止める。`working` を確かめる前に走らせると、まだ指示を受けていない `idle` の Agent ですぐ返る。
 - `--wait` は、Agent が `idle` か `done` で止まると返る。最後の発言に `## 変更の要約` の行（`karrybit:completion-report` の最初の見出し）があればすぐに返り、なければターンの合間かもしれないので 1 分待ち、Agent が作業に戻らなければ `no-report` で返る。ブリーフと送る指示には、`karo:delegate` skill の「依頼に毎回書く決まり」の完了の報告の行を書く。
 - `--wait` は、transcript の最後の発言のあとに結果のない tool 呼び出し（AskUserQuestion や承認のダイアログ）があれば、Herdr が `idle` か `done` と出していても、すぐに `awaiting-answer` で返る。
 - `--wait` は、一度返した停止をもう一度は返さない。同じ停止のまま走らせ直すと、Agent が次に止まるまで待つ（走らせ直す前に終わっていた停止は、すぐに返す）。
@@ -99,11 +98,11 @@ agent-ctl send --goal <条件> <名前>
 
 ### 報告を取り出す
 
-- 通知を受け取れなかったとき（会話を再開したあとなど）は、`<scripts>/agent-report <名前>` を単独で走らせる。待たずに、その Agent の transcript の最後の発言を出す。
+- 通知を受け取れなかったとき（会話を再開したあとなど）は、`karo-agent-report <名前>` を単独で走らせる。待たずに、その Agent の transcript の最後の発言を出す。
 
 ### 閉じる
 
-- 片付けるときは、`<scripts>/agent-ctl close <名前>` を単独で走らせる。`close` は `start` が控え（`$HERDR_AGENT_STATE_HOME/ledger`。既定は `${XDG_STATE_HOME:-~/.local/state}/herdr-agent/ledger`）に書いた Agent だけを片付け、控えにない名前は 1 行で断る。断られた Agent は、人が手で片付ける。
+- 片付けるときは、`karo-agent-ctl close <名前>` を単独で走らせる。`close` は `start` が控え（`$HERDR_AGENT_STATE_HOME/ledger`。既定は `${XDG_STATE_HOME:-~/.local/state}/herdr-agent/ledger`）に書いた Agent だけを片付け、控えにない名前は 1 行で断る。断られた Agent は、人が手で片付ける。
 - `close` は、控えにある workspace（`tab` では tab）の label が名前であること、呼び出し側の workspace（`tab` では tab）でないこと、`working`・`blocked` の Agent がいないことを確かめる。`tab` のほかは、さらに submodule がないこと、未 commit の変更がないこと、場所の種類ごとの取り込み済みの条件（「起動する」の表）を確かめる。
 - worktree を消す場所では、すべての確かめを通ったあとに、`close` が `git clean -fdX` で ignored なファイル（`.venv`、`node_modules`、cache、`.claude/` の下の Claude Code の記録）を消してから worktree を消す。確かめのどれかで止まったときは、何も消さない。
 - JSON は `{name, kind, workspace, place, parent}` で、`tab` と `parent_kept`（閉じなかった親の workspace と理由）が付くことがある。`parent_kept` があれば、それも人に伝える。
@@ -127,7 +126,7 @@ karo が呼び出し側のとき、下の「止まった Agent に答える」�
 ## pane で開く・閉じる
 
 - 閉じてよいのは karo が作った tab・pane・workspace だけにする。karo 自身の pane（`$HERDR_PANE_ID`）とオーナーが作ったものは残す。
-- オーナーが画像（.png .jpg .jpeg .webp .gif）か動画（.mp4 .webm）を見たいと頼んだときと、`karo:explain` が解説を見せるときは `~/.config/claude/skills/karo/scripts/view-open <絶対パス> [<短い名前>]` を、`karrybit:crit` が review の URL を返したとき（開き直したときも）は URL のポートを `~/.config/claude/skills/karo/scripts/crit-open <ポート>` に渡して、単独の Bash で実行し、出力の pane の ID を控える。
+- オーナーが画像（.png .jpg .jpeg .webp .gif）か動画（.mp4 .webm）を見たいと頼んだときと、`karo:explain` が解説を見せるときは `karo-view-open <絶対パス> [<短い名前>]` を、`karrybit:crit` が review の URL を返したとき（開き直したときも）は URL のポートを `karo-crit-open <ポート>` に渡して、単独の Bash で実行し、出力の pane の ID を控える。
 - view-open は `view - <名前>`、crit-open は `view - crit` の pane に開き、右に terminal-browser の pane があれば tab として足す。crit-open は、その URL を表示している tab がすでにあれば、開かずにその tab だけを reload して `crit-open: reloaded <URL>` を出す。新しい pane で開くのは、オーナーがそう頼んだときだけにする（先頭に `--no-merge`）。0 でない終了コードで終わったときは、パスか URL をオーナーに伝える。
 - karo が開いた `view - ` で始まる label の pane は、オーナーが閉じてと言ったときに `herdr pane close <pane の ID>` で閉じ、キーは送らない（`Ctrl+C` も送らない）。
 
@@ -138,7 +137,7 @@ karo が呼び出し側のとき、下の「止まった Agent に答える」�
 2. 答えを決める。承認のダイアログは、呼び出し側が渡した「答えてよいダイアログの一覧」に合えば Yes と決め、一覧にないもの、どれにあたるか迷うものは人に尋ねる。AskUserQuestion は、依頼とブリーフから答えが決まる問いには呼び出し側が答えを決め、決まらない問いは人に尋ねる。
    完了条件: 送る答えが決まったか、人に尋ねている。
 3. 答えを送る。
-   - 承認のダイアログの Yes: `blocked` の Agent には `<scripts>/safe-key enter <名前>` で送る（`safe-key` は `blocked` の Agent にだけ Enter を送り、答えのない AskUserQuestion が transcript にある Agent には送らない）。`awaiting-answer` で返った `idle` か `done` の Agent には、`herdr agent send-keys <Agent 名> Enter` で送る。
+   - 承認のダイアログの Yes: `blocked` の Agent には `karo-safe-key enter <名前>` で送る（`safe-key` は `blocked` の Agent にだけ Enter を送り、答えのない AskUserQuestion が transcript にある Agent には送らない）。`awaiting-answer` で返った `idle` か `done` の Agent には、`herdr agent send-keys <Agent 名> Enter` で送る。
    - 起動時の信頼のダイアログ（既定の選択が「No, exit」）: 人が信頼すると答えたら、`herdr agent send-keys <Agent 名> Down Enter` で「Yes, I trust this folder」を選ぶ。Enter だけを送ると「No, exit」が選ばれて Claude が終わる。`start` が `not_ready` で終わったときはブリーフが届いていないので、Agent が `idle` になってから、ブリーフの文を `agent-ctl send` で送る。
    - AskUserQuestion の選択肢: `herdr agent send-keys <Agent 名>` で `Down` か `Up` をカーソルが答えに来る回数だけ送ってから `Enter` を送る。multiSelect の問いでは、画面の下のキーの案内に従って、答えの選択肢をすべて選ぶ。
    - AskUserQuestion の自由記述: カーソルを `Other` の行（`Type something` と出る）に合わせ、`herdr pane send-text <pane> <答えの文>` で文を打ってから `Enter` を送る。`<pane>` は `herdr agent get <Agent 名>` の `pane_id`。
@@ -149,7 +148,7 @@ karo が呼び出し側のとき、下の「止まった Agent に答える」�
 4. `herdr agent read <Agent 名>` で画面が次に進んだことを確かめ、「終わるのを待つ」に戻る。
    完了条件: background の `agent-report --wait` が走っている。
 
-- foreground がページャ（`less`・`glow`）の pane には、`<scripts>/safe-key quit <pane>` で q を送る。
+- foreground がページャ（`less`・`glow`）の pane には、`karo-safe-key quit <pane>` で q を送る。
 - `safe-key` は呼び出し側の pane には送らない。ほかのキーと文字（`herdr agent send-keys`、`herdr pane send-keys`、`herdr pane send-text`）には、毎回確認が出る。
 
 ## Herdr を触る Agent のブリーフに足す決まり

@@ -27,7 +27,7 @@
 set -eu
 
 usage() {
-  echo "usage: land <branch> [--rebase]" >&2
+  echo "usage: karo-land <branch> [--rebase]" >&2
   exit 2
 }
 case $# in
@@ -55,7 +55,7 @@ export GIT_OPTIONAL_LOCKS=0 GIT_CONFIG_COUNT=5 \
   GIT_CONFIG_KEY_3=maintenance.auto GIT_CONFIG_VALUE_3=false \
   GIT_CONFIG_KEY_4=submodule.recurse GIT_CONFIG_VALUE_4=false
 
-. "${0%/*}/../../../lib/karo-env"
+. "${0%/*}/../lib/karo-env"
 karo_path=$KARO_HOME worktrees_path=$KARO_STATE_HOME/worktrees
 karo=$(cd "$karo_path" 2>/dev/null && pwd -P) || stop "$karo_path is not a folder"
 worktrees=$(cd "$worktrees_path" 2>/dev/null && pwd -P) || stop "$worktrees_path is not a folder"
@@ -188,6 +188,6 @@ if [ "$mode" = rebase ]; then
 fi
 
 git_at "$karo/.git" "$karo" merge-base --is-ancestor main "$branch" ||
-  stop "main is not an ancestor of the branch; run land $branch --rebase first"
+  stop "main is not an ancestor of the branch; run karo-land $branch --rebase first"
 safe_git "$karo/.git" "$karo" merge -q --ff-only "$branch"
 echo "land $branch: main fast-forwarded to $(git_at "$karo/.git" "$karo" rev-parse --short HEAD)"

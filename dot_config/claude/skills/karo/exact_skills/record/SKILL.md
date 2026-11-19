@@ -7,13 +7,13 @@ user-invocable: false
 # 記録を書いて commit する
 
 - 記録のファイルは、下の「書き込み先」の表の記録のファイル。タスク・判断待ち・タスクかプロジェクトに閉じた決定は記録のファイルに書かず、`bd` で書く（`karo:tasks` skill）。karo 自身の長い目の運用・設計の決定は、下の「Decision Record を書く」で `$KARO_HOME/decisions/` に書く。過去の会話も書き写さず、要るときは cass で引く（`karo:recall` skill）。
-- 下の `<scripts>` は `~/.config/claude/skills/karo/scripts` で、この `~/` の形のまま書く。
+- karo の scripts は plugin の `bin/` にあり、`karo-commit` のように名前だけで書く。
 - ノートを作る前と、ノートのフロントマターを書くか直す前に、この skill のフォルダの `frontmatter.md` を読む。フィールドの書き方、種類ごとの置き場所と埋め方、状態が変わったときに直すフィールドがある。
 
 ## 書く
 
 - 新しいファイルは Write で、今あるファイルへの追記と直しは Edit で、`$KARO_HOME` の下の絶対パスに書く（`$KARO_HOME` の値は SessionStart の hook が出す）。
-- Edit・Write のあと、post-edit の hook が `.md` を rumdl で整え、`<scripts>/karo-check --only <そのファイル>` で確かめる。hook が問題を返したら、そのファイルを直してから commit する。hook が返すのは書いたファイルの問題か検査そのものの失敗だけで、消すか名前を変えた Project のノートを `projects` に挙げるほかのノートの問題は commit が止める。
+- Edit・Write のあと、post-edit の hook が `.md` を rumdl で整え、`karo-check --only <そのファイル>` で確かめる。hook が問題を返したら、そのファイルを直してから commit する。hook が返すのは書いたファイルの問題か検査そのものの失敗だけで、消すか名前を変えた Project のノートを `projects` に挙げるほかのノートの問題は commit が止める。
 - standup（`standup/YYYY-MM-DD.md`）がまだなければ、Write で `type: Standup`・`date`・`description`・`tasks`・`projects`（当たるものがなければ `[]`）のフロントマターから作る（`frontmatter.md` の「種類」の `Standup` の行）。
 - `state.md` は、下の「state.md を書く」に従って書く。
 - 運用の出来事（タスクを持たない依頼で記録を変えたこと）は、commit の本文に書く。
@@ -181,7 +181,7 @@ user-invocable: false
 | ノートの書き先 | 調べた結果は `$KARO_HOME/investigation/YYYY-MM-DD-<話題>.md`、MTG の記録は MTG ごとに `$KARO_HOME/source/meeting/YYYY-MM-DD-<MTG>.md` |
 | 情報源のアクセスの制約 | 外のサービスは読むだけにすること。`$KARO_HOME/AGENTS.md` に外のサービスや MTG の議事録を読む範囲の決まりがあれば、その文を写して書く |
 | ノートの規則 | 書く前に `frontmatter.md`（この skill のフォルダ。依頼には絶対パスで書く）を Read で読み、その「フィールド」と、書き先の種類の行（調べ物は `Investigation`、MTG は `Meeting Notes`、imozuru の map.md は `Research Map`）に従うこと |
-| 検査 | `~/.config/claude/skills/karo/scripts/karo-check --only <ノートの $KARO_HOME からのパス>` を `~/` の形のまま単独で実行する（imozuru を使ったら `--only investigation/YYYY-MM-DD-<話題>/map.md` も足す）。合格は、終了コードが 2 でなく、出力に `<ノートのパス><TAB>` で始まる行がないこと。ほかのノートの行は数えないので、件数の行（`karo-check: <件数> problem(s) in the --only scope`）が 0 でなくてもよい。終了コード 2 は検査そのものの失敗（`$KARO_HOME` に入れない、yq・fd・rg を動かせない） |
+| 検査 | `karo-check --only <ノートの $KARO_HOME からのパス>` を名前だけで単独で実行する（imozuru を使ったら `--only investigation/YYYY-MM-DD-<話題>/map.md` も足す）。合格は、終了コードが 2 でなく、出力に `<ノートのパス><TAB>` で始まる行がないこと。ほかのノートの行は数えないので、件数の行（`karo-check: <件数> problem(s) in the --only scope`）が 0 でなくてもよい。終了コード 2 は検査そのものの失敗（`$KARO_HOME` に入れない、yq・fd・rg を動かせない） |
 | 追加の skill | 分野や論点を探る調査には `imozuru:imozuru` を使ってよく、原文の保存先はノートと同じ名前のフォルダ `$KARO_HOME/investigation/YYYY-MM-DD-<話題>/` |
 | 分担 | ノートの commit は karo が commit の script で行い、判断待ち（decision の bead）は karo が `bd` で作る。サブエージェントは commit も `bd` もしない |
 
@@ -189,15 +189,15 @@ user-invocable: false
 
 ## commit する
 
-1. 1 つの返事に要る書き込みをすべて書いたら、それを 1 つの commit にする。`<scripts>/commit '<件名>' '<本文>' <パス>...` を単独の Bash の呼び出しで（パイプ・リダイレクト・`&&` をつながずに）実行する。
+1. 1 つの返事に要る書き込みをすべて書いたら、それを 1 つの commit にする。`karo-commit '<件名>' '<本文>' <パス>...` を単独の Bash の呼び出しで（パイプ・リダイレクト・`&&` をつながずに）実行する。
    - 件名は `<タスクID>[, <タスクID>]...: <何を変えたか>` の形にし、そのやり取りのタスク ID で始める。タスクのないやり取りでは、ID を置かずに何を変えたかだけを書く。
    - 本文には、なぜ変えたか（オーナーのどの指示か、どの決定・出典に基づくか）を書く。件名と本文は、それぞれ改行を含まない 1 行にし、`'` で囲む（本文に `'` を入れない）。
-   - パスは `$KARO_HOME` からの相対パスで、この commit に入れるファイルをすべて並べる（消したファイルも、名前を変えたファイルは前と後の両方も並べる）。commit は並べたパスだけを stage し、commit に入る中身（HEAD に並べたパスの今の中身を足したもの）を `<scripts>/karo-check --only` で、そのパスと、消すか名前を変えた Project のノートを `projects` に挙げるほかのノートについて確かめる。並べていないファイルの直しは中身に入らないので、ほかのノートを直したらそのノートも並べる。記録の全体は確かめないので、全体は `karo:land`・`karo:checkout` の引数なしの karo-check が確かめる。
+   - パスは `$KARO_HOME` からの相対パスで、この commit に入れるファイルをすべて並べる（消したファイルも、名前を変えたファイルは前と後の両方も並べる）。commit は並べたパスだけを stage し、commit に入る中身（HEAD に並べたパスの今の中身を足したもの）を `karo-check --only` で、そのパスと、消すか名前を変えた Project のノートを `projects` に挙げるほかのノートについて確かめる。並べていないファイルの直しは中身に入らないので、ほかのノートを直したらそのノートも並べる。記録の全体は確かめないので、全体は `karo:land`・`karo:checkout` の引数なしの karo-check が確かめる。
 
    <example>
 
    ```sh
-   ~/.config/claude/skills/karo/scripts/commit 'karo-k3m: record the survey of fb list sorting' 'Keep the survey of sorting the fb list by update date, as the owner asked.' investigation/2026-01-01-fb-sort.md
+   karo-commit 'karo-k3m: record the survey of fb list sorting' 'Keep the survey of sorting the fb list by update date, as the owner asked.' investigation/2026-01-01-fb-sort.md
    ```
 
    </example>

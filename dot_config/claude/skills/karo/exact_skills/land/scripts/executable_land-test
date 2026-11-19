@@ -9,15 +9,15 @@
 # Every repository is a new one in a land-test.* folder made with mktemp in $TMPDIR, and every case
 # gives land KARO_HOME and KARO_STATE_HOME in that folder, so the real record repository and state
 # folder are never touched. land's look-up of the Claude Code process lists processes and cannot run in
-# the sandbox, so each case runs a copy of land, with lib/karo-env beside it as in the plugin, in which
+# the sandbox, so each case runs a copy of land, with lib/karo-env placed as in the plugin, in which
 # that one line is replaced. The cases about variables land must not take as a place or as the callers
 # run land itself.
-# usage: land-test   (tests the land beside this script)
+# usage: land-test   (tests the plugin's bin/karo-land)
 set -uo pipefail
 exec </dev/null
 [[ $# -eq 0 ]] || { echo "usage: land-test" >&2; exit 2; }
-bin=$(cd "$(dirname "$0")" && pwd)
-land=$bin/land
+bin=$(cd "$(dirname "$0")/../../../bin" && pwd)
+land=$bin/karo-land
 failed=0
 fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
 pass() { printf 'ok\t%s\n' "$1"; }
@@ -30,7 +30,7 @@ fi
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
 unset LAND_TEST_ROOT LAND_TEST_CLAUDE_CWD
 tmp_root=$(cd "${TMPDIR:-/tmp}" && pwd -P)
-lib=$bin/../../../lib/karo-env
+lib=$bin/../lib/karo-env
 if [[ $(grep -cxF 'callers=$(claude_cwds)' "$land") != 1 || ! -f $lib ]]; then
   echo "land-test: $land lacks the one callers line the copy replaces, or $lib is missing" >&2
   exit 1
@@ -38,13 +38,13 @@ fi
 
 # fresh: a new root with karo on main (a.txt) and a worktree of the branch feat/agent/x adding b.txt in
 # root/worktrees, the folder land takes with KARO_HOME=karo and KARO_STATE_HOME=root, and the copy of
-# land in root/skills/land/scripts, with root/lib/karo-env, that reads the Claude Code folders from
+# land in root/bin, with root/lib/karo-env, that reads the Claude Code folders from
 # root/claude-cwds.
 fresh() {
   root=$(mktemp -d "$tmp_root/land-test.XXXXXX") || exit 2
   karo=$root/karo wt=$root/worktrees/x branch=feat/agent/x
-  copy=$root/skills/land/scripts/land
-  mkdir -p "$root/worktrees" "$root/skills/land/scripts" "$root/lib" && cp "$lib" "$root/lib/" || exit 2
+  copy=$root/bin/karo-land
+  mkdir -p "$root/worktrees" "$root/bin" "$root/lib" && cp "$lib" "$root/lib/" || exit 2
   awk -v r="$root" '
     $0 == "callers=$(claude_cwds)" { print "callers=$(cat '"'"'" r "/claude-cwds'"'"')"; next }
     { print }' "$land" >"$copy" && chmod +x "$copy" || exit 2
@@ -297,7 +297,7 @@ usage_error() {
   shift
   run "$@"
   code=$?
-  if [[ $code -eq 2 && $err == "usage: land <branch> [--rebase]" ]]; then pass "$name is a usage error"
+  if [[ $code -eq 2 && $err == "usage: karo-land <branch> [--rebase]" ]]; then pass "$name is a usage error"
   else fail "$name: exit $code: $err"; fi
 }
 fresh

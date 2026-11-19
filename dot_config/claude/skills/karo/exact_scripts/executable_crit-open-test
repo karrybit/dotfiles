@@ -3,26 +3,26 @@
 # under it) and opens nothing; that otherwise it points a crit tab on another port where crit no
 # longer answers at http://localhost:<port>, and touches no other tab: not a crit tab whose crit
 # still answers, not a localhost tab with another title, not a "Crit" page elsewhere; that with no
-# such tab it hands the tb-view beside it only "view - crit" and http://localhost:<port>; that
+# such tab it hands tb-view only "view - crit" and http://localhost:<port>; that
 # --no-merge first always goes to tb-view with --no-merge and reuses no tab; and that it refuses
-# any argument other than a port made of digits. It runs a copy of crit-open beside a tb-view stub,
+# any argument other than a port made of digits. It runs a copy of crit-open with a tb-view stub placed as in the plugin,
 # with stubs on PATH: terminal-browser prints the tabs in TABS for ls and logs actions, and curl
 # answers only for the ports in ALIVE (tb-view-test covers tb-view). settings-test checks that the settings allow crit-open and run it
 # outside the sandbox.
-# usage: crit-open-test   (tests the crit-open beside this script; its files go to a temporary
+# usage: crit-open-test   (tests the plugin's bin/karo-crit-open; its files go to a temporary
 #        directory that is removed)
 set -uo pipefail
 exec </dev/null
-bin=$(cd "$(dirname "$0")" && pwd)
+bin=$(cd "$(dirname "$0")/../bin" && pwd)
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/crit-open-test.XXXXXX") || exit 2
 trap 'rm -rf "$tmp"' EXIT
 failed=0
 fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
 pass() { printf 'ok\t%s\n' "$1"; }
 
-cp "$bin/crit-open" "$tmp/" || exit 2
-co=$tmp/crit-open
-cat > "$tmp/tb-view" <<'EOF'
+mkdir "$tmp/bin" "$tmp/scripts" && cp "$bin/karo-crit-open" "$tmp/bin/" || exit 2
+co=$tmp/bin/karo-crit-open
+cat > "$tmp/scripts/tb-view" <<'EOF'
 #!/bin/sh
 (IFS='|'; printf '%s\n' "$*") >> "$FAKE_LOG"
 EOF
@@ -44,7 +44,7 @@ esac
 case " $ALIVE " in *" $port "*) exit 0 ;; esac
 exit 7
 EOF
-chmod +x "$tmp/tb-view" "$tmp/fake/terminal-browser" "$tmp/fake/curl"
+chmod +x "$tmp/scripts/tb-view" "$tmp/fake/terminal-browser" "$tmp/fake/curl"
 export PATH=$tmp/fake:$PATH FAKE_LOG=$tmp/log ALIVE=
 # Two browsers: one with a tab on port 498090, one with tab 2 on a page under port 49809.
 other='{"key": "1-1", "tabs": [{"id": 1, "url": "http://localhost:498090/", "title": "Vite App"}]}'

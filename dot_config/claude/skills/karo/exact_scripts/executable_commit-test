@@ -8,7 +8,7 @@ set -uo pipefail
 exec </dev/null
 . "${0%/*}/../lib/karo-env"
 karo=${1:-$KARO_HOME}
-bin=$(cd "$(dirname "$0")" && pwd)
+bin=$(cd "$(dirname "$0")/../bin" && pwd)
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/commit-test.XXXXXX") || exit 2
 trap 'rm -rf "$tmp"' EXIT
 failed=0
@@ -26,7 +26,7 @@ git -C "$v" init -q && git -C "$v" config user.name test && git -C "$v" config u
 git -C "$v" add -A && git -C "$v" commit -q -m init || exit 2
 
 head_() { git -C "$v" rev-parse HEAD; }
-run() { out=$("$bin/commit" "$@" 2>&1); code=$?; }
+run() { out=$("$bin/karo-commit" "$@" 2>&1); code=$?; }
 # ng <name> <want in output>: the last run stopped with NG, HEAD did not move, and nothing is staged.
 ng() {
   if [[ $code -eq 1 && $out == *"$2"* && ${out##*$'\n'} == "NG "* && $(head_) == "$before" && -z $(git -C "$v" diff --cached --name-only) ]]; then
@@ -87,7 +87,7 @@ before=$(head_)
 run "t-test0001: 変わらない" "本文" investigation/2026-01-01-demo.md
 if [[ $code -eq 0 && $out == "OK - t-test0001: 変わらない (no change)" && $(head_) == "$before" ]]; then pass "no change"; else fail "no change: exit $code: $out"; fi
 
-out=$("$bin/commit" "t-test0001: 本文なし" "" investigation/2026-01-01-demo.md 2>&1); code=$?
+out=$("$bin/karo-commit" "t-test0001: 本文なし" "" investigation/2026-01-01-demo.md 2>&1); code=$?
 if [[ $code -eq 2 && $out == usage:* ]]; then pass "no body prints the usage"; else fail "no body: exit $code: $out"; fi
 
 # The bad writes.
@@ -149,7 +149,7 @@ done < <(printf '%s:' "$PATH")
 if (PATH=${norumdl%:}; ! command -v rumdl >/dev/null); then pass "rumdl is off the trimmed PATH"; else fail "rumdl is still on the trimmed PATH"; fi
 printf '\nrumdl なしの追記\n' >> "$v/investigation/2026-01-01-demo.md"
 printf -- '---\ntype: Investigation\ndescription: 例。\ndate: 2026-01-02\ntasks: []\nprojects:\n  - all\n---\n\n## 例\n' > "$v/investigation/2026-01-02-fmt.md"
-out=$(PATH=${norumdl%:} "$bin/commit" "t-test0001: rumdl なし" "本文" investigation/2026-01-01-demo.md investigation/2026-01-02-fmt.md 2>&1); code=$?
+out=$(PATH=${norumdl%:} "$bin/karo-commit" "t-test0001: rumdl なし" "本文" investigation/2026-01-01-demo.md investigation/2026-01-02-fmt.md 2>&1); code=$?
 ng "a rumdl not on PATH stops" "rumdl: command not found"
 if [[ $(git -C "$v" status --porcelain -- investigation) == $' M investigation/2026-01-01-demo.md\n?? investigation/2026-01-02-fmt.md' ]]; then
   pass "the write stopped for rumdl is kept as written"
@@ -197,12 +197,12 @@ run "t-test0001: 名前を変える" "本文" project/misc/old.md project/misc/n
 if [[ $code -eq 0 && $out == "OK "* && -z $(git -C "$v" status --porcelain -- investigation project) ]]; then pass "a rename with its listing fixed commits"; else fail "a rename with its listing fixed: exit $code: $out: $(git -C "$v" status --porcelain)"; fi
 before=$(head_)
 
-# The record folders are one list, record-folders beside the scripts: with a folder added to a copy of it,
+# The record folders are one list, the plugin's scripts/record-folders: with a folder added to a copy of it,
 # commit takes a path there and karo-check checks the note.
 alt=$tmp/bin
-cp -R "$bin" "$alt" && cp -R "$bin/../lib" "$tmp/" && printf 'standup source investigation project doc decisions scrap\n' > "$alt/record-folders"
+cp -R "$bin" "$alt" && cp -R "$bin/../lib" "$bin/../scripts" "$tmp/" && printf 'standup source investigation project doc decisions scrap\n' > "$tmp/scripts/record-folders"
 mkdir -p "$v/scrap" && printf '## a\n' > "$v/scrap/t-test0001-demo.md"
-out=$("$alt/commit" "t-test0001: scrap" "本文" scrap/t-test0001-demo.md 2>&1); code=$?
+out=$("$alt/karo-commit" "t-test0001: scrap" "本文" scrap/t-test0001-demo.md 2>&1); code=$?
 ng "a folder added to record-folders is a record folder" $'scrap/t-test0001-demo.md\tmissing date'
 rm "$v/scrap/t-test0001-demo.md"
 

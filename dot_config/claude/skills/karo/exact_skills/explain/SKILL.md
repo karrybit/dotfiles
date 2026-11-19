@@ -7,7 +7,7 @@ description: 'HTML の解説を git の外の store（`$KARO_DATA_HOME/html/<UUI
 
 - HTML の解説は、1 ファイルの HTML で資料や仕組みを解説するもの。1 つの解説は store の `<root>/<id>/` のフォルダで、`index.html` と `metadata.json` を持つ。store は git の外にある。
 - この skill は、karo の運用（store の場所、id、`metadata.json`、探し方、置き方）だけを持つ。作り方、評価のしかた、依頼の型を直すときは `karrybit:explain` skill にある。
-- 下の `<karo-check>` は `~/.config/claude/skills/karo/scripts/karo-check` で、この `~/` の形のまま書く。
+- `karo-check` は karo の plugin の `bin/` にあり、名前だけで書く。
 
 ## store
 
@@ -77,7 +77,7 @@ description: 'HTML の解説を git の外の store（`$KARO_DATA_HOME/html/<UUI
 4. `karrybit:explain` skill を Skill tool で呼び、その手順を最後まで進める。渡す値は次のとおり。
    - HTML の書き先: `<一時フォルダ>/index.html`。
    - 控えのファイル: `<一時フォルダ>/metadata.json`。書き方の規則は上の「metadata.json」。入れる値は、3 の id と `created_at`、1 の `source`、頼まれたタスクとプロジェクトで、`title` は HTML の題にする。検査は上の「metadata.json」の検査のコマンド。
-   - 説明の文書の書き先: オーナーが説明の文書も残すよう頼んだときだけ渡す。書き先は `$KARO_HOME/doc/<話題>.md`、フロントマターは `karo:record` skill の `frontmatter.md` の「種類」の `Document` の行（sources は元の資料と版）、検査は `<karo-check> --only doc/<話題>.md`。`$KARO_HOME` の記録なので、書いたあとは `karo:record` skill に従う。
+   - 説明の文書の書き先: オーナーが説明の文書も残すよう頼んだときだけ渡す。書き先は `$KARO_HOME/doc/<話題>.md`、フロントマターは `karo:record` skill の `frontmatter.md` の「種類」の `Document` の行（sources は元の資料と版）、検査は `karo-check --only doc/<話題>.md`。`$KARO_HOME` の記録なので、書いたあとは `karo:record` skill に従う。
    - 頼まれた内容の原文: 頼まれた発言の本文と時刻。今のセッションにない過去の発言は、`karo:recall` skill で引く。
    - 呼び出し側が元の資料の場所・版・読み方を渡したときは、それもそのまま渡す。
 

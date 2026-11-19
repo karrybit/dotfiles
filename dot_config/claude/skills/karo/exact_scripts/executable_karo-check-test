@@ -7,7 +7,7 @@
 set -uo pipefail
 . "${0%/*}/../lib/karo-env"
 vault=${1:-$KARO_HOME}
-bin=$(cd "$(dirname "$0")" && pwd)
+bin=$(cd "$(dirname "$0")/../bin" && pwd)
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/karo-check-test.XXXXXX") || exit 2
 trap 'rm -rf "$tmp"' EXIT
 failed=0
@@ -125,6 +125,15 @@ for tool in yq fd rg; do
   out=$(PATH="$tmp/broken-$tool:$PATH" "$bin/karo-check" "$ok" 2>&1); code=$?
   if [[ $code -eq 2 && $out == "karo-check: cannot run $tool" ]]; then pass "a $tool that cannot run is named"; else fail "broken $tool: exit $code: $out"; fi
 done
+
+# A whole run names a bin/ script that PATH finds in another folder first; with the plugin's bin/ alone
+# on the end of PATH, or with --only, nothing is named.
+mkdir -p "$tmp/shadow" && printf '#!/bin/sh\n' > "$tmp/shadow/karo-commit" && chmod +x "$tmp/shadow/karo-commit"
+if out=$(PATH="$PATH:$bin" "$bin/karo-check" "$ok" 2>&1); then pass "the plugin's bin/ on PATH passes"; else fail "the plugin's bin/ on PATH: $out"; fi
+out=$(PATH="$tmp/shadow:$PATH:$bin" "$bin/karo-check" "$ok" 2>&1); code=$?
+if [[ $code -eq 1 && $out == *"karo-commit"$'\t'"PATH runs $tmp/shadow/karo-commit, not $bin/karo-commit"* ]]; then pass "a karo-commit before the plugin's bin/ is named"
+else fail "a karo-commit before the plugin's bin/: exit $code: $out"; fi
+if out=$(PATH="$tmp/shadow:$PATH:$bin" "$bin/karo-check" --only doc/demo.md "$ok" 2>&1); then pass "only: PATH is not checked"; else fail "only: PATH is checked: $out"; fi
 
 # Frontmatter values are data: a value holding "|", a newline, a glob, or shell syntax is reported as the
 # problems it is and nothing more, and no command in it runs.

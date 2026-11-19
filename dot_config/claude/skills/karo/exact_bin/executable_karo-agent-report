@@ -38,7 +38,7 @@
 set -eu
 
 usage() {
-  echo "usage: agent-report [--wait] <agent-name>" >&2
+  echo "usage: karo-agent-report [--wait] <agent-name>" >&2
   exit 2
 }
 wait=
@@ -93,7 +93,7 @@ if [ -z "$wait" ]; then
   report
   exit 0
 fi
-. "${0%/*}/../../../lib/karo-env"
+. "${0%/*}/../lib/karo-env"
 seen=$HERDR_AGENT_STATE_HOME/stops/$name
 # hand_over <status>: note the stop and print it with the message.
 hand_over() {

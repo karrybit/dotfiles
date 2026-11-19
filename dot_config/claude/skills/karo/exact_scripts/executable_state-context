@@ -39,7 +39,7 @@ if [[ $mode == agents ]]; then
     | select(length > 0)
     | "## 待ち直す Agent",
       "このセッションで走らせている agent-report --wait がなければ、karo:herdr-agent skill の「終わるのを待つ」のとおり、次のコマンドをそれぞれ単独で、Bash の background 実行で、timeout を 86400000 にして走らせる（待ちの background はセッションが終わると消える。一度返した停止はもう返さないので、全員を待ち直してよい）。",
-      (.[] | "- \(.)（\($status[gsub("[^a-z0-9_-]"; "-")])）: `~/.config/claude/skills/karo/skills/herdr-agent/scripts/agent-report --wait \(.)`")' \
+      (.[] | "- \(.)（\($status[gsub("[^a-z0-9_-]"; "-")])）: `karo-agent-report --wait \(.)`")' \
     <<<"$tasks" 2>/dev/null
   exit 0
 fi

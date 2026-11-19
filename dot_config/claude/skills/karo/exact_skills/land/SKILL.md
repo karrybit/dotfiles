@@ -8,18 +8,18 @@ argument-hint: <branch> [--rebase]
 
 - 引数は、取り込むブランチの名前（`<semantics>/agent/<title>`）と、任意の `--rebase` だけを受け取る。
 - 引数に `--rebase` があれば、手順の 1 だけを行って返す。なければ、手順の 1〜3 を行う。
-- 取り込みは、この skill の `scripts/land` を `~/.config/claude/skills/karo/skills/land/scripts/land` の `~` の形で書き、`$KARO_HOME` から単独のコマンドで実行する。
-- land は、`scripts/land` の冒頭にある確かめをすべて通ってから、hook と fsmonitor を止めた git だけを sandbox の外で動かす（`sandbox.excludedCommands` と `allow` に入れてあり、確認は出ない）。
+- 取り込みは、karo の plugin の `bin/` の `karo-land` を名前だけで書き、`$KARO_HOME` から単独のコマンドで実行する。
+- land は、`bin/karo-land` の冒頭にある確かめをすべて通ってから、hook と fsmonitor を止めた git だけを sandbox の外で動かす（`sandbox.excludedCommands` と `allow` に入れてあり、確認は出ない）。
 - land は、確かめが 1 つでも合わなければ、何もせずに理由を 1 行出して止まる。
 - land が止まったら、そこで手順を止め、land の出した 1 行を返す。
 
 ## 手順
 
-1. ブランチが main より遅れていれば、`~/.config/claude/skills/karo/skills/land/scripts/land <branch> --rebase` で、worktree の中でブランチを main に載せ替える。競合したら land が rebase を戻し、競合したファイルを出すので、Agent に直させる。
+1. ブランチが main より遅れていれば、`karo-land <branch> --rebase` で、worktree の中でブランチを main に載せ替える。競合したら land が rebase を戻し、競合したファイルを出すので、Agent に直させる。
    完了条件: ブランチが main より遅れていない。
-2. `~/.config/claude/skills/karo/skills/land/scripts/land <branch>` で、main をブランチに fast-forward する。
+2. `karo-land <branch>` で、main をブランチに fast-forward する。
    完了条件: `$KARO_HOME` の main がブランチの先頭を指す。
-3. 引数なしの `~/.config/claude/skills/karo/scripts/karo-check` を単独のコマンドで実行し、記録全体を確かめる。commit の検査（`karo-check --only`）は commit したファイル（消した Project のノートなら、それを `projects` に挙げるノートも）だけを見るので、その外にある、取り込みが持ち込んだ問題はここで見つける。問題が出たら、出たファイルを直して commit する（`karo:record` skill）。
+3. 引数なしの `karo-check` を単独のコマンドで実行し、記録全体を確かめる。commit の検査（`karo-check --only`）は commit したファイル（消した Project のノートなら、それを `projects` に挙げるノートも）だけを見るので、その外にある、取り込みが持ち込んだ問題はここで見つける。問題が出たら、出たファイルを直して commit する（`karo:record` skill）。
    完了条件: `karo-check: 0 problem(s)` が出たか、直しの commit が `OK` の行を出した。
 
 ## 返すもの

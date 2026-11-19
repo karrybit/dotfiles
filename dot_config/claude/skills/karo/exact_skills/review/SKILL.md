@@ -11,7 +11,7 @@ description: Agent の成果物をレビューに回す手順。実装 Agent の
 
 ## 1. 完了報告を受け取る
 
-1. 完了報告を読む。完了報告は、`karo:delegate` skill の「終わるのを待つ」の agent-report の通知の出力の 2 行目からにある。通知がないとき（会話を再開したあとなど）は、`<scripts>/agent-report <タスクID>` を単独で実行して読む（`<scripts>` は `karo:delegate` skill の冒頭）。完了報告に、`karrybit:completion-report` のひな形の見出しと、ブリーフの「完了時の報告」で足した見出しがそろっているかを確かめる。見出しが欠けていたら、`karo:delegate` skill の追加指示で埋めさせる。見出しがそろったら、完了報告の要旨（commit、テスト結果、残課題）と、Agent の worktree と branch（`karo:delegate` skill の冒頭の控えの `place` と `branch`）を `報告:` の comment で書く。残課題のうち別の仕事にするものは、`karo:tasks` skill の「タスクを進める」の 1・2 で `bd create --deps discovered-from:<タスクID>` で作る。
+1. 完了報告を読む。完了報告は、`karo:delegate` skill の「終わるのを待つ」の agent-report の通知の出力の 2 行目からにある。通知がないとき（会話を再開したあとなど）は、`karo-agent-report <タスクID>` を単独で実行して読む。完了報告に、`karrybit:completion-report` のひな形の見出しと、ブリーフの「完了時の報告」で足した見出しがそろっているかを確かめる。見出しが欠けていたら、`karo:delegate` skill の追加指示で埋めさせる。見出しがそろったら、完了報告の要旨（commit、テスト結果、残課題）と、Agent の worktree と branch（`karo:delegate` skill の冒頭の控えの `place` と `branch`）を `報告:` の comment で書く。残課題のうち別の仕事にするものは、`karo:tasks` skill の「タスクを進める」の 1・2 で `bd create --deps discovered-from:<タスクID>` で作る。
    完了条件: 完了報告の項目がそろい、`報告:` の comment の JSON が出ている。
 2. PR があれば、`karrybit:publish-check` に PR の番号と worktree を渡して、ブランチ名、commit メッセージ、差分、PR の本文を調べさせる。追加で探す語のファイルとして、session の決まりの「外に出す内容」にある 2 つのファイルも一緒に渡す。見つかったものは、レビューに回す前に `karo:delegate` skill の追加指示で元の Agent に直させる（commit メッセージは rebase で直させる）。そのリポジトリにもとからある語で直さないものは、3 の差分と一緒にオーナーに伝える。
    完了条件: `karrybit:publish-check` の報告が `見つかったもの: 0` か、残ったものすべてに直さない理由がある。
@@ -41,11 +41,11 @@ description: Agent の成果物をレビューに回す手順。実装 Agent の
    - `karo:delegate` skill の「依頼に毎回書く決まり」の行。足す見出しは「レビューの結果」で、結果をそこに書く
 
    完了条件: 依頼のファイルがある。
-2. `<scripts>/agent-ctl start --permission-mode plan <タスクID>-rv <依頼のファイル> tab <タスクID>` を単独で実行し、実装 Agent の workspace の別 tab で、読み取り専用の Agent を起動する（`<scripts>` と JSON の扱いは `karo:delegate` skill の冒頭と「新しいタスクを委任する」の 4。Review Agent は claim しない）。`working` になったら、`karo:delegate` skill の「終わるのを待つ」に従って `<タスクID>-rv` を待つ。
+2. `karo-agent-ctl start --permission-mode plan <タスクID>-rv <依頼のファイル> tab <タスクID>` を単独で実行し、実装 Agent の workspace の別 tab で、読み取り専用の Agent を起動する（JSON の扱いは `karo:delegate` skill の「新しいタスクを委任する」の 4。Review Agent は claim しない）。`working` になったら、`karo:delegate` skill の「終わるのを待つ」に従って `<タスクID>-rv` を待つ。
    完了条件: background の agent-report が走っている。
 3. 終わったら、agent-report の通知の出力の 2 行目からの結果を読み、頼んだ Review Agent の名前と調べた範囲を `レビュー依頼:` の comment に書く。結果の要旨は、続く「3」の `判定:`・`変更依頼:`・`承認:` の comment に書く。結果の全文はファイルに保存せず、要るときは cass で `<タスクID>-rv` の会話を引く（`karo:recall` skill）。
    完了条件: `レビュー依頼:` の comment の JSON が出ている。
-4. `<scripts>/agent-ctl close <タスクID>-rv` を単独で実行して Review Agent の tab を閉じる。終わったら「1」の 3 に戻る。
+4. `karo-agent-ctl close <タスクID>-rv` を単独で実行して Review Agent の tab を閉じる。終わったら「1」の 3 に戻る。
    完了条件: `close` の JSON が出た。
 
 ## 3. オーナーが差分を読んでレビューする（「1」の 3 で決めた作業）

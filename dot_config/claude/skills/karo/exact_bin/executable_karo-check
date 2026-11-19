@@ -13,9 +13,9 @@
 # digits, a child with ".<n>" added (karo-a2v.1, t-a1b2c3d4, ABC-12). Tasks live in the task database,
 # which karo-check does not read, so only the form is checked.
 # usage: karo-check [--only <path>]... [<karo dir>]
-# Default: KARO_HOME, or ~/karo when unset; only its record folders, listed in record-folders beside this
-# script, get the frontmatter checks, and the originals imozuru keeps (investigation/<topic>/sources/ and
-# investigation/<topic>/log.md) are left out.
+# Default: KARO_HOME, or ~/karo when unset; only its record folders, listed in the plugin's
+# scripts/record-folders, get the frontmatter checks, and the originals imozuru keeps
+# (investigation/<topic>/sources/ and investigation/<topic>/log.md) are left out.
 # --only limits the check to the given paths from the karo dir (changed, added, or removed files; for a
 # rename, both paths) and, for a removed project file, the notes listing it as a project. A file brought
 # in is checked in full.
@@ -40,7 +40,7 @@ while [[ ${1:-} == --only ]]; do only+=("${2#./}"); shift 2; done
 vault=${1:-$KARO_HOME}
 bin=$(cd "$(dirname "$0")" && pwd)
 # The record folders, the one list commit takes its record paths from too
-read -r -a folders < "$bin/record-folders"
+read -r -a folders < "$bin/../scripts/record-folders"
 cd "$vault" || exit 2
 excl='^investigation/[^/]+/(log\.md$|sources/)'
 problems=0
@@ -107,6 +107,15 @@ while IFS= read -r f; do
     [[ $p == all || $vocab == *" $p "* ]] || report "$f" "unknown project: $p"
   done
 done < <(fd -t f -e md . ${existing[@]+"${existing[@]}"} | rg -v "$excl" | sort | while IFS= read -r f; do in_scope "$f" && printf '%s\n' "$f"; done)
+
+# A whole run also checks that each name in this bin/ that PATH finds runs the file here: Claude Code
+# adds the plugin's bin/ at the end of PATH, so a folder before it could hold another file of the name.
+# A name PATH does not find (a hook, a terminal) is not checked.
+if (( ! scoped )); then
+  for e in "$bin"/karo-*; do
+    found=$(command -v "${e##*/}") && [[ ! $found -ef $e ]] && report "${e##*/}" "PATH runs $found, not $e"
+  done
+fi
 
 in=; (( scoped )) && in=" in the --only scope"
 echo "karo-check: $problems problem(s)$in" >&2

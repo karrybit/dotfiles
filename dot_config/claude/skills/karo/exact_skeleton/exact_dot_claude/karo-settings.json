@@ -17,29 +17,31 @@
       "Bash(herdr pane layout*)",
       "Bash(herdr pane process-info *)",
       "Bash(herdr worktree list*)",
-      "Bash(~/.config/claude/skills/karo/skills/land/scripts/land *)",
-      "Bash(~/.config/claude/skills/karo/scripts/crit-open *)",
-      "Bash(~/.config/claude/skills/karo/skills/herdr-agent/scripts/agent-ctl *)",
-      "Bash(~/.config/claude/skills/karo/skills/herdr-agent/scripts/agent-report *)",
-      "Bash(~/.config/claude/skills/karo/skills/herdr-agent/scripts/safe-key *)"
+      "Bash(karo-land *)",
+      "Bash(karo-crit-open *)",
+      "Bash(karo-agent-ctl *)",
+      "Bash(karo-agent-report *)",
+      "Bash(karo-safe-key *)"
     ]
   },
   "sandbox": {
     "excludedCommands": [
       "bd *",
       "bv *",
-      "~/.config/claude/skills/karo/skills/insights/scripts/insights *",
+      "karo-insights *",
       "herdr agent *",
       "herdr workspace *",
       "herdr worktree *",
       "herdr tab *",
       "herdr pane *",
-      "~/.config/claude/skills/karo/skills/land/scripts/land *",
-      "~/.config/claude/skills/karo/scripts/crit-open *",
-      "~/.config/claude/skills/karo/scripts/view-open *",
-      "~/.config/claude/skills/karo/skills/herdr-agent/scripts/agent-ctl *",
-      "~/.config/claude/skills/karo/skills/herdr-agent/scripts/agent-report *",
-      "~/.config/claude/skills/karo/skills/herdr-agent/scripts/safe-key *"
+      "karo-land *",
+      "karo-crit-open *",
+      "karo-view-open *",
+      "karo-open-tasks",
+      "karo-open-tasks *",
+      "karo-agent-ctl *",
+      "karo-agent-report *",
+      "karo-safe-key *"
     ]
   }
 }

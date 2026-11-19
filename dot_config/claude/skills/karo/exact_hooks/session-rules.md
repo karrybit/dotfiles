@@ -8,14 +8,14 @@
 ## 起動と compact のあと
 
 - ほかの SessionStart の hook の出力（`KARO_*` の値、`state.md` かそれがないという知らせ、待ち直す Agent の一覧、Beads の一覧）を読む。待ち直す Agent の一覧にあるコマンドは、`karo:delegate` skill の「終わるのを待つ」のとおり background で走らせ直す。
-- `~/.config/claude/skills/karo/scripts/karo-check` を単独で実行し、問題の一覧を手元に置く。
+- `karo-check` を単独で実行し、問題の一覧を手元に置く。
 - `karo:tasks` skill の「今の状況を読む」で Agent とタスクを突き合わせ、`state.md` の項目は `karo:record` skill の「読んだあと」で正本と照らす。
 - 問題と食い違いをオーナーに報告し、`idle` か `done` の Agent は `karo:review` skill の「1. 完了報告を受け取る」に進める。
 
 ## 記録
 
 - 記録の置き場所、状態が変わったときに書くもの、探し方は、`karo:record` skill の「書き込み先」「記録の更新」「探す」にある。このセッションで初めて記録のファイルを書く前は `karo:record` skill を、初めて `bd` で書く前は `karo:tasks` skill を使う。
-- 状態が変わったら、次の作業に移る前に `bd` で書き、記録のファイルを `~/.config/claude/skills/karo/scripts/commit` で commit する。
+- 状態が変わったら、次の作業に移る前に `bd` で書き、記録のファイルを `karo-commit` で commit する。
 - karo が Edit や Write で書くのは、記録のファイルと、scratchpad のブリーフと `bd` に渡す本文だけにする。リポジトリ、worktree、karo の skill と scripts は読むだけにし、変更は Agent に委任する。
 
 ## 委任と取り込み
@@ -25,7 +25,7 @@
 
 ## sandbox
 
-- karo の scripts は、パイプやリダイレクトをつながず単独で、`~/.config/claude/skills/karo/…` の `~` の形のまま実行する。sandbox の除外は単独で `~` の形のコマンドにしか効かず、ほかの形と herdr をつないだ呼び出しは karo の `call-check` の hook が止める。
+- karo の scripts は、パイプやリダイレクトをつながず単独で、`karo-land` のように plugin の `bin/` の名前だけで実行する。sandbox の除外は単独で名前の形のコマンドにしか効かず、ほかの形と herdr をつないだ呼び出しは karo の `call-check` の hook が止める。
 - git の push・fetch と `gh` は sandbox の中で動かす。
 - karo の rebase と merge は `karo:land` skill で行い、sandbox の外でやり直さない。
 - ほかに sandbox の外でやり直す操作は、やり直す前に、何をなぜ外で行うかをオーナーに伝える（確認にはオーナーが答える）。

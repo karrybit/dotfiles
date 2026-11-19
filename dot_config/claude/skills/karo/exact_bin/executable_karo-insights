@@ -16,16 +16,14 @@
 #   turns          karo turns (one per prompt from the owner, a peer or a task
 #                  notification) with tool calls, not counting AskUserQuestion,
 #                  Write/Edit to a scratchpad, and runs of the scripts the
-#                  skills call as steps (karo's scripts/commit, scripts/crit-open,
-#                  scripts/karo-check, and scripts/view-open, the karo land
-#                  skill's land, the karo
-#                  insights skill's insights, the karo herdr-agent skill's
-#                  agent-ctl and agent-report, every bd command, and every command matching a regular
+#                  skills call as steps (karo's karo-commit, karo-crit-open,
+#                  karo-check, karo-view-open, karo-land, karo-insights,
+#                  karo-agent-ctl and karo-agent-report, every bd command, and every command matching a regular
 #                  expression in the uncounted: list of
 #                  $KARO_CONFIG_HOME/config.yaml): the owner's AGENTS.md leaves the
 #                  calls a skill requires out of karo's two. A run is a command that
-#                  starts with the script's ~ path, the one form karo's session rules
-#                  (hooks/session-rules.md) allow, so a command that only reads a
+#                  starts with the script's name in the plugin's bin/, the one form
+#                  karo's session rules (hooks/session-rules.md) allow, so a command that only reads a
 #                  script still counts.
 #   over_limit     the turns with more than 2 such calls: session, start time,
 #                  kind, calls, and calls per tool.
@@ -41,12 +39,12 @@
 #                  is earlier, and the minutes in between; ended is null
 #                  while it has neither.
 #
-# usage: insights [YYYY-MM-DD]   (default: today)
+# usage: karo-insights [YYYY-MM-DD]   (default: today)
 # Environment: KARO_HOME (default ~/karo), KARO_CONFIG_HOME (default ${XDG_CONFIG_HOME:-~/.config}/karo), CLAUDE_CONFIG_DIR (default ~/.claude).
 set -eu
 
 usage() {
-  echo "usage: insights [YYYY-MM-DD]" >&2
+  echo "usage: karo-insights [YYYY-MM-DD]" >&2
   exit 2
 }
 [ $# -le 1 ] || usage
@@ -55,7 +53,7 @@ case $day in
   [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) ;;
   *) usage ;;
 esac
-. "${0%/*}/../../../lib/karo-env"
+. "${0%/*}/../lib/karo-env"
 karo=$(cd "$KARO_HOME" && pwd -P)
 projects=${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects
 # Claude Code names a project folder after its cwd with every non-alphanumeric
@@ -71,7 +69,7 @@ def day: ts | strflocaltime("%Y-%m-%d");
 def hm: ts | strflocaltime("%H:%M");
 def session: split("/") | last | sub("\\.jsonl$"; "") | .[:8];
 def text: .content | if type == "string" then . else (map(.text? // "") | join("")) end;
-def step: test("^~/\\.config/claude/skills/karo/(scripts/(commit|crit-open|karo-check|view-open)|skills/(land/scripts/land|insights/scripts/insights|herdr-agent/scripts/(agent-ctl|agent-report)))( |$)")
+def step: test("^karo-(commit|crit-open|check|view-open|land|insights|agent-ctl|agent-report)( |$)")
   or test("^bd( |$)")
   or (. as $c | any($uncounted[]; . as $re | $c | test($re)));
 def counted: .name == "AskUserQuestion" or (.name == "Bash" and (.input.command | tostring | step))

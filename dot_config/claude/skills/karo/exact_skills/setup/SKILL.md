@@ -15,9 +15,9 @@ description: 別のマシンで、karo と $KARO_HOME の仕組みが動くか�
    完了条件: `karo-setup: required tools found` が出て `missing:` の行がないか、`missing:` の行の一覧（使えなくなる機能と入れ方の案内つき）をオーナーに示している。
 2. `claude plugin list` を実行し、名前が `karo` と `karrybit` の plugin が読み込まれているかを、id の `@` の前の名前で確かめる。`@` の後ろは入れ方で変わるので問わない。karrybit が読み込まれていなければ、`claude plugin install karrybit@<marketplace>` で入れるよう案内して、ここで止める。`$KARO_HOME/rule/checkin.md` があれば、その「外の情報源」の節で使う plugin と外のサービスの接続も確かめる（ファイルがなければ確かめない）。
    完了条件: `karo` と `karrybit` と、確かめた plugin と接続のそれぞれについて、読み込まれているか、足りないことをオーナーに示している。karrybit が足りないときは、入れ方を示して止まっている。
-3. `~/.config/claude/skills/karo/scripts/settings-test $KARO_HOME/.claude/settings.json $KARO_HOME/.claude/settings.local.json $KARO_HOME/.claude/karo-settings.json` を単独で実行する。settings-test は、karo に共通の `settings.json`、オーナーや環境に依存する値を持つ git の外の `settings.local.json`、karo の会話だけが `--settings` で読む `karo-settings.json` を、Claude Code と同じく配列をつないで合わせてから確かめる。karo の hook は karo の `hooks/hooks.json` が登録するので、settings に同じ hook があると `FAIL` になる（hook が 2 回走る）。`FAIL` の行は、オーナーが 3 つのファイルのどれかを直す（sandbox はその場所を書かせない）。
+3. `karo-settings-test $KARO_HOME/.claude/settings.json $KARO_HOME/.claude/settings.local.json $KARO_HOME/.claude/karo-settings.json` を単独で実行する。settings-test は、karo に共通の `settings.json`、オーナーや環境に依存する値を持つ git の外の `settings.local.json`、karo の会話だけが `--settings` で読む `karo-settings.json` を、Claude Code と同じく配列をつないで合わせてから確かめる。karo の hook は karo の `hooks/hooks.json` が登録するので、settings に同じ hook があると `FAIL` になる（hook が 2 回走る）。`FAIL` の行は、オーナーが 3 つのファイルのどれかを直す（sandbox はその場所を書かせない）。
    完了条件: `settings-test: 0 failure(s)` が出たか、`FAIL` の行の一覧をオーナーに示している。
-4. `git -C $KARO_HOME branch --show-current` が `main` を出すかと、引数なしの `~/.config/claude/skills/karo/scripts/karo-check` を単独で実行した結果を確かめる。
+4. `git -C $KARO_HOME branch --show-current` が `main` を出すかと、引数なしの `karo-check` を単独で実行した結果を確かめる。
    完了条件: `main` と `karo-check: 0 problem(s)` が出たか、違いをオーナーに示している。
 5. 人がする段をオーナーに頼む。Claude Code のログイン、`$KARO_HOME` のフォルダの信頼のダイアログ、外のサービスの接続の認証、そしてオーナーのターミナルで `karo` を実行して karo の会話を開き直すこと（`karo` は herdr の server をオーナーのターミナルから起こす）。
    allow や deny などを足すとき（外のサービスへ書き込む前の確認に、使う MCP のツールの `permissions.ask` を置くときを含む）は、`$KARO_HOME/.claude/settings.local.json` を変えるよう案内する（`settings.json` は karo に共通の値だけを持つ）。

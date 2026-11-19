@@ -18,7 +18,7 @@
 set -eu
 
 usage() {
-  echo "usage: safe-key enter <agent> | safe-key quit <pane>" >&2
+  echo "usage: karo-safe-key enter <agent> | karo-safe-key quit <pane>" >&2
   exit 2
 }
 [ $# -eq 2 ] || usage

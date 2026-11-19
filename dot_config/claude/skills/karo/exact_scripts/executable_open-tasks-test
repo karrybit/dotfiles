@@ -12,7 +12,7 @@
 #        temporary directory, which is removed)
 set -uo pipefail
 exec </dev/null
-bin=$(cd "$(dirname "$0")" && pwd)
+bin=$(cd "$(dirname "$0")/../bin" && pwd)
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/open-tasks-test.XXXXXX") || exit 2
 trap 'rm -rf "$tmp"' EXIT
 failed=0
@@ -74,7 +74,7 @@ expected="## 作業中
 "
 
 check() { if eval "$2"; then pass "$1"; else fail "$1: code=$code out=$out"; fi; }
-run() { : >"$STUB_LOG"; out=$("$bin/open-tasks" "$@" 2>&1); code=$?; }
+run() { : >"$STUB_LOG"; out=$("$bin/karo-open-tasks" "$@" 2>&1); code=$?; }
 
 run --label project:github.com/acme/demo
 check "the tables come out as expected and exit 0" '[[ $code -eq 0 && $out == "${expected%$'\''\n'\''}" ]]'

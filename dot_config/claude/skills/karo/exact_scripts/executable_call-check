@@ -1,11 +1,11 @@
 #!/bin/sh
 # PreToolUse hook on Bash: stops calls that bypass what the settings of KARO_HOME expect.
-# A path under ~/.config/claude/skills/karo/ (where this plugin is deployed) written another way
-# ($HOME or ${HOME} in place of ~, or the home directory spelled out) anywhere in the command stops,
-# reads included: sandbox.excludedCommands matches the command text as written and lists the ~ form
-# only, and a read works just as well with ~.
+# A path to a script in the plugin's bin/ (…/bin/karo-<name>) anywhere in the command stops: the
+# skills call those scripts by name, and permission rules and sandbox.excludedCommands match the
+# command text as written and list the names only, so a path stays in the sandbox and asks. The other
+# scripts (the helpers and the tests in scripts/) may be called by path.
 # A git rebase that asks to leave the sandbox stops (git rebase --abort passes): a branch of KARO_HOME is
-# rebased by the karo:land skill's scripts/land <branch> --rebase, which is the one way that rebases
+# rebased by the karo:land skill's karo-land <branch> --rebase, which is the one way that rebases
 # with git's hooks off.
 # A herdr call that touches the Herdr socket stops when it is joined to anything else (pipe, &&,
 # ||, ;, redirection other than an fd duplicate such as 2>&1, $(...), backquote, newline), and a
@@ -16,14 +16,13 @@
 # herdr, so a search for the text, a jq filter or a script written through a heredoc is not mistaken
 # for a call. This is not a shell parser: a shape it cannot read passes.
 # usage: call-check < <PreToolUse hook input JSON>   (exit 2 with the reason on stderr to stop)
-verdict=$(jq -r --arg home "$HOME/" '
+verdict=$(jq -r '
   (.tool_input.command // "") as $cmd
   | ($cmd
      | gsub("<<-?[ \t]*([\"'\''])?(?<t>[A-Za-z_][A-Za-z0-9_]*)[\"'\'']?(?<rest>[^\n]*)\n([\\s\\S]*?\n)?\\k<t>(?=\n|$)"; "<<H\(.rest)")
      | gsub("\\\\.|'\''[^'\'']*'\''|\"(\\\\.|[^\"\\\\])*\""; "Q")
      | gsub("[0-9]*[<>]&[0-9-]+"; " ")) as $bare
-  | if ($cmd | contains($home + ".config/claude/skills/karo/"))
-      or ($cmd | test("\\$(HOME|\\{HOME\\})\"?/\\.config/claude/skills/karo/")) then "absolute"
+  | if ($cmd | test("/bin/karo-[A-Za-z0-9]")) then "path"
     elif .tool_input.dangerouslyDisableSandbox == true
       and ($bare | test("(^|[\\s;&|(])git(\\s+-[cC]\\s+\\S+)*\\s+rebase(?![\\w-])(?!\\s+--abort)")) then "rebase"
     elif ($bare | test("(^|[\\s;&|(`/])herdr\\s+(status|agent|workspace|worktree|tab|pane|api)(?![\\w-])") | not) then "pass"
@@ -31,14 +30,14 @@ verdict=$(jq -r --arg home "$HOME/" '
     elif .tool_input.dangerouslyDisableSandbox == true then "herdr-unsandboxed"
     else "pass" end')
 case $verdict in
-  absolute)
+  path)
     cat >&2 <<EOF
-このコマンドは ~/.config/claude/skills/karo/ を ~ 以外の書き方（ホームの絶対パスや \$HOME）で指している。sandbox.excludedCommands は ~ の形だけを載せているので、ほかの書き方は除外に当たらず sandbox に残り、Operation not permitted で止まる。~/.config/claude/skills/karo/… のように ~ の形に書き直して呼び直す。
+このコマンドは karo の plugin の bin/ の script（…/bin/karo-<name>）をパスで指している。settings の規則と sandbox.excludedCommands は名前の形（karo-land など）だけを載せているので、パスの呼び出しは規則に当たらず、確認が出るか sandbox に残って Operation not permitted で止まる。パスを付けずに karo-land のように名前だけで、単独で呼び直す。
 EOF
     exit 2 ;;
   rebase)
     cat >&2 <<EOF
-このコマンドは git rebase を sandbox の外で走らせようとしている。KARO_HOME のリポジトリのブランチの rebase は、karo が ~/.config/claude/skills/karo/skills/land/scripts/land <branch> --rebase を単独で実行して行う。Agent は sandbox の中で rebase し、unable to unlink old で落ちたら git rebase --abort で戻して作業を止め、karo に land --rebase を頼むと報告する。
+このコマンドは git rebase を sandbox の外で走らせようとしている。KARO_HOME のリポジトリのブランチの rebase は、karo が karo-land <branch> --rebase を単独で実行して行う。Agent は sandbox の中で rebase し、unable to unlink old で落ちたら git rebase --abort で戻して作業を止め、karo に karo-land --rebase を頼むと報告する。
 EOF
     exit 2 ;;
   herdr-joined) what="このコマンドは herdr に別のコマンドかリダイレクトをつないでいる" ;;

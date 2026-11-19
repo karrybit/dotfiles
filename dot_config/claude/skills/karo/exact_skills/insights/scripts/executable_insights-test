@@ -5,7 +5,7 @@
 # the counts they should. A bd stub on PATH answers bd query and bd show with sample JSON.
 # usage: insights-test
 set -uo pipefail
-bin=$(cd "$(dirname "$0")" && pwd)
+bin=$(cd "$(dirname "$0")/../../../bin" && pwd)
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/insights-test.XXXXXX") || exit 2
 trap 'rm -rf "$tmp"' EXIT
 # /bin/bash on macOS cannot make a here document while the current folder is one it may not write, even
@@ -53,15 +53,15 @@ day() {
     '{"type":"assistant","uuid":"a0","timestamp":"2026-11-08T01:00:01.000Z","sessionId":"s1","message":{"id":"m0","model":"claude-opus-5-5","content":[{"type":"tool_use","id":"x0","name":"Bash","input":{"command":"ls"}}]}}' \
     '{"type":"user","uuid":"u1","timestamp":"2026-11-09T01:00:00.000Z","sessionId":"s1","origin":{"kind":"human"},"message":{"content":"hello"}}' \
     '{"type":"assistant","uuid":"a1","timestamp":"2026-11-09T01:00:10.000Z","sessionId":"s1","message":{"id":"m1","model":"claude-opus-5-5","content":[{"type":"tool_use","id":"b1","name":"Bash","input":{"command":"ls"}}]}}' \
-    '{"type":"assistant","uuid":"a2","timestamp":"2026-11-09T01:00:10.000Z","sessionId":"s1","message":{"id":"m1","model":"claude-opus-5-5","content":[{"type":"tool_use","id":"b12","name":"Bash","input":{"command":"~/.config/claude/skills/karo/scripts/crit-open 3000"}},{"type":"tool_use","id":"b17","name":"Bash","input":{"command":"~/.config/claude/skills/karo/skills/herdr-agent/scripts/agent-ctl start t-ex0009 /p/brief.md tab t-ex0008"}},{"type":"tool_use","id":"b18","name":"Bash","input":{"command":"~/.config/claude/skills/karo/skills/herdr-agent/scripts/agent-ctl close t-ex0009"}},{"type":"tool_use","id":"b19","name":"Bash","input":{"command":"~/.config/claude/skills/karo/skills/herdr-agent/scripts/agent-report --wait t-ex0009"}},{"type":"tool_use","id":"b3","name":"Write","input":{"file_path":"/p/scratchpad/brief.md"}},{"type":"tool_use","id":"b4","name":"Read","input":{"file_path":"/x"}},{"type":"tool_use","id":"b5","name":"AskUserQuestion","input":{}}]}}' \
+    '{"type":"assistant","uuid":"a2","timestamp":"2026-11-09T01:00:10.000Z","sessionId":"s1","message":{"id":"m1","model":"claude-opus-5-5","content":[{"type":"tool_use","id":"b12","name":"Bash","input":{"command":"karo-crit-open 3000"}},{"type":"tool_use","id":"b17","name":"Bash","input":{"command":"karo-agent-ctl start t-ex0009 /p/brief.md tab t-ex0008"}},{"type":"tool_use","id":"b18","name":"Bash","input":{"command":"karo-agent-ctl close t-ex0009"}},{"type":"tool_use","id":"b19","name":"Bash","input":{"command":"karo-agent-report --wait t-ex0009"}},{"type":"tool_use","id":"b3","name":"Write","input":{"file_path":"/p/scratchpad/brief.md"}},{"type":"tool_use","id":"b4","name":"Read","input":{"file_path":"/x"}},{"type":"tool_use","id":"b5","name":"AskUserQuestion","input":{}}]}}' \
     "{\"type\":\"user\",\"uuid\":\"r1\",\"timestamp\":\"2026-11-09T01:00:40.000Z\",\"sessionId\":\"s1\",\"permissionDecision\":{\"decision\":\"accept\",\"source\":\"$1\"},\"message\":{\"content\":[{\"type\":\"tool_result\",\"tool_use_id\":\"b1\",\"content\":\"out\"}]}}" \
     '{"type":"user","uuid":"r4","timestamp":"2026-11-09T01:00:41.000Z","sessionId":"s1","permissionDecision":{"decision":"reject","source":"config","reasonCode":"classifier:auto-mode"},"message":{"content":[{"type":"tool_result","tool_use_id":"b4","is_error":true,"content":"Permission for this action was denied by the Claude Code auto mode classifier."}]}}' \
     '{"type":"user","uuid":"r5","timestamp":"2026-11-09T01:02:00.000Z","sessionId":"s1","permissionDecision":{"decision":"accept","source":"user_temporary"},"message":{"content":[{"type":"tool_result","tool_use_id":"b5","content":"answered"}]}}'
   [ "${2:-}" != extra ] || printf '%s\n' '{"type":"assistant","uuid":"a3","timestamp":"2026-11-09T01:02:10.000Z","sessionId":"s1","message":{"id":"m2","model":"claude-opus-5-5","content":[{"type":"tool_use","id":"b6","name":"Bash","input":{"command":"pwd"}}]}}'
   # Calls that read a step script, or run a script that is no skill step, count.
-  [ "${2:-}" != reads ] || printf '%s\n' '{"type":"assistant","uuid":"a3","timestamp":"2026-11-09T01:02:10.000Z","sessionId":"s1","message":{"id":"m2","model":"claude-opus-5-5","content":[{"type":"tool_use","id":"b20","name":"Bash","input":{"command":"rg foo ~/.config/claude/skills/karo/skills/herdr-agent/scripts/agent-ctl"}},{"type":"tool_use","id":"b21","name":"Bash","input":{"command":"~/.config/claude/skills/karo/skills/herdr-agent/scripts/agent-ctl-test"}},{"type":"tool_use","id":"b23","name":"Bash","input":{"command":"rg foo ~/.config/claude/skills/karo/scripts/commit"}},{"type":"tool_use","id":"b24","name":"Bash","input":{"command":"~/.config/claude/skills/karo/scripts/fmcheck doc/a.md"}}]}}'
+  [ "${2:-}" != reads ] || printf '%s\n' '{"type":"assistant","uuid":"a3","timestamp":"2026-11-09T01:02:10.000Z","sessionId":"s1","message":{"id":"m2","model":"claude-opus-5-5","content":[{"type":"tool_use","id":"b20","name":"Bash","input":{"command":"rg foo /opt/plugins/karo/bin/karo-agent-ctl"}},{"type":"tool_use","id":"b21","name":"Bash","input":{"command":"/opt/plugins/karo/skills/herdr-agent/scripts/agent-ctl-test"}},{"type":"tool_use","id":"b23","name":"Bash","input":{"command":"rg foo /opt/plugins/karo/bin/karo-commit"}},{"type":"tool_use","id":"b24","name":"Bash","input":{"command":"/opt/plugins/karo/scripts/fmcheck doc/a.md"}}]}}'
   # Runs of karo's step scripts and bd do not count; ~/bin/mine and ~/bin/other count unless uncounted: lists them.
-  [ "${2:-}" != karo ] || printf '%s\n' '{"type":"assistant","uuid":"a3","timestamp":"2026-11-09T01:02:10.000Z","sessionId":"s1","message":{"id":"m2","model":"claude-opus-5-5","content":[{"type":"tool_use","id":"k1","name":"Bash","input":{"command":"~/.config/claude/skills/karo/scripts/commit s b doc/i.md"}},{"type":"tool_use","id":"k2","name":"Bash","input":{"command":"~/.config/claude/skills/karo/scripts/karo-check"}},{"type":"tool_use","id":"k3","name":"Bash","input":{"command":"~/.config/claude/skills/karo/skills/land/scripts/land feat/agent/x --rebase"}},{"type":"tool_use","id":"k4","name":"Bash","input":{"command":"~/.config/claude/skills/karo/skills/insights/scripts/insights 2026-11-09"}},{"type":"tool_use","id":"k7","name":"Bash","input":{"command":"~/.config/claude/skills/karo/scripts/view-open /p/doc/abc/1/index.html"}},{"type":"tool_use","id":"k8","name":"Bash","input":{"command":"~/.config/claude/skills/karo/scripts/crit-open 3000"}},{"type":"tool_use","id":"k9","name":"Bash","input":{"command":"bd ready --json"}},{"type":"tool_use","id":"k5","name":"Bash","input":{"command":"~/bin/mine x"}},{"type":"tool_use","id":"k6","name":"Bash","input":{"command":"~/bin/other"}}]}}'
+  [ "${2:-}" != karo ] || printf '%s\n' '{"type":"assistant","uuid":"a3","timestamp":"2026-11-09T01:02:10.000Z","sessionId":"s1","message":{"id":"m2","model":"claude-opus-5-5","content":[{"type":"tool_use","id":"k1","name":"Bash","input":{"command":"karo-commit s b doc/i.md"}},{"type":"tool_use","id":"k2","name":"Bash","input":{"command":"karo-check"}},{"type":"tool_use","id":"k3","name":"Bash","input":{"command":"karo-land feat/agent/x --rebase"}},{"type":"tool_use","id":"k4","name":"Bash","input":{"command":"karo-insights 2026-11-09"}},{"type":"tool_use","id":"k7","name":"Bash","input":{"command":"karo-view-open /p/doc/abc/1/index.html"}},{"type":"tool_use","id":"k8","name":"Bash","input":{"command":"karo-crit-open 3000"}},{"type":"tool_use","id":"k9","name":"Bash","input":{"command":"bd ready --json"}},{"type":"tool_use","id":"k5","name":"Bash","input":{"command":"~/bin/mine x"}},{"type":"tool_use","id":"k6","name":"Bash","input":{"command":"~/bin/other"}}]}}'
   printf '%s\n' \
     '{"type":"system","subtype":"turn_duration","uuid":"d1","timestamp":"2026-11-09T01:02:30.000Z","sessionId":"s1","durationMs":150500}'
 }
@@ -89,7 +89,7 @@ write() { # <approval source> [extra call]
     > "$tmp/claude/projects/-work-t10/g8.jsonl"
 }
 
-run() { out=$("$bin/insights" 2026-11-09 2>&1); code=$?; }
+run() { out=$("$bin/karo-insights" 2026-11-09 2>&1); code=$?; }
 check() { # <name> <jq expression that must be true>
   if [[ $code -eq 0 ]] && jq -e "$2" <<<"$out" >/dev/null 2>&1; then pass "$1"; else fail "$1: $code $out"; fi
 }
@@ -146,7 +146,7 @@ if [[ $code -eq 0 ]] && jq -e '.delegations == []' <<<"$out" >/dev/null && [[ $(
 BD_STUB=fail run
 if [[ $code -ne 0 && $out == *'no beads database found'* ]]; then pass "a failing bd fails insights"; else fail "failing bd: $code $out"; fi
 
-out=$("$bin/insights" 11/09 2>&1); code=$?
+out=$("$bin/karo-insights" 11/09 2>&1); code=$?
 if [[ $code -eq 2 ]]; then pass "a date not in YYYY-MM-DD is a usage error"; else fail "usage: $code $out"; fi
 
 echo "insights-test: $failed failure(s)"

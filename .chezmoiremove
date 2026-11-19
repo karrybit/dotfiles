@@ -50,6 +50,14 @@
 # not exact_, so the removed examples.md stays on a machine otherwise.
 .config/claude/skills/karo/skills/record/examples.md
 
+# The karo plugin's entry scripts are in its bin/ as karo-<name>. The skill
+# folders are not exact_, so the old copies stay on a machine otherwise.
+.config/claude/skills/karo/skills/land/scripts/land
+.config/claude/skills/karo/skills/insights/scripts/insights
+.config/claude/skills/karo/skills/herdr-agent/scripts/agent-ctl
+.config/claude/skills/karo/skills/herdr-agent/scripts/agent-report
+.config/claude/skills/karo/skills/herdr-agent/scripts/safe-key
+
 # The crit eval's branch case has no port-from-target grader. The evals folder
 # is not exact_, so the removed grader stays on a machine otherwise.
 .config/claude/skills/karrybit/evals/crit/plugin-eval/branch/graders/port-from-target.md

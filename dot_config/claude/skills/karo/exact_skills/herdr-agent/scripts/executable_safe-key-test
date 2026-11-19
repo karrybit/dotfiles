@@ -6,12 +6,12 @@
 # to a pane showing a pager;
 # and refuses any other argument, against a herdr on PATH that logs what it is sent. The rules a
 # caller's settings.json needs for safe-key are checked by agent-ctl-test.
-# usage: safe-key-test   (tests the safe-key beside this script; its files go to a temporary
+# usage: safe-key-test   (tests the plugin's bin/karo-safe-key; its files go to a temporary
 #        directory that is removed)
 set -uo pipefail
 exec </dev/null
-bin=$(cd "$(dirname "$0")" && pwd)
-sk=$bin/safe-key
+bin=$(cd "$(dirname "$0")/../../../bin" && pwd)
+sk=$bin/karo-safe-key
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/safe-key-test.XXXXXX") || exit 2
 trap 'rm -rf "$tmp"' EXIT
 failed=0

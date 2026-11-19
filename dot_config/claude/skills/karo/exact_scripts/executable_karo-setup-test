@@ -10,7 +10,7 @@
 # usage: karo-setup-test
 set -uo pipefail
 exec </dev/null
-bin=$(cd "$(dirname "$0")" && pwd)
+bin=$(cd "$(dirname "$0")/../bin" && pwd)
 plugin=$(cd "$bin/.." && pwd)
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/karo-setup-test.XXXXXX") || exit 2
 failed=0
@@ -145,7 +145,7 @@ run check "$stubs" --check
 if [[ $code -eq 0 && -z $(ls -A "$tmp/check") ]]; then pass "--check writes nothing"; else fail "--check: exit $code: $out"; fi
 
 # The skeleton's settings, with the settings.local.json that karo-setup makes, hold what karo's scripts need.
-out=$("$bin/settings-test" "$plugin/skeleton/.claude/settings.json" "$k/.claude/settings.local.json" "$plugin/skeleton/.claude/karo-settings.json" 2>&1); code=$?
+out=$("$bin/karo-settings-test" "$plugin/skeleton/.claude/settings.json" "$k/.claude/settings.local.json" "$plugin/skeleton/.claude/karo-settings.json" 2>&1); code=$?
 if [[ $code -eq 0 ]]; then pass "skeleton settings pass settings-test"; else fail "skeleton settings: $(printf '%s\n' "$out" | rg '^FAIL|failure')"; fi
 
 echo "karo-setup-test: $failed failure(s), files in $tmp" >&2

@@ -6,15 +6,15 @@
 # A failed check, or a rumdl that cannot run (one that is not on PATH, say), unstages the paths, leaves the
 # files as written, and prints "NG <subject>" after the reason; a commit prints "OK <short hash> <subject>".
 # rumdl fmt exits 0 when only problems it cannot fix are left, so those do not stop the commit.
-# usage: commit <subject> <body> <path>...   (paths from KARO_HOME, each under a folder in record-folders
-#        beside this script; the body says why)
+# usage: karo-commit <subject> <body> <path>...   (paths from KARO_HOME, each under a folder in the plugin's
+#        scripts/record-folders; the body says why)
 # Environment: KARO_HOME (default ~/karo). Runs inside the sandbox: it writes only KARO_HOME, its .git, and
 # a temporary folder under TMPDIR that it removes.
 set -u
-[ $# -ge 3 ] && [ -n "$2" ] || { echo "usage: commit <subject> <body (why)> <path>..." >&2; exit 2; }
+[ $# -ge 3 ] && [ -n "$2" ] || { echo "usage: karo-commit <subject> <body (why)> <path>..." >&2; exit 2; }
 subject=$1 body=$2; shift 2
 bin=$(cd "$(dirname "$0")" && pwd)
-read -r -a folders < "$bin/record-folders"
+read -r -a folders < "$bin/../scripts/record-folders"
 . "${0%/*}/../lib/karo-env"
 cd "$KARO_HOME" || exit 2
 for p; do

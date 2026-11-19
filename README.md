@@ -255,9 +255,10 @@ and the wheel select entries; `Esc` or `Ctrl-C` quits.
 terminal-browser (`work` profile, the Homebrew cask in `Brewfile.work`) draws
 a browser in a Herdr pane. It comes from Homebrew, not aqua, because the copy
 aqua unpacks fails macOS's code signature check and macOS refuses to open it.
-The karo plugin's `crit-open` and `view-open` open it through the `tb-view`
-beside them, which names the new pane `view - <name>` when terminal-browser is
-its foreground process. `crit-open` reloads the tab instead when one already
+The karo plugin's `karo-crit-open` and `karo-view-open` open it through the
+`tb-view` in its `scripts/`, which names the new pane `view - <name>` when
+terminal-browser is its foreground process. `karo-crit-open` reloads the tab
+instead when one already
 shows the review's `http://localhost:<port>`, and otherwise points a tab
 showing a crit review at the new URL when crit no longer answers on that tab's
 port, so a review reopened on a new port keeps its tab and each running review

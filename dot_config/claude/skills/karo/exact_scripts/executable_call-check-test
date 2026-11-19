@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2016,SC2088  # the commands are single-quoted on purpose: they are the hook's input
-# Show that call-check stops a ~/.config/claude/skills/karo path written without ~ (the herdr-agent
-# skill's scripts included), a git rebase that asks to leave the sandbox, a herdr call joined to
+# Show that call-check stops a path to a script in the plugin's bin/ (the herdr-agent skill's
+# scripts included, reads too), a git rebase that asks to leave the sandbox, a herdr call joined to
 # another command or a file redirection, and a lone herdr call that asks to leave the sandbox, while
-# it lets through ~ calls, git rebase --abort, a rebase inside the sandbox, lone herdr calls (2>&1
+# it lets through calls by name, tests in scripts/ by path, git rebase --abort, a rebase inside the sandbox, lone herdr calls (2>&1
 # included), and quoted text and heredoc bodies that mention git rebase or herdr. settings-test
 # checks that karo's hooks/hooks.json runs it.
 # usage: call-check-test [<call-check>]   (default: the one beside this script)
@@ -24,33 +24,28 @@ run() {
     '{hook_event_name: "PreToolUse", tool_name: "Bash", tool_input: {command: $c, dangerouslyDisableSandbox: $d}}' |
     LC_ALL=en_US.UTF-8 "$hc" 2>&1); code=$?
 }
-stops_bin() {
+stops_path() {
   run "$@"
-  if [[ $code -eq 2 && $out == *'書き方（ホームの絶対パスや $HOME）で指している。'* && $out == *'~/.config/claude/skills/karo/… のように ~ の形に書き直して'* ]]; then pass "stops_bin: $1"
-  else fail "stops_bin: $1: exit $code: $out"; fi
+  if [[ $code -eq 2 && $out == *'bin/ の script（…/bin/karo-<name>）をパスで指している。'* && $out == *'名前だけで、単独で呼び直す'* ]]; then pass "stops_path: $1"
+  else fail "stops_path: $1: exit $code: $out"; fi
 }
 passes() {
   run "$@"
   if [[ $code -eq 0 && -z $out ]]; then pass "passes: $1 ${2:-}"; else fail "passes: $1 ${2:-}: exit $code: $out"; fi
 }
 
-stops_bin "$HOME/.config/claude/skills/karo/scripts/commit s b x"
-stops_bin '$HOME/.config/claude/skills/karo/skills/land/scripts/land b'
-stops_bin '${HOME}/.config/claude/skills/karo/scripts/karo-check --only doc/a.md'
-stops_bin '"$HOME"/.config/claude/skills/karo/scripts/karo-check'
-stops_bin "cat $HOME/.config/claude/skills/karo/scripts/call-check"
-stops_bin "$HOME/.config/claude/skills/karo/scripts/commit s b x | head"
-stops_bin "$HOME/.config/claude/skills/karo/skills/herdr-agent/scripts/agent-ctl close a1"
-stops_bin '$HOME/.config/claude/skills/karo/skills/herdr-agent/scripts/agent-report a1'
-stops_bin '${HOME}/.config/claude/skills/karo/skills/herdr-agent/scripts/agent-ctl close a1'
-stops_bin '"$HOME"/.config/claude/skills/karo/skills/herdr-agent/scripts/safe-key enter a1'
-stops_bin "cat $HOME/.config/claude/skills/karo/skills/herdr-agent/scripts/agent-ctl"
-stops_bin "$HOME/.config/claude/skills/karo/skills/herdr-agent/scripts/agent-report a1 | head"
+stops_path '~/.claude/skills/karo/bin/karo-commit s b x'
+stops_path "$HOME/.claude/skills/karo/bin/karo-land b"
+stops_path '$HOME/.claude/skills/karo/bin/karo-check --only doc/a.md'
+stops_path '"${CLAUDE_PLUGIN_ROOT}"/bin/karo-check'
+stops_path '/opt/plugins/karo/bin/karo-agent-ctl close a1'
+stops_path 'cat /opt/plugins/karo/bin/karo-agent-ctl'
+stops_path '/opt/plugins/karo/bin/karo-agent-report a1 | head'
 
 # git rebase outside the sandbox, in the shapes karo and Agents have run it in.
 stops_rebase() {
   run "$1" true
-  if [[ $code -eq 2 && $out == *'git rebase を sandbox の外で'* && $out == *'karo/skills/land/scripts/land <branch> --rebase'* ]]; then pass "stops_rebase: $1"
+  if [[ $code -eq 2 && $out == *'git rebase を sandbox の外で'* && $out == *'karo-land <branch> --rebase'* ]]; then pass "stops_rebase: $1"
   else fail "stops_rebase: $1: exit $code: $out"; fi
 }
 stops_rebase 'git -c core.hooksPath=/dev/null -c core.fsmonitor=false -c maintenance.auto=false -c gc.auto=0 -C /home/owner/.local/state/karo/worktrees/land-agent-branches rebase main'
@@ -87,10 +82,12 @@ stops_herdr "echo \"it's\"; herdr pane list"
 stops_herdr 'herdr status --json' true
 stops_herdr 'herdr pane layout --current' true
 
-passes '~/.config/claude/skills/karo/scripts/commit s b x'
-passes '~/.config/claude/skills/karo/skills/land/scripts/land b'
-passes '~/.config/claude/skills/karo/skills/herdr-agent/scripts/agent-ctl close a1'
-passes '~/.config/claude/skills/karo/skills/herdr-agent/scripts/safe-key enter a1'
+passes 'karo-commit s b x'
+passes 'karo-land b'
+passes 'karo-agent-ctl close a1'
+passes 'karo-safe-key enter a1'
+passes '/opt/plugins/karo/scripts/karo-check-test'
+passes '/opt/plugins/karo/skills/land/scripts/land-test'
 passes 'git status'
 passes 'git status' true
 passes 'herdr agent list'

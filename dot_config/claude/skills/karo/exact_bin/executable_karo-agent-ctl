@@ -53,12 +53,12 @@ set -eu
 
 usage() {
   printf '%s\n' \
-    'usage: agent-ctl start [--goal <condition>] [--permission-mode <mode>] <name> <brief-file> <place>' \
+    'usage: karo-agent-ctl start [--goal <condition>] [--permission-mode <mode>] <name> <brief-file> <place>' \
     '         <place>: dir <path> [<branch>] | worktree <repo> <base> <branch> <path>' \
     '                | herdr-worktree <repo> <branch> | tab <agent>' \
-    '       agent-ctl send [--interrupt] <name> <text>' \
-    '       agent-ctl send --goal <condition> <name>' \
-    '       agent-ctl close <name>' >&2
+    '       karo-agent-ctl send [--interrupt] <name> <text>' \
+    '       karo-agent-ctl send --goal <condition> <name>' \
+    '       karo-agent-ctl close <name>' >&2
   exit 2
 }
 
@@ -283,7 +283,7 @@ merged_on_origin() {
 # workspace herdr worktree create opened for it ({parent: true, workspace,
 # repo_key}). Lines are appended, and a line is dropped by writing the rest to
 # a temporary file in the same folder and moving it over the ledger.
-. "${0%/*}/../../../lib/karo-env"
+. "${0%/*}/../lib/karo-env"
 ledger=$HERDR_AGENT_STATE_HOME/ledger
 if [ -n "${HERDR_AGENT_TEST_LEDGER:-}" ]; then
   test_dir=$(cd "${HERDR_AGENT_TEST_LEDGER%/*}" 2>/dev/null && pwd -P || true)

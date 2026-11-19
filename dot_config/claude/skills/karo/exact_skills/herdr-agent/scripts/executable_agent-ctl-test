@@ -11,13 +11,13 @@
 # start steps are checked against a herdr on PATH that starts no agent, and --goal and send against
 # one that logs the prompts: /goal follows the brief, never goes into a dialog, and a condition that
 # could submit another line, hide text or clear the goal stops agent-ctl before it makes anything.
-# The rules and values a caller's settings.json needs are checked by karo's scripts/settings-test.
-# usage: agent-ctl-test   (tests the agent-ctl beside this script, inside Herdr; the repositories go
+# The rules and values a caller's settings.json needs are checked by karo's bin/karo-settings-test.
+# usage: agent-ctl-test   (tests the plugin's bin/karo-agent-ctl, inside Herdr; the repositories go
 #        to a folder made with mktemp, left for the OS to clear, and the workspaces it made are closed)
 set -uo pipefail
 exec </dev/null
-bin=$(cd "$(dirname "$0")" && pwd)
-ac=$bin/agent-ctl
+bin=$(cd "$(dirname "$0")/../../../bin" && pwd)
+ac=$bin/karo-agent-ctl
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/agent-ctl-test.XXXXXX") || exit 2
 tmp=$(cd "$tmp" && pwd -P)
 # The caller's settings may set these; each case below sets what it needs.

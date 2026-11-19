@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2016,SC2088  # the filters are jq, and the ~ paths are rule text, not paths to expand
+# shellcheck disable=SC2016  # the filters are jq
 # Show that a project's settings hold what karo's scripts need from them: karo enabled, the scripts
 # a skill runs as one call allowed and kept out of ask and deny, view-open in ask and kept out of allow
 # and deny (each open asks first, since the page it opens can run scripts outside the sandbox), the
@@ -12,14 +12,15 @@
 # the settings' hooks: it must run call-check by a PreToolUse hook on Bash and post-edit by a
 # PostToolUse hook on Edit|Write, and no settings hook may name a karo script or repeat one of its
 # commands,
-# since that hook would run twice. Each missing value is a FAIL line of its own. The rules use the ~
-# form, since permission rules and sandbox.excludedCommands match the command text as written.
+# since that hook would run twice. Each missing value is a FAIL line of its own. The rules name the
+# scripts by their names in the plugin's bin/ (karo-land), since permission rules and
+# sandbox.excludedCommands match the command text as written and skills call the scripts by name.
 # The checks read the files' values merged the way Claude Code merges settings layers: arrays
 # joined without duplicates, objects merged key by key, and a later file's other values winning.
-# usage: settings-test <settings.json> [<settings.json>...]
+# usage: karo-settings-test <settings.json> [<settings.json>...]
 set -uo pipefail
 exec </dev/null
-[[ $# -ge 1 ]] || { echo "usage: settings-test <settings.json> [<settings.json>...]" >&2; exit 2; }
+[[ $# -ge 1 ]] || { echo "usage: karo-settings-test <settings.json> [<settings.json>...]" >&2; exit 2; }
 hooks_file=$(cd "$(dirname "$0")/.." && pwd)/hooks/hooks.json
 for f in "$@" "$hooks_file"; do
   jq -e 'type == "object"' "$f" >/dev/null 2>&1 || { echo "settings-test: $f is not a JSON object" >&2; exit 2; }
@@ -39,7 +40,6 @@ pass() { printf 'ok\t%s\n' "$1"; }
 
 # check <name> <JSON text> <jq filter that must give true> [<jq options>...]
 check() { if jq -ne "${@:4}" --argjson json "$2" "\$json | $3" >/dev/null 2>&1; then pass "$1"; else fail "$1"; fi; }
-karo='~/.config/claude/skills/karo'
 # hook <event> <matcher wanted> <script>: a hook of the event in hooks.json whose matcher covers the
 # wanted one runs the script.
 hook() {
@@ -50,28 +50,31 @@ hook() {
 }
 
 check "karo is enabled" "$settings" '.enabledPlugins // {} | to_entries | any((.key | startswith("karo@")) and .value == true)'
-for rule in "scripts/commit *" "scripts/crit-open *" "skills/land/scripts/land *" "scripts/karo-check" "scripts/karo-check *" \
-  "scripts/open-tasks" "scripts/open-tasks *"; do
-  check "Bash($karo/$rule) is allowed and in neither ask nor deny" "$settings" '
+for rule in "karo-commit *" "karo-crit-open *" "karo-land *" "karo-check" "karo-check *" \
+  "karo-open-tasks" "karo-open-tasks *"; do
+  check "Bash($rule) is allowed and in neither ask nor deny" "$settings" '
     any(.permissions.allow[]?; . == "Bash(\($r))")
       and ([.permissions.ask[]?, .permissions.deny[]?] | any(startswith("Bash(" + ($r | rtrimstr(" *")))) | not)' \
-    --arg r "$karo/$rule"
+    --arg r "$rule"
 done
-check "Bash($karo/scripts/view-open *) is in ask and in neither allow nor deny" "$settings" '
+check "Bash(karo-view-open *) is in ask and in neither allow nor deny" "$settings" '
   any(.permissions.ask[]?; . == "Bash(\($r))")
     and ([.permissions.allow[]?, .permissions.deny[]?] | any(startswith("Bash(" + ($r | rtrimstr(" *")))) | not)' \
-  --arg r "$karo/scripts/view-open *"
-for command in "scripts/crit-open *" "skills/land/scripts/land *" "scripts/view-open *"; do
-  check "$karo/$command is in sandbox.excludedCommands" "$settings" 'any(.sandbox.excludedCommands[]?; . == $c)' --arg c "$karo/$command"
+  --arg r "karo-view-open *"
+# The scripts that must run outside the sandbox: land rebases and moves main, crit-open and view-open
+# open a Herdr pane, the herdr-agent skill's scripts call herdr, and insights and open-tasks run bd,
+# which cannot open the Beads lock inside the sandbox. open-tasks also runs with no argument.
+for command in "karo-land *" "karo-crit-open *" "karo-view-open *" "karo-agent-ctl *" "karo-agent-report *" \
+  "karo-safe-key *" "karo-insights *" "karo-open-tasks *" "karo-open-tasks"; do
+  check "$command is in sandbox.excludedCommands" "$settings" 'any(.sandbox.excludedCommands[]?; . == $c)' --arg c "$command"
 done
 check "tb-view, terminal-browser and open are neither allowed nor excluded" "$settings" '
   [(.permissions.allow // [])[], (.sandbox.excludedCommands // [])[]]
     | any(test("^(Bash\\()?((~|/)[^ ]*/)?(tb-view|terminal-browser|open)( |\\)|$)")) | not'
-# The herdr-agent skill's scripts check before they call herdr, so they are allowed and leave the
-# sandbox; herdr's own close, prompt and key commands keep their prompt.
-for s in agent-ctl agent-report safe-key; do
-  check "Bash($karo/skills/herdr-agent/scripts/$s *) is allowed" "$settings" 'any(.permissions.allow[]?; . == $r)' --arg r "Bash($karo/skills/herdr-agent/scripts/$s *)"
-  check "$karo/skills/herdr-agent/scripts/$s * is in sandbox.excludedCommands" "$settings" 'any(.sandbox.excludedCommands[]?; . == $c)' --arg c "$karo/skills/herdr-agent/scripts/$s *"
+# The herdr-agent skill's scripts check before they call herdr, so they are allowed; herdr's own close,
+# prompt and key commands keep their prompt.
+for s in karo-agent-ctl karo-agent-report karo-safe-key; do
+  check "Bash($s *) is allowed" "$settings" 'any(.permissions.allow[]?; . == $r)' --arg r "Bash($s *)"
 done
 check "env sets HERDR_AGENT_NAME_PATTERN" "$settings" '.env.HERDR_AGENT_NAME_PATTERN // "" | length > 0'
 # herdr takes no upper-case letter in an agent name, and agent-ctl refuses one, so the pattern holds no

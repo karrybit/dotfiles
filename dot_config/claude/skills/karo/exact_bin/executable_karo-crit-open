@@ -7,18 +7,18 @@
 # port, it points that tab at the URL and prints
 # "crit-open: opened <url> in the tab that showed <old url>". Otherwise it
 # opens the URL in a Herdr pane named "view - crit" beside the caller's,
-# through tb-view beside this script, and prints what tb-view prints.
+# through tb-view in the plugin's scripts/, and prints what tb-view prints.
 # --no-merge always opens a new pane instead of reusing a tab or adding one to
 # an existing pane. terminal-browser does not start
 # inside the sandbox, and a "*" in a permission rule or a sandbox exclusion
 # matches any run of words, so a rule on terminal-browser itself would also let
 # it run page scripts, proxy through ssh, or upgrade itself outside the
 # sandbox; this script takes only a port number and is the allowed form.
-# usage: crit-open [--no-merge] <port>
+# usage: karo-crit-open [--no-merge] <port>
 set -eu
 
 usage() {
-  echo "usage: crit-open [--no-merge] <port>" >&2
+  echo "usage: karo-crit-open [--no-merge] <port>" >&2
   exit 2
 }
 merge=
@@ -57,4 +57,4 @@ if [ -z "$merge" ]; then
 $crit_tabs
 EOF
 fi
-exec "$(dirname "$0")/tb-view" "view - crit" "$url" ${merge:+"$merge"}
+exec "${0%/*}/../scripts/tb-view" "view - crit" "$url" ${merge:+"$merge"}

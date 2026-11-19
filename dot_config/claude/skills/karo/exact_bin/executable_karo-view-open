@@ -1,7 +1,7 @@
 #!/bin/sh
 # Opens one file in terminal-browser, in a Herdr pane named "view - <name>"
-# (default "view - browser") beside the caller's, through the tb-view beside
-# this script, and prints what tb-view prints: an .html or .svg under
+# (default "view - browser") beside the caller's, through the tb-view in the
+# plugin's scripts/, and prints what tb-view prints: an .html or .svg under
 # doc/ of KARO_HOME, an explanation's index.html in the store
 # (<store>/<lowercase UUID>/index.html, the store being $KARO_DATA_HOME/html),
 # or an image or video anywhere, by absolute path.
@@ -10,7 +10,7 @@
 # come only from doc/ and the store, where the explain skill keeps its HTML.
 # The real path, with symlinks resolved, must pass the same check against the
 # real doc/ and store, so a link cannot lead a page in from outside them.
-# usage: view-open [--no-merge] <absolute path> [<name>]
+# usage: karo-view-open [--no-merge] <absolute path> [<name>]
 # Environment: KARO_HOME (default ~/karo), KARO_DATA_HOME (default
 # ${XDG_DATA_HOME:-~/.local/share}/karo).
 set -eu
@@ -19,7 +19,7 @@ set -eu
 karo=$KARO_HOME
 store=$KARO_DATA_HOME/html
 usage() {
-  echo "usage: view-open [--no-merge] <absolute path of an .html or .svg under $karo/doc, a $store/<UUID>/index.html, or a .png .jpg .jpeg .webp .gif .mp4 .webm> [<name of letters, digits, . _ -, starting with a letter or digit>]" >&2
+  echo "usage: karo-view-open [--no-merge] <absolute path of an .html or .svg under $karo/doc, a $store/<UUID>/index.html, or a .png .jpg .jpeg .webp .gif .mp4 .webm> [<name of letters, digits, . _ -, starting with a letter or digit>]" >&2
   exit 2
 }
 h='[0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
@@ -44,4 +44,4 @@ check "$1" "$karo" "$store"
 # A folder that does not exist keeps its given path, which no real path is under.
 check "$(realpath "$1")" "$(realpath "$karo" 2>/dev/null || echo "$karo")" \
   "$(realpath "$store" 2>/dev/null || echo "$store")"
-exec "$(dirname "$0")/tb-view" "view - ${2-browser}" "$1" ${merge:+"$merge"}
+exec "${0%/*}/../scripts/tb-view" "view - ${2-browser}" "$1" ${merge:+"$merge"}

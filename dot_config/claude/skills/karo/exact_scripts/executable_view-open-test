@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Show that view-open hands the tb-view beside it "view - <name>" (default
+# Show that view-open hands tb-view "view - <name>" (default
 # "view - browser") and the path, with --no-merge when it comes first, for an existing .html or .svg
 # under doc/ of KARO_HOME, an existing <store>/<lowercase UUID>/index.html in the store under
 # KARO_DATA_HOME or, when it is unset or empty, under karo/ of XDG_DATA_HOME or, when that is unset or
@@ -11,14 +11,14 @@
 # folder, opens only when its real path passes too, against the real doc/ and store, so a link in
 # doc/ or the store to an .html outside them, or an image name linked to an .html, is refused, and
 # KARO_HOME may itself be a symlink. It runs with HOME, KARO_HOME,
-# KARO_DATA_HOME, and XDG_DATA_HOME in a temporary directory that holds a copy of view-open beside
+# KARO_DATA_HOME, and XDG_DATA_HOME in a temporary directory that holds a copy of view-open and
 # a tb-view stub logging what it is given (tb-view-test covers tb-view). settings-test checks that the settings
 # ask before each view-open and run it outside the sandbox.
-# usage: view-open-test   (tests the view-open beside this script; its files go to a temporary
+# usage: view-open-test   (tests the plugin's bin/karo-view-open; its files go to a temporary
 #        directory that is removed)
 set -uo pipefail
 exec </dev/null
-bin=$(cd "$(dirname "$0")" && pwd)
+bin=$(cd "$(dirname "$0")/../bin" && pwd)
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/view-open-test.XXXXXX") || exit 2
 trap 'rm -rf "$tmp"' EXIT
 # /bin/bash on macOS cannot make a here document while the current folder is one it may not write, even
@@ -28,8 +28,8 @@ failed=0
 fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
 pass() { printf 'ok\t%s\n' "$1"; }
 
-mkdir "$tmp/bin" && cp "$bin/view-open" "$tmp/bin/" && cp -R "$bin/../lib" "$tmp/" || exit 2
-vo=$tmp/bin/view-open stub=$tmp/bin/tb-view
+mkdir "$tmp/bin" "$tmp/scripts" && cp "$bin/karo-view-open" "$tmp/bin/" && cp -R "$bin/../lib" "$tmp/" || exit 2
+vo=$tmp/bin/karo-view-open stub=$tmp/scripts/tb-view
 id=0f6c7d9e-3b1a-4c52-9e34-5a8d1b7c2e40
 mkdir -p "$tmp/karo/doc/abc/1" "$tmp/media" "$tmp/folder.png" "$tmp/data/html/$id/sub" \
   "$tmp/data/html/.tmp.abc123" "$tmp/data/html/0F6C7D9E-3B1A-4C52-9E34-5A8D1B7C2E40" "$tmp/data/html/abc" \

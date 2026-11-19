@@ -7,10 +7,10 @@
 # next stop when the stop it finds was handed over already, noted in $HERDR_AGENT_STATE_HOME/stops,
 # and "status: error" when herdr fails.
 # A name holding characters herdr does not take reaches herdr with each turned into "-".
-# usage: agent-report-test   (tests the agent-report beside this script; its files go to a
+# usage: agent-report-test   (tests the plugin's bin/karo-agent-report; its files go to a
 #        temporary directory that is removed)
 set -uo pipefail
-bin=$(cd "$(dirname "$0")" && pwd)
+bin=$(cd "$(dirname "$0")/../../../bin" && pwd)
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/agent-report-test.XXXXXX") || exit 2
 trap 'rm -rf "$tmp"' EXIT
 failed=0
@@ -71,7 +71,7 @@ stop='--until idle --until done --until blocked --until unknown'
 resume='--until working --until blocked --until unknown --timeout'
 
 states() { local name=$1; shift; printf '%s\n' "$@" > "$tmp/stub/$name.states"; }
-run() { : > "$tmp/log"; out=$("$bin/agent-report" "$@" 2>&1); code=$?; calls=$(tr '\n' ';' < "$tmp/log"); }
+run() { : > "$tmp/log"; out=$("$bin/karo-agent-report" "$@" 2>&1); code=$?; calls=$(tr '\n' ';' < "$tmp/log"); }
 
 states a1 "idle report"
 run a1
@@ -154,8 +154,8 @@ if [[ $code -eq 0 && $out == "checking the docs" ]]; then pass "taking the repor
 states c1 "idle pause" "idle report 2"
 states c2 "idle pause" "idle report-b 2"
 : > "$tmp/log"
-STUB_RESUME_SLEEP=1 "$bin/agent-report" --wait c1 > "$tmp/c1.out" 2>&1 &
-STUB_RESUME_SLEEP=1 "$bin/agent-report" --wait c2 > "$tmp/c2.out" 2>&1 &
+STUB_RESUME_SLEEP=1 "$bin/karo-agent-report" --wait c1 > "$tmp/c1.out" 2>&1 &
+STUB_RESUME_SLEEP=1 "$bin/karo-agent-report" --wait c2 > "$tmp/c2.out" 2>&1 &
 wait
 if [[ $(< "$tmp/c1.out") == "status: idle"$'\n'"$report" && $(< "$tmp/c2.out") == $'status: idle\n## 変更の要約\nreport of b' ]]; then pass "two agents waited on at once each get their own report"; else fail "parallel: $(< "$tmp/c1.out") / $(< "$tmp/c2.out")"; fi
 

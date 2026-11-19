@@ -7,7 +7,7 @@ The cases grant no `Bash`, so a run cannot reach a real Herdr server or start an
 ## Files
 
 - `plugin-eval/send-working`: the user wants to add an instruction to the agent `fixer`, which is `working`.
-  - `script-path`: the answer calls `agent-ctl send` by the `~/` form of the scripts path that the settings rules match.
+  - `script-path`: the answer calls `karo-agent-ctl send` by the name that the settings rules match.
   - `working-not-sent`: the answer waits for `idle` or `done`, or offers `--interrupt` only after asking whether interrupting is acceptable.
 - `plugin-eval/send-goal`: the user wants to send a /goal condition to the `idle` agent `fixer`.
   - `goal-flag`: the answer uses `agent-ctl send --goal` by the `~/` form of the path.

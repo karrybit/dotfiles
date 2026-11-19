@@ -8,7 +8,7 @@
 # parent shows as its ID alone. プロジェクト joins the part after the last `/` of each `project:<名前>`
 # label, each name once. Titles are cut at 40 characters, and `|` in a cell is escaped. The arguments
 # go on to `bd list`, so `--label project:<名前>` narrows it. A bd that fails exits with its status.
-# usage: open-tasks [<bd list option>...]
+# usage: karo-open-tasks [<bd list option>...]
 . "${0%/*}/../lib/karo-env"
 tasks=$(bd -C "$KARO_HOME" --readonly list --status open,in_progress,blocked,deferred --limit 0 --json "$@") || exit
 printf '%s\n' "$tasks" | jq -r '
