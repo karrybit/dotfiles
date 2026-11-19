@@ -23,6 +23,8 @@ user-invocable: false
 
 この表と下の「情報源」の表が、情報ごとの正本の置き場所を決める。パスは `$` で始まるものを除き `$KARO_HOME` からのパス。
 
+- この skill の 5 つの表（書き込み先、情報源、置き場所の補足、記録の更新、探す）が、karo の記録の規則の正本。`$KARO_HOME/AGENTS.md`・`$KARO_HOME/rule/` は、表を写さずにこの skill の節を指し、オーナーに固有の決まり（外のサービスと MTG の議事録を読む範囲など）だけを持つ。
+
 | 場所 | 内容 |
 | --- | --- |
 | `.beads`（Beads。`bd` で書く） | タスク・判断待ち・タスクかプロジェクトに閉じた決定と、タスクの出来事（claim・close の event と comment。レビューの要旨も comment）。書き方は `karo:tasks` skill |
@@ -36,7 +38,7 @@ user-invocable: false
 | `project/repo/<vcs>/<org>/<repo>/review/` | レビューの原本（新しくは書かない） |
 | `project/design/YYYY-MM-DD-design-doc-<話題>.md` | Design Doc。実現したいこと（機能）ごとに 1 本で、複数のリポジトリをまたいでよい。下の「置き場所の補足」のとおり反映したら消す |
 | `project/misc/<theme>.md` | リポジトリを持たない話題の運用の約束 |
-| `project/misc/<theme>/YYYY-MM-DD-<資料名>.md` | その話題の手順。直しても名前を変えない |
+| `project/misc/<theme>/YYYY-MM-DD-<資料名>.md` | その話題の手順。日付は作った日で、直しても名前を変えない |
 | `doc/<話題>.md` | 話題ごとにまとめた資料（人に渡すものも、karo やオーナーが読み返すものも） |
 | `$KARO_DATA_HOME/html/<UUID>/` | HTML の解説。git の外で、commit しない。書き方は `karo:explain` skill |
 
@@ -52,6 +54,7 @@ user-invocable: false
 | タスク・担当・判断待ち・タスクかプロジェクトに閉じた決定 | SessionStart の hook が出す Beads の一覧、`bd`（`karo:tasks` skill） |
 | karo 自身の長い目の決定と理由 | `decisions/` の Decision Record（下の「探す」） |
 | 経緯と理由 | 下の「探す」の手順と `git log` |
+| タスクの依存とボトルネックの分析 | bv の robot mode（`karo:tasks` skill の「分析する（bv）」）。タスクの状態の正は `bd` |
 | 今のセッションにも記録にもない過去の会話 | cass。当たりは過去の証拠で、今の決定の正本ではない（`karo:recall` skill） |
 | 会議や議論の内容 | `source/meeting/` の MTG の記録と、オーナーが接続した外のサービス（読む範囲は `$KARO_HOME/AGENTS.md` にあればそれに従う） |
 
@@ -81,7 +84,7 @@ user-invocable: false
 | レビュー結果を受け取った・中継した | `レビュー依頼:`・`変更依頼:`・`承認:`・`判定:` の comment（`karo:review` skill） | なし |
 | 作業を取り込んだ（karo の land、push、PR の merge） | タスクを閉じる | なし |
 | 判断が必要になった | decision の bead を作り、タスクの blocker にする | なし |
-| オーナーが決めた | decision の bead を閉じるか、`決定:` の comment。karo の長い目の方針なら、閉じる理由に Decision Record のパスだけを書く | karo の長い目の方針なら、`decisions/` の Decision Record |
+| オーナーが決めた | decision の bead を閉じるか、`決定:` の comment。karo の長い目の方針なら、判断待ちの bead を閉じる理由に Decision Record のパスだけを書く | karo の長い目の方針なら、`decisions/` の Decision Record |
 | Agent を終了した | 取り込まずに止めたときは claim を外す | なし |
 
 - どのタスクにも属さない運用の依頼（Agent の終了、状況の確認、karo の記録や規則の直し）では、Beads のタスクを作らない。記録を変えるときは返事を送る前に commit し、本文に、依頼が触れたタスク ID か `karo`、何をなぜしたか（規則を足したときはその理由）、出典 `会話 YYYY-MM-DD HH:MM` を書く。
@@ -98,23 +101,23 @@ user-invocable: false
 | 問い | 手順（1 行が 1 回の呼び出し） |
 | --- | --- |
 | セッション開始・compact 後 | SessionStart の hook の出力（`state.md`、Beads の一覧）。Beads の一覧がなければ、`karo:tasks` skill の「今の状況を読む」の「開いているタスク」と「判断待ち」 |
-| タスクの今の一覧 | `karo:tasks` skill の「今の状況を読む」の表 |
+| タスクの今の一覧（開いている・判断待ち・着手できる・止まっている・ある日から閉じた・作った・動いた・動いていない） | `karo:tasks` skill の「今の状況を読む」の表 |
 | タスクの経緯と今の状態 | `bd show <タスクID> --json --include-comments`、続けて `bd history <タスクID> --events --json`、続けて `rg -n <タスクID> "${KARO_STATE_HOME:-${XDG_STATE_HOME:-$HOME/.local/state}/karo}/state.md"; rg -lUP '\A---\n(?:(?!---\n).*\n)*?tasks:\n(?:  - .+\n)*  - <タスクID>\n' -g '!investigation/*/sources/**' .` |
 | 過去の会話 | `karo:recall` skill |
 | タスクの分析（依存・ボトルネック・次の候補） | `karo:tasks` skill の「分析する（bv）」 |
-| ある日からの出来事 | `karo:tasks` skill の「今の状況を読む」の「ある日から動いたタスク」、続けて `git log --since YYYY-MM-DD` |
+| ある日からの出来事 | `karo:tasks` skill の「今の状況を読む」の「ある日から動いたタスク」、続けて `git log --since YYYY-MM-DD`（運用の出来事は commit の本文にある） |
 | 委任するプロジェクトに効く決定と運用 | `cat project/*/<name>.md`、続けて `bd list --all --type decision --status closed --label-any project:<name>,project:all --json`、続けて `bd dep list <それらの ID> --direction up --type supersedes --json`（返った ID は置き換え済み）。karo の仕組みを変える委任では、下の「karo の今の長い目の決定」も読む |
-| karo の今の長い目の決定 | `rg -L '^status: deprecated$' decisions`。理由と出典はそのファイルの本文 |
+| karo の今の長い目の決定 | `rg --files-without-match '^status: deprecated$' decisions`（置き換え済みを除いた一覧）。理由と出典はそのファイルの本文 |
 | karo の長い目の決定を語で探す | `rg -n '<語>' decisions` |
-| タスクとプロジェクトの決定を語で探す | `bd list --all --type decision --desc-contains '<語>' --json` |
+| タスクとプロジェクトの決定を語で探す | `bd list --all --type decision --desc-contains '<語>' --json`（決定の文は本文にあり、comment は検索されない） |
 | Beads の決定の理由と出典 | `bd show <決定の ID> --json` |
 | MTG で決まったこと | `rg -n -A6 '^#+ (決定\|宿題)' source/meeting/YYYY-MM-DD-*.md` |
-| プロジェクトの現状 | `cat project/*/<name>.md`、開いているタスクは「タスクの今の一覧」に `--label project:<name>` を足す |
+| プロジェクトの現状 | `cat project/*/<name>.md`、開いているタスクは「タスクの今の一覧」に `--label project:<name>` を足す、効く決定は上の「委任するプロジェクトに効く決定と運用」と同じ |
 | HTML の解説（作る前） | `karo:explain` skill の 1 と 2 |
 | `doc/` の資料の最新版 | `cat doc/<話題>.md`。前の版は `git log -p -- doc/<話題>.md` |
 | 外に作ったもの・送った文面 | `bd list --all --notes-contains '<ID か URL の一部か相手>' --json`、続けて `bd list --all --desc-contains '<同じ語>' --json`、続けて `rg -n '<同じ語>' standup source` |
 | 調査の原文 | `investigation/YYYY-MM-DD-<話題>/map.md` の論点から原文の行へ。`rg -n '<語>' investigation/YYYY-MM-DD-<話題>/sources` |
-| 下書き・置き換え済み | `rg -lUP '\A---\n(?:(?!---\n).*\n)*?status: (?:draft\|deprecated)' -g '!investigation/*/sources/**' .`。Decision Record の置き換え先は古い記録の「状態」の節 |
+| 下書き・置き換え済み | `rg -lUP '\A---\n(?:(?!---\n).*\n)*?status: (?:draft\|deprecated)' -g '!investigation/*/sources/**' .`。Decision Record の置き換え先は古い記録の「状態」の節のリンク、置き換え元は新しい記録の「参照」の節のリンク。Beads の置き換え済みの決定は、上の「委任するプロジェクトに効く決定と運用」の `bd dep list` |
 
 ## Decision Record を書く
 

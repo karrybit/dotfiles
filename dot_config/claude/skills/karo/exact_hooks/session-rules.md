@@ -14,7 +14,7 @@
 
 ## 記録
 
-- 記録の置き場所、状態が変わったときに書くもの、探し方は、`karo:record` skill の「書き込み先」「記録の更新」「探す」にある。このセッションで初めて記録のファイルを書く前は `karo:record` skill を、初めて `bd` で書く前は `karo:tasks` skill を使う。
+- 記録の置き場所と情報源、状態が変わったときに書くもの、探し方は、`karo:record` skill の「書き込み先」「情報源」「置き場所の補足」「記録の更新」「探す」の表が正本。このセッションで初めて記録のファイルを書く前は `karo:record` skill を、初めて `bd` で書く前は `karo:tasks` skill を使う。
 - 状態が変わったら、次の作業に移る前に `bd` で書き、記録のファイルを `karo-commit` で commit する。
 - karo が Edit や Write で書くのは、記録のファイルと、scratchpad のブリーフと `bd` に渡す本文だけにする。リポジトリ、worktree、karo の skill と scripts は読むだけにし、変更は Agent に委任する。
 
