@@ -33,8 +33,8 @@
 ## 外に出す内容
 
 - チームや組織から見える場所（ブランチ名、commit メッセージ、PR、Issue、チャット、外部へのチケット）には、そのリポジトリや業務から辿れる事実だけを書き、タスク ID、karo や Herdr の運用、手元の環境の事情を入れない。Agent に書かせるときも同じにする。
-- push、PR の作成と本文の更新、チャットなどへの送信の前に、`karrybit:publish-check` に出ていく内容を調べさせ、依頼に下の karo の語と、`$KARO_HOME/rule/publish-terms.md` があればそのパスを書く。見つかったものは直してから公開し、直さないものは理由をオーナーに伝える。
-- karo の語: Beads の ID（`karo-` と英小文字・数字の 3〜8 文字、子は `.` と数字が続く）、karo、Herdr、ブリーフ、Beads、`bd`、karo の scripts の名前（`commit`、`karo-check`、`view-open`、`crit-open`、`tb-view`、`land`、`agent-ctl`、`agent-report`）、`$KARO_HOME` のパス、`standup/`、`source/meeting/`、`state.md`。
+- push、PR の作成と本文の更新、チャットなどへの送信の前に、`karrybit:publish-check` に出ていく内容を調べさせ、依頼に追加で探す語のファイルとして、karo の語の `~/.config/claude/skills/karo/scripts/publish-terms` と、オーナーの語の `$KARO_CONFIG_HOME/publish-terms`（既定は `~/.config/karo/publish-terms`）があればそのパスを書く。見つかったものは直してから公開し、直さないものは理由をオーナーに伝える。
+- オーナーの語のファイルは、karo の語のファイルと同じ形にする: 1 行 1 つの ripgrep の正規表現で、`#` で始まる行はコメント、空行は無視される。会社の名前、社内のドメインやチケットの形、人の名前を書き、git に入れない。
 
 ## 入口
 

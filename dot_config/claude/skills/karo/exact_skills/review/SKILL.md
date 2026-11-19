@@ -13,7 +13,7 @@ description: Agent の成果物をレビューに回す手順。実装 Agent の
 
 1. 完了報告を読む。完了報告は、`karo:delegate` skill の「終わるのを待つ」の agent-report の通知の出力の 2 行目からにある。通知がないとき（会話を再開したあとなど）は、`<scripts>/agent-report <タスクID>` を単独で実行して読む（`<scripts>` は `karo:delegate` skill の冒頭）。完了報告に、`karrybit:completion-report` のひな形の見出しと、ブリーフの「完了時の報告」で足した見出しがそろっているかを確かめる。見出しが欠けていたら、`karo:delegate` skill の追加指示で埋めさせる。見出しがそろったら、完了報告の要旨（commit、テスト結果、残課題）と、Agent の worktree と branch（`karo:delegate` skill の冒頭の控えの `place` と `branch`）を `報告:` の comment で書く。残課題のうち別の仕事にするものは、`karo:tasks` skill の「タスクを進める」の 1・2 で `bd create --deps discovered-from:<タスクID>` で作る。
    完了条件: 完了報告の項目がそろい、`報告:` の comment の JSON が出ている。
-2. PR があれば、`karrybit:publish-check` に PR の番号と worktree を渡して、ブランチ名、commit メッセージ、差分、PR の本文を調べさせる。`$KARO_HOME/rule/publish-terms.md` があれば、追加で探す語と形のファイルとして一緒に渡す。見つかったものは、レビューに回す前に `karo:delegate` skill の追加指示で元の Agent に直させる（commit メッセージは rebase で直させる）。そのリポジトリにもとからある語で直さないものは、3 の差分と一緒にオーナーに伝える。
+2. PR があれば、`karrybit:publish-check` に PR の番号と worktree を渡して、ブランチ名、commit メッセージ、差分、PR の本文を調べさせる。追加で探す語のファイルとして、session の決まりの「外に出す内容」にある 2 つのファイルも一緒に渡す。見つかったものは、レビューに回す前に `karo:delegate` skill の追加指示で元の Agent に直させる（commit メッセージは rebase で直させる）。そのリポジトリにもとからある語で直さないものは、3 の差分と一緒にオーナーに伝える。
    完了条件: `karrybit:publish-check` の報告が `見つかったもの: 0` か、残ったものすべてに直さない理由がある。
 3. 次に進む先を決める。受け入れ条件にゲートの行（`karrybit:readiness-review` の判定が READY）がある作業は、まだ判定がなければ、先に「2. Review Agent に調べさせる」を行い、判定を受けたら「3」の 3 の判定の扱いに進む。ゲートの行がない作業は、完了の通知だけでは readiness-review に回さない。オーナーが Review Agent を求めたときと、変更が複数のモジュールにまたがるときは、まだ済ませていなければ、先に「2. Review Agent に調べさせる」を行い、終わったらここに戻る。次の作業は、`レビュー依頼:` の comment（レビューする人と範囲）を書いてから「3. オーナーが差分を読んでレビューする」に進む。
    - PR を作るリポジトリの作業
