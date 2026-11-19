@@ -19,6 +19,9 @@ bin=$(cd "$(dirname "$0")" && pwd)
 vo=${1:-$bin/view-open}
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/view-open-test.XXXXXX") || exit 2
 trap 'rm -rf "$tmp"' EXIT
+# /bin/bash on macOS cannot make a here document while the current folder is one it may not write, even
+# with TMPDIR writable, so the test runs from its temporary folder.
+cd "$tmp" || exit 2
 failed=0
 fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
 pass() { printf 'ok\t%s\n' "$1"; }

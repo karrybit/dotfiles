@@ -9,6 +9,9 @@ set -uo pipefail
 exec </dev/null
 bin=$(cd "$(dirname "$0")" && pwd)
 hc=${1:-$bin/call-check}
+# /bin/bash on macOS cannot make a here document while the current folder is one it may not write, even
+# with TMPDIR writable, so the test runs from TMPDIR.
+cd "${TMPDIR:-/tmp}" || exit 2
 failed=0
 fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
 pass() { printf 'ok\t%s\n' "$1"; }
