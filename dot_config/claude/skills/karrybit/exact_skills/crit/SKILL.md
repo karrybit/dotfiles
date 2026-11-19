@@ -1,7 +1,7 @@
 ---
 name: crit
 description: crit でレビューを起動して review の URL を返し、ユーザーが付けたコメントに返事をする手順。引数なしなら起動した場所のファイルを、GitHub の PR の URL を渡すとその PR を、PR になっていないブランチか commit を渡すとその差分を開く。ユーザーが /karrybit:crit を打ったとき、crit でコメントしたいと言ったときに使う。
-allowed-tools: Bash(crit .), Bash(crit . --port *), Bash(crit --port *), Bash(crit --session *), Bash(crit comments *), Bash(crit comment *), Bash(crit stop), Bash(crit stop .), Bash(crit status --json), Bash(crit), Bash(crit --pr *), Bash(crit --range *), Read
+allowed-tools: Bash(crit .), Bash(crit . --port *), Bash(crit --port *), Bash(crit --session *), Bash(crit comments *), Bash(crit comment *), Bash(crit stop), Bash(crit stop .), Bash(crit status --json), Bash(crit), Bash(crit --pr *), Bash(crit --range *), Bash(git -C * fetch origin), Read
 argument-hint: "[GitHub の PR の URL | PR になっていないブランチ | commit]"
 ---
 
@@ -22,7 +22,8 @@ argument-hint: "[GitHub の PR の URL | PR になっていないブランチ | 
 - PR は、PR のリポジトリの checkout から `--remote` を付けずに開く。GitHub の PR では、crit がファイルの一覧と差分を起動した場所の git で作る（`--remote` で API から読むのはファイルの中身だけ）ので、ほかのリポジトリから開くとそのリポジトリの作業ツリーが出る。
 - `<checkout>` は、呼び出し側がその PR か commit のブランチの worktree か checkout のパスを渡せばそれを使う。渡されなければ、その PR のリポジトリを checkout している場所をユーザーに尋ねる。PR のブランチを checkout しておく必要はない。
 - `<worktree>` は、呼び出し側が渡したそのブランチの worktree にする。渡されなければ、そのブランチを checkout している場所をユーザーに尋ねる。
-- PR になっていないブランチは、範囲を付けずにブランチを checkout した worktree で開く。crit は、`origin/HEAD` が指す既定のブランチとの merge-base からの差分を出し、session を worktree のパスとブランチで決めるので、commit を足しても rebase しても同じ session と URL のままコメントと返事が残り、手順 5 で次の回に進む。`--range` で開くと session が SHA で決まり、次の回に進めない。
+- PR になっていないブランチは、範囲を付けずにブランチを checkout した worktree で開く。crit は、起動するときと `crit --session` のときに、`origin/HEAD` が指す既定のブランチの追跡の ref（`origin/main` など）との merge-base を求め、そこからの差分を出す。session を worktree のパスとブランチで決めるので、commit を足しても rebase しても同じ session と URL のままコメントと返事が残り、手順 5 で次の回に進む。`--range` で開くと session が SHA で決まり、次の回に進めない。
+- PR になっていないブランチを開く前と開き直す前に毎回、`git -C <worktree> fetch origin` で比べる先の追跡の ref を最新にする。crit は fetch しないので、追跡の ref が古いと、既定のブランチに入った変更までブランチの差分に混じる。fetch が sandbox に止められて失敗したら、同じコマンドを sandbox の外で動かす承認を呼び出し側に求める。承認が得られなければ、差分に既定のブランチの変更が混じりうるとユーザーに伝えてから開く。
 - crit は、`crit .` のファイルの一覧と、PR の head と `--range` の先を daemon の起動時にしか読まず、reload でも `crit --session` でも、足したファイルや新しい commit は出ない。そこで引数なし・PR・1 つの commit を開く前に毎回、起動した場所で `crit stop .`（PR と 1 つの commit は `cd <checkout> && crit stop`）を動かす。daemon が動いていなければ `no running daemon found` で終わるので、そのまま表のコマンドに進む。同じ checkout から同じ対象を開けば、session の ID とコメントは変わらない。
 - PR になっていないブランチの daemon は、レビューを終えるまで止めずに残す。止めて起動し直すと、同じ session で新しい commit までの差分は出るが、回は進まない。
 - daemon は `cd <checkout> && crit stop`（ブランチは `cd <worktree> && crit stop`）で checkout ごとに止める。`crit stop --all` はほかの checkout の `crit .` も止める。
@@ -31,7 +32,7 @@ argument-hint: "[GitHub の PR の URL | PR になっていないブランチ | 
 
 ## 手順
 
-1. 上の表のコマンドを、Bash の `run_in_background: true` と `timeout: 86400000` で動かす（引数なし・PR・1 つの commit なら、先に「開くもの」の `crit stop` を動かす）。timeout を付けないと、Claude Code が 30 分で crit を止める。
+1. 上の表のコマンドを、Bash の `run_in_background: true` と `timeout: 86400000` で動かす（引数なし・PR・1 つの commit なら、先に「開くもの」の `crit stop` を、PR になっていないブランチなら、先に「開くもの」の `git fetch` を動かす）。timeout を付けないと、Claude Code が 30 分で crit を止める。
    完了条件: crit の出力にある review の URL が手元にある。
 2. crit の出力の review の URL（`http://localhost:<ポート>`）を返す。呼び出し側の規則（`CLAUDE.md`・`AGENTS.md`）に review の URL の開き方があれば、その規則のとおりに開く。なければ URL をユーザーに示し、ユーザーにブラウザで開いてもらう。そのうえで「コメントを付けて Finish Review を押してください」と返して、background の crit が終わるのを待つ。レビューのファイルは、crit が終わってから読む。
    完了条件: background の crit が終わった。
@@ -43,7 +44,7 @@ argument-hint: "[GitHub の PR の URL | PR になっていないブランチ | 
    - コメントの解決はユーザーが決めるので、`--resolve` はユーザーが頼んだときだけ付ける。
 
    完了条件: 未解決のコメントすべてに返事がある。
-5. 引数なしと PR になっていないブランチなら、3 で控えた `crit --session <id>` を 1 と同じ形で動かす（ブランチは、足された commit が差分に出て、回が 1 つ進む）。PR と 1 つの commit なら、push された commit を差分に出すために、「開くもの」の開き直しの手順で status から引いたポートを `--port` に付けて 1 から開き直す。どの場合も、ポートが 2 と同じでも違っても、crit の出力の review の URL の画面を 2 と同じ開き方で開き直してから、ユーザーに伝える。呼び出し側の規則に review の URL の開き方があれば、その規則のとおりに開いたあとで「crit に返事を書きました。<URL> の画面で確かめ、Finish Review を押してください」と返す。なければ「crit に返事を書きました。<URL> の画面を reload して確かめ、Finish Review を押してください」と返す。対象が 2 つ以上あると、どの画面を reload するかは URL のポートでしか見分けられない。crit が終わったら 3 に戻る。
+5. 引数なしと PR になっていないブランチなら、3 で控えた `crit --session <id>` を 1 と同じ形で動かす（ブランチは、先に「開くもの」の `git fetch` を動かす。足された commit が差分に出て、回が 1 つ進む）。PR と 1 つの commit なら、push された commit を差分に出すために、「開くもの」の開き直しの手順で status から引いたポートを `--port` に付けて 1 から開き直す。どの場合も、ポートが 2 と同じでも違っても、crit の出力の review の URL の画面を 2 と同じ開き方で開き直してから、ユーザーに伝える。呼び出し側の規則に review の URL の開き方があれば、その規則のとおりに開いたあとで「crit に返事を書きました。<URL> の画面で確かめ、Finish Review を押してください」と返す。なければ「crit に返事を書きました。<URL> の画面を reload して確かめ、Finish Review を押してください」と返す。対象が 2 つ以上あると、どの画面を reload するかは URL のポートでしか見分けられない。crit が終わったら 3 に戻る。
    完了条件: 3 で未解決のコメントが 0 件だった（ユーザーがコメントなしで Finish Review を押した）。
 
 ## 困ったとき
