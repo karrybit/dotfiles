@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2016,SC2088  # the commands are single-quoted on purpose: they are the hook's input
-# Show that call-check stops a path to a script in the plugin's bin/ (the herdr-agent skill's
-# scripts included, reads too), a git rebase that asks to leave the sandbox, a herdr call joined to
-# another command or a file redirection, and a lone herdr call that asks to leave the sandbox, while
-# it lets through calls by name, tests in scripts/ by path, git rebase --abort, a rebase inside the sandbox, lone herdr calls (2>&1
-# included), and quoted text and heredoc bodies that mention git rebase or herdr. settings-test
+# Show that call-check stops a git rebase that asks to leave the sandbox, a herdr or bd call joined
+# to another command or a file redirection, a lone herdr call that asks to leave the sandbox, and a
+# lone bd call whose quoted argument holds a joining character, while it lets through calls by name or
+# by path, git rebase --abort, a rebase inside the sandbox, lone herdr and bd calls (2>&1 included),
+# and quoted text, heredoc bodies and searches that mention git rebase, herdr or bd. settings-test
 # checks that karo's hooks/hooks.json runs it.
 # usage: call-check-test [<call-check>]   (default: the one beside this script)
 set -uo pipefail
@@ -24,23 +24,10 @@ run() {
     '{hook_event_name: "PreToolUse", tool_name: "Bash", tool_input: {command: $c, dangerouslyDisableSandbox: $d}}' |
     LC_ALL=en_US.UTF-8 "$hc" 2>&1); code=$?
 }
-stops_path() {
-  run "$@"
-  if [[ $code -eq 2 && $out == *'bin/ の script（…/bin/karo-<name>）をパスで指している。'* && $out == *'名前だけで、単独で呼び直す'* ]]; then pass "stops_path: $1"
-  else fail "stops_path: $1: exit $code: $out"; fi
-}
 passes() {
   run "$@"
   if [[ $code -eq 0 && -z $out ]]; then pass "passes: $1 ${2:-}"; else fail "passes: $1 ${2:-}: exit $code: $out"; fi
 }
-
-stops_path '~/.claude/skills/karo/bin/karo-commit s b x'
-stops_path "$HOME/.claude/skills/karo/bin/karo-land b"
-stops_path '$HOME/.claude/skills/karo/bin/karo-check --only doc/a.md'
-stops_path '"${CLAUDE_PLUGIN_ROOT}"/bin/karo-check'
-stops_path '/opt/plugins/karo/bin/karo-agent-ctl close a1'
-stops_path 'cat /opt/plugins/karo/bin/karo-agent-ctl'
-stops_path '/opt/plugins/karo/bin/karo-agent-report a1 | head'
 
 # git rebase outside the sandbox, in the shapes karo and Agents have run it in.
 stops_rebase() {
@@ -82,10 +69,45 @@ stops_herdr "echo \"it's\"; herdr pane list"
 stops_herdr 'herdr status --json' true
 stops_herdr 'herdr pane layout --current' true
 
+# bd joined to another command or a file redirection, and a lone one with a joining character quoted.
+stops_bd() {
+  run "$@"
+  if [[ $code -eq 2 && $out == *'。bd は単独の呼び出しで実行し'* && $out == *'openat LOCK'* && $out == *'--readonly'* && $out == *'--body-file'* ]]; then pass "stops_bd: $1 ${2:-}"
+  else fail "stops_bd: $1 ${2:-}: exit $code: $out"; fi
+}
+stops_bd 'bd ready --json | jq .'
+stops_bd 'bd show a1 --json 2>/dev/null'
+stops_bd 'bd list --json > open.json'
+stops_bd 'bd update a1 --claim --json && echo done'
+stops_bd 'bd close a1 --json || true'
+stops_bd 'bd ready --json; bd list --json'
+stops_bd 'x=$(bd ready --json)'
+stops_bd 'echo `bd ready`'
+stops_bd 'cd /tmp/x && bd ready --json'
+stops_bd 'bd ready --readonly --json | head'
+stops_bd 'bd show a1
+bd show a2'
+stops_bd "bd create 't' --acceptance 'runs \$(x) and <name> && exits 0' --json"
+stops_bd "bd create \"t\" --acceptance \"value of \$(pwd)\" --json"
+stops_bd "bd close a1 --reason 'done; merged' --json"
+passes 'bd ready --json'
+passes 'bd ready --json 2>&1'
+passes "bd create 'title' -t task --body-file /tmp/x/body.md --json"
+passes 'bd comment a1 --file /tmp/x/c.md --json'
+passes 'bd --help'
+passes 'rg bd notes.md'
+passes 'rg -n "bd ready | jq" notes.md'
+passes "echo 'bd list > f'"
+passes "cat > s.sh <<'EOF'
+bd ready --json | jq .
+EOF"
+
 passes 'karo-commit s b x'
 passes 'karo-land b'
 passes 'karo-agent-ctl close a1'
 passes 'karo-safe-key enter a1'
+passes '/opt/plugins/karo/bin/karo-land b'
+passes '~/.claude/skills/karo/bin/karo-commit s b x'
 passes '/opt/plugins/karo/scripts/karo-check-test'
 passes '/opt/plugins/karo/skills/land/scripts/land-test'
 passes 'git status'

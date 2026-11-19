@@ -60,8 +60,7 @@ JSON から次を選ぶ。合わせて 10 件までにし、多いときは数�
 
 | 規則（書いてある場所） | 強制するもの |
 | --- | --- |
-| herdr は単独で呼ぶ（karo の決まりの「sandbox」） | karo の `scripts/call-check`（hook） |
-| karo の scripts は `bin/` の名前で呼ぶ（karo の決まりの「sandbox」） | karo の `scripts/call-check`（hook。`karo:herdr-agent` の scripts を含む） |
+| herdr と `bd` は単独で呼ぶ（karo の決まりの「sandbox」） | karo の `scripts/call-check`（hook。`bd` は引用符の中の記号も止める） |
 | karo の rebase は `karo:land` skill で行い、sandbox の外でやり直さない（karo の決まりの「sandbox」） | karo の `scripts/call-check`（hook。sandbox の外の `git rebase` を止める。`--abort` は通す）、`karo:land` の `bin/karo-land` |
 | 記録は「書き込み先」の表のファイルにだけ書く（`karo:record` の「書き込み先」） | karo の `bin/karo-commit`（commit するパスの確かめ） |
 | 新しい記録のノートにフロントマターを付ける（`karo:record` の `frontmatter.md`） | karo の `bin/karo-check`（`post-edit` の hook が書いたノートに、`bin/karo-commit` が commit に入る中身に、`--only` で呼ぶ） |

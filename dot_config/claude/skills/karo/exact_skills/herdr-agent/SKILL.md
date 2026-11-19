@@ -9,7 +9,7 @@ description: Herdr で別のセッションの Claude Code の Agent を起動�
 
 - この skill は、Herdr の Agent の 5 つの操作（起動、指示の送信、終わるのを待つ、報告を取り出す、閉じる）と、止まった Agent に答える手順を受け持つ。
 - 呼び出し側は、Agent の名前、ブリーフのファイル、作業する場所、goal の条件、permission mode、答えてよいダイアログの一覧を決めて渡す。ブリーフの中身、報告の読み方、作業の取り込みは呼び出し側が持つ。
-- scripts は karo の plugin の `bin/` にあり、`karo-agent-ctl` のように名前だけで呼ぶ。settings の規則はコマンドの文字列をそのまま照らすので、パスを付けて書くと規則に合わず、確認が出るか sandbox に残る（karo の `call-check` の hook が止める）。
+- scripts は karo の plugin の `bin/` にあり、`karo-agent-ctl` のように名前だけで呼ぶ。settings の規則はコマンドの文字列をそのまま照らすので、パスを付けて書くと規則に合わず、確認が出るか sandbox に残る。
 
 ## 呼び出し側が先に整える settings
 
@@ -23,7 +23,7 @@ description: Herdr で別のセッションの Claude Code の Agent を起動�
 | `env` の `HERDR_AGENT_BRANCH_PATTERN`（任意） | `worktree` と `herdr-worktree` で作るブランチが合うべき ERE |
 | `env` の `HERDR_AGENT_BRANCH_DENY`（任意） | そのブランチが合ってはいけない ERE |
 
-- hook は settings に書かない。karo の plugin の `hooks/hooks.json` が PreToolUse に `call-check` を登録し、`bin/` の scripts をパスで書いた呼び出しと、herdr をつないだ呼び出しを止める。
+- hook は settings に書かない。karo の plugin の `hooks/hooks.json` が PreToolUse に `call-check` を登録し、herdr をつないだ呼び出しを止める。
 - `env` は、sandbox の中の Agent が書き換えられない settings に置く。呼び出しの先頭に `VAR=x` を付けると `allow` の規則に合わなくなるので、env の値は呼び出しのたびに変えられない。
 - herdr 自体の `workspace close`・`tab close`・`worktree remove`・`agent prompt`・`agent send-keys`・`pane send-keys`・`pane send-text` は `allow` に入れない。scripts は確かめてから herdr を呼ぶので許可でき、herdr 自体は確認を出したままにする。
 - settings を確かめるときは、`karo-settings-test <settings.json> [<settings.json>...]` に、その会話が読む settings のファイルをすべて渡して走らせる。settings-test は、渡したファイルを Claude Code と同じく配列をつないで合わせ、表の値の有無と、herdr 自体の上の操作が `allow` に当たらないことを確かめ、足りない行は 1 行ずつ `FAIL` で出る。

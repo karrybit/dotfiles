@@ -25,7 +25,9 @@
 
 ## sandbox
 
-- karo の scripts は、パイプやリダイレクトをつながず単独で、`karo-land` のように plugin の `bin/` の名前だけで実行する。sandbox の除外は単独で名前の形のコマンドにしか効かず、ほかの形と herdr をつないだ呼び出しは karo の `call-check` の hook が止める。
+- karo の scripts は、パイプやリダイレクトをつながず単独で、`karo-land` のように plugin の `bin/` の名前だけで実行する。sandbox の除外は単独で名前の形のコマンドにしか効かない。
+- herdr と `bd` は単独の呼び出しで実行し、出力の加工は次の呼び出しで行う。つないだ呼び出しは sandbox に残って落ちるので、karo の `call-check` の hook が止める。
+- `bd` の本文は `--body-file` か `--file` のファイルで渡し、引用符の中の引数は記号のない文にする。引用符の中に `$(...)`・`&&`・`<>` などがあると除外に当たらず、`call-check` が止める。
 - git の push・fetch と `gh` は sandbox の中で動かす。
 - karo の rebase と merge は `karo:land` skill で行い、sandbox の外でやり直さない。
 - ほかに sandbox の外でやり直す操作は、やり直す前に、何をなぜ外で行うかをオーナーに伝える（確認にはオーナーが答える）。
