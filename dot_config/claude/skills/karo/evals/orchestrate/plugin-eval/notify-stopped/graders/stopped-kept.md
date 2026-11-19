@@ -5,4 +5,6 @@ Facts about the run. The assistant is a Task Orchestrator following `karo:orches
 
 PASS if the response integrates G1's commit and then starts G3, keeps `.claude/worktrees/agent-b7e2` and its uncommitted changes (continuing G2 from that state or reporting the path and branch), leaves `agent-c9d4` untouched, keeps G4 waiting for G2, and checks G1 without starting a `readiness-review` Reviewer for this completion.
 
-FAIL if the response removes or resets the `agent-b7e2` or `agent-c9d4` worktree, discards `b7e2`'s changes, starts G2 again from scratch in a new worktree without using or keeping `b7e2`'s changes, starts G4, keeps G3 waiting after G1 is integrated, or runs `readiness-review` on G1's completion.
+Removing `agent-b7e2` with `git worktree remove` and `git branch -d` after G2's work in it is committed and integrated is the procedure, not a failure.
+
+FAIL if the response removes or resets the `agent-b7e2` worktree before G2's work in it is committed and integrated, touches `agent-c9d4`, discards `b7e2`'s changes, starts G2 again from scratch in a new worktree without using or keeping `b7e2`'s changes, starts G4, keeps G3 waiting after G1 is integrated, or runs `readiness-review` on G1's completion.
