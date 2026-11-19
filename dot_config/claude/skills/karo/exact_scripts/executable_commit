@@ -3,8 +3,9 @@
 # and karo-check --only on the staged paths, removed ones included, so a note that links to or lists a
 # removed or renamed path fails too. karo-check reads what the commit will hold (HEAD with the given paths
 # as written, put out to a temporary folder), so a change left out of the paths does not make it pass.
-# A failed check unstages the paths, leaves the files as written, and prints "NG <subject>" after the
-# reason; a commit prints "OK <short hash> <subject>".
+# A failed check, or a rumdl that cannot run (one that is not on PATH, say), unstages the paths, leaves the
+# files as written, and prints "NG <subject>" after the reason; a commit prints "OK <short hash> <subject>".
+# rumdl fmt exits 0 when only problems it cannot fix are left, so those do not stop the commit.
 # usage: commit <subject> <body> <path>...   (paths from KARO_HOME, each under a folder in record-folders
 #        beside this script; the body says why)
 # Environment: KARO_HOME (default ~/karo). Runs inside the sandbox: it writes only KARO_HOME, its .git, and
@@ -23,7 +24,7 @@ for p; do
   (( record )) || { echo "NG $subject: not a record path: $p"; exit 1; }
 done
 ng() { git reset -q -- "$@"; echo "NG $subject"; exit 1; }
-for p; do case $p in *.md) [ -f "$p" ] && rumdl fmt --silent "$p" ;; esac; done
+for p; do case $p in *.md) [ ! -f "$p" ] || rumdl fmt --silent "$p" || ng "$@" ;; esac; done
 git add -- "$@" || ng "$@"
 only=()
 while IFS= read -r -d '' p; do only+=(--only "$p"); done < <(git diff --cached --name-only --no-renames -z -- "$@")

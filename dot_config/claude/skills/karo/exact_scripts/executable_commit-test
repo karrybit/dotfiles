@@ -127,6 +127,31 @@ if git -C "$v" diff --quiet -- investigation/2026-01-01-demo.md; then fail "the 
 git -C "$v" checkout -q -- investigation/2026-01-01-demo.md
 rm "$v/investigation/2026-01-02-bad.md"
 
+# A rumdl that cannot run stops the commit: with rumdl taken off PATH, a good write with an edit to a
+# committed note stops, nothing is staged, and the files stay as written. The other commands of a folder
+# that holds rumdl stay on PATH as links in $tmp/path, so only rumdl is missing.
+norumdl=$tmp/path:
+mkdir "$tmp/path" || exit 2
+while IFS= read -r -d : d; do
+  if [[ -x $d/rumdl ]]; then
+    for x in "$d"/*; do [[ ${x##*/} == rumdl || -e $tmp/path/${x##*/} ]] || ln -s "$x" "$tmp/path/${x##*/}"; done
+  else
+    norumdl+=$d:
+  fi
+done < <(printf '%s:' "$PATH")
+if (PATH=${norumdl%:}; ! command -v rumdl >/dev/null); then pass "rumdl is off the trimmed PATH"; else fail "rumdl is still on the trimmed PATH"; fi
+printf '\nrumdl なしの追記\n' >> "$v/investigation/2026-01-01-demo.md"
+printf -- '---\ntype: Investigation\ndescription: 例。\ndate: 2026-01-02\nprojects:\n  - all\n---\n\n## 例\n' > "$v/investigation/2026-01-02-fmt.md"
+out=$(PATH=${norumdl%:} "$bin/commit" "t-test0001: rumdl なし" "本文" investigation/2026-01-01-demo.md investigation/2026-01-02-fmt.md 2>&1); code=$?
+ng "a rumdl not on PATH stops" "rumdl: command not found"
+if [[ $(git -C "$v" status --porcelain -- investigation) == $' M investigation/2026-01-01-demo.md\n?? investigation/2026-01-02-fmt.md' ]]; then
+  pass "the write stopped for rumdl is kept as written"
+else
+  fail "the write stopped for rumdl: $(git -C "$v" status --porcelain)"
+fi
+git -C "$v" checkout -q -- investigation/2026-01-01-demo.md
+rm "$v/investigation/2026-01-02-fmt.md"
+
 # A file name git would quote (not ASCII) is checked like any other.
 printf -- '---\ntype: Investigation\ndescription: 例。\n---\n\n## 例\n' > "$v/investigation/2026-01-02-調査.md"
 run "t-test0001: 名前" "本文" investigation/2026-01-02-調査.md
