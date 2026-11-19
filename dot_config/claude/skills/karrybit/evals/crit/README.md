@@ -22,4 +22,4 @@ A run cannot start crit: in a run's sandbox the home folder is unreadable, and c
 
 ## What the Suite Separates
 
-Measured on a wrapper holding only this skill, with `karrybit:skill-eval`'s suite command (`--ablation none`, `--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`): every `pr-number` grader passes 3/3. The `branch` case's prompt and graders are not measured. The graders guard against regressions; no other configuration has been measured against them.
+Measured on a wrapper holding only this skill, with `karrybit:skill-eval`'s suite command (`--ablation none`, `--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`): every `pr-number` grader passes 3/3. The `branch` and `url-only` cases' prompts and graders are not measured. The graders guard against regressions; no other configuration has been measured against them.
