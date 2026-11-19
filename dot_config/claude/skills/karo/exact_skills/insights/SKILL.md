@@ -24,7 +24,7 @@ description: karo と Agent の一日の働きを transcript と Beads（bd）�
 
 | 指標 | insights の JSON のキー | 数え方と限り |
 | --- | --- | --- |
-| 1. karo のターンごとのツール呼び出し | `turns`、`over_limit` | オーナー・peer・task-notification の発言ごとに、scratchpad への Write・Edit、`AskUserQuestion`、skill の手順が呼ぶ karo と karrybit の scripts の実行と、`$KARO_CONFIG_HOME/config.yaml` の `uncounted:` の正規表現に合うコマンド（ファイルかキーがなければ、この追加分はない。一覧は `scripts/insights` の冒頭の `turns`）を除いて数える。オーナーの AGENTS.md が決めるターンごとの呼び出しの上限（型の例では「作業の分け方」の 2 回）を超えたターンが `over_limit`。skill の手順が求める herdr の呼び出し（`herdr agent get` など）は数に入るので、違反かどうかは 2 で確かめる |
+| 1. karo のターンごとのツール呼び出し | `turns`、`over_limit` | オーナー・peer・task-notification の発言ごとに、scratchpad への Write・Edit、`AskUserQuestion`、skill の手順が呼ぶ karo と karrybit の scripts の実行と、`bd` の呼び出しと、`$KARO_CONFIG_HOME/config.yaml` の `uncounted:` の正規表現に合うコマンド（ファイルかキーがなければ、この追加分はない。一覧は `scripts/insights` の冒頭の `turns`）を除いて数える。オーナーの AGENTS.md が決めるターンごとの呼び出しの上限（型の例では「作業の分け方」の 2 回）を超えたターンが `over_limit`。skill の手順が求める herdr の呼び出し（`herdr agent get` など）は数に入るので、違反かどうかは 2 で確かめる |
 | 2. 承認の拒否 | `approvals` | グループ（`karo`・`subagents`・`agents`）ごとに、`rejected_user`（オーナーの拒否）、`rejected_classifier`（auto mode の判定の拒否）、`prompted`（確認が出てオーナーが通した）。`prompt_wait_s` は、確認が出た呼び出しの、呼び出しから結果までの秒数の和で、実行の時間も入る |
 | 3. Agent の `blocked` | `agent_prompts` | Herdr の Agent ごとの、確認のダイアログで人を待った呼び出しの数と秒数。Herdr の状態の履歴は残らないので、ダイアログの待ちで代える。確認以外の止まり方（Agent が尋ねて `idle` になった）は入らないので、タスクの `報告:` の comment と突き合わせる |
 | 4. 待ち時間 | `karo_turn_s`、`delegations` | karo のターンの長さ（件数、合計、最大の秒）と、その日に初めて claim されたタスク（`started_at`）ごとの、claim から最初の comment か close の早いほうまでの分。`ended` が `null` の行は、まだそのどちらもない委任。同じタスクへの 2 回目からの委任（追加指示）は数えない |
