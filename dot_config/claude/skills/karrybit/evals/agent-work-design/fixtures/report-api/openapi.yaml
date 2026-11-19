@@ -1,0 +1,23 @@
+openapi: 3.0.3
+info:
+  title: report-api
+  version: 1.4.0
+paths:
+  /reports:
+    get:
+      parameters:
+        - { name: start, in: query, required: true, schema: { type: string, format: date } }
+        - { name: end, in: query, required: true, schema: { type: string, format: date } }
+      responses:
+        "200":
+          description: Sales rows between start and end.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    day: { type: string, format: date }
+                    region: { type: string }
+                    amount: { type: integer }
