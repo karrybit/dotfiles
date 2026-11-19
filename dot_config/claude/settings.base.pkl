@@ -276,16 +276,6 @@ settings: Dynamic = new Dynamic {
         }
       }
     }
-    ["PreCompact"] = new Listing {
-      new Dynamic {
-        hooks = new Listing {
-          new Dynamic {
-            type = "command"
-            command = "true"
-          }
-        }
-      }
-    }
   }
 }
 
