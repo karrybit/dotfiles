@@ -109,7 +109,7 @@ description: 'Herdr 上の Agent に仕事を委任する手順。オーナー�
 - 役目を終えた Agent は、AGENTS.md の「委任・レビュー・Checkin・Checkout」の恒常的な許可に従い、オーナーの承認を待たずに終了し、結果だけを報告する。
 - 取り込まれていない commit や未 commit の変更が残っているときは、終了せずにオーナーに報告する。
 
-1. `<scripts>/agent-ctl close <タスクID>` を単独で実行する（`karo:herdr-agent` の「閉じる」）。止まったら、その行と `parent_kept` をオーナーに報告する。ignored なファイルで止まったら、karo は一覧をオーナーに示して消してよいかを尋ね、worktree のファイルは調べも消しもしない。消してよいと答えたら、一覧のパスをリテラルで並べた `rm -rf <place>/<パス> …` の 1 行を示してオーナーのターミナルで実行してもらい、終わったら `close` を走らせ直す。残すと答えたら、閉じずに残したことを報告する。
+1. `<scripts>/agent-ctl close <タスクID>` を単独で実行する（`karo:herdr-agent` の「閉じる」）。worktree に残った Git の管理外のファイル（`.venv`、`node_modules`、cache など）は、`close` がすべての確かめを通ったあとに worktree と一緒に消す。止まったら、その行と `parent_kept` をオーナーに報告する。
    完了条件: JSON が出ているか、止まった理由をオーナーに報告している。
 2. タスクを閉じずに Agent を終えたとき（取り込まずに止めたとき）は、`bd unclaim <タスクID> --if-assignee <Agent 名> --json` を単独で実行する。
    完了条件: JSON の `status` が `open`。取り込んで閉じるタスクでは、この手順はない。

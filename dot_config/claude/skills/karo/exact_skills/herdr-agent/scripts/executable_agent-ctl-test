@@ -244,16 +244,20 @@ else
   fail "worktree .claude: exit $code: $out"
 fi
 
-# An ignored .claude that is a link: status does not list it, so close reaches the cleanup, removes
-# nothing through the link, and stops on the ignored link.
+# An ignored .claude that is a link: status does not list it, so close removes the link with the
+# worktree and nothing through it.
 printf '/.claude\n' >> "$repo/.git/info/exclude"
 dir=$(worktree claude-link)
 workspace ac0125-test "$dir"
 note_worktree ac0125-test "$id" "$dir"
 mkdir -p "$tmp/outside/.cc-writes" && touch "$tmp/outside/.cc-writes/keep"
 ln -s "$tmp/outside" "$dir/.claude"
-refuses "an ignored .claude that is a link" "has ignored files that removing it would delete: .claude" "$id" "$dir" ac0125-test
-if [[ -f $tmp/outside/.cc-writes/keep ]]; then pass "nothing is removed through a .claude link"; else fail "close removed $tmp/outside/.cc-writes through a link"; fi
+run ac0125-test
+if [[ $code -eq 0 && ! -d $dir && -f $tmp/outside/.cc-writes/keep ]]; then
+  pass "an ignored .claude link goes with the worktree, and nothing is removed through it"
+else
+  fail "worktree .claude link: exit $code, outside kept: $([[ -f $tmp/outside/.cc-writes/keep ]] && echo yes || echo no): $out"
+fi
 
 dir=$(worktree submodule)
 workspace ac0112-test "$dir"
@@ -743,22 +747,48 @@ if pr_start pr-node ac0204-test; then
   fi
 fi
 
+# ignored <worktree>: put ignored files and folders in the worktree.
+ignored() {
+  printf 'secret\n' > "$1/.env.local"
+  mkdir "$1/cache.local" "$1/sub" "$1/メモ" && touch "$1/cache.local/a" "$1/sub/a.local" "$1/メモ/x.local"
+}
 pr_repo pr-ignored
 if pr_start pr-ignored ac0205-test; then
   g -C "$wt" push -q origin feat/pr-ignored
-  printf 'secret\n' > "$wt/.env.local"
-  mkdir "$wt/cache.local" "$wt/sub" "$wt/メモ" && touch "$wt/cache.local/a" "$wt/cache.local/b" "$wt/sub/a.local" "$wt/sub/b.local" "$wt/メモ/x.local"
+  ignored "$wt"
   pr_close ac0205-test
-  if [[ $code -eq 1 && $out == *"has ignored files that removing it would delete: .env.local cache.local/ sub/ メモ/" && -f $wt/.env.local && ! -s $FAKE_LOG ]]; then
-    pass "herdr-worktree: ignored files stop it and are all listed, an ignored or all-ignored folder once, a Japanese name unquoted"
+  if [[ $code -eq 0 && ! -d $wt ]] && rg -qx "remove $ws" "$FAKE_LOG"; then
+    pass "herdr-worktree: a worktree with only ignored files left is removed with them"
   else
     fail "herdr-worktree ignored: exit $code: $out: $(cat "$FAKE_LOG")"
   fi
 fi
+# A check that fails stops close before any ignored file is removed.
+pr_repo pr-ignored-dirty
+if pr_start pr-ignored-dirty ac0216-test; then
+  ignored "$wt"
+  printf 'x\n' > "$wt/new.txt"
+  pr_close ac0216-test
+  if [[ $code -eq 1 && $out == *"has uncommitted changes" && -f $wt/.env.local && -f $wt/cache.local/a && ! -s $FAKE_LOG ]]; then
+    pass "herdr-worktree: an uncommitted change stops it and no ignored file is removed"
+  else
+    fail "herdr-worktree ignored and uncommitted: exit $code: $out: $(cat "$FAKE_LOG")"
+  fi
+fi
+pr_repo pr-ignored-ahead
+if pr_start pr-ignored-ahead ac0217-test; then
+  ignored "$wt"
+  g -C "$wt" commit -q --allow-empty -m 'not pushed'
+  pr_close ac0217-test
+  if [[ $code -eq 1 && $out == *"1 commit(s) not on a remote" && -f $wt/.env.local && -f $wt/cache.local/a && ! -s $FAKE_LOG ]]; then
+    pass "herdr-worktree: a commit not on a remote stops it and no ignored file is removed"
+  else
+    fail "herdr-worktree ignored and unpushed: exit $code: $out: $(cat "$FAKE_LOG")"
+  fi
+fi
 
-# Ignored files only under .claude/, with or without tracked files beside them there, and an empty
-# .cc-writes/ in a .claude/ deeper in do not stop close; another ignored file beside them stops it,
-# is the only one listed, and nothing is removed.
+# Ignored files under .claude/, with or without tracked files beside them there, and an empty
+# .cc-writes/ in a .claude/ deeper in go with the worktree, and a tracked file there does not stop it.
 nested=.claude/skills/demo/skills/.claude/.cc-writes
 pr_repo pr-claude-only
 if pr_start pr-claude-only ac0211-test; then
@@ -783,19 +813,6 @@ if pr_start pr-claude-tracked ac0212-test; then
     fail "herdr-worktree .claude with a tracked file: exit $code: $out: $(cat "$FAKE_LOG")"
   fi
 fi
-pr_repo pr-claude-other
-if pr_start pr-claude-other ac0210-test; then
-  printf 'secret\n' > "$wt/.env.local"
-  mkdir -p "$wt/$nested" "$wt/.claude/.cc-writes" && touch "$wt/$nested/a" "$wt/.claude/.cc-writes/a" "$wt/.claude/scheduled_tasks.lock"
-  pr_close ac0210-test
-  if [[ $code -eq 1 && $out == *"has ignored files that removing it would delete: .env.local" && -f $wt/.env.local && -f $wt/$nested/a &&
-    -f $wt/.claude/.cc-writes/a && -f $wt/.claude/scheduled_tasks.lock && ! -s $FAKE_LOG ]]; then
-    pass "herdr-worktree: another ignored file beside .claude/ stops it, is the only one listed, and nothing is removed"
-  else
-    fail "herdr-worktree .claude and another file: exit $code: $out: $(cat "$FAKE_LOG")"
-  fi
-fi
-
 # A failure after the worktree is removed is one line, exit 1, saying what was already done.
 pr_repo pr-fail
 if pr_start pr-fail ac0207-test; then

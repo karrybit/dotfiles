@@ -104,12 +104,12 @@ agent-ctl send --goal <条件> <名前>
 ### 閉じる
 
 - 片付けるときは、`<scripts>/agent-ctl close <名前>` を単独で走らせる。`close` は `start` が控え（`~/.local/state/herdr-agent/ledger`）に書いた Agent だけを片付け、控えにない名前は 1 行で断る。断られた Agent は、人が手で片付ける。
-- `close` は、控えにある workspace（`tab` では tab）の label が名前であること、呼び出し側の workspace（`tab` では tab）でないこと、`working`・`blocked` の Agent がいないことを確かめる。`tab` のほかは、さらに submodule がないこと、未 commit の変更がないこと、場所の種類ごとの取り込み済みの条件（「起動する」の表）を確かめ、worktree を消す場所では `.claude/` の外に ignored なファイルがないことも確かめる。`.claude/` の下の ignored なファイル（Claude Code が作る書き込みの記録や予定のタスクのロック）は、`close` が worktree を消す前に消す。
+- `close` は、控えにある workspace（`tab` では tab）の label が名前であること、呼び出し側の workspace（`tab` では tab）でないこと、`working`・`blocked` の Agent がいないことを確かめる。`tab` のほかは、さらに submodule がないこと、未 commit の変更がないこと、場所の種類ごとの取り込み済みの条件（「起動する」の表）を確かめる。
+- worktree を消す場所では、すべての確かめを通ったあとに、`close` が `git clean -fdX` で ignored なファイル（`.venv`、`node_modules`、cache、`.claude/` の下の Claude Code の記録）を消してから worktree を消す。確かめのどれかで止まったときは、何も消さない。
 - JSON は `{name, kind, workspace, place, parent}` で、`tab` と `parent_kept`（閉じなかった親の workspace と理由）が付くことがある。`parent_kept` があれば、それも人に伝える。
 - origin のブランチは、`close` が `git ls-remote` で origin にいまの先頭を尋ねて確かめる。手元の `origin/<ブランチ>` は使わないので、push のあとに fetch は要らない。origin に届かなければ、`close` はその理由の 1 行で止まる。
 - origin の先頭の commit が手元にないブランチ（ほかから push された）とは比べないので、そのブランチにだけ入っている commit で止まったら、fetch してから呼び直す。
 - 取り込まれていない commit で止まったら、取り込んでから呼び直す。
-- ignored なファイルで止まったら、行に `.claude/` の外の消す候補のパスがすべて並ぶ（ignored なフォルダは 1 つにまとまる）。この一覧を人に示して、消すかを決めてもらう。消したら `close` を呼び直す。
 
 ## 止まった Agent に答える
 

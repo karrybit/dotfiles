@@ -31,8 +31,9 @@
 # permission rule cannot tell a workspace start made from any other, and this
 # command can be allowed instead because it checks. close finds the
 # workspace (or tab) the ledger names, checks that it may be closed and that
-# the work at the place has landed, removes a worktree the way its kind needs
-# (the branch stays), and closes the workspace. A herdr worktree's parent
+# the work at the place has landed, removes a worktree the way its kind needs,
+# with the files git ignores in it (the branch stays), and closes the
+# workspace. A herdr worktree's parent
 # workspace is closed only when start noted opening it.
 #
 # A <name> (and the <agent> of tab) stands for the Herdr agent named by it
@@ -371,26 +372,6 @@ close_workspace() {
   esac
   changes=$(safe_git "$place" status --porcelain --ignore-submodules=all)
   [ -z "$changes" ] || stop "$place has uncommitted changes"
-  # Removing a worktree deletes the files git ignores too (.env.local, a local
-  # database), and status does not list them. The stop lists every path, an
-  # ignored folder once, so the owner can decide on them without a search.
-  # ls-files also lists the files of a folder it lists as ignored when the
-  # folder is untracked; the sorted list puts the folder first, so awk drops
-  # them.
-  # Claude Code keeps its own scratch in the worktree's .claude/ (its log of
-  # writes, the lock of its scheduled tasks), which may go with the worktree,
-  # so the paths under .claude/ are left off. A .claude that is a link is
-  # listed as .claude, with no slash, so it stops close.
-  if [ "$kind" != dir ]; then
-    # Claude Code also makes an empty .claude/.cc-writes/ in a folder deeper
-    # in that it works in; that one goes only when it is empty. The .claude/
-    # it leaves empty is not ignored, so it is not listed.
-    find "$place" -type d -name .cc-writes -empty -exec rmdir -- {} +
-    ignored=$(safe_git "$place" -c core.quotePath=false ls-files --others --ignored --exclude-standard --directory)
-    ignored=$(printf '%s\n' "$ignored" | awk '!/^\.claude\//')
-    [ -z "$ignored" ] || stop "$place has ignored files that removing it would delete: $(printf '%s\n' "$ignored" |
-      awk 'd != "" && index($0, d) == 1 { next } /\/$/ { d = $0 } { print }' | paste -sd ' ' -)"
-  fi
   # What is pushed is read from origin's branch heads now, not from the
   # remote-tracking refs, which a push can leave behind. A head whose commit
   # is not here cannot be compared, so it is skipped and its commits count as
@@ -421,10 +402,12 @@ close_workspace() {
       ;;
   esac
 
-  # The files git ignores under .claude/ go first, so the worktree is removed
-  # with nothing ignored left in it. clean -X removes only ignored files and
-  # keeps the tracked ones, such as a .claude/settings.json.
-  [ "$kind" = dir ] || safe_git "$place" clean -fdXq -- .claude
+  # Once every check has passed, the files git ignores (.venv, node_modules,
+  # a build cache, Claude Code's scratch in .claude/) go first, so the
+  # worktree is removed with nothing ignored left in it. clean -X removes only
+  # ignored files and keeps the tracked ones; it removes a link, not what the
+  # link points at.
+  [ "$kind" = dir ] || safe_git "$place" clean -fdXq
 
   parent=
   kept=
