@@ -81,3 +81,8 @@
 .config/claude/skills/karrybit/evals/researcher/fixtures
 .config/claude/skills/karrybit/evals/researcher/plugin-eval/other-repo/graders/no-record-paths.md
 .config/claude/skills/karrybit/evals/researcher/plugin-eval/other-repo/graders/no-bd.md
+
+# The explain eval's brief case checks rubric paths with rubric-paths-exist
+# alone. The evals folder is not exact_, so the removed grader stays on a
+# machine otherwise.
+.config/claude/skills/karrybit/evals/explain/plugin-eval/brief/graders/rubric-paths.md
