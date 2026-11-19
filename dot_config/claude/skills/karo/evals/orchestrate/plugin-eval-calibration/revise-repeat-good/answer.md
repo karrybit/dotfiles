@@ -1,7 +1,7 @@
 指摘 1 は G4 の Worker に差し戻し、指摘 2 は同じ指摘で 2 回差し戻しても解けていないので karo に問います。
 
-1. SendMessage（to: `d2a8`、「`docs/usage.md:8` の `--delim` を `--delimiter` に直して commit する。直したら `bin/lint docs/usage.md` の出力を返す」）。`d2a8` に届かなければ、G4 の Worker を同じ指摘で起動し直す。
-2. `d2a8` の完了通知を待ち、その commit を取り込み、`bin/lint` を走らせる。動いている Subagent がなくなるまで待ってから、ターンを終える。
+1. Agent（G4 の Worker の差し戻し、`run_in_background: true`、prompt: 「前の Worker `d2a8` の結果は R4 の commit。指摘は `docs/usage.md:8` の `--delim` が R2 の `--delimiter` と違うこと。`--delimiter` に直して commit し、`bin/lint docs/usage.md` の出力を返す」）。
+2. その Worker の完了通知を待ち、その commit を取り込み、`bin/lint` を走らせる。動いている Subagent がなくなるまで待ってから、ターンを終える。
 3. 指摘 2 は `a1f3` に 3 回目は返さない。
 
 karo への問い:

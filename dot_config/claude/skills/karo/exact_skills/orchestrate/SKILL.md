@@ -26,7 +26,7 @@ description: Task Orchestrator として、1 つの大きな仕事の作業の�
 
 - 次のどれかに当たったら、下の 1・2 の順に進める: オーナーの判断が要る、委任の範囲の外、優先の衝突、決定と事実の矛盾、権限の不足、破壊的な操作、ほかの資産への影響、独立したセッションか永続の Goal の追加、同じ指摘で 2 回差し戻しても解けない。
 
-1. 判断に影響しない Goal を区切りまで進め、問いに関わらない REVISE の指摘を元の Worker に差し戻し、background の Subagent をすべて待ち切る。
+1. 判断に影響しない Goal を区切りまで進め、問いに関わらない指摘を「readiness-review を起動する境目」の形で差し戻し、background の Subagent をすべて待ち切る。
    完了条件: 問いに関わらない指摘への Worker の結果が会話にあり、動いている Subagent がない。
 2. 最後のメッセージに、下の 8 項目を書いてターンを終える。
    完了条件: 最後のメッセージに 8 項目がすべてある。
@@ -48,15 +48,18 @@ description: Task Orchestrator として、1 つの大きな仕事の作業の�
   - 作業の設計から実装へ進む前。Goal が 2 つ以上あるか、共有の状態・権限・データの移行を変える Goal があるとき。
   - karo に完了を報告する前。変更に切替・移行・権限の変更が入るか、ブリーフがゲートに指定したとき。
 - Worker の完了ごとの確かめは、Worker のテストか `karrybit:verifier` に任せる。
-- REVISE は指摘ごとに元の Worker に差し戻し、同じ指摘で 2 回差し戻して解けない指摘だけを「karo に問う」に進める。
+- REVISE の指摘と、境目の外のレビュー（自動のセキュリティのレビューなど）の指摘は、指摘ごとにその Goal の Worker に差し戻す。差し戻しは新しい Worker の Subagent を起動し、前の Worker の結果、指摘、残した worktree のパスとブランチを渡す。
+- 統合の確かめで見つけた欠陥も同じ形で差し戻し、1 行で直る欠陥だけは Orchestrator が直して完了の報告に書く。
+- 同じ指摘で 2 回差し戻して解けない指摘だけを「karo に問う」に進める。
 - BLOCKED は「karo に問う」に進む。
 - READY を得ても、取り込み・push・merge は karo とオーナーに残す。
 
 ## Subagent の worktree
 
-- `isolation: worktree` は、変更が重なりうる Worker を並べるときだけ使い、順に動かす Worker は自分の worktree で動かす。
+- `isolation: worktree` は、変えるファイルが重なりうる Worker を並べるときだけ使い、順に動かす Worker と、変えるファイルが重ならずに並べる Worker は自分の worktree で動かす。
+- 自分の worktree で並べる Worker には `git add` と commit をさせず、commit は Orchestrator が Goal ごとに分ける。
 - `isolation: worktree` の Subagent が終わったら、その commit を `git merge --ff-only` か `git cherry-pick` で自分のブランチに取り込み、`git worktree remove <リテラルのパス>` と `git branch -d worktree-agent-<id>` で外す。`-d` は取り込んでいないブランチを断るので、取り込み忘れの変更は消えない。
-- 衝突したか REVISE のままで取り込めない worktree は残し、完了の報告にパスとブランチを書く。
+- 衝突したか REVISE のままで取り込めない worktree は残し、差し戻す Worker にパスとブランチを渡す。解けずに「karo に問う」に進むときは、残した worktree のパスとブランチを「証拠」に書く。
 - 自分が作った `.claude/worktrees/agent-*` だけを外し、ほかの worktree は残す。
 
 ## 再開と完了の条件
