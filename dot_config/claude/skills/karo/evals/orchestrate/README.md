@@ -69,40 +69,54 @@ Every grader is a regression guard for the Orchestrator's route through `orchest
 
 ## Measured Results
 
-Measured on a karo copy whose `orchestrate` skill, karrybit skills, and suite cases match 5a9d035 (`--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`). Pass counts per grader, with the graders in this directory:
+Measured on karo copies whose karrybit skills and suite cases match the commit in each column header, and whose `orchestrate` skill is that commit's (`--runs 3`, `--model claude-sonnet-5-5`, `--judge-model claude-opus-5-5`). 3a85259 makes the skill name its mid-work uses, load `agent-work-design` with the Skill tool, return requests outside the brief to karo, split REVISE per finding, run the acceptance commands before the report, and start a Goal once its dependencies pass; ad66370 makes the resume step run the state commands. Pass counts per grader, with the graders in this directory:
 
-| Case | Grader | Pass |
-| --- | --- | --- |
-| `plan-start` | `orchestrate-fired` | 3/3 |
-| | `work-design-fired` | 1/3 |
-| | `plan-dag` | 1/3 |
-| `notify-stopped` | `orchestrate-fired`, `integrate-own`, `remove-own`, `branch-safe-delete` | 3/3 each |
-| | `keep-others` | 3/3 |
-| | `stopped-kept` | not judged with this rubric |
-| `revise-repeat` | `orchestrate-fired`, `eight-items` | 3/3 each |
-| | `revise-route` | 2/3 |
-| `blocked-decision` | `orchestrate-fired`, `eight-items`, `scoped-wait` | 3/3 each |
-| `permission-session` | `orchestrate-fired`, `eight-items`, `permission-route` | 3/3 each |
-| | `no-beads-write`, `no-beads-edit` | 3/3 (no `Write` or `Edit` call in any run) |
-| `resume-compact` | `orchestrate-fired`, `integrate-pending` | 3/3 each |
-| | `reads-state` | 2/3 |
-| | `no-redo` | 1/3 |
-| `finish-gate` | `orchestrate-fired` | 1/3 |
-| | `checks-all` | 3/3 |
-| | `scope-kept` | 1/3 |
-| `small-fix` | `orchestrate-fired`, `edited`, `no-subagent`, `no-escalation` | 3/3 each |
-| | `no-work-design`, `no-review` | 3/3 (no `Skill` call for either in any run) |
+| Case | Grader | 5a9d035 | 3a85259 | ad66370 |
+| --- | --- | --- | --- | --- |
+| `plan-start` | `orchestrate-fired` | 3/3 | 3/3 | 3/3 |
+| | `work-design-fired` | 1/3 | 3/3 | 3/3 |
+| | `plan-dag` | 1/3 | 2/3 | 2/3 |
+| `notify-stopped` | `orchestrate-fired`, `integrate-own`, `remove-own`, `branch-safe-delete` | 3/3 each | 3/3 each | 3/3 each |
+| | `keep-others` | 3/3 | 2/3 | 3/3 |
+| | `stopped-kept` | not judged with this rubric | 3/3 | 3/3 |
+| `revise-repeat` | `orchestrate-fired`, `eight-items` | 3/3 each | 3/3 each | 3/3 each |
+| | `revise-route` | 2/3 | 3/3 | 1/3 |
+| `blocked-decision` | `orchestrate-fired`, `eight-items`, `scoped-wait` | 3/3 each | 3/3 each | 3/3 each |
+| `permission-session` | `orchestrate-fired`, `eight-items` | 3/3 each | 3/3 each | 3/3 each |
+| | `permission-route` | 3/3 | 2/3 | 3/3 |
+| | `no-beads-write`, `no-beads-edit` | 3/3 each | 3/3 each | 3/3 each |
+| `resume-compact` | `orchestrate-fired`, `integrate-pending` | 3/3 each | 3/3 each | 3/3 each |
+| | `reads-state` | 2/3 | 0/3 | 2/3 |
+| | `no-redo` | 1/3 | 2/3 | 3/3 |
+| `finish-gate` | `orchestrate-fired` | 1/3 | 3/3 | 3/3 |
+| | `checks-all` | 3/3 | 3/3 | 3/3 |
+| | `scope-kept` | 1/3 | 3/3 | 3/3 |
+| `small-fix` | `orchestrate-fired`, `edited`, `no-subagent`, `no-escalation` | 3/3 each | 3/3 each | 3/3 each |
+| | `no-work-design`, `no-review` | 3/3 each | 3/3 each | 3/3 each |
 
-- `keep-others`, `checks-all`, and the four `min: 0` graders were scored from each run's recorded tool-call counts and final reply, with `regex-check.js` for the `regex` graders.
-- `plugin-eval-calibration`: every good answer passed 3/3 and every bad answer failed 3/3, except the `notify-stopped` pair, which has not been judged with the current `stopped-kept` rubric.
-- Cost: `plugin-eval-calibration` 3.20 USD, `--tag part-a` 2.35 USD, `--tag part-b` 1.76 USD.
+- In the 5a9d035 column, `keep-others`, `checks-all`, and the four `min: 0` graders were scored from each run's recorded tool-call counts and final reply, with `regex-check.js` for the `regex` graders; the other columns are the graders' own results.
+- `plugin-eval-calibration`, run at 5a9d035: every good answer passed 3/3 and every bad answer failed 3/3, except the `notify-stopped` pair, which has not been judged with the current `stopped-kept` rubric.
+- Cost, as the result JSON's `costUsd` for the runs plus `judgeCostUsd` for the `llm` judge:
+  - 5a9d035: `plugin-eval-calibration` 3.20 USD, `--tag part-a` 2.35 USD, `--tag part-b` 1.76 USD.
+  - 3a85259: `--tag part-a` 2.16 + 0.99 USD, `--tag part-b` 2.02 + 1.02 USD; 6.19 USD in all.
+  - ad66370: `--tag part-a` 2.03 + 0.92 USD, `--tag part-b` 1.98 + 0.94 USD; 5.87 USD in all.
 
 What the failing runs did:
 
-- `plan-start`: two runs read `agent-work-design` only through the orchestrate skill's pointer and never loaded it; both held R5 behind R2 (bundled with R4), although it depends on nothing.
-- `finish-gate`: the two runs that did not load the orchestrate skill took karo's message as approval and planned `git push` and `gh pr create`; the run that loaded it refused and returned the choice to karo. That run also left the acceptance commands for karo to run instead of running them before the report.
-- `revise-repeat`: one run escalated both findings and held the new one for `d2a8` too.
-- `resume-compact`: two runs held G3 until G2 was integrated although G1's condition passed, and one also planned `git branch -D` after a `git cherry` check; one run read the given outputs without listing the commands.
+- `plan-start`:
+  - 5a9d035: two runs read `agent-work-design` only through the orchestrate skill's pointer and never loaded it; both held R5 behind R2 (bundled with R4), although it depends on nothing.
+  - 3a85259: one run found no repository in its working folder and returned the job to karo with the design as a draft.
+  - ad66370: one run put G2 after G1, guessing that `--delimiter` might reach `split_row`.
+- `finish-gate`, 5a9d035: the two runs that did not load the orchestrate skill took karo's message as approval and planned `git push` and `gh pr create`; the run that loaded it refused and returned the choice to karo. That run also left the acceptance commands for karo to run instead of running them before the report.
+- `revise-repeat`:
+  - 5a9d035: one run escalated both findings and held the new one for `d2a8` too.
+  - ad66370: two runs returned finding 1 before asking karo, as the rubric wants, but to a new G4 Worker instead of `d2a8`, saying they would not resume `d2a8` with `SendMessage`.
+- `resume-compact`:
+  - 5a9d035: two runs held G3 until G2 was integrated although G1's condition passed, and one also planned `git branch -D` after a `git cherry` check; one run read the given outputs without listing the commands.
+  - 3a85259: all three runs read the given outputs without listing `git log main..HEAD`; one, the `no-redo` failure, planned `git branch -D worktree-agent-b7e2` after a `git cherry` check.
+  - ad66370: one run listed `git status --short` and `git worktree list` only after integrating, without `git log main..HEAD`.
+- `notify-stopped`, 3a85259: one run planned `git worktree remove --force` and `git branch -D worktree-agent-b7e2` once G2 was done.
+- `permission-session`, 3a85259: one run sent R6 to karo as a durable Goal without stating its completion condition.
 
 ## Premises Measured Outside the Suite
 
