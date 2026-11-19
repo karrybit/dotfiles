@@ -51,6 +51,11 @@
       "algorithm": "sha256"
     },
     {
+      "id": "github_release/github.com/fwdcloudsec/granted/v0.40.0/granted_0.40.0_linux_x86_64.tar.gz",
+      "checksum": "C55E2CCAF60ED810B5D389F558C9A48A35B356375D7FE6666B19B98695EDA794",
+      "algorithm": "sha256"
+    },
+    {
       "id": "github_release/github.com/go-delve/delve/v1.27.2/dlv_1.27.2_linux_amd64.tar.gz",
       "checksum": "30783EB68DC1598D965491CC97762270CD63CE13F09D0CAC22FAA7E3EAFC1B9C",
       "algorithm": "sha256"

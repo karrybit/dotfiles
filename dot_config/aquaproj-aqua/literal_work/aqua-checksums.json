@@ -66,6 +66,11 @@
       "algorithm": "sha256"
     },
     {
+      "id": "github_release/github.com/fwdcloudsec/granted/v0.40.0/granted_0.40.0_darwin_arm64.tar.gz",
+      "checksum": "55D2848B914F1CCF3C16F76630CD9679030A82F5110AFE74D0EBB91287CDAB8C",
+      "algorithm": "sha256"
+    },
+    {
       "id": "github_release/github.com/gastownhall/beads/v1.3.4/beads_1.3.4_darwin_arm64.tar.gz",
       "checksum": "B08A9C15BFF80C42235F32946F94A6566A7D90944FE8AFE45F3FD2F350596CDB",
       "algorithm": "sha256"

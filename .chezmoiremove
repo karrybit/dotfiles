@@ -20,6 +20,9 @@
 # Plannotator was retired.
 .config/zsh/zshenv.d/20_tool_plannotator.zsh
 
+# granted's assume picks an AWS profile and logs in to SSO.
+.config/zsh/functions/aws-login
+
 # karo keeps no PROVENANCE.md. Its plugin folder and skill folders are not
 # exact_, so these files stay on a machine after leaving the source.
 .config/claude/skills/karo/PROVENANCE.md
