@@ -77,7 +77,7 @@ description: '$KARO_HOME のタスク・判断待ち・タスクかプロジェ�
 
 - 複数のタスクかプロジェクトに効く決定は decision の bead にし、そのタスクの中だけの決定は `決定:` の comment にする。karo 自身の長い目の運用・設計の決定は、bead にも comment にも全文を書かず、`karo:record` skill の「Decision Record を書く」で記録にする。タスクを止める判断待ちは、決まる先がどちらでも、下の 1 の decision の bead で持つ。
 - 判断待ちの問いから決定までを、1 つの decision の bead で持つ。判断待ちは label `human` があり開いている bead、決定は閉じて close_reason に決定の文か Decision Record のパスがある bead で、開いている decision を決まったこととして扱わない。
-- 規則・`state.md`・ノートから Beads の決定を指すときは `決定 <ID>` と、Decision Record を指すときはそのパス（`decisions/YYYY-MM-DD-<話題>.md`）を書く。今の判断待ちと効く決定の引き方は、`$KARO_HOME/rule/information-design.md` の「探す」の表にある。
+- 規則・`state.md`・ノートから Beads の決定を指すときは `決定 <ID>` と、Decision Record を指すときはそのパス（`decisions/YYYY-MM-DD-<話題>.md`）を書く。今の判断待ちと効く決定の引き方は、`karo:record` skill の「探す」の表にある。
 
 1. 判断が必要になったら、`bd create '<問い 1 文>' -t decision -l human -l project:<名前> --body-file <本文> --json` で作る。本文は「問い」「選択肢と推奨」「出典」（上の「comment の語」の会話の出典の形）の節にする。全プロジェクトに効く問いは label `project:all` にする。タスクを止めるなら、`bd dep add <タスク> <決定> --json` で blocker にする（`--parent` の子は blocker にならない）。
    完了条件: `bd human list --status open --json` に出る。
@@ -93,7 +93,7 @@ description: '$KARO_HOME のタスク・判断待ち・タスクかプロジェ�
 ### 今の状況を読む
 
 - 作業・タスク・順序・並列・次にやることを答える返事は、その返事の中で引いた `bd` か bv（下の「分析する（bv）」）の出力から書く（SessionStart の hook の出力はセッションを始めたときの写しで、そのあとの変化を含まない）。
-- 状況は下の表のコマンドで引く。karo:checkin・karo:checkout・`$KARO_HOME/AGENTS.md`・`$KARO_HOME/rule/information-design.md` はこの節を指し、コマンドを写さない。プロジェクトに絞るときは `--label project:<名前>` を足す。
+- 状況は下の表のコマンドで引く。karo:checkin・karo:checkout・`$KARO_HOME/AGENTS.md` はこの節を指し、コマンドを写さない。プロジェクトに絞るときは `--label project:<名前>` を足す。
 
 | 問い | コマンド |
 | --- | --- |
