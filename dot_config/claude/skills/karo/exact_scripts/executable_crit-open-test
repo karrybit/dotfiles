@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
-# Show that crit-open hands the tb-view beside it only "view - crit" and http://localhost:<port>,
-# with --no-merge when it comes first, for a port made of digits, and refuses any other argument,
-# against a copy of crit-open beside a tb-view stub that logs what it is given (tb-view-test covers
-# tb-view). settings-test checks that the settings allow crit-open and run it outside the sandbox.
+# Show that crit-open reloads the terminal-browser tab showing http://localhost:<port> (or a page
+# under it) and opens nothing; that otherwise, including when only a tab on another port such as
+# <port>0 is open, it hands the tb-view beside it only "view - crit" and http://localhost:<port>;
+# that --no-merge first always goes to tb-view with --no-merge and reloads nothing; and that it
+# refuses any argument other than a port made of digits. It runs a copy of crit-open beside a tb-view
+# stub, with a terminal-browser stub on PATH that prints the tabs in TABS for ls and logs actions
+# (tb-view-test covers tb-view). settings-test checks that the settings allow crit-open and run it
+# outside the sandbox.
 # usage: crit-open-test   (tests the crit-open beside this script; its files go to a temporary
 #        directory that is removed)
 set -uo pipefail
@@ -20,23 +24,46 @@ cat > "$tmp/tb-view" <<'EOF'
 #!/bin/sh
 (IFS='|'; printf '%s\n' "$*") >> "$FAKE_LOG"
 EOF
-chmod +x "$tmp/tb-view"
-
-export FAKE_LOG=$tmp/log
+mkdir "$tmp/fake"
+cat > "$tmp/fake/terminal-browser" <<'EOF'
+#!/bin/sh
+case $1 in
+  ls) [ "$*" = "ls --all --json" ] || echo "unexpected terminal-browser $*" >> "$FAKE_LOG"; printf '%s\n' "$TABS" ;;
+  *) (IFS='|'; printf 'tb|%s\n' "$*") >> "$FAKE_LOG" ;;
+esac
+EOF
+chmod +x "$tmp/tb-view" "$tmp/fake/terminal-browser"
+export PATH=$tmp/fake:$PATH FAKE_LOG=$tmp/log
+# Two browsers: one with a tab on port 498090, one with tab 2 on a page under port 49809.
+other='{"key": "1-1", "tabs": [{"id": 1, "url": "http://localhost:498090/"}]}'
+open_tabs='{"self": null, "browsers": ['"$other"', {"key": "2-1", "tabs": [{"id": 1, "url": "https://example.com/"}, {"id": 2, "url": "http://localhost:49809/files"}]}]}'
+export TABS='{"self": null, "browsers": []}'
 run() {
   : > "$FAKE_LOG"
   out=$("$co" "$@" 2>&1); code=$?
 }
 
+TABS=$open_tabs run 49809
+if [[ $code -eq 0 && $(cat "$FAKE_LOG") == "tb|action|--browser|2-1|--tab|2|--|reload" && $out == "crit-open: reloaded http://localhost:49809" ]]; then
+  pass "a tab showing the port is reloaded and nothing is opened"
+else
+  fail "a tab showing the port: exit $code: $out: $(paste -sd '/' "$FAKE_LOG")"
+fi
+TABS='{"self": null, "browsers": ['"$other"']}' run 49809
+if [[ $code -eq 0 && $(cat "$FAKE_LOG") == "view - crit|http://localhost:49809" ]]; then
+  pass "with only a tab on another port, the port opens in the view - crit pane"
+else
+  fail "a tab on another port: exit $code: $out: $(paste -sd '/' "$FAKE_LOG")"
+fi
 run 49809
 if [[ $code -eq 0 && $(cat "$FAKE_LOG") == "view - crit|http://localhost:49809" ]]; then
-  pass "a port opens http://localhost:<port> in the view - crit pane"
+  pass "with no browser, a port opens http://localhost:<port> in the view - crit pane"
 else
   fail "a port: exit $code: $out: $(paste -sd '/' "$FAKE_LOG")"
 fi
-run --no-merge 49809
+TABS=$open_tabs run --no-merge 49809
 if [[ $code -eq 0 && $(cat "$FAKE_LOG") == "view - crit|http://localhost:49809|--no-merge" ]]; then
-  pass "--no-merge before the port is passed on"
+  pass "--no-merge before the port is passed on and reloads nothing"
 else
   fail "--no-merge: exit $code: $out: $(paste -sd '/' "$FAKE_LOG")"
 fi

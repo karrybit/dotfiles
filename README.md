@@ -257,7 +257,9 @@ a browser in a Herdr pane. It comes from Homebrew, not aqua, because the copy
 aqua unpacks fails macOS's code signature check and macOS refuses to open it.
 The karo plugin's `crit-open` and `view-open` open it through the `tb-view`
 beside them, which names the new pane `view - <name>` when terminal-browser is
-its foreground process;
+its foreground process. `crit-open` reloads the tab instead when one already
+shows the review's `http://localhost:<port>`, so each crit review keeps its
+own tab;
 closing the pane ends its browser, and the daemon exits 15 seconds after the
 last one. Chezmoi keeps three of its files:
 
