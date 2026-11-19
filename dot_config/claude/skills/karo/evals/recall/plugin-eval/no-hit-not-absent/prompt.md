@@ -11,5 +11,5 @@ allowed_tools: [Read, Glob, Grep, Skill]
 ```json
 {"query":"Zenn","count":0,"total_matches":0,"hits":[],
  "budget":{"timed_out":false},
- "_meta":{"index_freshness":{"stale":true,"age_seconds":5400,"stale_threshold_seconds":1800,"pending_sessions":3}}}
+ "_meta":{"index_freshness":{"stale":true,"last_indexed_at":"2026-11-19T09:00:00Z","age_seconds":5400,"stale_threshold_seconds":1800,"pending_sessions":3}}}
 ```

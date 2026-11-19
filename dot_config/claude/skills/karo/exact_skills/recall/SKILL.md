@@ -29,16 +29,16 @@ description: '過去の会話（Claude Code の transcript）から、今の作�
    完了条件: 語・workspace・期間が決まっている。
 2. `cass search '<語>' --workspace '<workspace>' --days <日数> --mode lexical --robot --robot-meta --fields source_path,line_number,created_at,agent,snippet --max-content-length 160 --limit 5 --max-tokens 2000 --timeout 2000` を単独で実行する。
    - `budget.timed_out` が true なら、その検索は「探しきれなかった」と扱う。
-   - `_meta.index_freshness.stale` が true で、探す出来事が直近 30 分にあるときは、`cass index --json` を 1 回実行してから同じ検索をやり直す。古い index でも、検索が裏で次の検索のための更新を始める。
+   - 当たりが 0 件か足りず、探す出来事が `_meta.index_freshness.last_indexed_at` より後にありうるときは、`cass index --json` を 1 回実行してから同じ検索をやり直す。`last_indexed_at` より後の会話は index にない。`_meta.index_freshness.stale` は index と cass の DB の食い違いだけを表し、index の後の会話があっても false のままなので、この判断に使わない。
    - 出力の `error` が index の作り直しや保守を求めたら、そこで止めてオーナーに伝える。
    - 当たりがないか足りないときは、語の言い換え、期間を広げる、`--workspace` を外す、のどれか 1 つずつで広げ、広げるのは合わせて 3 回までにする。
 
-   完了条件: 当たりの一覧か 0 件の結果と、探した語・workspace・期間と、`stale`・`timed_out` の値が手元にある。
+   完了条件: 当たりの一覧か 0 件の結果と、探した語・workspace・期間と、`last_indexed_at`・`timed_out` の値が手元にある。
 3. snippet で問いに関わる当たりを 3 件まで選び、`cass view <source_path> --message-index <line_number> -C 3 --json` を単独で実行して前後の原文を読む（元のファイルが消えたあとも、cass の archive から読める）。決定・合意・理由を答えるときは、snippet だけで答えずに原文を読む。`cass view` が `error` を返したら、その `kind` を書き、その当たりは原文を確かめていないと書く。
    完了条件: 答えに使う当たりのすべてに、`cass view` の原文か、読めなかった `kind` がある。
 4. 原文の発言を、発言・提案・合意・決定・未確定のどれかに分ける。決定と書くのは、同じ決定が `$KARO_HOME/decisions/` の置き換えられていない Decision Record か Beads（閉じた decision の bead か `決定:` の comment）にあるものだけにする。原文にオーナーが決めたとあっても記録にないものは「過去の会話の発言（記録なし）」と書き、今も効くかをオーナーに確かめる。効くと答えたら、karo 自身の長い目の方針は `karo:record` skill の「Decision Record を書く」で、それ以外は `karo:tasks` skill の「判断待ちと決定」の 3 で記録にする。
    完了条件: 答えに使う発言のすべてに分類があり、決定と書いたものには Decision Record のパスか Beads の ID がある。
-5. 要旨・分類・出典を返す。当たりがなかったときは「この範囲では見つからなかった」と書き、探した語・workspace・期間・`stale`・`timed_out` と、cass に残るのは `karo:checkout` skill の 6 の保持期間の中の会話だけであることを添える。
+5. 要旨・分類・出典を返す。当たりがなかったときは「この範囲では見つからなかった」と書き、探した語・workspace・期間・`last_indexed_at`・`timed_out` と、cass に残るのは `karo:checkout` skill の 6 の保持期間の中の会話だけであることを添える。
    完了条件: 返事のすべての主張に出典があるか、見つからなかった範囲が書いてある。
 
 ## 出典

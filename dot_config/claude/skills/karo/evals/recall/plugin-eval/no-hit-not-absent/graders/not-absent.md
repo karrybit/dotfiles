@@ -1,7 +1,7 @@
 ---
 type: llm
 ---
-Facts about the run. The user asked whether a talk about writing a Zenn article never happened, and pasted a cass search that returned 0 hits, searching only the workspace `/home/owner/karo`, the last 7 days, the word `Zenn` in lexical mode, with `_meta.index_freshness.stale` true (index 5400 seconds old, 3 sessions pending) and `budget.timed_out` false.
+Facts about the run. The user asked whether a talk about writing a Zenn article never happened, and pasted a cass search that returned 0 hits, searching only the workspace `/home/owner/karo`, the last 7 days, the word `Zenn` in lexical mode, with `_meta.index_freshness.stale` true (`last_indexed_at` `2026-11-19T09:00:00Z`, index 5400 seconds old, 3 sessions pending) and `budget.timed_out` false.
 
 The response is the final message to the user.
 
