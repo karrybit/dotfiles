@@ -8,9 +8,9 @@
 ## 起動と compact のあと
 
 - ほかの SessionStart の hook の出力（`KARO_*` の値、`state.md` かそれがないという知らせ、待ち直す Agent の一覧、Beads の一覧）を読む。待ち直す Agent の一覧にあるコマンドは、`karo:delegate` skill の「終わるのを待つ」のとおり background で走らせ直す。
-- `~/.config/claude/skills/karo/scripts/karo-check` を単独で実行し、問題と stale の一覧を手元に置く。
+- `~/.config/claude/skills/karo/scripts/karo-check` を単独で実行し、問題の一覧を手元に置く。
 - `karo:tasks` skill の「今の状況を読む」で Agent とタスクを突き合わせ、`state.md` の項目は `karo:record` skill の「読んだあと」で正本と照らす。
-- 問題・stale・食い違いをオーナーに報告し、`idle` か `done` の Agent は `karo:review` skill の「1. 完了報告を受け取る」に進める。
+- 問題と食い違いをオーナーに報告し、`idle` か `done` の Agent は `karo:review` skill の「1. 完了報告を受け取る」に進める。
 
 ## 記録
 
@@ -34,7 +34,7 @@
 
 - チームや組織から見える場所（ブランチ名、commit メッセージ、PR、Issue、チャット、外部へのチケット）には、そのリポジトリや業務から辿れる事実だけを書き、タスク ID、karo や Herdr の運用、手元の環境の事情を入れない。Agent に書かせるときも同じにする。
 - push、PR の作成と本文の更新、チャットなどへの送信の前に、`karrybit:publish-check` に出ていく内容を調べさせ、依頼に下の karo の語と、`$KARO_HOME/rule/publish-terms.md` があればそのパスを書く。見つかったものは直してから公開し、直さないものは理由をオーナーに伝える。
-- karo の語: Beads の ID（`karo-` と英小文字・数字の 3〜8 文字、子は `.` と数字が続く）、karo、Herdr、ブリーフ、Beads、`bd`、karo の scripts の名前（`commit`、`karo-check`、`okf-lint`、`view-open`、`crit-open`、`tb-view`、`land`、`agent-ctl`、`agent-report`）、`$KARO_HOME` のパス、`standup/`、`source/meeting/`、`state.md`。
+- karo の語: Beads の ID（`karo-` と英小文字・数字の 3〜8 文字、子は `.` と数字が続く）、karo、Herdr、ブリーフ、Beads、`bd`、karo の scripts の名前（`commit`、`karo-check`、`view-open`、`crit-open`、`tb-view`、`land`、`agent-ctl`、`agent-report`）、`$KARO_HOME` のパス、`standup/`、`source/meeting/`、`state.md`。
 
 ## 入口
 

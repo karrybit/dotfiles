@@ -57,11 +57,12 @@ edit "a broken note that reads the edited file does not stop it" "$v/standup/202
 rm "$v/doc/reader.md"
 edit "a path that climbs out of KARO_HOME is not checked" "$v/standup/../../wt2/standup/2026-01-02.md" $'## 例' 0 ""
 kept "rumdl leaves a path that climbs out of KARO_HOME" "$tmp/wt2/standup/2026-01-02.md"
-# A copy of this folder without the plugin's schema makes karo-check unable to run.
+# A copy of this folder whose karo-check is a stub that cannot run stands in for a check that cannot run.
 post_edit_bin=$tmp/bin
 mkdir -p "$post_edit_bin"
-for s in "$bin"/*; do [[ ${s##*/} == frontmatter-schema.yaml ]] || ln -s "$s" "$post_edit_bin/"; done
-edit "a check that cannot run exits 2 with its reason" "$v/standup/2026-01-04.md" "${note//01-01/01-04}" 2 "karo-check: no schema"
+for s in "$bin"/*; do [[ ${s##*/} == karo-check ]] || ln -s "$s" "$post_edit_bin/"; done
+printf '#!/bin/sh\necho "karo-check: cannot run yq" >&2\nexit 2\n' > "$post_edit_bin/karo-check" && chmod +x "$post_edit_bin/karo-check"
+edit "a check that cannot run exits 2 with its reason" "$v/standup/2026-01-04.md" "${note//01-01/01-04}" 2 "karo-check: cannot run"
 post_edit_bin=
 edit "a file outside KARO_HOME is not checked" "$tmp/wt/standup/2026-01-02.md" $'## 例' 0 ""
 kept "rumdl leaves a file outside KARO_HOME" "$tmp/wt/standup/2026-01-02.md"

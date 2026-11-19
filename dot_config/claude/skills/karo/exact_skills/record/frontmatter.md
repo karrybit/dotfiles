@@ -5,9 +5,8 @@
 - `$KARO_HOME` の記録のフォルダ（この skill の `SKILL.md` の「書き込み先」の表のフォルダ）のノートは、1 行目から OKF（Open Knowledge Format v0.2）の YAML フロントマターを持つ。
 - 層・鮮度の考え方（何をいつ書くか）は `karrybit:data-information-design` skill にあり、このファイルは karo のフィールドの書き方を持つ。
 - どのノートも `date`・`description`・`tasks`・`projects` のキーを持つ。`date` と `description` には値を書く。`tasks` と `projects` は、ノートを作るきっかけになったタスクとプロジェクトを `rg` で引けるように書き、当たるものがなければ空のリスト `[]` にする（値のない `tasks:` は欠けになる）。`type` は任意。
-- 必須のフィールドの正本は karo plugin の `scripts/frontmatter-schema.yaml` の `required`（karo-check が読む。`$KARO_HOME` に schema のファイルがあっても読まない）。種類ごとの必須と置き場所は検査しない。
-- `~/.config/claude/skills/karo/scripts/karo-check` が、必須のフィールド、`date` の形、`tasks` の ID の形と `projects` の名前、リンク、wiki link を確かめる。確かめることの範囲は `scripts/karo-check` の冒頭にある。
-- 対象はこれらのフォルダの `.md` すべてで、対象にしないものは `frontmatter-schema.yaml` の `exclude` にある（imozuru が書く `investigation/YYYY-MM-DD-<話題>/sources/` の原文など）。
+- `~/.config/claude/skills/karo/scripts/karo-check` が、4 つのキーがあること、`date` の形、`description` が空でないこと、`tasks` の ID の形と `projects` の名前、wiki link を確かめる。ほかのフィールドと本文のリンク先は確かめない。確かめることの範囲は `scripts/karo-check` の冒頭にある。
+- 対象はこれらのフォルダの `.md` すべてで、imozuru が書く `investigation/YYYY-MM-DD-<話題>/sources/` の原文と `log.md` は対象にしない。
 
 ## フィールド
 
@@ -19,10 +18,9 @@
 | `tasks` | 必須のキー。タスク ID のブロック形式のリスト（`  - karo-a2v`）。タスク ID のない仕事は外のチケットのキー（`ABC-123`）。当たるものがなければ `tasks: []` |
 | `projects` | 必須のキー。プロジェクトの名前のブロック形式のリスト。当たるものがなければ `projects: []`。値は Project のノートの、`project/repo/` か `project/misc/` より後ろのパスから `.md` を除いたもの（`github.com/acme/demo`、`work`） |
 | `status` | 下書きは `draft`、置き換わったものは `deprecated`。仕上がったもの（Accepted の Decision Record を含む）には書かない |
-| `supersedes` | 置き換えた古いノートの、`$KARO_HOME` からのパス |
+| `supersedes` | 置き換えた古いノートの、`$KARO_HOME` からのパス。karo-check は確かめないので、そのパスのファイルがあることを書くときに確かめる |
 | `resource` | ノートが表す実物の URL（リポジトリ、PR） |
 | `sources` | `- { id, resource, title }` のリスト。外の原文（議事録、Slack、資料、ドキュメント）の URL |
-| `stale_after` | 見直しの日時。`2026-12-05T00:00:00+09:00` |
 
 - ほかの道具が書いたキーは、消さずにそのまま残す。
 - 値が `` ` ``・`[`・`*`・`&`・`!`・`|`・`>`・`'`・`"`・`%`・`@` で始まるとき、`: ` か ` #` を含むときは、値を単一引用符で囲む。

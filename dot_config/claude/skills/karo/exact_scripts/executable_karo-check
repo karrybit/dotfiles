@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-# Check the karo records: first the general checks of okf-lint (beside this script) against the schema
-# (frontmatter and the fields every note requires, path links, stale_after), then the checks that belong to the karo structure (the
-# forms of dates and task IDs; the project vocabulary; wiki links; and the task database, .beads, kept out
-# of git). It is the one implementation of the record checks, run at three depths:
+# Check the karo records: each .md in a record folder starts with a frontmatter that yq can read, holding
+# the keys date, description, tasks and projects, with date in YYYY-MM-DD and description not empty;
+# each item of tasks has the form of a task ID and each item of projects names a project note or is
+# 'all' (both may be the empty list []). A [[...]] wiki link in any note is reported, and on a whole run
+# the task database, .beads, is kept out of git. It is the one implementation of the record checks, run
+# at three depths:
 #   after an edit   post-edit runs --only <the edited file> and stops on that file's problems alone
 #   at a commit     commit runs --only <the staged paths>, removed ones included, on what the commit holds
 #   whole           karo:setup, karo:checkout, and karo:land run it without --only
@@ -12,59 +14,42 @@
 # digits, a child with ".<n>" added (karo-a2v.1, t-a1b2c3d4, ABC-12). Tasks live in the task database,
 # which karo-check does not read, so only the form is checked.
 # usage: karo-check [--only <path>]... [<karo dir>]
-# Default: KARO_HOME, or ~/karo when unset (only its record folders, listed in record-folders beside this script, get the karo checks). The schema is frontmatter-schema.yaml beside this script, the karo
-# plugin's own, so a schema file in the karo dir is not read.
-# --only limits the check to the given vault-relative paths (changed, added, or removed files; for a rename, both
-# paths). okf-lint gets the same paths; the karo checks also read, for a removed project file, the notes
-# listing it as a project. A file brought in is checked in full.
-# Prints "<path><TAB><problem>" per problem, okf-lint's and its own, and exits 1 when any is found, or stops
-# with okf-lint's code 2 when okf-lint finds an argument or schema error or cannot run yq, fd, or rg.
-# Notes past their stale_after are printed as "<path><TAB>stale since ..." and do not fail the check.
+# Default: KARO_HOME, or ~/karo when unset; only its record folders, listed in record-folders beside this
+# script, get the frontmatter checks, and the originals imozuru keeps (investigation/<topic>/sources/ and
+# investigation/<topic>/log.md) are left out.
+# --only limits the check to the given paths from the karo dir (changed, added, or removed files; for a
+# rename, both paths) and, for a removed project file, the notes listing it as a project. A file brought
+# in is checked in full.
+# Prints "<path><TAB><problem>" per problem and exits 1 when any is found, or exits 2 when the karo dir
+# cannot be entered or yq, fd, or rg cannot run ("karo-check: cannot run <tool>").
 set -uo pipefail
 # Where aqua installs yq, rg, and fd, each call goes through aqua's proxy, which adds a start-up cost, and a
-# whole run makes hundreds of calls. Call the binaries that aqua which names instead, in this script and in
-# okf-lint, through exported functions: a binary's file name may differ from the command's (yq_darwin_arm64),
-# so adding its folder to PATH would not do.
+# whole run makes hundreds of calls. Call the binaries that aqua which names instead, through functions: a
+# binary's file name may differ from the command's (yq_darwin_arm64), so adding its folder to PATH would
+# not do.
 if command -v aqua >/dev/null; then
-  yq_bin=$(aqua which yq 2>/dev/null) && [[ -x $yq_bin ]] && { yq() { "$yq_bin" "$@"; }; export yq_bin; export -f yq; }
-  rg_bin=$(aqua which rg 2>/dev/null) && [[ -x $rg_bin ]] && { rg() { "$rg_bin" "$@"; }; export rg_bin; export -f rg; }
-  fd_bin=$(aqua which fd 2>/dev/null) && [[ -x $fd_bin ]] && { fd() { "$fd_bin" "$@"; }; export fd_bin; export -f fd; }
+  yq_bin=$(aqua which yq 2>/dev/null) && [[ -x $yq_bin ]] && yq() { "$yq_bin" "$@"; }
+  rg_bin=$(aqua which rg 2>/dev/null) && [[ -x $rg_bin ]] && rg() { "$rg_bin" "$@"; }
+  fd_bin=$(aqua which fd 2>/dev/null) && [[ -x $fd_bin ]] && fd() { "$fd_bin" "$@"; }
 fi
+for tool in yq fd rg; do
+  "$tool" --version >/dev/null 2>&1 || { echo "karo-check: cannot run $tool" >&2; exit 2; }
+done
 only=()
 while [[ ${1:-} == --only ]]; do only+=("${2#./}"); shift 2; done
 vault=${1:-${KARO_HOME:-$HOME/karo}}
 bin=$(cd "$(dirname "$0")" && pwd)
-lint=$bin/okf-lint
 # The record folders, the one list commit takes its record paths from too
 read -r -a folders < "$bin/record-folders"
 cd "$vault" || exit 2
-SCHEMA=$bin/frontmatter-schema.yaml
-[[ -f $SCHEMA ]] || { echo "karo-check: no schema at $SCHEMA" >&2; exit 2; }
+excl='^investigation/[^/]+/(log\.md$|sources/)'
 problems=0
-stale=0
 report() { printf '%s\t%s\n' "$1" "$2"; problems=$((problems+1)); }
 
-# The general checks. okf-lint's lines are passed on and counted with the karo checks' lines; its own count
-# lines are dropped, and when it stops with code 2 its output goes to stderr and nothing is counted.
-lint_args=()
-for p in ${only[@]+"${only[@]}"}; do lint_args+=(--only "$p"); done
-lint_out=$("$lint" ${lint_args[@]+"${lint_args[@]}"} "$SCHEMA" . 2>&1); code=$?
-(( code > 1 )) && { printf '%s\n' "$lint_out" >&2; exit "$code"; }
-while IFS= read -r l; do
-  if [[ $l == *$'\t'* ]]; then
-    printf '%s\n' "$l"
-    if [[ ${l#*$'\t'} == "stale since "* ]]; then stale=$((stale+1)); else problems=$((problems+1)); fi
-  elif [[ -n $l && ! $l =~ ^okf-lint:\ [0-9]+\ (stale\ note|problem)\(s\)$ ]]; then
-    printf '%s\n' "$l" >&2
-  fi
-done < <(printf '%s\n' "$lint_out")
-
-# The karo checks.
 # Frontmatter values are split on these two control characters, which yq replaces in every value it
 # prints; values never reach arithmetic, word splitting, or globbing.
 FS=$'\x1f' LS=$'\x1e'
 export FS LS
-excl=$(yq '(.exclude // []) | join("|")' "$SCHEMA")
 existing=()
 for d in "${folders[@]}"; do [[ -d $d ]] && existing+=("$d"); done
 # The project vocabulary: the path names of the project notes, <vcs>/<org>/<repo> for
@@ -92,29 +77,24 @@ if (( ${#only[@]} )); then
   (( ${#listed[@]} )) && add_scope < <(rg -l -F -x "${listed[@]}" ${existing[@]+"${existing[@]}"} 2>/dev/null)
 fi
 
-# Per note, one yq call prints the karo frontmatter problems, then one "@info" line with the fields the later
-# checks need ($FS between fields, $LS between list items; control characters in values become spaces).
-# yq emits a string literal even after a failing select, so each check is an if/else-null.
+# Per note, one yq call prints the frontmatter problems, then one "@info" line with the projects
+# ($LS between items; control characters in values become spaces). yq emits a string literal even after
+# a failing select, so each check is an if/else-null.
 expr='
   . as $d
   | ([
-      (if ($d | has("date")) and (($d.date | tostring | test("^\d{4}-\d{2}-\d{2}$")) | not) then "date is not YYYY-MM-DD" else null end),
+      (["date", "description", "tasks", "projects"][] as $k | (if ($d | has($k)) | not then "missing " + $k else null end)),
+      (if ($d | has("date")) and (($d.date // "" | tostring | test("^\d{4}-\d{2}-\d{2}$")) | not) then "date is not YYYY-MM-DD" else null end),
+      (if ($d | has("description")) and (($d.description // "" | tostring) == "") then "empty description" else null end),
       (($d.tasks // [])[] | (if (tostring | test("^[A-Za-z][A-Za-z0-9]*(-[A-Za-z0-9]+)+(\.[0-9]+)*$")) | not then "bad task id: " + tostring else null end))
     ] | map(select(. != null)) | .[] | sub("[[:cntrl:]]"; " ")),
-    ("@info" + strenv(FS) + ([
-      ((.type // "") | tostring | sub("[[:cntrl:]]"; " ")),
-      ((.projects // []) | map(tostring | sub("[[:cntrl:]]"; " ")) | join(strenv(LS)))
-    ] | join(strenv(FS))))'
-lint_out=$'\n'$lint_out$'\n'
+    ("@info" + strenv(FS) + ((.projects // []) | map(tostring | sub("[[:cntrl:]]"; " ")) | join(strenv(LS))))'
 while IFS= read -r f; do
-  # okf-lint reports frontmatter it cannot read; every .md in a record folder is a note, which okf-lint
-  # leaves out when it has no frontmatter and sits where no type lives
   first=; IFS= read -r first < "$f"
-  if [[ $first != --- ]]; then
-    [[ $lint_out == *$'\n'"$f"$'\tno frontmatter\n'* ]] || report "$f" "no frontmatter"
-    continue
+  [[ $first == --- ]] || { report "$f" "no frontmatter"; continue; }
+  if ! out=$(yq --front-matter=extract "$expr" "$f" 2>&1); then
+    report "$f" "unparseable frontmatter: ${out%%$'\n'*}"; continue
   fi
-  out=$(yq --front-matter=extract "$expr" "$f" 2>/dev/null) || continue
   # Process substitution, not a here-string: a here-string needs a temporary file, and when the
   # sandbox refuses it the loop is skipped silently and the problems go uncounted.
   info=
@@ -122,17 +102,15 @@ while IFS= read -r f; do
     [[ -z $p ]] && continue
     if [[ $p == "@info$FS"* ]]; then info=${p#"@info$FS"}; else report "$f" "$p"; fi
   done < <(printf '%s\n' "$out")
-  [[ -z $info ]] && continue
-  IFS=$FS read -r ty projects < <(printf '%s\n' "$info")
-  # each item of projects, which may be the empty list, comes from the project vocabulary or is 'all'
-  IFS=$LS read -r -a ps < <(printf '%s\n' "$projects")
+  # each item of projects comes from the project vocabulary or is 'all'
+  IFS=$LS read -r -a ps < <(printf '%s\n' "$info")
   for p in ${ps[@]+"${ps[@]}"}; do
     [[ $p == all || $vocab == *" $p "* ]] || report "$f" "unknown project: $p"
   done
 done < <(fd -t f -e md . ${existing[@]+"${existing[@]}"} | rg -v "$excl" | sort | while IFS= read -r f; do in_scope "$f" && printf '%s\n' "$f"; done)
 
-# A link to a note is a path link, [label](<folder>/<file>.md) with the path from the vault (okf-lint checks
-# that it resolves); a [[...]] wiki link is reported (fenced code and inline code are skipped)
+# A link to a note is a path link, [label](<folder>/<file>.md) with the path from the karo dir; a [[...]]
+# wiki link is reported (fenced code and inline code are skipped)
 while IFS=: read -r f l; do
   f=${f#./}
   while IFS= read -r w; do
@@ -146,7 +124,7 @@ done < <(
   done < <(fd -t f -e md -E "investigation/*/sources" -E rule -E AGENTS.md .)
   (( ${#files[@]} )) && awk 'FNR == 1 {f = 0} /^```/{f=!f; next} !f{gsub(/`[^`]*`/, ""); if (/\[\[/) print FILENAME ":" $0}' "${files[@]}")
 
-# The task database, .beads, stays out of the vault's git: ignored when it is there, and nothing under
+# The task database, .beads, stays out of the karo dir's git: ignored when it is there, and nothing under
 # it tracked. Checked on a whole run in a git work tree; runs with --only leave git alone.
 if (( ! scoped )) && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   [[ -e .beads ]] && ! git check-ignore -q .beads && report .beads "task database not ignored by git"
@@ -154,6 +132,5 @@ if (( ! scoped )) && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
 fi
 
 in=; (( scoped )) && in=" in the --only scope"
-echo "karo-check: $stale stale note(s)$in" >&2
 echo "karo-check: $problems problem(s)$in" >&2
 [[ $problems -eq 0 ]]

@@ -14,7 +14,7 @@ description: 一日の終わりに、karo が今日を振り返り、明日や�
    - `karo:tasks` skill の「今の状況を読む」の表の、「開いているタスク」、「判断待ち」、「ある日から閉じたタスク」と「ある日から作ったタスク」（どちらも今日の日付から）と、その節の Agent とタスクの突き合わせ。
    - 引数なしの `~/.config/claude/skills/karo/scripts/karo-check` を単独のコマンドで実行した出力。
 
-   完了条件: 表の 4 つの行の出力と、突き合わせの完了条件を満たした結果と、karo-check の問題と stale の一覧が手元にある。
+   完了条件: 表の 4 つの行の出力と、突き合わせの完了条件を満たした結果と、karo-check の問題の一覧が手元にある。
 2. Agent を片付ける。動いている Agent のうち役目を終えた Agent（karo の決まり（SessionStart の hook が入れる文）の「委任と取り込み」の定義）を、`karo:delegate` skill の「Agent を終了する」の 1 で閉じ、その 2 に当たるときは 2 も行う。`working` の Agent は閉じずに一覧にする。
    完了条件: 役目を終えた Agent ごとに `close` の JSON か止まった理由が手元にあり、`working` の Agent の一覧が手元にある。
 3. 下の「報告の項目」を短く報告する。各項目にはタスク ID を付ける。
@@ -38,4 +38,4 @@ description: 一日の終わりに、karo が今日を振り返り、明日や�
 - 残ったこと（`in_progress`・`blocked`・`open` のタスクと、`working` の Agent。Herdr の状態をそのまま書く）
 - 判断待ち（1 の判断待ちの decision の bead ごとに、問いと、本文の選択肢と推奨）
 - 明日やること（翌朝の `karo:checkin` で最初に扱う候補を、優先する順に）
-- 片付け（閉じた Agent、karo-check の問題と stale）
+- 片付け（閉じた Agent、karo-check の問題）

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Show that karo-check can tell a valid vault from a broken one: a small valid vault must pass, each
 # broken note in a copy of it must be reported, and a copy of the real vault with one note broken must fail.
-# The cases break what the karo checks and the karo schema decide, and how okf-lint's results are counted with
-# them; okf-lint's own checks are tested by okf-lint-test beside this script.
+# The cases break each frontmatter check, the project and wiki link checks, and the .beads checks, and
+# show what karo-check leaves alone.
 # usage: karo-check-test [<karo dir>]   (default KARO_HOME or ~/karo, read only: the real vault is its
 #        copy; the copies go to a temporary directory and are removed)
 set -uo pipefail
@@ -39,16 +39,15 @@ cases=(
   'bad task ID in a note with a type the schema does not name|doc/demo.md	bad task id: karo_a2v|sed -i.bak "s/^type: Document/type: Bogus/; s/  - t-test0001/  - karo_a2v/" doc/demo.md'
   'wiki link|wiki link, write a path link: \[\[demo\]\]|sed -i.bak "s#\[demo\](project/repo/github.com/acme/demo.md)#[[demo]]#" doc/demo.md'
   'no frontmatter where no type lives|investigation/2026-01-01-demo/notes.md	no frontmatter|mkdir -p investigation/2026-01-01-demo && printf "## no frontmatter\\n" > investigation/2026-01-01-demo/notes.md'
-  # The fields every note requires in the karo schema, date and description, which okf-lint checks
-  'replaced decision record removed|decisions/2026-01-02-example.md	supersedes missing: decisions/2026-01-01-example.md|rm decisions/2026-01-01-example.md'
+  # The four keys every note has: date and description with a value, tasks and projects
   'document without description|missing description|sed -i.bak "/^description:/d" doc/demo.md'
   'missing date|investigation/2026-01-01-example.md	missing date|sed -i.bak "/^date:/d" investigation/2026-01-01-example.md'
   'missing tasks key|doc/demo.md	missing tasks|sed -i.bak "/^tasks:/,/^  - t-test0001/d" doc/demo.md'
   'missing projects key|standup/2026-01-01.md	missing projects|sed -i.bak "/^projects:/d" standup/2026-01-01.md'
-  'empty description|standup/2026-01-01.md	missing description|sed -i.bak "s/^description: .*/description: \"\"/" standup/2026-01-01.md'
+  'empty description|standup/2026-01-01.md	empty description|sed -i.bak "s/^description: .*/description: \"\"/" standup/2026-01-01.md'
   'unparseable frontmatter|doc/demo.md	unparseable frontmatter|sed -i.bak "s/^description: .*/description: a: b/" doc/demo.md'
   'date not YYYY-MM-DD|doc/demo.md	date is not YYYY-MM-DD|sed -i.bak "s/^date: 2026-01-01/date: 2026-1-1/" doc/demo.md'
-  'removed note still linked|doc/demo.md	link target missing: project/repo/github.com/acme/demo.md|rm project/repo/github.com/acme/demo.md'
+  'removed project still listed|doc/demo.md	unknown project: github.com/acme/demo|rm project/repo/github.com/acme/demo.md'
 )
 for c in "${cases[@]}"; do
   name=${c%%|*}; rest=${c#*|}; want=${rest%%|*}; cmd=${rest#*|}
@@ -86,36 +85,45 @@ printf '## 例\n' > "$copy/scrap/t-test0001-demo.md"
 printf '例\n' > "$copy/doc/demo.txt"
 if out=$("$bin/karo-check" "$copy" 2>&1); then pass "what karo-check does not read passes"; else fail "what karo-check does not read: $out"; fi
 
-# okf-lint's problems are counted with the karo checks' problems, once each, under karo-check's count line.
+# Problems of different checks are counted once each under karo-check's count line.
 copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"
 printf '## no frontmatter\n' > "$copy/standup/2026-01-02.md"
 sed -i.bak 's#  - github.com/acme/demo#  - nope#' "$copy/doc/demo.md" && rm "$copy/doc/demo.md.bak"
 out=$("$bin/karo-check" "$copy" 2>&1); code=$?
 if [[ $code -eq 1 ]] && [[ $(printf '%s\n' "$out" | rg -c -- '	no frontmatter') == 1 ]] && printf '%s\n' "$out" | rg -qF $'doc/demo.md\tunknown project: nope' \
-  && printf '%s\n' "$out" | rg -qxF 'karo-check: 2 problem(s)' && ! printf '%s\n' "$out" | rg -q '^okf-lint: '; then
-  pass "okf-lint and karo problems counted together"
+  && printf '%s\n' "$out" | rg -qxF 'karo-check: 2 problem(s)'; then
+  pass "problems of different checks counted together"
 else
-  fail "okf-lint and karo problems counted together: exit $code: $out"
+  fail "problems of different checks counted together: exit $code: $out"
 fi
 
 # An --only run says so in its count lines, so it is not read as a whole run.
 out=$("$bin/karo-check" --only doc/demo.md "$ok" 2>&1); code=$?
 if [[ $code -eq 0 ]] && printf '%s\n' "$out" | rg -qxF 'karo-check: 0 problem(s) in the --only scope'; then pass "only: the count line names the scope"; else fail "only: count line: exit $code: $out"; fi
 
-# The schema is the plugin's: a schema file left in the karo dir, even a broken one, is not read.
+# A schema file left in the karo dir from an earlier layout, even a broken one, is not read.
 copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"; mkdir -p "$copy/rule"
 printf 'types: [Bogus]\n' > "$copy/rule/frontmatter-schema.yaml"
 if out=$("$bin/karo-check" "$copy" 2>&1); then pass "a schema file in the karo dir is not read"; else fail "a schema file in the karo dir: $out"; fi
-# Without the plugin's schema, or when okf-lint finds an argument or schema error, karo-check stops
-# without a count. The cases run a copy of this folder whose schema is missing or broken.
-nobin=$tmp/bin
-mkdir -p "$nobin"
-for f in "$bin"/*; do [[ ${f##*/} == frontmatter-schema.yaml ]] || ln -s "$f" "$nobin/"; done
-out=$("$nobin/karo-check" "$ok" 2>&1); code=$?
-if [[ $code -eq 2 && $out == "karo-check: no schema at "* && $out != *$'\n'* ]]; then pass "missing schema stops"; else fail "missing schema: exit $code: $out"; fi
-printf 'types: [Bogus]\n' > "$nobin/frontmatter-schema.yaml"
-out=$("$nobin/karo-check" "$ok" 2>&1); code=$?
-if [[ $code -eq 2 && $out == *"has a types that is not a map"* && $out != *"karo-check: "* ]]; then pass "okf-lint schema error stops"; else fail "okf-lint schema error: exit $code: $out"; fi
+# A karo dir that cannot be entered, or a yq, fd or rg that cannot run, stops karo-check with 2 and no
+# count. The stub aqua fails, so karo-check takes the tools from PATH: the broken one, and links to the
+# real binaries of the other two, resolved through aqua where aqua installs them.
+out=$("$bin/karo-check" "$tmp/none" 2>&1); code=$?
+if [[ $code -eq 2 && $out != *"problem(s)"* ]]; then pass "a missing karo dir stops"; else fail "missing karo dir: exit $code: $out"; fi
+real() {
+  local p
+  if command -v aqua >/dev/null && p=$(aqua which "$1" 2>/dev/null) && [[ -x $p ]]; then printf '%s\n' "$p"; return; fi
+  command -v "$1"
+}
+for tool in yq fd rg; do
+  mkdir -p "$tmp/broken-$tool"
+  for t in yq fd rg; do [[ $t == "$tool" ]] || ln -s "$(real "$t")" "$tmp/broken-$tool/$t"; done
+  printf '#!/bin/sh\nexit 126\n' > "$tmp/broken-$tool/$tool"
+  printf '#!/bin/sh\nexit 1\n' > "$tmp/broken-$tool/aqua"
+  chmod +x "$tmp/broken-$tool/$tool" "$tmp/broken-$tool/aqua"
+  out=$(PATH="$tmp/broken-$tool:$PATH" "$bin/karo-check" "$ok" 2>&1); code=$?
+  if [[ $code -eq 2 && $out == "karo-check: cannot run $tool" ]]; then pass "a $tool that cannot run is named"; else fail "broken $tool: exit $code: $out"; fi
+done
 
 # Frontmatter values are data: a value holding "|", a newline, a glob, or shell syntax is reported as the
 # problems it is and nothing more, and no command in it runs.
@@ -132,7 +140,7 @@ hostile() {
   elif [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -qF -- "$want" && printf '%s\n' "$out" | rg -qxF "karo-check: $n problem(s)$in"; then pass "$name"
   else fail "$name: exit $code, want $n problem(s) with '$want': $out"; fi
 }
-hostile 'status with a newline and a forged @info' 2 'unknown project: nope' '  - all' $'  - nope\nstatus: "x\\n@info|Bogus"'
+hostile 'status with a newline and a forged @info' 1 'unknown project: nope' '  - all' $'  - nope\nstatus: "x\\n@info|Bogus"'
 hostile 'project that is a glob' 1 'unknown project: *' '  - all' '  - "*"'
 hostile 'project with a command substitution' 1 'unknown project: $(touch pwned)' '  - all' '  - "$(touch pwned)"'
 hostile 'project with "|"' 1 'unknown project: all|x' '  - all' '  - "all|x"'
@@ -143,7 +151,7 @@ hostile 'only: project with "|"' 1 'unknown project: all|x' '  - all' '  - "all|
 scoped=(
   'only: problem in a given file|missing description|project/repo/github.com/acme/demo.md|sed -i.bak "/^description:/d" project/repo/github.com/acme/demo.md'
   'only: problem in another file is left out|pass|standup/2026-01-01.md|sed -i.bak "s#  - github.com/acme/demo#  - nope#" doc/demo.md'
-  'only: okf-lint problem in another file is left out|pass|standup/2026-01-01.md|sed -i.bak "/^description:/d" project/repo/github.com/acme/demo.md'
+  'only: a frontmatter problem in another file is left out|pass|standup/2026-01-01.md|sed -i.bak "/^description:/d" project/repo/github.com/acme/demo.md'
   'only: renamed project still listed|doc/demo.md	unknown project: github.com/acme/demo|project/repo/github.com/acme/demo.md project/repo/github.com/acme/demo2.md|sed -i.bak "s#\[demo\](project/repo/github.com/acme/demo.md)#demo#" doc/demo.md && mv project/repo/github.com/acme/demo.md project/repo/github.com/acme/demo2.md'
   'only: wiki link in a given file|wiki link, write a path link: \[\[demo\]\]|doc/demo.md|sed -i.bak "s#\[demo\](project/repo/github.com/acme/demo.md)#[[demo]]#" doc/demo.md'
 )
@@ -205,7 +213,7 @@ if [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -qxF $'.beads\ttask database t
 # A copy of the real vault with one note's description removed must fail on that note and on nothing else.
 # cp keeps the file names byte for byte; tar on macOS rewrites them to NFD, which breaks the link paths.
 real=$tmp/real
-count() { "$bin/karo-check" "$1" 2>&1 | rg -c -v '^karo-check: |	stale since '; }
+count() { "$bin/karo-check" "$1" 2>&1 | rg -c -v '^karo-check: '; }
 if cp -R "$vault/." "$real" && rm -rf "$real/.git"; then
   before=$(count "$real")
   target=$(cd "$real" && rg -l '^description: ' investigation -g '!*/sources/**' | sort | head -n 1)

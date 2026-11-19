@@ -172,27 +172,28 @@ before=$(head_)
 run "t-test0001: 改行" "本文" $'investigation/2026-01-02-a\nb.md'
 ng "a path with a newline is refused" "not a record path"
 
-# A rename or a removal that leaves a link to the old path stops, and the files stay as they are; with
-# the link fixed and listed too, the rename commits.
-printf -- '---\ntype: Investigation\ndescription: 例。\ndate: 2026-01-02\ntasks: []\nprojects:\n  - all\n---\n\n## 例\n' > "$v/investigation/2026-01-02-old.md"
-printf -- '---\ntype: Investigation\ndescription: 例。\ndate: 2026-01-02\ntasks: []\nprojects:\n  - all\n---\n\n## 例\n\n[前の調べ物](investigation/2026-01-02-old.md)\n' > "$v/investigation/2026-01-02-next.md"
-run "t-test0001: 足す" "本文" investigation/2026-01-02-old.md investigation/2026-01-02-next.md
+# A rename or a removal of a project note that another note lists as a project stops, and the files
+# stay as they are; with the listing fixed and listed too, the rename commits.
+mkdir -p "$v/project/misc"
+printf -- '---\ntype: Project\ndescription: 例。\ndate: 2026-01-02\ntasks: []\nprojects: []\n---\n\n## 例\n' > "$v/project/misc/old.md"
+printf -- '---\ntype: Investigation\ndescription: 例。\ndate: 2026-01-02\ntasks: []\nprojects:\n  - old\n---\n\n## 例\n' > "$v/investigation/2026-01-02-next.md"
+run "t-test0001: 足す" "本文" project/misc/old.md investigation/2026-01-02-next.md
 before=$(head_)
-mv "$v/investigation/2026-01-02-old.md" "$v/investigation/2026-01-02-new-name.md"
-run "t-test0001: 名前を変える" "本文" investigation/2026-01-02-old.md investigation/2026-01-02-new-name.md
-ng "a rename that leaves a link stops" $'investigation/2026-01-02-next.md\tlink target missing: investigation/2026-01-02-old.md'
-if [[ -f $v/investigation/2026-01-02-new-name.md && ! -e $v/investigation/2026-01-02-old.md ]]; then pass "the stopped rename is kept"; else fail "the stopped rename: $(git -C "$v" status --porcelain)"; fi
-rm "$v/investigation/2026-01-02-new-name.md"
-run "t-test0001: 消す" "本文" investigation/2026-01-02-old.md
-ng "a removal that leaves a link stops" $'investigation/2026-01-02-next.md\tlink target missing: investigation/2026-01-02-old.md'
-git -C "$v" checkout -q -- investigation/2026-01-02-old.md
-mv "$v/investigation/2026-01-02-old.md" "$v/investigation/2026-01-02-new-name.md"
-sed -i.bak 's#investigation/2026-01-02-old.md#investigation/2026-01-02-new-name.md#' "$v/investigation/2026-01-02-next.md" && rm "$v/investigation/2026-01-02-next.md.bak"
-# The check reads what the commit holds: the link fixed in the working tree but not listed stops it.
-run "t-test0001: 名前を変える" "本文" investigation/2026-01-02-old.md investigation/2026-01-02-new-name.md
-ng "a link fixed but not listed stops" $'investigation/2026-01-02-next.md\tlink target missing: investigation/2026-01-02-old.md'
-run "t-test0001: 名前を変える" "本文" investigation/2026-01-02-old.md investigation/2026-01-02-new-name.md investigation/2026-01-02-next.md
-if [[ $code -eq 0 && $out == "OK "* && -z $(git -C "$v" status --porcelain -- investigation) ]]; then pass "a rename with its link fixed commits"; else fail "a rename with its link fixed: exit $code: $out: $(git -C "$v" status --porcelain)"; fi
+mv "$v/project/misc/old.md" "$v/project/misc/new-name.md"
+run "t-test0001: 名前を変える" "本文" project/misc/old.md project/misc/new-name.md
+ng "a rename that leaves a listing stops" $'investigation/2026-01-02-next.md\tunknown project: old'
+if [[ -f $v/project/misc/new-name.md && ! -e $v/project/misc/old.md ]]; then pass "the stopped rename is kept"; else fail "the stopped rename: $(git -C "$v" status --porcelain)"; fi
+rm "$v/project/misc/new-name.md"
+run "t-test0001: 消す" "本文" project/misc/old.md
+ng "a removal that leaves a listing stops" $'investigation/2026-01-02-next.md\tunknown project: old'
+git -C "$v" checkout -q -- project/misc/old.md
+mv "$v/project/misc/old.md" "$v/project/misc/new-name.md"
+sed -i.bak 's#^  - old$#  - new-name#' "$v/investigation/2026-01-02-next.md" && rm "$v/investigation/2026-01-02-next.md.bak"
+# The check reads what the commit holds: the listing fixed in the working tree but not listed stops it.
+run "t-test0001: 名前を変える" "本文" project/misc/old.md project/misc/new-name.md
+ng "a listing fixed but not listed stops" $'investigation/2026-01-02-next.md\tunknown project: old'
+run "t-test0001: 名前を変える" "本文" project/misc/old.md project/misc/new-name.md investigation/2026-01-02-next.md
+if [[ $code -eq 0 && $out == "OK "* && -z $(git -C "$v" status --porcelain -- investigation project) ]]; then pass "a rename with its listing fixed commits"; else fail "a rename with its listing fixed: exit $code: $out: $(git -C "$v" status --porcelain)"; fi
 before=$(head_)
 
 # The record folders are one list, record-folders beside the scripts: with a folder added to a copy of it,

@@ -1,8 +1,0 @@
-# Frontmatter rules for the karo records (OKF v0.2), read by okf-lint through karo-check.
-# Every note has a date, a description, and the tasks and projects keys; tasks and projects may be the
-# empty list [], and karo-check checks the form of their items. type is optional. Paths matching exclude
-# are not checked.
-required: [date, description, tasks, projects]
-exclude:
-  - '^investigation/[^/]+/log\.md$'
-  - '^investigation/[^/]+/sources/'

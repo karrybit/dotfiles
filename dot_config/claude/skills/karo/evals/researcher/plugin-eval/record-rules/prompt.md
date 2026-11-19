@@ -16,7 +16,7 @@ plugins: ["../../../..", "../../../../vendor/karrybit"]
 - ノートの書き先: このリポジトリの `source/meeting/2026-11-17-weekly-sync.md`（絶対パスにして渡す）
 - 情報源のアクセスの制約: このリポジトリの `rule/sources.md` に従う。
 - ノートの規則: このリポジトリの `rule/note-rules.md` に従う。
-- 検査: このリポジトリで `bin/check-note source/meeting/2026-11-17-weekly-sync.md` を単独で実行する。合格の出力は `check-note: 0 problem(s)`。`stale since` の行は数えない。終了コード 2 は検査そのものの失敗。
+- 検査: このリポジトリで `bin/check-note source/meeting/2026-11-17-weekly-sync.md` を単独で実行する。合格の出力は `check-note: 0 problem(s)`。終了コード 2 は検査そのものの失敗。
 - 追加の skill: 分野や論点を探る調査には `imozuru:imozuru` を使ってよい。原文の保存先は `investigation/2026-11-18-<話題>/`。
 - 分担: ノートの commit と、タスクと判断待ちの記録は依頼した側が行う。Agent は commit も `bd` もしない。
 </request>

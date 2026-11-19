@@ -3,7 +3,7 @@
 # repository at KARO_HOME, KARO_HOME itself or one of its worktrees, and then karo-check --only on it with
 # that checkout as the root. rumdl's fix is silent and never fails the hook. A problem of the written file,
 # or a check that cannot run, goes to Claude on stderr with exit 2; a problem karo-check finds in another
-# note that reads the file is left to the commit, which checks the notes it holds. The edit is already
+# note (one listing a removed project file, say) is left to the commit, which checks the notes it holds. The edit is already
 # made, and the commit script stops it from landing. A path that climbs with .. is left alone, since it may
 # lead out of the checkout, and a hidden path in the checkout (under .claude/, say) is only formatted,
 # since karo-check does not read it.
@@ -22,6 +22,6 @@ p=${PWD#"$root"}/${f##*/}; p=${p#/}
 case /$p in */.*) exit 0 ;; esac
 out=$("$bin/karo-check" --only "$p" "$root" 2>&1); code=$?
 [ "$code" -eq 0 ] && exit 0
-[ "$code" -eq 1 ] && out=$(printf '%s\n' "$out" | awk -F '\t' -v p="$p" '$1 == p && $2 !~ /^stale since /')
+[ "$code" -eq 1 ] && out=$(printf '%s\n' "$out" | awk -F '\t' -v p="$p" '$1 == p')
 [ -n "$out" ] && { printf '%s\n' "$out" >&2; exit 2; }
 exit 0

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Commit only the given paths of the karo record, after rumdl fmt on each .md, git diff --cached --check,
-# and karo-check --only on the staged paths, removed ones included, so a note that links to or lists a
-# removed or renamed path fails too. karo-check reads what the commit will hold (HEAD with the given paths
+# and karo-check --only on the staged paths, removed ones included, so a note that lists a removed or
+# renamed project note as a project fails too. karo-check reads what the commit will hold (HEAD with the given paths
 # as written, put out to a temporary folder), so a change left out of the paths does not make it pass.
 # A failed check, or a rumdl that cannot run (one that is not on PATH, say), unstages the paths, leaves the
 # files as written, and prints "NG <subject>" after the reason; a commit prints "OK <short hash> <subject>".
