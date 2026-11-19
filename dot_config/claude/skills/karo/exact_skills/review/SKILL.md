@@ -75,7 +75,7 @@ description: Agent の成果物をレビューに回す手順。実装 Agent の
 
 1. `karo:delegate` skill の「Agent を終了する」の 1 で、Agent を片付ける（タスクは次の 2 で閉じる）。
    完了条件: `close` の JSON が出ているか、止まった理由をオーナーに報告している。
-2. `bd close <タスクID> --reason "取り込み: <commit か PR>" --force --suggest-next --json` を単独で実行する（claim の持ち主が Agent 名なので `--force` が要る）。新しく ready になったタスクがあれば、オーナーに伝える。
+2. `bd close <タスクID> --reason "取り込み: <commit か PR>" --force --suggest-next --json` を単独で実行する（claim の持ち主が Agent 名なので `--force` が要る）。閉じたことで ready になったタスクは、`karo:tasks` skill の「タスクを進める」の 6 のとおりに扱う。
    完了条件: JSON の `status` が `closed`。
 3. `karo:record` skill の「state.md を書く」のとおり、取り込んだタスクの行を `state.md` の「進めている作業」から消す。
    完了条件: `state.md` の「進めている作業」にそのタスク ID がない。

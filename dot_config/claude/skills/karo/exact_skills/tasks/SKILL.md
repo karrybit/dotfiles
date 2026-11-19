@@ -36,6 +36,7 @@ description: '$KARO_HOME のタスク・判断待ち・タスクかプロジェ�
 | レビュー中・変更依頼・承認（merge 待ち） | status `in_progress` のまま。段階は下の「comment の語」で残す |
 | 取り込んだ（done） | status `closed`、reason `取り込み: <commit か PR>` |
 | 取り下げた（dropped） | status `closed`、reason `dropped: <理由>`、label `dropped` |
+| ready になったら言われなくても委任に進む（オーナーが決めたタスクだけ） | label `auto-start` |
 | 件名 | title |
 | 依頼と、確かめ済みの事実と制約 | description |
 | 受け入れ条件 | `--acceptance` |
@@ -56,8 +57,8 @@ description: '$KARO_HOME のタスク・判断待ち・タスクかプロジェ�
    完了条件: `bd show <ID> --json --include-comments` に `報告:` の comment がある。
 5. レビューを頼んだら、誰に何のレビューを頼んだかを `レビュー依頼:` の comment に書く。結果を受けたら、結果の要旨を `変更依頼:` か `承認:` の comment に書く。`karrybit:readiness-review` の判定は、`判定:` の comment に判定と要旨を書く（要旨の項目と判定ごとの扱いは `karo:review` skill の「3」）。レビューの全文はファイルに残さず、要るときは cass で引く（`karo:recall` skill）。
    完了条件: `レビュー依頼:` の comment があり、結果を受けたあとは `変更依頼:`・`承認:`・`判定:` のどれかの comment に結果の要旨がある。
-6. 取り込んだら（karo の land、dotfiles の push と apply、PR の merge）、`bd close <ID> --reason '取り込み: <commit か PR>' --force --suggest-next --json` で閉じ、新しく ready になったタスクをオーナーに伝える。取り下げるときは、`--reason 'dropped: <理由>'` で閉じて `bd label add <ID> dropped --json` を付ける。
-   完了条件: `bd show <ID> --json` の status が `closed` で、reason に取り込みか取り下げの印がある。
+6. 取り込んだら（karo の land、dotfiles の push と apply、PR の merge）、`bd close <ID> --reason '取り込み: <commit か PR>' --force --suggest-next --json` を単独で実行して閉じる（hook がこの出力の JSON を読むので、パイプでつながない）。閉じたことで ready になったタスクは、karo の hook が tool の結果の横に案内し、label `auto-start` のタスクは `karo:delegate` skill で委任に進め、ほかのタスクはオーナーに伝える。取り下げるときは、`--reason 'dropped: <理由>'` で閉じて `bd label add <ID> dropped --json` を付ける。
+   完了条件: `bd show <ID> --json` の status が `closed` で、reason に取り込みか取り下げの印がある。hook の案内が出たときは、案内のタスクごとに委任に進んだかオーナーに伝えている。
 
 ### 閉じる時機
 

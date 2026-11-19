@@ -1,5 +1,5 @@
 {
-  "description": "Session context and the compaction summary's instructions, the Bash call check, Markdown formatting and record note checks after an edit, and the prompt time for the record repository at KARO_HOME (default ~/karo).",
+  "description": "Session context and the compaction summary's instructions, the Bash call check, Markdown formatting and record note checks after an edit, the tasks a bd close made ready, and the prompt time for the record repository at KARO_HOME (default ~/karo).",
   "hooks": {
     "SessionStart": [
       {
@@ -49,6 +49,15 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}\"/scripts/post-edit"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/scripts/newly-ready"
           }
         ]
       }

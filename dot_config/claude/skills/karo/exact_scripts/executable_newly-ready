@@ -1,0 +1,19 @@
+#!/bin/sh
+# PostToolUse hook for Bash: after a `bd close ... --suggest-next --json` in a session of the record
+# repository at KARO_HOME (default ~/karo), puts the tasks the close made ready into the context as
+# additionalContext, with the ones labelled auto-start sent on to karo:delegate and the others to the
+# owner. bd prints an object with "unblocked" only when the close made a task ready, and the plain
+# array of closed issues otherwise. Any other command, session, or output gives nothing. It only
+# informs: it always exits 0.
+[ "${CLAUDE_PROJECT_DIR:-}" = "${KARO_HOME:-$HOME/karo}" ] || exit 0
+jq -c '
+  select(.tool_input.command // "" | test("\\bbd close\\b"))
+  | .tool_response.stdout // "" | fromjson? | objects | .unblocked // []
+  | map(select(type == "object" and .id) | {line: "- \(.id) \(.title // "")", auto: any(.labels[]?; . == "auto-start")})
+  | [ (map(select(.auto)) | select(length > 0)
+       | "閉じたことで ready になった auto-start のタスク。karo:delegate skill で委任に進む:\n" + (map(.line) | join("\n"))),
+      (map(select(.auto | not)) | select(length > 0)
+       | "閉じたことで ready になったタスク。オーナーに伝える:\n" + (map(.line) | join("\n"))) ]
+  | select(length > 0)
+  | {hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: join("\n\n")}}' 2>/dev/null
+exit 0
