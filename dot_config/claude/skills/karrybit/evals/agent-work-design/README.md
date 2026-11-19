@@ -9,7 +9,7 @@ Cases for the `agent-work-design` skill in `exact_skills/exact_agent-core/`. The
 | The skill is picked on its own for large work | `plugin-eval-activation` q01–q04 (`fire`): a staged library upgrade across three repositories, a staged merge of four plugins, a log platform move that starts with an investigation, a feature split across three agents. No prompt names the skill | `skill` (`tool_used` Skill, `min: 1`) |
 | The skill is not picked for small work | `plugin-eval-activation` q05–q08 (`nofire`): a one-line typo, a paragraph rewrite, a one-function bug, one delegated task | `skill` (`min: 0, max: 0`) |
 | The plan does not over-split | `one-goal-change`: an option, its test, and a README line, with "段取りを考えてから進めて" in the request | `one-goal`, `skill-not-fired` |
-| The plan keeps the dependencies that matter | `deps-provider-switch`: an email provider switch whose vendor notes, linked from nowhere, require template approval before the first send, and whose `templates/` another team's batch reads | `read-vendor-notes`, `approval-before-switch`, `owner-before-delete` |
+| The plan keeps the dependencies that matter | `deps-provider-switch`: an email provider switch whose vendor notes, linked from nowhere, require template approval before the first send, and whose `templates/` another team's batch reads | `read-vendor-notes` (`regex` on the trace), `approval-before-switch`, `owner-before-delete` |
 | Work that changes the same files is not run in parallel, and independent work is | `parallel-shared-file`: two API changes to the same handler and contract, and a translation that touches neither | `shared-files-not-parallel`, `independent-in-parallel` |
 | No needless agent, script, or management file | `one-goal-change` and `parallel-shared-file`; `replan-after-review` | `no-agent` (`tool_used` Agent, `max: 0`, `arm: both`), `no-extra-files` (no new file but a test file), `no-new-files` |
 | A changed premise is followed downstream, and the rest is kept | `replan-after-review`: a review moves G2 from a new column in another team's table to a table of the service's own; G3 depends on G2, G1 and G4 do not | `g3-follows`, `g1-kept`, `g4-kept`, `g2-replaced` |
@@ -42,3 +42,12 @@ Cases for the `agent-work-design` skill in `exact_skills/exact_agent-core/`. The
    Completion: every `diff` prints nothing.
 3. Run the three eval directories against `DIR/with/.config/claude/skills/karrybit` with `--runs 3`.
    Completion: each result JSON has `"partial": false`, every run has `"error": null`, and every good calibration answer passes its graders more often than its bad one.
+
+## What the Suite Separates
+
+Measured on the plugin as `chezmoi archive` renders it with this skill and suite as at 46af21c, on a base that still held the `herdr-agent` skill, with `--runs 3`, `--model claude-sonnet-5-5`, and `--judge-model claude-opus-5-5`, one measurement per eval directory:
+
+- Activation: every `fire` request loads the skill in 3 of 3 runs and no `nofire` request loads it (24 of 24 runs as expected). With the description before 46af21c, which said to use the skill before starting rather than before the first tool call, the `fire` requests loaded it in 8 of 12 runs: q03 in none, q02 in two. The failing runs searched the empty workspace first, found nothing, and asked the user without loading the skill.
+- Behavior: in the with-arm, every grader passes 3 of 3 runs. The skill fires in `deps-provider-switch` and `parallel-shared-file`, stays off in `one-goal-change`, and stays off in `replan-after-review`, where the session edits the plan directly. The baseline also passes every grader 3 of 3, so these cases show the expected behavior and guard against regressions, but do not separate the skill from no skill.
+- `read-vendor-notes` matches `Read` and `Bash` inputs, since one run read `docs/vendor/newmail.md` with `cat`; on the kept traces of this measurement it passes 6 of 6 runs, and fails on a trace of `parallel-shared-file`.
+- Calibration: each good answer passes each of its `llm` graders in 3 of 3 runs and each bad answer fails each of them in 3 of 3, with every echoed reply identical to its `answer.md`. The `regex` graders pass and fail on hand-made inputs with `scripts/regex-check.js`.
