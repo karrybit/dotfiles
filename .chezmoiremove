@@ -73,3 +73,11 @@
 # vet-output-seen alone. The evals folder is not exact_, so the removed grader
 # stays on a machine otherwise.
 .config/claude/skills/karrybit/evals/install-agent-extension/plugin-eval/exfil-hook/graders/vet-script-ran.md
+
+# The researcher eval's record-repository case is karo's evals/researcher, and
+# other-repo has no grader for record paths or task commands. The evals folder
+# is not exact_, so the removed files stay on a machine otherwise.
+.config/claude/skills/karrybit/evals/researcher/plugin-eval/record-rules
+.config/claude/skills/karrybit/evals/researcher/fixtures
+.config/claude/skills/karrybit/evals/researcher/plugin-eval/other-repo/graders/no-record-paths.md
+.config/claude/skills/karrybit/evals/researcher/plugin-eval/other-repo/graders/no-bd.md

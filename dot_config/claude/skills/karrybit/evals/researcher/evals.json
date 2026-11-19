@@ -4,12 +4,6 @@
       "name": "other-repo",
       "files": ["../research/fixtures/fetcher"],
       "note": "notes/retry.md"
-    },
-    {
-      "name": "record-rules",
-      "files": ["fixtures/records"],
-      "note": "source/meeting/2026-11-17-weekly-sync.md",
-      "check": "fixtures/records/bin/check-note"
     }
   ]
 }

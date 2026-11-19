@@ -3,6 +3,7 @@ max_turns: 40
 timeout_seconds: 1200
 allowed_tools: [Read, Glob, Grep, Skill, Agent, Bash, Write, Edit]
 tags: [researcher]
+plugins: ["../../../..", "../../../../vendor/karrybit"]
 ---
 
 このリポジトリは記録のリポジトリ。2026-11-17 の定例の議事録から、MTG の記録を作ってほしい。
