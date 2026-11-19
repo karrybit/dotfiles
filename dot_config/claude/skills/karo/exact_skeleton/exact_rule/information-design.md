@@ -53,7 +53,7 @@
 | MTG で決まったこと | `rg -n -A6 '^#+ (決定\|宿題)' source/meeting/YYYY-MM-DD-*.md` |
 | プロジェクトの現状 | `cat project/*/<name>.md`、開いているタスクは上の「タスクの今の一覧」の「開いているタスク」に `--label project:<name>` を足す、効く決定は上と同じ |
 | HTML の解説（作る前） | `karo:explain` skill の 1 と 2 |
-| 人に渡す資料の最新版 | `cat doc/<話題>.md`。前の版は `git log -p -- doc/<話題>.md` |
+| `doc/` の資料の最新版 | `cat doc/<話題>.md`。前の版は `git log -p -- doc/<話題>.md` |
 | 外に作ったもの・送った文面 | `bd list --all --notes-contains '<ID か URL の一部か相手>' --json`、続けて `bd list --all --desc-contains '<ID か URL の一部か相手>' --json`、続けて `rg -n '<ID か URL の一部か相手>' standup source` |
 | 調査の原文 | `investigation/YYYY-MM-DD-<話題>/map.md` の論点から原文の行へ。`rg -n '<語>' investigation/YYYY-MM-DD-<話題>/sources` |
 | 下書き・置き換え済み | `rg -lUP '\A---\n(?:(?!---\n).*\n)*?status: (?:draft\|deprecated)' -g '!investigation/*/sources/**' .`。Decision Record の置き換え先は、新しい記録の `supersedes` と、古い記録の「状態」の節のリンク。Beads の置き換え済みの決定は、上の「委任するプロジェクトに効く決定と運用」の `bd dep list` |

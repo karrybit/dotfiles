@@ -23,7 +23,7 @@
 | `project/design/YYYY-MM-DD-design-doc-<話題>.md` | Design Doc。実現したいこと（機能）ごとに 1 本書き、1 本が複数のリポジトリをまたいでよい。ADR と spec に反映したら消す（手順は `rule/information-design.md` の「置き場所の補足」） |
 | `project/misc/<theme>.md` | リポジトリを持たない話題の運用の約束 |
 | `project/misc/<theme>/YYYY-MM-DD-<資料名>.md` | その話題の手順 |
-| `doc/<話題>.md` | 人に渡す資料 |
+| `doc/<話題>.md` | 話題ごとにまとめた資料（人に渡すものも、karo やオーナーが読み返すものも） |
 | `$KARO_DATA_HOME/html/<UUID>/` | 作った HTML の解説（`index.html`）と、元の資料・版・作った日時（`metadata.json`）。git の外に置き、作り直すたびに新しい UUID にする。書き方は `karo:explain` skill |
 
 - この表と下の「情報源」の表が、情報ごとの正本の置き場所を決める。

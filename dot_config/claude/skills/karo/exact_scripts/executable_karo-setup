@@ -25,14 +25,11 @@ tools=(
   'rg|required|https://github.com/BurntSushi/ripgrep'
   'fd|required|https://github.com/sharkdp/fd'
   'rumdl|required|https://github.com/rvben/rumdl'
-  'lsof|required|the lsof package of the OS'
-  'ps|required|the procps package of the OS'
   'bv|task analysis (karo:tasks)|https://github.com/Dicklesworthstone/beads_viewer'
   'cass|past conversations (karo:recall)|https://github.com/Dicklesworthstone/coding_agent_session_search'
   'crit|crit reviews (karrybit:crit)|https://github.com/tomasz-tomczyk/crit'
   'terminal-browser|opening pages (view-open, crit-open)|https://terminal-browser.com/'
   'gh|pull request checks (karrybit:publish-check)|https://cli.github.com/'
-  'uuidgen|HTML explanations (karo:explain)|the util-linux or uuid-runtime package of the OS'
 )
 missing=0
 for t in "${tools[@]}"; do
