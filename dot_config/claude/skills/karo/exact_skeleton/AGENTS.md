@@ -46,4 +46,4 @@
 ## このファイルと設定を変えるとき
 
 - `AGENTS.md`、`rule/`、`.claude/` を変更するときは、変更を始める前にオーナーの承認を得る。
-- allow や deny などの規則を足すときは、`.claude/settings.local.json` を変える（`.claude/settings.json` は karo に共通の値だけを持つ）。
+- allow や deny などの規則は、オーナーが `.claude/settings.local.json` に足す。karo は足す内容を示す（`.claude/settings.json` は karo に共通の値だけを持つ）。
