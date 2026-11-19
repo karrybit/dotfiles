@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+# Show that karo's SessionStart and PreCompact hooks, run from hooks.json with a hook input like Claude
+# Code's, put state.md into the context once and keep the compaction going: on startup, resume and
+# compact, all the SessionStart hooks whose matcher takes the source print state.md's body once, call no
+# `bd prime`, and stay under Claude Code's 10,000-character cap per hook; a missing state.md and one over
+# 8,000 characters each give a notice and exit 0; items marked "（… 時点）" bring a request to check them
+# against Beads and Herdr, and a state.md without the mark brings none; only compact asks to call the
+# skills again; on manual and auto PreCompact the hook exits 0 with no block decision and tells the
+# summary to leave state.md out, with its last change or the notice that it is missing; a session outside
+# KARO_HOME gets nothing.
+# usage: state-context-test   (KARO_HOME, KARO_STATE_HOME and the Beads go to a temporary directory,
+#        which is removed; bd is a stub that logs its arguments, so no real Beads is read)
+set -uo pipefail
+exec </dev/null
+root=$(cd "$(dirname "$0")/.." && pwd)
+hooks=$root/hooks/hooks.json
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/state-context-test.XXXXXX") || exit 2
+trap 'rm -rf "$tmp"' EXIT
+failed=0
+fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
+pass() { printf 'ok\t%s\n' "$1"; }
+
+export KARO_HOME=$tmp/karo KARO_STATE_HOME=$tmp/state CLAUDE_PLUGIN_ROOT=$root CLAUDE_PROJECT_DIR=$tmp/karo
+mkdir -p "$KARO_HOME/.beads" "$KARO_STATE_HOME" "$tmp/bin" || exit 2
+printf '# karo\n' > "$KARO_HOME/AGENTS.md"
+printf '#!/bin/sh\necho "bd $*" >> "%s/bd.log"\n[ "$1" = list ] || [ "$1" = ready ] && echo "[]"\nexit 0\n' "$tmp" > "$tmp/bin/bd"
+chmod +x "$tmp/bin/bd"
+export PATH=$tmp/bin:$PATH
+state=$KARO_STATE_HOME/state.md
+sample='# state
+
+更新: 2026-01-01 10:00
+
+## 焦点
+
+- 記録の検査を速くする
+
+## 進めている作業
+
+- t-test0001: 検査の script を直す。Agent t-test0001 に委任済み。次: 完了報告を受けたらレビューに回す（2026-01-01 10:00 時点）
+
+## 制約
+
+- dotfiles への取り込みは fast-forward だけ（decisions/2026-01-01-landing.md）
+
+## 未解決
+
+- 検討中: 検査を commit の前だけにするか。オーナーに確かめる
+
+## 参照
+
+- decisions/2026-01-01-landing.md'
+
+# run <event> <input JSON>: runs every hook of the event in hooks.json whose matcher takes the input's
+# source or trigger, one after another, and sets out (all stdout), codes (exit codes) and lens (each
+# hook's stdout length in characters).
+run() {
+  local key cmd o
+  key=$(jq -r '.source // .trigger' <<<"$2")
+  out='' codes='' lens=''
+  : > "$tmp/bd.log"
+  while IFS= read -r cmd; do
+    o=$(bash -c "$cmd" <<<"$2"); codes+="$? "
+    lens+="$(printf '%s' "$o" | jq -Rs length) "
+    out+=$o$'\n'
+  done < <(jq -r --arg e "$1" --arg k "$key" \
+    '.hooks[$e][]? | select((.matcher // "") as $m | $m == "" or ($k | test("^(" + $m + ")$"))) | .hooks[].command' "$hooks")
+}
+count() { grep -c -- "$1" <<<"$out"; }
+check() { if eval "$2"; then pass "$1"; else fail "$1: codes=$codes lens=$lens"; fi; }
+zero() { [[ $codes =~ ^(0 )+$ ]]; }
+under() { local n; for n in $lens; do (( n <= $1 )) || return 1; done; }
+
+printf '%s\n' "$sample" > "$state"
+for source in startup resume compact; do
+  run SessionStart "{\"source\":\"$source\"}"
+  check "$source: two SessionStart hooks run and exit 0" '[[ $codes == "0 0 " ]]'
+  check "$source: state.md comes once" '[[ $(count "^- 記録の検査を速くする$") -eq 1 && $(count "^## state.md の終わり$") -eq 1 ]]'
+  check "$source: the KARO_* values come once" '[[ $(count "^KARO_HOME=$KARO_HOME ") -eq 1 ]]'
+  check "$source: no bd prime is run or printed" '! grep -q prime "$tmp/bd.log" && [[ $(count "bd prime") -eq 0 ]]'
+  check "$source: the Beads lists still come" '[[ $(count "^## bd: in_progress$") -eq 1 ]]'
+  check "$source: a marked item asks for a check against Beads and Herdr" '[[ $(count "時点）」の付いた項目は") -eq 1 ]]'
+  if [[ $source == compact ]]; then want=1; else want=0; fi
+  check "$source: the request to call the skills again comes $want time(s)" '[[ $(count "Skill tool で呼び直す") -eq $want ]]'
+done
+
+printf '%s\n' "${sample//（2026-01-01 10:00 時点）/}" > "$state"
+run SessionStart '{"source":"resume"}'
+check "a state.md without a mark asks for no check" 'zero && [[ $(count "時点）」の付いた項目は") -eq 0 ]]'
+
+big=$(printf 'あ%.0s' $(seq 7999))
+printf '%s\n' "$big" > "$state"
+run SessionStart '{"source":"startup"}'
+check "a state.md of 8,000 characters comes whole and the hook stays under 10,000" \
+  'zero && [[ $(count "^## state.md の終わり$") -eq 1 ]] && under 10000'
+printf '%s\n' "${big}い" > "$state"
+run SessionStart '{"source":"startup"}'
+check "a state.md over 8,000 characters gives a notice and its path, not its body" \
+  'zero && [[ $(count "8000 字を超えるので出さない") -eq 1 && $(count "^## state.md の終わり$") -eq 0 ]] && under 2000'
+
+rm "$tmp/state/state.md"
+for source in startup resume compact; do
+  run SessionStart "{\"source\":\"$source\"}"
+  check "$source: a missing state.md exits 0 and says so" 'zero && [[ $(count "state.md がない") -eq 1 ]]'
+done
+for trigger in manual auto; do
+  run PreCompact "{\"trigger\":\"$trigger\",\"custom_instructions\":null}"
+  check "$trigger PreCompact without state.md exits 0 and asks the summary to keep the state" \
+    '[[ $codes == "0 " ]] && [[ $(count "state.md がないので") -eq 1 ]]'
+done
+
+printf '%s\n' "$sample" > "$state"
+touch -t 202601011000 "$state"
+for trigger in manual auto; do
+  run PreCompact "{\"trigger\":\"$trigger\",\"custom_instructions\":null}"
+  check "$trigger PreCompact exits 0 and does not block" '[[ $codes == "0 " ]] && ! grep -q "\"decision\"" <<<"$out"'
+  check "$trigger PreCompact leaves state.md out of the summary" '[[ $(count "state.md の中身は要約に写さない") -eq 1 ]]'
+  check "$trigger PreCompact keeps what changed after the last change" '[[ $(count "最終更新（2026-01-01 10:00）より後") -eq 1 ]] && under 10000'
+done
+
+CLAUDE_PROJECT_DIR=$tmp/elsewhere
+run SessionStart '{"source":"startup"}'
+check "a session outside KARO_HOME gets no SessionStart output" 'zero && [[ $out =~ ^[[:space:]]*$ ]]'
+run PreCompact '{"trigger":"auto","custom_instructions":null}'
+check "a session outside KARO_HOME gets no PreCompact output" 'zero && [[ $out =~ ^[[:space:]]*$ ]]'
+
+echo "state-context-test: $failed failure(s)" >&2
+[ "$failed" -eq 0 ]

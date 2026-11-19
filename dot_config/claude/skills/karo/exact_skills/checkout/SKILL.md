@@ -21,7 +21,7 @@ description: 一日の終わりに、karo が今日を振り返り、明日や�
    完了条件: 5 つの項目がすべて報告にある。
 4. 次をすべて書き、standup を commit する。
    - 報告: `$KARO_HOME/standup/YYYY-MM-DD.md`（今日の日付）の末尾に `## Checkout（YYYY-MM-DD）` の節を足す。節の下の `### 今日の振り返り` に「報告の項目」の「明日やること」のほかの項目を、`### 明日やること` に「明日やること」を書く。今日のファイルがなければ、`karo:record` skill の「書く」のとおりフロントマターから作る。報告で挙げたタスクがフロントマターの `tasks` になければ足す。
-   - `$KARO_STATE_HOME/state.md`: 1 の `bd` の出力と `herdr agent list` から Edit で書き直す（git の外なので commit に入れない）。
+   - `$KARO_STATE_HOME/state.md`: `karo:record` skill の「state.md を書く」のとおり、今日終えた作業を消し、残ったことと明日やることに合わせて焦点と次の行動を直す。
    - commit の本文: Checkout の記録であることと standup のパス、2 で閉じた Agent の名前。
 
    完了条件: commit が `OK` の行を出した。

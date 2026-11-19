@@ -1,6 +1,6 @@
 ---
 name: record
-description: '$KARO_HOME の記録のファイルを Edit・Write で書き、karo の commit の script で commit する手順と、ノートのフロントマターの書き方（type、項目の埋め方、置き場所、状態が変わったときに直すフィールド）と、karo の長い目の決定の Decision Record の書き方と置き換え方と、NG の直し方と、調べ物を karrybit:researcher のサブエージェントに頼むときに依頼に書く karo の規則。記録のファイルを書くとき、ノートのフロントマターを書くか直すとき、オーナーが karo の運用・設計の方針を決めたか変えたとき、委任・取り込み・終了を記録するとき、commit か karo-check が問題を出したとき、調べ物や MTG の記録づくりを頼むときに使う。'
+description: '$KARO_HOME の記録のファイルを Edit・Write で書き、karo の commit の script で commit する手順と、ノートのフロントマターの書き方（type、項目の埋め方、置き場所、状態が変わったときに直すフィールド）と、karo の長い目の決定の Decision Record の書き方と置き換え方と、karo の今の状態の state.md の形と書き直す時機と、NG の直し方と、調べ物を karrybit:researcher のサブエージェントに頼むときに依頼に書く karo の規則。記録のファイルを書くとき、ノートのフロントマターを書くか直すとき、オーナーが karo の運用・設計の方針を決めたか変えたとき、委任・取り込み・終了を記録するとき、state.md を書き直すとき、commit か karo-check が問題を出したとき、調べ物や MTG の記録づくりを頼むときに使う。'
 user-invocable: false
 ---
 
@@ -15,7 +15,7 @@ user-invocable: false
 - 新しいファイルは Write で、今あるファイルへの追記と直しは Edit で、`$KARO_HOME` の下の絶対パスに書く（`$KARO_HOME` の値は SessionStart の hook が出す）。
 - Edit・Write のあと、post-edit の hook が `.md` を rumdl で整え、`<scripts>/karo-check --only <そのファイル>` で確かめる。hook が問題を返したら、そのファイルを直してから commit する。hook が返すのは書いたファイルの問題か検査そのものの失敗だけで、そのファイルを指すほかのノートの問題は commit が止める。
 - standup（`standup/YYYY-MM-DD.md`）がまだなければ、Write で `type: Standup` と `date` のフロントマターから作る（`frontmatter.md` の「種類」の `Standup` の行）。
-- `state.md` は git の外の `$KARO_STATE_HOME/state.md` にあり（`$KARO_STATE_HOME` の値は SessionStart の hook が出す）、Edit で書き、commit のパスに並べない。
+- `state.md` は、下の「state.md を書く」に従って書く。
 - 運用の出来事（タスクを持たない依頼で記録を変えたこと）は、commit の本文に書く。
 - 長い本文（サブエージェントの調査の結果、imozuru の原文）は、そのサブエージェントや imozuru に `$KARO_HOME` の書き先へ直接書かせ、終わったらそのパスを commit に渡す。
 
@@ -37,6 +37,43 @@ user-invocable: false
 - 決定を変えるときは、新しい記録を書き、フロントマターの `supersedes` に古い記録のパスを書く。古い記録は消さずに、`frontmatter.md` の「追記したとき・状態が変わったとき」の表の「決定を新しい決定で置き換えた」の行のとおり直し、2 つを同じ commit に入れる。誤字と事実の誤りの訂正は、古い記録を Edit で直すだけにする。
 - 判断待ちの decision の bead から決まった決定は、記録を書いてから、bead を `bd close <決定> --reason '決定: decisions/<記録>.md' --json` で閉じる。決定の全文は記録にだけ置き、bead には書き写さない。
 - Decision Record は理由を持ち、karo が今従う規則は持たない。規則は `$KARO_HOME/AGENTS.md`・`$KARO_HOME/rule/`・skill に書き、規則の行から記録のパスを指す。
+
+## state.md を書く
+
+- `$KARO_STATE_HOME/state.md` は karo の今の状態（Working Memory）で、karo だけが書く。委任した Agent とサブエージェントには、state.md を書かせない。
+- state.md は git の外にあるので、Edit・Write で書き、commit のパスに並べない（`$KARO_STATE_HOME` の値は SessionStart の hook が出す）。
+- karo の `scripts/state-context` の hook が、SessionStart（startup・resume・compact）で state.md の全文と最終更新の時刻を出し、PreCompact で compact の要約に、state.md の中身を写さず最終更新より後の変化を残すよう指示する。
+- 1 行目を `# state`、次に `更新: YYYY-MM-DD HH:MM` を置き、下の 5 つの節をこの順に置いて、今も効く状態だけを書く。
+
+| 節 | 書くこと |
+| --- | --- |
+| `## 焦点` | 今の目標と注力すること |
+| `## 進めている作業` | 取り組んでいる仕事ごとに 1 行。行の先頭にタスク ID を書き、状況と次の行動を続ける |
+| `## 制約` | 今効いている重要な制約。規則の本文は写さず、規則のファイルか Decision Record のパスを書く |
+| `## 未解決` | 解くべき問題と、オーナーに確かめること |
+| `## 参照` | 要るときに読む Beads の ID、Decision Record のパス（`decisions/YYYY-MM-DD-<話題>.md`）、資料のパス |
+
+- Beads のタスクの状態や Herdr の Agent の状態のように、正本で変わる状態を書いた項目は、末尾に `（YYYY-MM-DD HH:MM 時点）` を付ける。hook はこの印があると、その項目を正本で確かめるよう求める文を出す。
+- 確定していない項目は、先頭に `検討中:` か `未確認:` を書き、確定した事項と分ける。
+- 詳細は正本（Beads、`decisions/`、資料）に置き、state.md にはその ID かパスと、復帰したあとに次の行動を決められるだけの 1 行を書く。会話の要約と作業の履歴は、Beads の comment と commit の本文にある。
+- 終わった作業と効かなくなった状態は、その場で消す。
+- state.md は 8,000 字までにする。hook の出力の上限が 10,000 字で、超えると hook は全文を出さずにパスだけを出す。超えそうになったら、文を機械的に縮めずに、古い項目を消すか正本への参照に置き換える。
+
+### 書き直す時機
+
+- 次のどれかが起きたら、その返事の中で state.md を直し、`更新:` の時刻を書き換える。会話のたびには直さない。
+  - 今の目標が変わった。
+  - 重要な制約か決定が加わった。
+  - 作業を委任・中断・再開した。
+  - 作業を取り込んだ（その行を「進めている作業」から消す）。
+  - 重要なブロッカーが生じたか、解けた。
+  - 作業の次の行動が変わった。
+
+### 読んだあと
+
+- SessionStart の hook が出した state.md の `（… 時点）` の項目と「進めている作業」のタスクは、次の行動に使う前に、タスクは `bd show <ID> --json`、Agent は `herdr agent get <名前>` で確かめる。
+- 正本と食い違ったら、正本を正として state.md を直す。
+- hook が state.md がないと知らせたら、Beads の一覧と `herdr agent list` から、この節の形で作る。
 
 ## 調べ物を頼む
 

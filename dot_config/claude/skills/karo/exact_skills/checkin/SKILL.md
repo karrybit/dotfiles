@@ -22,8 +22,8 @@ description: 一日の始まりに、Daily Standup として karo から報告�
    完了条件: 5 つの項目がすべて報告にある。
 3. オーナーがその場で決めたことは、karo 自身の長い目の運用・設計の方針なら `karo:record` skill の「Decision Record を書く」で記録にし、それ以外は `karo:tasks` skill の「判断待ちと決定」のとおり `bd` に書く。必要なら `karo:delegate` skill で Agent に指示する。
    完了条件: オーナーが決めたことごとに、`decisions/` に Decision Record を書いたか、`bd show <決定> --json` の close_reason に決定の文があるか、そのタスクに `決定:` の comment がある。
-4. 報告内容と決まったことを `$KARO_HOME/standup/YYYY-MM-DD.md` に追記し（ファイルがなければ `karo:record` skill の「書く」のとおりフロントマターから作る）、本文に Checkin の記録であることを書いて、3 で書いた Decision Record と一緒に commit する（`karo:record` skill）。`$KARO_STATE_HOME/state.md` は Edit で更新し、commit に入れない。
-   完了条件: commit が `OK` の行を出した。
+4. 報告内容と決まったことを `$KARO_HOME/standup/YYYY-MM-DD.md` に追記し（ファイルがなければ `karo:record` skill の「書く」のとおりフロントマターから作る）、本文に Checkin の記録であることを書いて、3 で書いた Decision Record と一緒に commit する（`karo:record` skill）。今日の焦点か次の行動が変わったら、`karo:record` skill の「state.md を書く」のとおり `state.md` も直す。
+   完了条件: commit が `OK` の行を出した。焦点か次の行動が変わったときは、`state.md` の `更新:` が今日の日付になっている。
 
 ## 報告の項目
 

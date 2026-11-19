@@ -7,7 +7,7 @@ description: '$KARO_HOME のタスク・判断待ち・タスクかプロジェ�
 
 - タスク・判断待ち・タスクかプロジェクトに閉じた決定とその状態の正本は Beads（`bd`）で、状態を変えるのは `bd` だけにする。karo 自身の長い目の運用・設計の決定の正本は `$KARO_HOME/decisions/` の Decision Record で、書き方は `karo:record` skill の「Decision Record を書く」にある。bv は同じタスクの集合を読んで分析し、その出力は推薦と診断にとどめる（下の「分析する（bv）」）。
 - Agent の起動と操作は `karo:delegate`、成果物のレビューは `karo:review`、`$KARO_HOME` への取り込みは `karo:land` の skill の手順にある。この skill は、それらに伴うタスクの状態と記録の書き方を決める。
-- bd のコマンドの一覧と挙動は SessionStart の hook が出す `bd prime` と `bd <コマンド> --help` に、bv のコマンドは `bv --robot-help` と `bv --robot-capabilities` にある。「karo での使い方」が `bd prime` の勧めと食い違って見えたら「karo での使い方」に従う。
+- bd のコマンドの一覧と挙動は `bd prime` と `bd <コマンド> --help` に、bv のコマンドは `bv --robot-help` と `bv --robot-capabilities` にある。「karo での使い方」が `bd prime` の勧めと食い違って見えたら「karo での使い方」に従う。
 
 ## karo での使い方
 
