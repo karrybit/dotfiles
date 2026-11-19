@@ -95,7 +95,7 @@ description: '$KARO_HOME のタスク・判断待ち・決定を Beads（bd）�
 ### comment の語
 
 - comment の先頭の語で種類を書く: `報告:`（要旨・commit・テスト結果・残課題・Agent の worktree と branch）、`レビュー依頼:`（誰に何のレビューを頼んだか）、`変更依頼:`・`承認:`（レビューの原本のパス）、`決定:`（そのタスクの中だけの決定と出典）、`メモ:`。
-- 委任は claim の event が Agent 名と時刻を持ち、作業場所は Herdr と agent-ctl の控え（`karo:delegate` skill の冒頭）が持つので、委任の comment は書かない。
+- 委任は claim の event が Agent 名と時刻を持ち、作業場所は Herdr の `cwd`（`karo:delegate` skill の冒頭）が持つので、委任の comment は書かない。
 - 長い原本（レビュー、調査）は `project/repo/<vcs>/<org>/<repo>/review/`・`investigation/` に置き、comment にはそのパスを書く。
 - 会話を出典に書くときは、オーナーの発言なら `会話 YYYY-MM-DD HH:MM`（その発言に hook が付けた `発言の時刻:` の値）、cass で引いた過去の会話なら `karo:recall` skill の「出典」の形で書く。
 
