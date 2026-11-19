@@ -69,6 +69,9 @@ else
   printf '%s\n' "$session_id" >"$id_file"
   claude_args=(--session-id "$session_id" -n "$name")
 fi
+# Settings only the karo session reads, such as running bd outside the sandbox;
+# agents started in karo worktrees read the shared project settings alone.
+claude_args+=(--settings "$karo_dir/.claude/karo-settings.json")
 
 agents=$(herdr agent list)
 if ! jq -e --arg n "$name" '.result.agents[] | select(.name == $n)' <<<"$agents" >/dev/null; then

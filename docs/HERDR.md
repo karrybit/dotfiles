@@ -242,7 +242,13 @@ whatever is missing. Running it again only brings the same session back:
 The session is tracked by a fixed ID in `<dir>/.karo-session-id`, not by its
 display name. `karo` resumes that ID while its transcript exists and starts a
 new session once the transcript is gone, for example after the
-`cleanupPeriodDays` sweep. The directory must already contain `AGENTS.md`:
+`cleanupPeriodDays` sweep. Either way it passes
+`--settings <dir>/.claude/karo-settings.json`, settings that only this session
+reads and that agents started in worktrees of the directory do not. A Claude
+Code that herdr restored after a server restart is only renamed, not
+restarted, so it keeps the arguments herdr restored it with; when they lack
+`--settings`, exit it and run `karo`, which starts it again in the freed pane.
+The directory must already contain `AGENTS.md`:
 `karo` never creates its contents. `HERDR_SESSION` points every step at a named
 herdr session, which keeps experiments off the default server.
 
