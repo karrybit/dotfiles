@@ -5,7 +5,8 @@
 # writes anything (exit 1); a missing feature tool names the feature that will not work and the run goes on.
 # The setup makes the folder and its git repository on main, copies the skeleton folder of this plugin
 # file by file, leaving every file already there as it is, makes the record folders listed in
-# record-folders, commits the files it copied, and makes the task database with bd init when .beads is
+# record-folders, commits the files it copied, makes .claude/settings.local.json for the user's own
+# settings when it is missing and git ignores it, and makes the task database with bd init when .beads is
 # missing. A second run changes nothing.
 # Run the setup in a terminal: the sandbox of a Claude Code session lets no command write .claude/.
 # usage: karo-setup [--check]
@@ -65,6 +66,17 @@ read -r -a folders < "$plugin/scripts/record-folders"
 mkdir -p "${folders[@]}" || exit 2
 if (( ${#copied[@]} )); then
   git add -- "${copied[@]}" && git commit -q -m "Add the karo skeleton" -- "${copied[@]}" || exit 2
+fi
+# The user's own settings and customizations go in .claude/settings.local.json, which git must ignore;
+# the file starts as an empty set of rules for the user to fill in.
+local_settings=.claude/settings.local.json
+if ! git check-ignore -q "$local_settings"; then
+  echo "karo-setup: git does not ignore $local_settings; add it to .gitignore and run karo-setup again" >&2
+  exit 1
+fi
+if [[ ! -e $local_settings ]]; then
+  printf '%s\n' '{' '  "$schema": "https://json.schemastore.org/claude-code-settings.json",' \
+    '  "permissions": {' '    "allow": [],' '    "ask": [],' '    "deny": []' '  }' '}' > "$local_settings" || exit 2
 fi
 # The ID prefix is given, since bd takes the folder name when it is not, and karo's IDs start with karo-.
 if [[ ! -e .beads ]]; then

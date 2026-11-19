@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Show that karo-setup sets up an empty HOME so that karo-check passes, changes nothing on a second run,
-# keeps a file already there, stops before writing anything when a required tool is missing, goes on
-# when only a feature tool is missing, and that the skeleton's settings pass settings-test.
+# keeps a file already there, makes an empty settings.local.json only where git ignores it, stops before
+# writing anything when a required tool is missing, goes on when only a feature tool is missing, and that
+# the skeleton's settings with that settings.local.json pass settings-test.
 # Each case runs with a HOME of its own under a new temporary folder and a PATH of stubs: the basic
 # commands, git, jq, yq, rg and fd are links to the real ones, the other tools are stubs, and bd is a
 # stub that records its arguments and makes .beads, so no real HOME, task database or tool is touched.
@@ -76,6 +77,12 @@ else
   fail "empty HOME: bd calls: $(cat "$tmp/empty.bd.log")"
 fi
 # karo-check reads but does not write, so it runs with the caller's PATH and only HOME changed.
+if [[ $(jq -c '.permissions' "$k/.claude/settings.local.json" 2>&1) == '{"allow":[],"ask":[],"deny":[]}' ]] \
+  && in_home empty git -C "$k" check-ignore -q .claude/settings.local.json; then
+  pass "empty HOME: settings.local.json made empty and ignored by git"
+else
+  fail "empty HOME: settings.local.json: $(cat "$k/.claude/settings.local.json" 2>&1)"
+fi
 check=$(env -u KARO_HOME HOME="$tmp/empty" "$bin/karo-check" 2>&1); c=$?
 if [[ $c -eq 0 ]] && printf '%s\n' "$check" | rg -qxF 'karo-check: 0 problem(s)'; then pass "empty HOME: karo-check 0 problem(s)"; else fail "empty HOME: karo-check exit $c: $check"; fi
 
@@ -89,15 +96,29 @@ else
   fail "second run: exit $code: $out; status: $(in_home empty git -C "$k" status --short)"
 fi
 
-# An AGENTS.md already there stays as it was, and the rest of the skeleton is copied.
-mkdir -p "$tmp/kept/karo"
+# An AGENTS.md and a settings.local.json already there stay as they were, and the rest of the skeleton
+# is copied.
+mkdir -p "$tmp/kept/karo/.claude"
 printf '# mine\n' > "$tmp/kept/karo/AGENTS.md"
+printf '{"env":{"MINE":"1"}}\n' > "$tmp/kept/karo/.claude/settings.local.json"
 run kept "$stubs"
 if [[ $code -eq 0 && $(cat "$tmp/kept/karo/AGENTS.md") == '# mine' && -f $tmp/kept/karo/rule/frontmatter-schema.yaml ]] \
-  && [[ -z $(in_home kept git -C "$tmp/kept/karo" ls-files AGENTS.md) ]]; then
-  pass "AGENTS.md already there is kept"
+  && [[ -z $(in_home kept git -C "$tmp/kept/karo" ls-files AGENTS.md) ]] \
+  && [[ $(cat "$tmp/kept/karo/.claude/settings.local.json") == '{"env":{"MINE":"1"}}' ]]; then
+  pass "AGENTS.md and settings.local.json already there are kept"
 else
-  fail "AGENTS.md already there: exit $code: $out; $(cat "$tmp/kept/karo/AGENTS.md")"
+  fail "files already there: exit $code: $out; $(cat "$tmp/kept/karo/AGENTS.md" "$tmp/kept/karo/.claude/settings.local.json")"
+fi
+
+# A .gitignore already there that does not ignore settings.local.json stops the run before the file is made.
+mkdir -p "$tmp/unignored/karo"
+printf '.beads/\n' > "$tmp/unignored/karo/.gitignore"
+run unignored "$stubs"
+if [[ $code -eq 1 && ! -e $tmp/unignored/karo/.claude/settings.local.json ]] \
+  && printf '%s\n' "$out" | rg -qF 'git does not ignore .claude/settings.local.json'; then
+  pass ".gitignore without settings.local.json stops"
+else
+  fail ".gitignore without settings.local.json: exit $code: $out"
 fi
 
 # A missing required tool stops the run before it writes anything, with a line per missing tool;
@@ -123,8 +144,8 @@ fi
 run check "$stubs" --check
 if [[ $code -eq 0 && -z $(ls -A "$tmp/check") ]]; then pass "--check writes nothing"; else fail "--check: exit $code: $out"; fi
 
-# The skeleton's settings hold what karo's scripts need.
-out=$("$bin/settings-test" "$plugin/skeleton/.claude/settings.json" "$plugin/skeleton/.claude/karo-settings.json" 2>&1); code=$?
+# The skeleton's settings, with the settings.local.json that karo-setup makes, hold what karo's scripts need.
+out=$("$bin/settings-test" "$plugin/skeleton/.claude/settings.json" "$k/.claude/settings.local.json" "$plugin/skeleton/.claude/karo-settings.json" 2>&1); code=$?
 if [[ $code -eq 0 ]]; then pass "skeleton settings pass settings-test"; else fail "skeleton settings: $(printf '%s\n' "$out" | rg '^FAIL|failure')"; fi
 
 echo "karo-setup-test: $failed failure(s), files in $tmp" >&2
