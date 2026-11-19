@@ -36,7 +36,7 @@
 | `project/misc/<theme>/YYYY-MM-DD-<資料名>.md` | `Playbook` | 下書きのあいだは `status: draft` |
 | `project/design/YYYY-MM-DD-design-doc-<話題>.md` | `Design Doc` | `date` はファイル名。`status` は書かない |
 | `project/repo/<vcs>/<org>/<repo>/review/` | `Review` | 今までのレビューの原本で、新しくは作らない（レビューの要旨は Beads の comment に書く。`karo:review` skill）。`tasks` はファイル名のタスク ID。`resource` はレビューした PR |
-| `decisions/YYYY-MM-DD-<話題>.md` | `Decision Record` | `description` は決定の名前になる 1 文。`date` はファイル名の日（決めた日）。`projects` は `$KARO_HOME` 自身の Project のノートの名前。本文の節は `SKILL.md` の「Decision Record を書く」 |
+| `decisions/YYYY-MM-DD-<話題>.md` | `Decision Record` | `description` は決定の名前になる 1 文。`date` はファイル名の日（決めた日）。`projects` は `$KARO_HOME` 自身の Project のノートの名前。まだなければ `[]`。本文の節は `SKILL.md` の「Decision Record を書く」 |
 | `source/meeting/YYYY-MM-DD-<MTG>.md` | `Meeting Notes` | 1 つのファイルに 1 つの MTG だけを置き、本文の `## ` の見出しの 1 つをその MTG の名前にする。`sources` には、その MTG の議事録と資料だけを、1 つずつ URL と名前で書く |
 | `investigation/YYYY-MM-DD-<話題>.md` | `Investigation` | `sources` に読んだ外の原文 |
 | `doc/<話題>.md` | `Document` | `sources` に外の元の資料 |
