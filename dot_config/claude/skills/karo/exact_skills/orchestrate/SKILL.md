@@ -64,8 +64,8 @@ description: Task Orchestrator として、1 つの大きな仕事の作業の�
 - 作業の設計の台帳を作らず、Goal ごとの完了の条件を、出力で示せる 1 行（`karrybit:goal` skill の形）にしておく。
 - 起動したとき、再起動したとき、compact のあとには、下の 1・2 で状態を確かめ直す。
 
-1. ブリーフ、`git log <base>..HEAD`、`git worktree list`、`git status --short` を読む。
-   完了条件: 4 つの出力が会話にある。
+1. ブリーフを読み直し、`git log <base>..HEAD`、`git worktree list`、`git status --short` を 1 つずつ走らせる。会話の要約か前の出力があっても、3 つを走らせ直す。
+   完了条件: 3 つのコマンドと出力が会話にある。
 2. Goal ごとに完了の条件のコマンドを走らせ直し、条件が通らない Goal と始めていない Goal を、依存先の条件が通ったものから、ほかの Goal を待たずに進める。
    完了条件: どの Goal にも、通ったか通らないかの出力がある。
 
