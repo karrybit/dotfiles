@@ -97,7 +97,7 @@ description: '$KARO_HOME のタスク・判断待ち・タスクかプロジェ�
 
 | 問い | コマンド |
 | --- | --- |
-| 開いているタスク | `karo-open-tasks`（状態ごと・親ごとにまとめた Markdown の表を出す） |
+| 開いているタスク | `karo-open-tasks`（閉じていない子を持つ親の表と、残りのタスクを状態ごと・親ごとにまとめた表を Markdown で出す） |
 | 判断待ち | `bd human list --status open --json` |
 | 着手できる仕事 | `bd ready --exclude-type decision --json` |
 | 止まっているタスク | `bd blocked --json` |

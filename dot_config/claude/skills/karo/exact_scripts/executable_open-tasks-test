@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2016,SC2034  # check evals its condition, which reads expected
-# Show that open-tasks turns the JSON of `bd list` into one heading and table per state: 作業中, 着手できる,
-# 待ち and 後回し in that order, no heading for a state with no task, the columns Parent, ID, Depends On
-# and Title, the tasks grouped by parent with the parent's ID on the first row of a group only, `-` for a
-# task with no parent, only the blockers in the list under Depends On, a blocked task with no blocker
-# under 待ち, and a title printed in full with its `|` escaped. It also shows that bd runs once on
-# KARO_HOME, read only, with the caller's arguments, that an empty list prints one line saying so, and
-# that a bd that fails makes open-tasks fail.
+# Show that open-tasks turns the JSON of `bd list` into a 親 section first, holding the tasks with a
+# child in the list, an intermediate parent among them, in the order of their IDs under the columns ID,
+# Status, Depends On and Title, and then one heading and table per state for every other task, a parent
+# whose children are all closed among them: 作業中, 着手できる, 待ち and 後回し in that order, no
+# heading for a section with no task, the columns Parent, ID, Depends On and Title, the tasks grouped by
+# parent with the parent's ID on the first row of a group only, `-` for a task with no parent, only the
+# blockers in the list under Depends On, a blocked task with no blocker under 待ち, and a title printed
+# in full with its `|` escaped. It also shows that bd runs once on KARO_HOME, read only, with the
+# caller's arguments, that an empty list prints one line saying so, and that a bd that fails makes
+# open-tasks fail.
 # usage: open-tasks-test   (bd is a stub that logs its arguments and prints STUB_JSON; the files go to a
 #        temporary directory, which is removed)
 set -uo pipefail
@@ -28,31 +31,41 @@ STUB
 chmod +x "$tmp/bin/bd" || exit 2
 export PATH=$tmp/bin:$PATH STUB_LOG=$tmp/bd.log STUB_JSON=$tmp/list.json KARO_HOME=$tmp/karo
 
-# The tasks have the fields of `bd list --json` that open-tasks reads. demo-gone and demo-x1 are closed,
-# so they are not in the list. demo-lone sits between two children of demo-p1, which must still come
+# The tasks have the fields of `bd list --json` that open-tasks reads. demo-gone, demo-x1 and the children
+# of demo-done are closed, so they are not in the list. demo-p1.1 is a parent and a child, and comes
+# before demo-p1 in the list. demo-lone sits between two children of demo-p1, which must still come
 # together.
 long='a|b'$(printf '長%.0s' {1..42})
 jq -n --arg long "$long" '
   def blocks($id; $on): {issue_id: $id, depends_on_id: $on, type: "blocks"};
-  [ {id: "demo-p1", title: "親の作業", status: "in_progress"},
-    {id: "demo-p1.1", title: "子の作業", status: "in_progress", parent: "demo-p1",
-     dependencies: [{issue_id: "demo-p1.1", depends_on_id: "demo-p1", type: "parent-child"}]},
+  [ {id: "demo-p1.1", title: "子の作業", status: "in_progress", parent: "demo-p1",
+     dependencies: [{issue_id: "demo-p1.1", depends_on_id: "demo-p1", type: "parent-child"},
+                    blocks("demo-p1.1"; "demo-gone"), blocks("demo-p1.1"; "demo-ext")]},
+    {id: "demo-p1", title: "親の作業", status: "in_progress"},
+    {id: "demo-p1.1.1", title: "孫の作業", status: "in_progress", parent: "demo-p1.1"},
     {id: "demo-p1.2", title: "閉じた先を待っていた", status: "open", parent: "demo-p1",
      dependencies: [blocks("demo-p1.2"; "demo-gone")]},
     {id: "demo-lone", title: $long, status: "open"},
     {id: "demo-p1.4", title: "兄弟", status: "open", parent: "demo-p1"},
     {id: "demo-x1.1", title: "閉じた親の子", status: "open", parent: "demo-x1"},
+    {id: "demo-done", title: "子がすべて閉じた", status: "open"},
     {id: "demo-p1.3", title: "開いた先を待つ", status: "open", parent: "demo-p1",
      dependencies: [blocks("demo-p1.3"; "demo-p1.2"), blocks("demo-p1.3"; "demo-gone"), blocks("demo-p1.3"; "demo-lone"),
                     {issue_id: "demo-p1.3", depends_on_id: "demo-p1.4", type: "related"}]},
     {id: "demo-ext", title: "外の回答を待つ", status: "blocked"} ]' >"$STUB_JSON" || exit 2
 escaped="a\\|b$(printf '長%.0s' {1..42})"
-expected="## 作業中
+expected="## 親
+
+| ID | Status | Depends On | Title |
+| --- | --- | --- | --- |
+| demo-p1 | 作業中 | - | 親の作業 |
+| demo-p1.1 | 作業中 | demo-ext | 子の作業 |
+
+## 作業中
 
 | Parent | ID | Depends On | Title |
 | --- | --- | --- | --- |
-| demo-p1 | demo-p1.1 | - | 子の作業 |
-| - | demo-p1 | - | 親の作業 |
+| demo-p1.1 | demo-p1.1.1 | - | 孫の作業 |
 
 ## 着手できる
 
@@ -62,6 +75,7 @@ expected="## 作業中
 |  | demo-p1.4 | - | 兄弟 |
 | demo-x1 | demo-x1.1 | - | 閉じた親の子 |
 | - | demo-lone | - | $escaped |
+| - | demo-done | - | 子がすべて閉じた |
 
 ## 待ち
 
@@ -76,14 +90,14 @@ run() { : >"$STUB_LOG"; out=$("$bin/karo-open-tasks" "$@" 2>&1); code=$?; }
 
 run --label project:github.com/acme/demo
 check "the tables come out as expected and exit 0" '[[ $code -eq 0 && $out == "${expected%$'\''\n'\''}" ]]'
-check "the headings come in the order of the states, and 後回し with no task has none" \
-  '[[ $(rg "^## " <<<"$out" | tr "\n" " ") == "## 作業中 ## 着手できる ## 待ち " ]]'
+check "親 comes first, the states follow in order, and 後回し with no task has no heading" \
+  '[[ $(rg "^## " <<<"$out" | tr "\n" " ") == "## 親 ## 作業中 ## 着手できる ## 待ち " ]]'
 check "bd runs once on KARO_HOME, read only, with the caller's arguments" \
   '[[ $(<"$STUB_LOG") == "bd -C $KARO_HOME --readonly list --status open,in_progress,blocked,deferred --limit 0 --json --label project:github.com/acme/demo" ]]'
 
 jq -n '[{id: "demo-d1", title: "後でやる", status: "deferred", parent: "demo-gone"}]' >"$STUB_JSON" || exit 2
 run
-check "a list with deferred tasks only gives the 後回し heading alone" \
+check "a list with no parent and deferred tasks only gives the 後回し heading alone" \
   '[[ $code -eq 0 && $(rg "^## " <<<"$out") == "## 後回し" && $out == *"| demo-gone | demo-d1 | - | 後でやる |"* ]]'
 
 echo '[]' >"$STUB_JSON" || exit 2
