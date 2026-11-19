@@ -13,8 +13,8 @@ description: 別のマシンで、karo と $KARO_HOME の仕組みが動くか�
 
 1. karo の scripts と skill が呼ぶ道具を、`~/.config/claude/skills/karo/scripts/karo-setup --check` を単独で実行して確かめる。道具の一覧と入れ方の案内は karo-setup が持ち、karo-setup は道具を入れない。
    完了条件: `karo-setup: required tools found` が出て `missing:` の行がないか、`missing:` の行の一覧（使えなくなる機能と入れ方の案内つき）をオーナーに示している。
-2. `claude plugin list` を実行し、`karrybit@skills-dir` と `karo@skills-dir` が読み込まれているか、`imozuru` の plugin（`karrybit:researcher` が分野を探る調査で使う）が入っているかを確かめる。`$KARO_HOME/rule/checkin.md` があれば、その「外の情報源」の節で使う plugin と外のサービスの接続も確かめる（ファイルがなければ確かめない）。
-   完了条件: 確かめた plugin と接続のそれぞれについて、読み込まれているか、足りないことをオーナーに示している。
+2. `claude plugin list` を実行し、名前が `karo` と `karrybit` の plugin が読み込まれているかを、id の `@` の前の名前で確かめる。`@` の後ろは入れ方で変わるので問わない。karrybit が読み込まれていなければ、`claude plugin install karrybit@<marketplace>` で入れるよう案内して、ここで止める。`$KARO_HOME/rule/checkin.md` があれば、その「外の情報源」の節で使う plugin と外のサービスの接続も確かめる（ファイルがなければ確かめない）。
+   完了条件: `karo` と `karrybit` と、確かめた plugin と接続のそれぞれについて、読み込まれているか、足りないことをオーナーに示している。karrybit が足りないときは、入れ方を示して止まっている。
 3. `~/.config/claude/skills/karo/scripts/settings-test $KARO_HOME/.claude/settings.json $KARO_HOME/.claude/settings.local.json $KARO_HOME/.claude/karo-settings.json` を単独で実行する。settings-test は、karo に共通の `settings.json`、オーナーや環境に依存する値を持つ git の外の `settings.local.json`、karo の会話だけが `--settings` で読む `karo-settings.json` を、Claude Code と同じく配列をつないで合わせてから確かめる。karo の hook は karo の `hooks/hooks.json` が登録するので、settings に同じ hook があると `FAIL` になる（hook が 2 回走る）。`FAIL` の行は、オーナーが 3 つのファイルのどれかを直す（sandbox はその場所を書かせない）。
    完了条件: `settings-test: 0 failure(s)` が出たか、`FAIL` の行の一覧をオーナーに示している。
 4. `git -C $KARO_HOME branch --show-current` が `main` を出すかと、引数なしの `~/.config/claude/skills/karo/scripts/karo-check` を単独で実行した結果を確かめる。

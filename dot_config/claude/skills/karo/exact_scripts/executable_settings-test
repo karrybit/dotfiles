@@ -49,7 +49,7 @@ hook() {
     --arg event "$1" --arg want "$2" --arg script "$3"
 }
 
-check "karo@skills-dir is enabled" "$settings" '.enabledPlugins["karo@skills-dir"] == true'
+check "karo is enabled" "$settings" '.enabledPlugins // {} | to_entries | any((.key | startswith("karo@")) and .value == true)'
 for rule in "scripts/commit *" "scripts/crit-open *" "skills/land/scripts/land *" "scripts/karo-check" "scripts/karo-check *"; do
   check "Bash($karo/$rule) is allowed and in neither ask nor deny" "$settings" '
     any(.permissions.allow[]?; . == "Bash(\($r))")
