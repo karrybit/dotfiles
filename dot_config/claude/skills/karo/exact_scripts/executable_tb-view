@@ -46,6 +46,7 @@ case $new in
   *' '*) echo "tb-view: more than one new pane ($new); none renamed" >&2; exit 1 ;;
   *)
     fg=$(herdr pane process-info --pane "$new" | jq -r '.result.process_info.foreground_processes[0].name // empty')
-    [ "$fg" = terminal-browser ] || { echo "tb-view: the new pane $new runs ${fg:-nothing} in the foreground, not terminal-browser; not renamed" >&2; exit 1; }
+    # The kernel keeps the first 15 characters of a process name.
+    [ "$fg" = terminal-browse ] || { echo "tb-view: the new pane $new runs ${fg:-nothing} in the foreground, not terminal-browser; not renamed" >&2; exit 1; }
     herdr pane rename "$new" "$label" >/dev/null; echo "$new $label" ;;
 esac

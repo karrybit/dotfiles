@@ -7,7 +7,7 @@
 # when there is none; and that two new panes, a new pane running something else in the foreground,
 # a failed open, no Herdr workspace, and wrong arguments rename nothing.
 # It runs against herdr and terminal-browser stubs on PATH: herdr prints a pane list kept in a file,
-# reports FG (default terminal-browser) as a pane's foreground process, and logs those calls and renames,
+# reports FG (default terminal-browse, the 15 characters of the name the kernel keeps) as a pane's foreground process, and logs those calls and renames,
 # and terminal-browser logs what it is given and adds 0, 1, or 2 panes to the list.
 # usage: tb-view-test [<tb-view>]   (default: the one beside this script; its files go to a
 #        temporary directory that is removed)
@@ -54,7 +54,7 @@ run() {
   shift 2
   printf '{"result": {"panes": [%s%s]}}\n' "$caller" "${others:+, $others}" > "$PANES"
   : > "$LOG"
-  out=$(env PATH="$tmp/fake:$PATH" HERDR_WORKSPACE_ID=w1 HERDR_PANE_ID=w1:p1 HERDR_TAB_ID=w1:t1 NEW="$new" FG="${FG:-terminal-browser}" "$tv" "$@" 2>/dev/null); code=$?
+  out=$(env PATH="$tmp/fake:$PATH" HERDR_WORKSPACE_ID=w1 HERDR_PANE_ID=w1:p1 HERDR_TAB_ID=w1:t1 NEW="$new" FG="${FG:-terminal-browse}" "$tv" "$@" 2>/dev/null); code=$?
   log=$(paste -sd '|' "$LOG")
 }
 expect() { # <name> <exit> <stdout> <log>
