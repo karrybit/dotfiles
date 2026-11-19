@@ -150,21 +150,25 @@ for c in "${untyped[@]}"; do
   elif [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -qF -- "$want"; then pass "$name"; else fail "$name: exit $code, want '$want': $out"; fi
 done
 
-# required: the fields every note requires, typed or not; a schema of required alone needs no types.
-printf 'required: [date, description]\n' > "$tmp/required.yaml"
+# required: the fields every note requires, typed or not; a schema of required alone needs no types. A
+# field that is missing, has no value, or is an empty string is reported; an empty list is a value.
+printf 'required: [date, description, tags]\n' > "$tmp/required.yaml"
 req=$tmp/req
 mkdir -p "$req/a"
-printf -- '---\ndate: 2030-01-01\ndescription: x\n---\n' > "$req/a/both.md"
-printf -- '---\ntype: Anything\ndate: 2030-01-01\ndescription: x\n---\n' > "$req/a/typed.md"
+printf -- '---\ndate: 2030-01-01\ndescription: x\ntags: [a]\n---\n' > "$req/a/both.md"
+printf -- '---\ntype: Anything\ndate: 2030-01-01\ndescription: x\ntags: []\n---\n' > "$req/a/typed.md"
 run "$tmp/required.yaml" "$req"
-if [[ $code -eq 0 ]]; then pass "required: notes with the fields pass, typed or not"; else fail "required: valid: exit $code: $out"; fi
-printf -- '---\ndate: 2030-01-01\n---\n' > "$req/a/no-description.md"
-printf -- '---\ntype: Anything\ndescription: ""\n---\n' > "$req/a/no-date.md"
+if [[ $code -eq 0 ]]; then pass "required: notes with the fields pass, an empty list among them"; else fail "required: valid: exit $code: $out"; fi
+printf -- '---\ndate: 2030-01-01\ntags: []\n---\n' > "$req/a/no-description.md"
+printf -- '---\ntype: Anything\ndescription: ""\ntags: []\n---\n' > "$req/a/no-date.md"
+printf -- '---\ndate: 2030-01-01\ndescription: x\n---\n' > "$req/a/no-tags.md"
+printf -- '---\ndate: 2030-01-01\ndescription: x\ntags:\n---\n' > "$req/a/tags-without-value.md"
 run "$tmp/required.yaml" "$req"
 if [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -qxF $'a/no-description.md\tmissing description' \
   && printf '%s\n' "$out" | rg -qxF $'a/no-date.md\tmissing date' && printf '%s\n' "$out" | rg -qxF $'a/no-date.md\tmissing description' \
-  && printf '%s\n' "$out" | rg -qxF 'okf-lint: 3 problem(s)'; then
-  pass "required: a missing or empty field is reported"
+  && printf '%s\n' "$out" | rg -qxF $'a/no-tags.md\tmissing tags' && printf '%s\n' "$out" | rg -qxF $'a/tags-without-value.md\tmissing tags' \
+  && printf '%s\n' "$out" | rg -qxF 'okf-lint: 5 problem(s)'; then
+  pass "required: a missing, valueless or empty field is reported"
 else
   fail "required: broken: exit $code: $out"
 fi

@@ -59,7 +59,7 @@ else
 fi
 
 # A removed note is committed as removed.
-printf -- '---\ntype: Investigation\ndescription: 例。\ndate: 2026-01-01\nprojects:\n  - all\nsources:\n  - https://example.invalid/a\n---\n\n## 例\n' > "$v/investigation/2026-01-01-gone.md"
+printf -- '---\ntype: Investigation\ndescription: 例。\ndate: 2026-01-01\ntasks: []\nprojects:\n  - all\nsources:\n  - https://example.invalid/a\n---\n\n## 例\n' > "$v/investigation/2026-01-01-gone.md"
 run "t-test0001: 足す" "本文" investigation/2026-01-01-gone.md
 rm "$v/investigation/2026-01-01-gone.md"
 run "t-test0001: 消す" "本文" investigation/2026-01-01-gone.md
@@ -70,15 +70,15 @@ else
 fi
 
 # A standup in standup/ and a meeting's notes in source/meeting/ are committed.
-printf -- '---\ntype: Standup\ndescription: 例の日。\ndate: 2026-11-18\n---\n\n## 報告\n' > "$v/standup/2026-11-18.md"
+printf -- '---\ntype: Standup\ndescription: 例の日。\ndate: 2026-11-18\ntasks: []\nprojects: []\n---\n\n## 報告\n' > "$v/standup/2026-11-18.md"
 run "t-test0001: standup" "本文" standup/2026-11-18.md
 if [[ $code -eq 0 && $out == "OK "* ]]; then pass "a standup commits"; else fail "a standup: exit $code: $out"; fi
-printf -- '---\ntype: Meeting Notes\ndescription: 例。\ndate: 2026-11-18\nprojects:\n  - all\nsources:\n  - https://example.invalid/a\n---\n\n## 例\n' > "$v/source/meeting/2026-11-18-weekly.md"
+printf -- '---\ntype: Meeting Notes\ndescription: 例。\ndate: 2026-11-18\ntasks: []\nprojects:\n  - all\nsources:\n  - https://example.invalid/a\n---\n\n## 例\n' > "$v/source/meeting/2026-11-18-weekly.md"
 run "t-test0001: MTG" "本文" source/meeting/2026-11-18-weekly.md
 if [[ $code -eq 0 && $out == "OK "* ]]; then pass "a meeting's notes commit"; else fail "a meeting's notes: exit $code: $out"; fi
 # A decision record in decisions/ is committed, and one without frontmatter there stops.
 mkdir -p "$v/decisions"
-printf -- '---\ntype: Decision Record\ndescription: 例の決定。\ndate: 2026-11-19\nprojects:\n  - github.com/acme/demo\n---\n\n## 状態\n\nAccepted\n' > "$v/decisions/2026-11-19-demo.md"
+printf -- '---\ntype: Decision Record\ndescription: 例の決定。\ndate: 2026-11-19\ntasks: []\nprojects:\n  - github.com/acme/demo\n---\n\n## 状態\n\nAccepted\n' > "$v/decisions/2026-11-19-demo.md"
 run "t-test0001: 決定" "本文" decisions/2026-11-19-demo.md
 if [[ $code -eq 0 && $out == "OK "* ]]; then pass "a decision record commits"; else fail "a decision record: exit $code: $out"; fi
 
@@ -106,7 +106,7 @@ printf '# state\n' > "$v/state.md"
 run "t-test0001: state" "本文" state.md
 ng "state.md is outside the record" "not a record path: state.md"
 rm "$v/state.md"
-mkdir -p "$v/journal" && printf -- '---\ntype: Standup\ndate: 2026-11-18\n---\n\n## 報告\n' > "$v/journal/2026-11-18-standup.md"
+mkdir -p "$v/journal" && printf -- '---\ntype: Standup\ndate: 2026-11-18\ntasks: []\nprojects: []\n---\n\n## 報告\n' > "$v/journal/2026-11-18-standup.md"
 run "t-test0001: journal" "本文" journal/2026-11-18-standup.md
 ng "journal/ is outside the record" "not a record path: journal/2026-11-18-standup.md"
 rm "$v/journal/2026-11-18-standup.md"
@@ -114,7 +114,7 @@ mkdir -p "$v/scrap" && printf '# a\n' > "$v/scrap/t-test0001-demo.md"
 run "t-test0001: scrap" "本文" scrap/t-test0001-demo.md
 ng "a folder not in record-folders is outside the record" "not a record path: scrap/t-test0001-demo.md"
 rm "$v/scrap/t-test0001-demo.md"
-printf -- '---\ntype: Standup\ndate: 2026-11-19\n---\n\n## 報告\n' > "$v/standup/2026-11-19.md"
+printf -- '---\ntype: Standup\ndate: 2026-11-19\ntasks: []\nprojects: []\n---\n\n## 報告\n' > "$v/standup/2026-11-19.md"
 run "t-test0001: description のない standup" "本文" standup/2026-11-19.md
 ng "a note without a description" $'standup/2026-11-19.md\tmissing description'
 rm "$v/standup/2026-11-19.md"
@@ -147,7 +147,7 @@ while IFS= read -r -d : d; do
 done < <(printf '%s:' "$PATH")
 if (PATH=${norumdl%:}; ! command -v rumdl >/dev/null); then pass "rumdl is off the trimmed PATH"; else fail "rumdl is still on the trimmed PATH"; fi
 printf '\nrumdl なしの追記\n' >> "$v/investigation/2026-01-01-demo.md"
-printf -- '---\ntype: Investigation\ndescription: 例。\ndate: 2026-01-02\nprojects:\n  - all\n---\n\n## 例\n' > "$v/investigation/2026-01-02-fmt.md"
+printf -- '---\ntype: Investigation\ndescription: 例。\ndate: 2026-01-02\ntasks: []\nprojects:\n  - all\n---\n\n## 例\n' > "$v/investigation/2026-01-02-fmt.md"
 out=$(PATH=${norumdl%:} "$bin/commit" "t-test0001: rumdl なし" "本文" investigation/2026-01-01-demo.md investigation/2026-01-02-fmt.md 2>&1); code=$?
 ng "a rumdl not on PATH stops" "rumdl: command not found"
 if [[ $(git -C "$v" status --porcelain -- investigation) == $' M investigation/2026-01-01-demo.md\n?? investigation/2026-01-02-fmt.md' ]]; then
@@ -165,7 +165,7 @@ ng "a bad note with a name that is not ASCII stops" $'investigation/2026-01-02-�
 rm "$v/investigation/2026-01-02-調査.md"
 
 # A name with a space commits; a path with a newline is refused before anything is staged.
-printf -- '---\ntype: Investigation\ndescription: 例。\ndate: 2026-01-02\nprojects:\n  - all\n---\n\n## 例\n' > "$v/investigation/2026-01-02-a b.md"
+printf -- '---\ntype: Investigation\ndescription: 例。\ndate: 2026-01-02\ntasks: []\nprojects:\n  - all\n---\n\n## 例\n' > "$v/investigation/2026-01-02-a b.md"
 run "t-test0001: 空白" "本文" "investigation/2026-01-02-a b.md"
 if [[ $code -eq 0 && $out == "OK "* ]]; then pass "a name with a space commits"; else fail "a name with a space: exit $code: $out"; fi
 before=$(head_)
@@ -174,8 +174,8 @@ ng "a path with a newline is refused" "not a record path"
 
 # A rename or a removal that leaves a link to the old path stops, and the files stay as they are; with
 # the link fixed and listed too, the rename commits.
-printf -- '---\ntype: Investigation\ndescription: 例。\ndate: 2026-01-02\nprojects:\n  - all\n---\n\n## 例\n' > "$v/investigation/2026-01-02-old.md"
-printf -- '---\ntype: Investigation\ndescription: 例。\ndate: 2026-01-02\nprojects:\n  - all\n---\n\n## 例\n\n[前の調べ物](investigation/2026-01-02-old.md)\n' > "$v/investigation/2026-01-02-next.md"
+printf -- '---\ntype: Investigation\ndescription: 例。\ndate: 2026-01-02\ntasks: []\nprojects:\n  - all\n---\n\n## 例\n' > "$v/investigation/2026-01-02-old.md"
+printf -- '---\ntype: Investigation\ndescription: 例。\ndate: 2026-01-02\ntasks: []\nprojects:\n  - all\n---\n\n## 例\n\n[前の調べ物](investigation/2026-01-02-old.md)\n' > "$v/investigation/2026-01-02-next.md"
 run "t-test0001: 足す" "本文" investigation/2026-01-02-old.md investigation/2026-01-02-next.md
 before=$(head_)
 mv "$v/investigation/2026-01-02-old.md" "$v/investigation/2026-01-02-new-name.md"

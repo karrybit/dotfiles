@@ -18,8 +18,8 @@
 #   exclude   list of POSIX EREs of paths not read
 # A note is a .md file outside exclude whose first line is ---, or whose path matches a type's paths; other
 # .md files (a README) and the files fd skips (hidden ones, those .gitignore matches) are not read.
-# Each note is a problem when it has no or unreadable frontmatter, or a missing or empty field that every
-# note or its type requires; a status other than draft, stable, or deprecated; a stale_after that is not an
+# Each note is a problem when it has no or unreadable frontmatter, or a field that every note or its type
+# requires missing, without a value, or an empty string (an empty list [] is a value); a status other than draft, stable, or deprecated; a stale_after that is not an
 # ISO 8601 datetime with seconds and an offset (2030-01-01T00:00:00+09:00 or ...Z); a path its type's paths
 # does not match; no sources or derived_from for a lineage type; a derived_from item (read up to "#") that
 # is missing or in a higher layer (bronze < silver < gold) than the note; or a supersedes that is missing.
@@ -115,7 +115,7 @@ expr='
   | ((.stale_after // "") | tostring) as $sa
   | ($sa | test(strenv(DT))) as $sa_ok
   | (([
-      (((($s.required // []) + ($t[$ty] // [])) | unique)[] | (if ($d[.] == null or $d[.] == "" or $d[.] == []) then "missing " + . else null end)),
+      (((($s.required // []) + ($t[$ty] // [])) | unique)[] | (if ($d[.] == null or $d[.] == "") then "missing " + . else null end)),
       (if ($d | has("status")) and (($d.status | tostring | test("^(draft|stable|deprecated)$")) | not) then "bad status" else null end),
       (if ($d | has("stale_after")) and ($sa_ok | not) then "stale_after needs an offset datetime: YYYY-MM-DDTHH:MM:SS and Z or +HH:MM" else null end)
     ] | map(select(. != null)) | .[] | sub("[[:cntrl:]]"; " ")),

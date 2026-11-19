@@ -14,7 +14,7 @@ user-invocable: false
 
 - 新しいファイルは Write で、今あるファイルへの追記と直しは Edit で、`$KARO_HOME` の下の絶対パスに書く（`$KARO_HOME` の値は SessionStart の hook が出す）。
 - Edit・Write のあと、post-edit の hook が `.md` を rumdl で整え、`<scripts>/karo-check --only <そのファイル>` で確かめる。hook が問題を返したら、そのファイルを直してから commit する。hook が返すのは書いたファイルの問題か検査そのものの失敗だけで、そのファイルを指すほかのノートの問題は commit が止める。
-- standup（`standup/YYYY-MM-DD.md`）がまだなければ、Write で `type: Standup`・`date`・`description` のフロントマターから作る（`frontmatter.md` の「種類」の `Standup` の行）。
+- standup（`standup/YYYY-MM-DD.md`）がまだなければ、Write で `type: Standup`・`date`・`description`・`tasks`・`projects`（当たるものがなければ `[]`）のフロントマターから作る（`frontmatter.md` の「種類」の `Standup` の行）。
 - `state.md` は、下の「state.md を書く」に従って書く。
 - 運用の出来事（タスクを持たない依頼で記録を変えたこと）は、commit の本文に書く。
 - 長い本文（サブエージェントの調査の結果、imozuru の原文）は、そのサブエージェントや imozuru に `$KARO_HOME` の書き先へ直接書かせ、終わったらそのパスを commit に渡す。

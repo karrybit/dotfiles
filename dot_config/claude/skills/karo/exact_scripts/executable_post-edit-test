@@ -39,7 +39,7 @@ edit() {
 fixed() { if ! grep -q ' $' "$2"; then pass "$1"; else fail "$1: trailing space left"; fi; }
 kept() { if grep -q ' $' "$2"; then pass "$1"; else fail "$1: file changed"; fi; }
 
-note=$'---\ntype: Standup\ndescription: 例の日。\ndate: 2026-01-01\n---\n\n## 報告'
+note=$'---\ntype: Standup\ndescription: 例の日。\ndate: 2026-01-01\ntasks: []\nprojects: []\n---\n\n## 報告'
 edit "a valid record note passes" "$v/standup/2026-01-01.md" "$note" 0 ""
 fixed "rumdl formats a record note" "$v/standup/2026-01-01.md"
 edit "a broken record note exits 2 with its problem" "$v/standup/2026-01-02.md" $'## 例' 2 $'standup/2026-01-02.md\tno frontmatter'

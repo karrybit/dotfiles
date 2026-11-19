@@ -16,19 +16,19 @@ pass() { printf 'ok\t%s\n' "$1"; }
 
 ok=$tmp/ok
 mkdir -p "$ok"/{standup,source/meeting,project/repo/github.com/acme/demo/review,project/design,investigation,doc,decisions}
-printf -- '---\ntype: Project\ndescription: 例のプロジェクト。\ndate: 2026-01-01\nprojects:\n  - github.com/acme/demo\n---\n\n## demo\n' > "$ok/project/repo/github.com/acme/demo.md"
+printf -- '---\ntype: Project\ndescription: 例のプロジェクト。\ndate: 2026-01-01\ntasks: []\nprojects:\n  - github.com/acme/demo\n---\n\n## demo\n' > "$ok/project/repo/github.com/acme/demo.md"
 # A project's reviews sit in the folder named after it, and Design Docs sit in project/design/.
 printf -- '---\ntype: Review\ndescription: 例のレビュー。\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - github.com/acme/demo\n---\n\n## 結論\n\n承認\n' > "$ok/project/repo/github.com/acme/demo/review/t-test0001-1.md"
-printf -- '---\ntype: Design Doc\ndescription: 例の設計。\ndate: 2026-01-01\nprojects:\n  - github.com/acme/demo\nsources:\n  - https://example.invalid/design\n---\n\n## 例\n' > "$ok/project/design/2026-01-01-design-doc-example.md"
+printf -- '---\ntype: Design Doc\ndescription: 例の設計。\ndate: 2026-01-01\ntasks: []\nprojects:\n  - github.com/acme/demo\nsources:\n  - https://example.invalid/design\n---\n\n## 例\n' > "$ok/project/design/2026-01-01-design-doc-example.md"
 printf -- '---\ntype: Document\ndescription: 例の資料。\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - github.com/acme/demo\n---\n\n## 例\n\nt-test0001 の [demo](project/repo/github.com/acme/demo.md)\n' > "$ok/doc/demo.md"
 printf -- '---\ntype: Investigation\ndescription: 例の調べ物。\ndate: 2026-01-01\ntasks:\n  - t-test0001\nprojects:\n  - all\n---\n\n## 例\n' > "$ok/investigation/2026-01-01-example.md"
 # A day's standup is standup/<day>.md, and a meeting's notes sit in source/meeting/.
-printf -- '---\ntype: Standup\ndescription: 例の日。\ndate: 2026-01-01\n---\n\n## Checkin（2026-01-01）\n\n- 例\n' > "$ok/standup/2026-01-01.md"
-printf -- '---\ntype: Meeting Notes\ndescription: 例の MTG。\ndate: 2026-01-01\nprojects:\n  - github.com/acme/demo\nsources:\n  - { id: notes, resource: https://example.invalid/notes, title: 例の議事録 }\n---\n\n## 例の MTG\n\n- 決定: 例\n' > "$ok/source/meeting/2026-01-01-demo.md"
+printf -- '---\ntype: Standup\ndescription: 例の日。\ndate: 2026-01-01\ntasks: []\nprojects: []\n---\n\n## Checkin（2026-01-01）\n\n- 例\n' > "$ok/standup/2026-01-01.md"
+printf -- '---\ntype: Meeting Notes\ndescription: 例の MTG。\ndate: 2026-01-01\ntasks: []\nprojects:\n  - github.com/acme/demo\nsources:\n  - { id: notes, resource: https://example.invalid/notes, title: 例の議事録 }\n---\n\n## 例の MTG\n\n- 決定: 例\n' > "$ok/source/meeting/2026-01-01-demo.md"
 
 # A decision record sits in decisions/; the one it replaces stays there as deprecated, named by supersedes.
-printf -- '---\ntype: Decision Record\ndescription: 例の古い決定。\ndate: 2026-01-01\nstatus: deprecated\nprojects:\n  - github.com/acme/demo\n---\n\n## 状態\n\nSuperseded（[新しい決定](decisions/2026-01-02-example.md)）\n' > "$ok/decisions/2026-01-01-example.md"
-printf -- '---\ntype: Decision Record\ndescription: 例の決定。\ndate: 2026-01-02\nprojects:\n  - github.com/acme/demo\nsupersedes: decisions/2026-01-01-example.md\n---\n\n## 状態\n\nAccepted\n' > "$ok/decisions/2026-01-02-example.md"
+printf -- '---\ntype: Decision Record\ndescription: 例の古い決定。\ndate: 2026-01-01\ntasks: []\nstatus: deprecated\nprojects:\n  - github.com/acme/demo\n---\n\n## 状態\n\nSuperseded（[新しい決定](decisions/2026-01-02-example.md)）\n' > "$ok/decisions/2026-01-01-example.md"
+printf -- '---\ntype: Decision Record\ndescription: 例の決定。\ndate: 2026-01-02\ntasks: []\nprojects:\n  - github.com/acme/demo\nsupersedes: decisions/2026-01-01-example.md\n---\n\n## 状態\n\nAccepted\n' > "$ok/decisions/2026-01-02-example.md"
 
 if out=$("$bin/karo-check" "$ok" 2>&1); then pass "valid vault passes"; else fail "valid vault fails: $out"; fi
 
@@ -43,6 +43,8 @@ cases=(
   'replaced decision record removed|decisions/2026-01-02-example.md	supersedes missing: decisions/2026-01-01-example.md|rm decisions/2026-01-01-example.md'
   'document without description|missing description|sed -i.bak "/^description:/d" doc/demo.md'
   'missing date|investigation/2026-01-01-example.md	missing date|sed -i.bak "/^date:/d" investigation/2026-01-01-example.md'
+  'missing tasks key|doc/demo.md	missing tasks|sed -i.bak "/^tasks:/,/^  - t-test0001/d" doc/demo.md'
+  'missing projects key|standup/2026-01-01.md	missing projects|sed -i.bak "/^projects:/d" standup/2026-01-01.md'
   'empty description|standup/2026-01-01.md	missing description|sed -i.bak "s/^description: .*/description: \"\"/" standup/2026-01-01.md'
   'unparseable frontmatter|doc/demo.md	unparseable frontmatter|sed -i.bak "s/^description: .*/description: a: b/" doc/demo.md'
   'date not YYYY-MM-DD|doc/demo.md	date is not YYYY-MM-DD|sed -i.bak "s/^date: 2026-01-01/date: 2026-1-1/" doc/demo.md'
@@ -56,16 +58,16 @@ for c in "${cases[@]}"; do
   if [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -q -- "$want"; then pass "$name"; else fail "$name: exit $code, want /$want/: $out"; fi
 done
 
-# type, tasks and projects are optional, and a note may sit in any record folder under any name: a note
-# with a date and a description passes without them.
+# type is optional, tasks and projects may be the empty list, and a note may sit in any record folder
+# under any name: a note with a date, a description and the two keys passes.
 # <name>|<shell command run inside the copy>
 optional=(
   'note without a type|sed -i.bak "/^type:/d" doc/demo.md'
   'note with a type the schema does not name|sed -i.bak "s/^type: Document/type: Bogus/" doc/demo.md'
-  'note without tasks and projects|sed -i.bak "/^tasks:/,/^  - github.com\/acme\/demo/d" doc/demo.md'
+  'note with empty tasks and projects|sed -i.bak "/^tasks:/,/^  - github.com\/acme\/demo/d; s/^date: .*/&\\ntasks: []\\nprojects: []/" doc/demo.md'
   'standup under another name|mv standup/2026-01-01.md standup/2026-01-01-standup.md'
   'review named without a task ID|mv project/repo/github.com/acme/demo/review/t-test0001-1.md project/repo/github.com/acme/demo/review/demo.md'
-  'note with date and description alone|printf -- "---\\ndate: 2026-01-03\\ndescription: x\\n---\\n" > decisions/anything.md'
+  'note with date, description and empty tasks and projects alone|printf -- "---\\ndate: 2026-01-03\\ndescription: x\\ntasks: []\\nprojects: []\\n---\\n" > decisions/anything.md'
 )
 for c in "${optional[@]}"; do
   name=${c%%|*}; cmd=${c#*|}
