@@ -1,0 +1,23 @@
+#!/bin/sh
+# Opens the crit review at http://localhost:<port> in terminal-browser, in a
+# Herdr pane named "view - crit" beside the caller's, through tb-view beside
+# this script, and prints what tb-view prints. --no-merge opens a new pane
+# instead of a tab in an existing one. terminal-browser does not start inside
+# the sandbox, and a "*" in a permission rule or a sandbox exclusion matches
+# any run of words, so a rule on terminal-browser itself would also let it run
+# page scripts, proxy through ssh, or upgrade itself outside the sandbox; this
+# script takes only a port number and is the allowed form.
+# usage: crit-open [--no-merge] <port>
+set -eu
+
+usage() {
+  echo "usage: crit-open [--no-merge] <port>" >&2
+  exit 2
+}
+merge=
+if [ "${1:-}" = --no-merge ]; then merge=--no-merge; shift; fi
+[ $# -eq 1 ] || usage
+case "$1" in
+  '' | *[!0123456789]*) usage ;;
+esac
+exec "$(dirname "$0")/tb-view" "view - crit" "http://localhost:$1" ${merge:+"$merge"}

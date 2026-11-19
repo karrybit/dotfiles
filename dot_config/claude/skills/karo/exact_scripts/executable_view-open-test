@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Show that view-open hands the karrybit crit skill's tb-view "view - <name>" (default
+# Show that view-open hands the tb-view beside it "view - <name>" (default
 # "view - browser") and the path, with --no-merge when it comes first, for an existing .html or .svg
 # under doc/ of KARO_HOME, an existing <store>/<lowercase UUID>/index.html in the store under
 # KARO_DATA_HOME or, when it is unset or empty, under karo/ of XDG_DATA_HOME or, when that is unset or
@@ -8,15 +8,14 @@
 # path, a path with "..", an .html or .svg outside doc/ and the store's UUID folders, an extension
 # off the list, a missing file, a folder, and a name with characters other than letters, digits,
 # ".", "_", and "-", or starting with one of those three. It runs with HOME, KARO_HOME,
-# KARO_DATA_HOME, and XDG_DATA_HOME in a temporary directory that holds a tb-view stub
-# logging what it is given (tb-view-test covers tb-view). settings-test checks that the settings
+# KARO_DATA_HOME, and XDG_DATA_HOME in a temporary directory that holds a copy of view-open beside
+# a tb-view stub logging what it is given (tb-view-test covers tb-view). settings-test checks that the settings
 # ask before each view-open and run it outside the sandbox.
-# usage: view-open-test [<view-open>]   (default: the one beside this script; its files go to a
-#        temporary directory that is removed)
+# usage: view-open-test   (tests the view-open beside this script; its files go to a temporary
+#        directory that is removed)
 set -uo pipefail
 exec </dev/null
 bin=$(cd "$(dirname "$0")" && pwd)
-vo=${1:-$bin/view-open}
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/view-open-test.XXXXXX") || exit 2
 trap 'rm -rf "$tmp"' EXIT
 # /bin/bash on macOS cannot make a here document while the current folder is one it may not write, even
@@ -26,9 +25,10 @@ failed=0
 fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
 pass() { printf 'ok\t%s\n' "$1"; }
 
-stub=$tmp/.config/claude/skills/karrybit/skills/crit/scripts/tb-view
+mkdir "$tmp/bin" && cp "$bin/view-open" "$tmp/bin/" || exit 2
+vo=$tmp/bin/view-open stub=$tmp/bin/tb-view
 id=0f6c7d9e-3b1a-4c52-9e34-5a8d1b7c2e40
-mkdir -p "${stub%/*}" "$tmp/karo/doc/abc/1" "$tmp/media" "$tmp/folder.png" "$tmp/data/html/$id/sub" \
+mkdir -p "$tmp/karo/doc/abc/1" "$tmp/media" "$tmp/folder.png" "$tmp/data/html/$id/sub" \
   "$tmp/data/html/.tmp.abc123" "$tmp/data/html/0F6C7D9E-3B1A-4C52-9E34-5A8D1B7C2E40" "$tmp/data/html/abc" \
   "$tmp/.local/share/karo/html/$id" "$tmp/xdg/karo/html/$id"
 cat > "$stub" <<'EOF'
@@ -123,5 +123,5 @@ refused "$tmp/media/missing.png"
 refused "$tmp/folder.png"
 refused "file://$tmp/media/a.png"
 
-if [[ $failed -gt 0 ]]; then echo "$failed failed"; exit 1; fi
-echo "all passed"
+echo "view-open-test: $failed failure(s)" >&2
+[ "$failed" -eq 0 ]

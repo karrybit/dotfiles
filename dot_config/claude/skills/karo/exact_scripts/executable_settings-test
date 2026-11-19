@@ -3,7 +3,9 @@
 # Show that a project's settings.json holds what karo's scripts need from it: karo enabled, the scripts
 # a skill runs as one call allowed and kept out of ask and deny, view-open in ask and kept out of allow
 # and deny (each open asks first, since the page it opens can run scripts outside the sandbox), the
-# ones that must leave the sandbox in sandbox.excludedCommands, the herdr-agent skill's agent-ctl,
+# ones that must leave the sandbox in sandbox.excludedCommands, no rule or exclusion for tb-view,
+# terminal-browser or open, which take any page, so only crit-open and view-open, which check the
+# page first, open it outside the sandbox, the herdr-agent skill's agent-ctl,
 # agent-report and safe-key allowed and out of the sandbox with HERDR_AGENT_NAME_PATTERN set, and
 # herdr's own close, prompt and key commands not allowed. The hooks are karo's own hooks/hooks.json, which Claude Code merges with
 # the settings' hooks: it must run call-check by a PreToolUse hook on Bash and post-edit by a
@@ -37,7 +39,7 @@ hook() {
 }
 
 check "karo@skills-dir is enabled" "$settings" '.enabledPlugins["karo@skills-dir"] == true'
-for rule in "scripts/commit *" "skills/land/scripts/land *" "scripts/karo-check" "scripts/karo-check *"; do
+for rule in "scripts/commit *" "scripts/crit-open *" "skills/land/scripts/land *" "scripts/karo-check" "scripts/karo-check *"; do
   check "Bash($karo/$rule) is allowed and in neither ask nor deny" "$settings" '
     any(.permissions.allow[]?; . == "Bash(\($r))")
       and ([.permissions.ask[]?, .permissions.deny[]?] | any(startswith("Bash(" + ($r | rtrimstr(" *")))) | not)' \
@@ -47,9 +49,12 @@ check "Bash($karo/scripts/view-open *) is in ask and in neither allow nor deny" 
   any(.permissions.ask[]?; . == "Bash(\($r))")
     and ([.permissions.allow[]?, .permissions.deny[]?] | any(startswith("Bash(" + ($r | rtrimstr(" *")))) | not)' \
   --arg r "$karo/scripts/view-open *"
-for command in "skills/land/scripts/land *" "scripts/view-open *"; do
+for command in "scripts/crit-open *" "skills/land/scripts/land *" "scripts/view-open *"; do
   check "$karo/$command is in sandbox.excludedCommands" "$settings" 'any(.sandbox.excludedCommands[]?; . == $c)' --arg c "$karo/$command"
 done
+check "tb-view, terminal-browser and open are neither allowed nor excluded" "$settings" '
+  [(.permissions.allow // [])[], (.sandbox.excludedCommands // [])[]]
+    | any(test("^(Bash\\()?((~|/)[^ ]*/)?(tb-view|terminal-browser|open)( |\\)|$)")) | not'
 # The herdr-agent skill's scripts check before they call herdr, so they are allowed and leave the
 # sandbox; herdr's own close, prompt and key commands keep their prompt.
 for s in agent-ctl agent-report safe-key; do

@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# Show that crit-open hands the tb-view beside it only "view - crit" and http://localhost:<port>,
+# with --no-merge when it comes first, for a port made of digits, and refuses any other argument,
+# against a copy of crit-open beside a tb-view stub that logs what it is given (tb-view-test covers
+# tb-view). settings-test checks that the settings allow crit-open and run it outside the sandbox.
+# usage: crit-open-test   (tests the crit-open beside this script; its files go to a temporary
+#        directory that is removed)
+set -uo pipefail
+exec </dev/null
+bin=$(cd "$(dirname "$0")" && pwd)
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/crit-open-test.XXXXXX") || exit 2
+trap 'rm -rf "$tmp"' EXIT
+failed=0
+fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
+pass() { printf 'ok\t%s\n' "$1"; }
+
+cp "$bin/crit-open" "$tmp/" || exit 2
+co=$tmp/crit-open
+cat > "$tmp/tb-view" <<'EOF'
+#!/bin/sh
+(IFS='|'; printf '%s\n' "$*") >> "$FAKE_LOG"
+EOF
+chmod +x "$tmp/tb-view"
+
+export FAKE_LOG=$tmp/log
+run() {
+  : > "$FAKE_LOG"
+  out=$("$co" "$@" 2>&1); code=$?
+}
+
+run 49809
+if [[ $code -eq 0 && $(cat "$FAKE_LOG") == "view - crit|http://localhost:49809" ]]; then
+  pass "a port opens http://localhost:<port> in the view - crit pane"
+else
+  fail "a port: exit $code: $out: $(paste -sd '/' "$FAKE_LOG")"
+fi
+run --no-merge 49809
+if [[ $code -eq 0 && $(cat "$FAKE_LOG") == "view - crit|http://localhost:49809|--no-merge" ]]; then
+  pass "--no-merge before the port is passed on"
+else
+  fail "--no-merge: exit $code: $out: $(paste -sd '/' "$FAKE_LOG")"
+fi
+
+refused() {
+  run "$@"
+  if [[ $code -eq 2 && ! -s $FAKE_LOG ]]; then pass "\"crit-open $1\" is refused"; else fail "\"crit-open $1\": exit $code: $out: $(paste -sd '|' "$FAKE_LOG")"; fi
+}
+run
+if [[ $code -eq 2 && ! -s $FAKE_LOG ]]; then pass "no argument is refused"; else fail "no argument: exit $code: $out"; fi
+for arg in "" "4980a" "-a" "49809/x" "49809@example.com" "1 2" "49809;x" "\$x" "４９８０９"; do
+  refused "$arg"
+done
+run 49809 ~/x.command
+if [[ $code -eq 2 && ! -s $FAKE_LOG ]]; then pass "a second argument is refused"; else fail "a second argument: exit $code: $out"; fi
+run 49809 --no-merge
+if [[ $code -eq 2 && ! -s $FAKE_LOG ]]; then pass "--no-merge after the port is refused"; else fail "--no-merge after the port: exit $code: $out"; fi
+run --no-merge
+if [[ $code -eq 2 && ! -s $FAKE_LOG ]]; then pass "--no-merge alone is refused"; else fail "--no-merge alone: exit $code: $out"; fi
+
+echo "crit-open-test: $failed failure(s)" >&2
+[ "$failed" -eq 0 ]
