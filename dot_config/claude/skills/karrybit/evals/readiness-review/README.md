@@ -18,7 +18,7 @@ Behavior cases for the `readiness-review` skill in `exact_skills/exact_agent-cor
 ## Files
 
 - `fixtures/wtctl`: shell commands that create a git worktree per worker (`bin/wt-new`), list them (`bin/wt-list`), and remove only those they created (`bin/wt-close`), using `state/ledger.tsv`; `docs/requirements.md` (R1 to R3), `docs/issues.md` (#3, the stale branch), and `tests/run`, which prints `<n> failure(s)`.
-- `fixtures/wtctl-v1`: the files `ready-no-merge` commits on `drop-branch-column`: `wt-new` writing two columns, `wt-list` reading the current branch, and `tests/run` with seven checks.
+- `fixtures/wtctl-v1`: the files `ready-no-merge` commits on `drop-branch-column`: `wt-new` writing two columns, `wt-list` reading the current branch, `README.md` describing two columns, and `tests/run` with eight checks.
 - `plugin-eval/<case>/`: `prompt.md`, `case.yaml`, `fixture.sh`, `graders/`, and `docs/`, the case's plan, design, decisions, or reports, which `fixture.sh` copies into the fixture's `docs/` before its first commit. `fixture.sh` sets the executable bits, since a `chezmoi archive` copy has none.
 
 ## Settings for This Suite

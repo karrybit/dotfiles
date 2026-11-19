@@ -24,6 +24,17 @@ check "wt-close removes a worktree wt-new created" '[ ! -d .worktrees/a ]'
 git worktree add -q -b human .worktrees/human
 check "wt-close leaves a worktree a person created" '! "$bin/wt-close" human 2>/dev/null && [ -d .worktrees/human ]'
 
+"$bin/wt-new" gone
+"$bin/wt-new" detached
+"$bin/wt-new" last
+rm -rf .worktrees/gone
+git -C .worktrees/detached switch -q --detach
+check "wt-list prints - for a deleted folder and a detached HEAD, and goes on" '[ "$("$bin/wt-list")" = "$(printf "gone\t-\ndetached\t-\nlast\twt/last")" ]'
+git worktree prune
+"$bin/wt-close" detached
+"$bin/wt-close" last
+awk -F'\t' '$1 != "gone"' state/ledger.tsv > state/ledger.tmp && mv state/ledger.tmp state/ledger.tsv
+
 git worktree add -q -b wt/old .worktrees/old
 printf 'old\t%s\twt/old\n' "$PWD/.worktrees/old" >> state/ledger.tsv
 check "wt-list reads a three-column row" '[ "$("$bin/wt-list")" = "$(printf "old\twt/old")" ]'
