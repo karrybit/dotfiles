@@ -1,0 +1,131 @@
+#!/usr/bin/env bash
+# Show that karo-setup sets up an empty HOME so that karo-check passes, changes nothing on a second run,
+# keeps a file already there, stops before writing anything when a required tool is missing, goes on
+# when only a feature tool is missing, and that the skeleton's settings pass settings-test.
+# Each case runs with a HOME of its own under a new temporary folder and a PATH of stubs: the basic
+# commands, git, jq, yq, rg and fd are links to the real ones, the other tools are stubs, and bd is a
+# stub that records its arguments and makes .beads, so no real HOME, task database or tool is touched.
+# The temporary folder is left in place and named on the last line.
+# usage: karo-setup-test
+set -uo pipefail
+exec </dev/null
+bin=$(cd "$(dirname "$0")" && pwd)
+plugin=$(cd "$bin/.." && pwd)
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/karo-setup-test.XXXXXX") || exit 2
+failed=0
+fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
+pass() { printf 'ok\t%s\n' "$1"; }
+
+# real <command>: the binary to link, through aqua which where aqua installs it
+real() {
+  local p
+  if command -v aqua >/dev/null && p=$(aqua which "$1" 2>/dev/null) && [[ -x $p ]]; then printf '%s\n' "$p"; return; fi
+  command -v "$1"
+}
+stubs=$tmp/stubs
+mkdir -p "$stubs"
+for c in bash env mkdir cp sed sort find dirname git jq yq rg fd; do
+  p=$(real "$c") || { echo "karo-setup-test: no $c" >&2; exit 2; }
+  ln -s "$p" "$stubs/$c"
+done
+for c in claude herdr rumdl lsof ps bv cass crit terminal-browser gh uuidgen; do
+  printf '#!/bin/sh\nexit 0\n' > "$stubs/$c"
+done
+printf '#!/bin/sh\nprintf "%%s\\n" "$*" >> "$BD_LOG"\n[ "$1" = init ] && mkdir .beads\nexit 0\n' > "$stubs/bd"
+chmod +x "$stubs"/*
+
+# without <tool>...: a PATH folder of the stubs with the given tools left out
+without() {
+  local d=$tmp/without-$(printf '%s-' "$@") s
+  mkdir -p "$d"
+  for s in "$stubs"/*; do
+    [[ " $* " == *" ${s##*/} "* ]] || ln -s "$s" "$d/"
+  done
+  printf '%s\n' "$d"
+}
+# run <case> <PATH> [<args>...]: karo-setup with the case's HOME; output in $out, exit code in $code
+run() {
+  local h=$tmp/$1 p=$2
+  shift 2
+  mkdir -p "$h"
+  out=$(env -i HOME="$h" PATH="$p" BD_LOG="$h.bd.log" GIT_CONFIG_NOSYSTEM=1 \
+    GIT_AUTHOR_NAME=test GIT_AUTHOR_EMAIL=test@example.invalid GIT_COMMITTER_NAME=test GIT_COMMITTER_EMAIL=test@example.invalid \
+    "$plugin/scripts/karo-setup" "$@" 2>&1)
+  code=$?
+}
+in_home() { env -i HOME="$tmp/$1" PATH="$stubs" GIT_CONFIG_NOSYSTEM=1 "${@:2}"; }
+
+# An empty HOME gets the skeleton, a git repository on main with the skeleton committed, and a task
+# database made once with the karo prefix; karo-check finds no problem.
+run empty "$stubs"
+k=$tmp/empty/karo
+if [[ $code -eq 0 && -f $k/AGENTS.md && -f $k/rule/frontmatter-schema.yaml && -f $k/.claude/settings.json && -d $k/.beads ]]; then
+  pass "empty HOME: skeleton copied"
+else
+  fail "empty HOME: exit $code: $out"
+fi
+if [[ $(in_home empty git -C "$k" branch --show-current) == main && -z $(in_home empty git -C "$k" status --short) ]] \
+  && [[ $(in_home empty git -C "$k" ls-files AGENTS.md) == AGENTS.md ]]; then
+  pass "empty HOME: skeleton committed on main"
+else
+  fail "empty HOME: git: $(in_home empty git -C "$k" status --short 2>&1)"
+fi
+if [[ $(cat "$tmp/empty.bd.log") == "init --quiet --stealth --non-interactive --skip-agents --skip-hooks --prefix karo" ]]; then
+  pass "empty HOME: bd init once with the karo prefix"
+else
+  fail "empty HOME: bd calls: $(cat "$tmp/empty.bd.log")"
+fi
+# karo-check reads but does not write, so it runs with the caller's PATH and only HOME changed.
+check=$(env -u KARO_HOME HOME="$tmp/empty" "$bin/karo-check" 2>&1); c=$?
+if [[ $c -eq 0 ]] && printf '%s\n' "$check" | rg -qxF 'karo-check: 0 problem(s)'; then pass "empty HOME: karo-check 0 problem(s)"; else fail "empty HOME: karo-check exit $c: $check"; fi
+
+# A second run changes nothing and calls bd no more.
+head_before=$(in_home empty git -C "$k" rev-parse HEAD)
+run empty "$stubs"
+if [[ $code -eq 0 && -z $(in_home empty git -C "$k" status --short) && $(in_home empty git -C "$k" rev-parse HEAD) == "$head_before" ]] \
+  && [[ $(wc -l < "$tmp/empty.bd.log") -eq 1 ]]; then
+  pass "second run: nothing changes"
+else
+  fail "second run: exit $code: $out; status: $(in_home empty git -C "$k" status --short)"
+fi
+
+# An AGENTS.md already there stays as it was, and the rest of the skeleton is copied.
+mkdir -p "$tmp/kept/karo"
+printf '# mine\n' > "$tmp/kept/karo/AGENTS.md"
+run kept "$stubs"
+if [[ $code -eq 0 && $(cat "$tmp/kept/karo/AGENTS.md") == '# mine' && -f $tmp/kept/karo/rule/frontmatter-schema.yaml ]] \
+  && [[ -z $(in_home kept git -C "$tmp/kept/karo" ls-files AGENTS.md) ]]; then
+  pass "AGENTS.md already there is kept"
+else
+  fail "AGENTS.md already there: exit $code: $out; $(cat "$tmp/kept/karo/AGENTS.md")"
+fi
+
+# A missing required tool stops the run before it writes anything, with a line per missing tool;
+# a missing feature tool is named with its feature.
+run missing "$(without herdr bv)"
+if [[ $code -eq 1 && -z $(ls -A "$tmp/missing") && ! -e $tmp/missing.bd.log ]] \
+  && printf '%s\n' "$out" | rg -qxF 'missing: herdr (required): install it from https://github.com/herdrdev/herdr' \
+  && printf '%s\n' "$out" | rg -qxF 'missing: bv (task analysis (karo:tasks) will not work): install it from https://github.com/Dicklesworthstone/beads_viewer'; then
+  pass "missing required tool: stops with guidance, writes nothing"
+else
+  fail "missing required tool: exit $code: $out; HOME: $(ls -A "$tmp/missing")"
+fi
+
+# A missing feature tool alone does not stop the setup.
+run feature "$(without cass)"
+if [[ $code -eq 0 && -f $tmp/feature/karo/AGENTS.md ]] && printf '%s\n' "$out" | rg -qF 'missing: cass (past conversations (karo:recall) will not work)'; then
+  pass "missing feature tool: named, setup goes on"
+else
+  fail "missing feature tool: exit $code: $out"
+fi
+
+# --check only checks the tools.
+run check "$stubs" --check
+if [[ $code -eq 0 && -z $(ls -A "$tmp/check") ]]; then pass "--check writes nothing"; else fail "--check: exit $code: $out"; fi
+
+# The skeleton's settings hold what karo's scripts need.
+out=$("$bin/settings-test" "$plugin/skeleton/.claude/settings.json" "$plugin/skeleton/.claude/karo-settings.json" 2>&1); code=$?
+if [[ $code -eq 0 ]]; then pass "skeleton settings pass settings-test"; else fail "skeleton settings: $(printf '%s\n' "$out" | rg '^FAIL|failure')"; fi
+
+echo "karo-setup-test: $failed failure(s), files in $tmp" >&2
+[[ $failed -eq 0 ]]

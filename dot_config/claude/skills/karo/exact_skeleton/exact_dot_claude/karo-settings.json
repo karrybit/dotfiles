@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(herdr agent list*)",
+      "Bash(herdr agent get *)",
+      "Bash(herdr agent read *)",
+      "Bash(herdr agent wait *)",
+      "Bash(herdr agent explain *)",
+      "Bash(herdr workspace list*)",
+      "Bash(herdr workspace get *)",
+      "Bash(herdr tab list*)",
+      "Bash(herdr pane list*)",
+      "Bash(herdr pane get *)",
+      "Bash(herdr pane read *)",
+      "Bash(herdr pane wait-output *)",
+      "Bash(herdr pane layout*)",
+      "Bash(herdr pane process-info *)",
+      "Bash(herdr worktree list*)",
+      "Bash(~/.config/claude/skills/karo/skills/land/scripts/land *)",
+      "Bash(~/.config/claude/skills/karo/scripts/crit-open *)",
+      "Bash(~/.config/claude/skills/karo/skills/herdr-agent/scripts/agent-ctl *)",
+      "Bash(~/.config/claude/skills/karo/skills/herdr-agent/scripts/agent-report *)",
+      "Bash(~/.config/claude/skills/karo/skills/herdr-agent/scripts/safe-key *)"
+    ]
+  },
+  "sandbox": {
+    "excludedCommands": [
+      "bd *",
+      "bv *",
+      "~/.config/claude/skills/karo/skills/insights/scripts/insights *",
+      "herdr agent *",
+      "herdr workspace *",
+      "herdr worktree *",
+      "herdr tab *",
+      "herdr pane *",
+      "~/.config/claude/skills/karo/skills/land/scripts/land *",
+      "~/.config/claude/skills/karo/scripts/crit-open *",
+      "~/.config/claude/skills/karo/scripts/view-open *",
+      "~/.config/claude/skills/karo/skills/herdr-agent/scripts/agent-ctl *",
+      "~/.config/claude/skills/karo/skills/herdr-agent/scripts/agent-report *",
+      "~/.config/claude/skills/karo/skills/herdr-agent/scripts/safe-key *"
+    ]
+  }
+}

@@ -5,19 +5,14 @@ description: 別のマシンで、karo と $KARO_HOME の仕組みが動くか�
 
 # karo の仕組みを確かめる
 
-- この skill は、karo を有効にした `$KARO_HOME` の会話で動く（karo は `$KARO_HOME/.claude/settings.json` の `enabledPlugins` でだけ読み込まれる）。`$KARO_HOME` の記録そのものは karo に入っていないので、`$KARO_HOME` の用意はこの skill の前にオーナーが行う。
+- この skill は、karo を有効にした `$KARO_HOME` の会話で動く（karo は `$KARO_HOME/.claude/settings.json` の `enabledPlugins` でだけ読み込まれる）。`$KARO_HOME` は、この skill の前に、オーナーがターミナルで `~/.config/claude/skills/karo/scripts/karo-setup` を実行して作る（骨組みの型の写し、git、Beads。すでにあるファイルは上書きしない）。
 - 確かめるのは構造（道具、plugin、settings、`$KARO_HOME` の git）で、記録の中身は確かめない。足りないものを入れる、settings を直す、ログインするのはオーナーで、karo は一覧を示して止まる。
 - karo の scripts は `$KARO_STATE_HOME/` の下を、Agent の worktree は `git worktree add` が、それぞれ使うときに作るので、この skill はフォルダを作らない。
 
 ## 手順
 
-1. karo の scripts と skill が呼ぶ道具を確かめる。次を 1 回の Bash で実行する。
-
-   ```sh
-   for t in herdr git jq yq rg fd ghq rumdl crit terminal-browser python3 shortid claude bd cass bv; do command -v "$t" >/dev/null || echo "missing: $t"; done
-   ```
-
-   完了条件: 出力が空か、`missing:` の行の一覧をオーナーに示している。
+1. karo の scripts と skill が呼ぶ道具を、`~/.config/claude/skills/karo/scripts/karo-setup --check` を単独で実行して確かめる。道具の一覧と入れ方の案内は karo-setup が持ち、karo-setup は道具を入れない。
+   完了条件: `karo-setup: required tools found` が出て `missing:` の行がないか、`missing:` の行の一覧（使えなくなる機能と入れ方の案内つき）をオーナーに示している。
 2. `claude plugin list` を実行し、`karrybit@skills-dir` と `karo@skills-dir` が読み込まれているか、`imozuru` の plugin（`karrybit:researcher` が分野を探る調査で使う）が入っているかを確かめる。`$KARO_HOME/rule/checkin.md` があれば、その「外の情報源」の節で使う plugin と外のサービスの接続も確かめる（ファイルがなければ確かめない）。
    完了条件: 確かめた plugin と接続のそれぞれについて、読み込まれているか、足りないことをオーナーに示している。
 3. `~/.config/claude/skills/karo/scripts/settings-test $KARO_HOME/.claude/settings.json $KARO_HOME/.claude/karo-settings.json` を単独で実行する。settings-test は、共有の `settings.json` と、karo の会話だけが `--settings` で読む `karo-settings.json` を、Claude Code と同じく配列をつないで合わせてから確かめる。karo の hook は karo の `hooks/hooks.json` が登録するので、settings に同じ hook があると `FAIL` になる（hook が 2 回走る）。`FAIL` の行は、オーナーが 2 つのファイルのどちらかを直す（sandbox はその場所を書かせない）。

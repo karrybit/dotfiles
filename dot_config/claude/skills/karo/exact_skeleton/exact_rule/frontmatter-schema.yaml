@@ -1,0 +1,40 @@
+# Required frontmatter fields per type for the karo records (OKF v0.2 + karo extensions).
+# Every type also requires `type`. Paths matching `exclude` are not checked.
+exclude:
+  - '^investigation/[^/]+/log\.md$'
+  - '^investigation/[^/]+/sources/'
+types:
+  Standup: [date]
+  Review: [date, tasks, projects]
+  Project: [description, projects]
+  Playbook: [description, projects]
+  Design Doc: [date, description, projects]
+  Meeting Notes: [date, description, projects]
+  Investigation: [date, description, projects]
+  Document: [date, description, projects]
+  Research Map: [description]
+  Decision Record: [date, description, projects]
+# Layer of each type. The only place a note's layer is decided; notes do not carry a layer key.
+layers:
+  Review: bronze
+  Meeting Notes: silver
+  Investigation: silver
+  Project: silver
+  Research Map: silver
+  Decision Record: silver
+  Playbook: gold
+  Design Doc: gold
+  Document: gold
+  Standup: gold
+# Where each type lives and what its file name starts with (POSIX extended regex on the path from the repository root).
+paths:
+  Standup: '^standup/[0-9]{4}-[0-9]{2}-[0-9]{2}\.md$'
+  Review: '^project/repo/[^/]+/[^/]+/[^/]+/review/[A-Za-z][A-Za-z0-9]*(-[A-Za-z0-9]+)+(\.[0-9]+)*-[^/]+\.md$'
+  Meeting Notes: '^source/meeting/[0-9]{4}-[0-9]{2}-[0-9]{2}-[^/]+\.md$'
+  Investigation: '^investigation/[0-9]{4}-[0-9]{2}-[0-9]{2}-[^/]+\.md$'
+  Document: '^doc/[^/]+\.md$'
+  Project: '^project/(repo/[^/]+/[^/]+/[^/]+|misc/[^/]+)\.md$'
+  Playbook: '^project/misc/[^/]+/[0-9]{4}-[0-9]{2}-[0-9]{2}-[^/]+\.md$'
+  Design Doc: '^project/(design|repo/[^/]+/[^/]+/[^/]+)/[0-9]{4}-[0-9]{2}-[0-9]{2}-design-doc-[^/]+\.md$'
+  Research Map: '^investigation/[0-9]{4}-[0-9]{2}-[0-9]{2}-[^/]+/map\.md$'
+  Decision Record: '^decisions/[0-9]{4}-[0-9]{2}-[0-9]{2}-[^/]+\.md$'
