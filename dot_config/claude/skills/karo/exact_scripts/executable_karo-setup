@@ -19,6 +19,7 @@ tools=(
   'claude|required|https://code.claude.com/docs/en/setup'
   'herdr|required|https://github.com/herdrdev/herdr'
   'git|required|https://git-scm.com/downloads'
+  'ghq|required|https://github.com/x-motemen/ghq'
   'bd|required|https://github.com/gastownhall/beads'
   'jq|required|https://jqlang.org/download/'
   'yq|required|https://github.com/mikefarah/yq'

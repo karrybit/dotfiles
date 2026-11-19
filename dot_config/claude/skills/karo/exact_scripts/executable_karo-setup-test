@@ -29,7 +29,7 @@ for c in bash env mkdir cp sed sort find dirname git jq yq rg fd; do
   p=$(real "$c") || { echo "karo-setup-test: no $c" >&2; exit 2; }
   ln -s "$p" "$stubs/$c"
 done
-for c in claude herdr rumdl bv cass crit terminal-browser gh; do
+for c in claude herdr ghq rumdl bv cass crit terminal-browser gh; do
   printf '#!/bin/sh\nexit 0\n' > "$stubs/$c"
 done
 printf '#!/bin/sh\nprintf "%%s\\n" "$*" >> "$BD_LOG"\n[ "$1" = init ] && mkdir .beads\nexit 0\n' > "$stubs/bd"
