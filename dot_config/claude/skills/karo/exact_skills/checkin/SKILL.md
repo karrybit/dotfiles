@@ -20,9 +20,9 @@ description: 一日の始まりに、Daily Standup として karo から報告�
    完了条件: 表の 4 つの行の出力と、突き合わせの完了条件を満たした結果が手元にある。「外の情報源」の節の源のそれぞれについて、結果か「取得できなかった」が手元にある（節がなければ、外の情報源を使わなかったことが手元にある）。
 2. 下の「報告の項目」を、前回からの変化とオーナーが対応すべきことを先にして、短く報告する。各項目にはタスク ID を付ける。
    完了条件: 5 つの項目がすべて報告にある。
-3. オーナーがその場で決めたことは、`karo:tasks` skill の「判断待ちと決定」のとおり `bd` に書く。必要なら `karo:delegate` skill で Agent に指示する。
-   完了条件: オーナーが決めたことごとに、`bd show <決定> --json` の close_reason に決定の文があるか、そのタスクに `決定:` の comment がある。
-4. 報告内容と決まったことを `$KARO_HOME/standup/YYYY-MM-DD.md` に追記し（ファイルがなければ `karo:record` skill の「書く」のとおりフロントマターから作る）、本文に Checkin の記録であることを書いて commit する（`karo:record` skill）。`$KARO_STATE_HOME/state.md` は Edit で更新し、commit に入れない。
+3. オーナーがその場で決めたことは、karo 自身の長い目の運用・設計の方針なら `karo:record` skill の「Decision Record を書く」で記録にし、それ以外は `karo:tasks` skill の「判断待ちと決定」のとおり `bd` に書く。必要なら `karo:delegate` skill で Agent に指示する。
+   完了条件: オーナーが決めたことごとに、`decisions/` に Decision Record を書いたか、`bd show <決定> --json` の close_reason に決定の文があるか、そのタスクに `決定:` の comment がある。
+4. 報告内容と決まったことを `$KARO_HOME/standup/YYYY-MM-DD.md` に追記し（ファイルがなければ `karo:record` skill の「書く」のとおりフロントマターから作る）、本文に Checkin の記録であることを書いて、3 で書いた Decision Record と一緒に commit する（`karo:record` skill）。`$KARO_STATE_HOME/state.md` は Edit で更新し、commit に入れない。
    完了条件: commit が `OK` の行を出した。
 
 ## 報告の項目

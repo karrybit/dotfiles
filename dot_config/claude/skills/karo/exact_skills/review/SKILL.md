@@ -34,7 +34,7 @@ description: Agent の成果物をレビューに回す手順。実装 Agent の
      - 元の要求と確定した判断: ブリーフのパスと、そこにある決定の出典
      - 対象: 成果物のパスと commit
      - 次の工程: ゲートの後ろの goal と、そこで行う操作の範囲
-     - 再レビューのとき: 前の判定の原本のパスと、直した差分。直した箇所と、それが波及する範囲だけを確かめる
+     - 再レビューのとき: 前の判定の `判定:` の comment の要旨と、直した差分。直した箇所と、それが波及する範囲だけを確かめる
    - 指摘ごとに根拠のファイルパスと行番号を書く
    - 調べた範囲と調べていない範囲を分けて書き、調べていない範囲については問題の有無を書かない
    - 許可範囲: 読むだけで、ファイルを変えない
@@ -43,8 +43,8 @@ description: Agent の成果物をレビューに回す手順。実装 Agent の
    完了条件: 依頼のファイルがある。
 2. `<scripts>/agent-ctl start --permission-mode plan <タスクID>-rv <依頼のファイル> tab <タスクID>` を単独で実行し、実装 Agent の workspace の別 tab で、読み取り専用の Agent を起動する（`<scripts>` と JSON の扱いは `karo:delegate` skill の冒頭と「新しいタスクを委任する」の 4。Review Agent は claim しない）。`working` になったら、`karo:delegate` skill の「終わるのを待つ」に従って `<タスクID>-rv` を待つ。
    完了条件: background の agent-report が走っている。
-3. 終わったら、agent-report の通知の出力の 2 行目からの結果を、`$KARO_HOME/project/repo/<名前>/review/<タスクID>-agent-<n>.md` に Write で保存して commit し（`karo:record` skill。`<名前>` はリポジトリのプロジェクトの名前で、そのノート `project/repo/<名前>.md` のパスから決まる。フロントマターは `karo:record` skill の `frontmatter.md` の `Review` の行に従い、commit の本文に指摘の数を書く）、保存したパスを添えた `レビュー依頼:` の comment を書く。
-   完了条件: commit が `OK` の行を出し、`レビュー依頼:` の comment の JSON が出ている。
+3. 終わったら、agent-report の通知の出力の 2 行目からの結果を読み、頼んだ Review Agent の名前と調べた範囲を `レビュー依頼:` の comment に書く。結果の要旨は、続く「3」の `判定:`・`変更依頼:`・`承認:` の comment に書く。結果の全文はファイルに保存せず、要るときは cass で `<タスクID>-rv` の会話を引く（`karo:recall` skill）。
+   完了条件: `レビュー依頼:` の comment の JSON が出ている。
 4. `<scripts>/agent-ctl close <タスクID>-rv` を単独で実行して Review Agent の tab を閉じる。終わったら「1」の 3 に戻る。
    完了条件: `close` の JSON が出た。
 
@@ -58,15 +58,15 @@ description: Agent の成果物をレビューに回す手順。実装 Agent の
 
    `<base>` は、PR を作るリポジトリでは PR の base ブランチ、`$KARO_HOME` では `main`、PR を作らないほかのリポジトリではプロジェクトの節の「レビューの差分の base」。差分の前に、対象の worktree、範囲、`HEAD` の commit を書く。オーナーが差分の外のファイルを見たいと言ったら、その箇所も貼る。
    完了条件: 範囲のすべてのファイルの差分が会話にある。
-2. オーナーのコメントと結論（承認か修正の依頼）を、`$KARO_HOME/project/repo/<名前>/review/<タスクID>-<n>.md` に Write で保存して commit する（`karo:record` skill。commit の本文に結論を書く）。`<名前>` は「2」の 3 と同じプロジェクトの名前で、`<n>` はそのタスクのレビュー回数。フロントマターは `karo:record` skill の `frontmatter.md` の `Review` の行に従い、本文に対象（worktree、範囲、`HEAD` の commit）、コメント（ファイルと行、オーナーの言葉）、結論を書く。結論が言われていなければ、オーナーに尋ねてから書く。
-   完了条件: commit が `OK` の行を出し、commit したレビューの結論が、オーナーの言った承認か修正の依頼のどちらかになっている。
+2. オーナーのコメントと結論（承認か修正の依頼）を、次の 3 で comment に書くレビューの要旨にまとめる。要旨は、対象（worktree、範囲、`HEAD` の commit）、コメント（ファイルと行、オーナーの言葉）、結論と、Review Agent の結果があればその指摘ごとのファイルと行にする。結論が言われていなければ、オーナーに尋ねてからまとめる。コメントに karo 自身の長い目の運用・設計の方針の判断があれば、`karo:record` skill の「Decision Record を書く」で記録にし、要旨にはその記録のパスだけを書く。
+   完了条件: 要旨の結論が、オーナーの言った承認か修正の依頼のどちらかになっている。
 3. 結論に従って進める。
-   - 修正の依頼: 2 で保存したレビューのパスを添えた `変更依頼:` の comment を書き、コメントを `karo:delegate` skill の「既存の Agent に追加指示を出す」で元の Agent に渡す。修正の完了報告を受けたら、この skill の「1. 完了報告を受け取る」に戻る。
-   - 承認: `karo:delegate` skill の「作業場所と取り込み」の取り込みに従って取り込む（`$KARO_HOME` では `karo:land` skill にブランチ名を渡す）。PR のあるリポジトリでは、2 で保存したレビューのパスを添えた `承認:` の comment を書き、Draft の解除（Ready for review）と merge をするかをオーナーに尋ね、merge のあとに節「4. 取り込んだあと」に進む。PR を作らないリポジトリでは、取り込んだら節「4. 取り込んだあと」に進む（承認は close の理由に残る）。
+   - 修正の依頼: 2 の要旨を `変更依頼:` の comment に書き、コメントを `karo:delegate` skill の「既存の Agent に追加指示を出す」で元の Agent に渡す。修正の完了報告を受けたら、この skill の「1. 完了報告を受け取る」に戻る。
+   - 承認: 2 の要旨を `承認:` の comment に書き、`karo:delegate` skill の「作業場所と取り込み」の取り込みに従って取り込む（`$KARO_HOME` では `karo:land` skill にブランチ名を渡す）。PR のあるリポジトリでは、Draft の解除（Ready for review）と merge をするかをオーナーに尋ね、merge のあとに節「4. 取り込んだあと」に進む。PR を作らないリポジトリでは、取り込んだら節「4. 取り込んだあと」に進む。
 
-   - readiness-review の判定（ゲートの作業）: 「2」の 3 で保存した原本のパスと判定を添えた `判定:` の comment を書き、判定ごとに次のとおり進める。
+   - readiness-review の判定（ゲートの作業）: 判定と要旨（次工程を妨げる指摘ごとのファイルと行と返す先）を `判定:` の comment に書き、判定ごとに次のとおり進める。
      - READY: 「1」の 3 の残りの文で進む先を決める。READY はオーナーの承認ではないので、merge・Ready for review・削除・切替は、今の規則どおりオーナーに尋ねてから行う。
-     - REVISE: 原本のパスを添えた `変更依頼:` の comment を書き、指摘を `karo:delegate` skill の「既存の Agent に追加指示を出す」で成果物の持ち主の Agent に渡す。指示には、指摘の箇所と、直しが影響する下流の goal（依存と完了の条件）も直すことを書く。直しの完了報告を受けたら「1」に戻り、再レビューを「2」で頼む。
+     - REVISE: 指摘を返す Agent の名前を `変更依頼:` の comment に書き、指摘を `karo:delegate` skill の「既存の Agent に追加指示を出す」で成果物の持ち主の Agent に渡す。指示には、指摘の箇所と、直しが影響する下流の goal（依存と完了の条件）も直すことを書く。直しの完了報告を受けたら「1」に戻り、再レビューを「2」で頼む。
      - BLOCKED: 判定が挙げたオーナーの判断を、`karo:tasks` skill の「判断待ちと決定」の 1 で decision の bead にし、ゲートの後ろの goal だけの blocker にする。ゲートとつながらない独立した goal には依存をつながず、そのまま進める。
 
    完了条件: 修正の依頼なら `変更依頼:` の comment の JSON が出て Agent が `working`、承認なら節「4. 取り込んだあと」に進んだか、オーナーに尋ねている。readiness-review の判定なら `判定:` の comment の JSON が出て、REVISE は修正の依頼と同じ、BLOCKED はゲートの後ろの goal だけが decision の bead を blocker に持つ。

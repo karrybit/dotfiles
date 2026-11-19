@@ -1,12 +1,12 @@
 ---
 name: record
-description: '$KARO_HOME の記録のファイルを Edit・Write で書き、karo の commit の script で commit する手順と、ノートのフロントマターの書き方（type、項目の埋め方、置き場所、状態が変わったときに直すフィールド）と、NG の直し方と、調べ物を karrybit:researcher のサブエージェントに頼むときに依頼に書く karo の規則。記録のファイルを書くとき、ノートのフロントマターを書くか直すとき、委任・取り込み・終了を記録するとき、commit か karo-check が問題を出したとき、調べ物や MTG の記録づくりを頼むときに使う。'
+description: '$KARO_HOME の記録のファイルを Edit・Write で書き、karo の commit の script で commit する手順と、ノートのフロントマターの書き方（type、項目の埋め方、置き場所、状態が変わったときに直すフィールド）と、karo の長い目の決定の Decision Record の書き方と置き換え方と、NG の直し方と、調べ物を karrybit:researcher のサブエージェントに頼むときに依頼に書く karo の規則。記録のファイルを書くとき、ノートのフロントマターを書くか直すとき、オーナーが karo の運用・設計の方針を決めたか変えたとき、委任・取り込み・終了を記録するとき、commit か karo-check が問題を出したとき、調べ物や MTG の記録づくりを頼むときに使う。'
 user-invocable: false
 ---
 
 # 記録を書いて commit する
 
-- 記録のファイルは、`$KARO_HOME/AGENTS.md` の「書き込み先」の表の記録のファイル。タスク・判断待ち・決定は記録のファイルに書かず、`bd` で書く（`karo:tasks` skill）。過去の会話も書き写さず、要るときは cass で引く（`karo:recall` skill）。
+- 記録のファイルは、`$KARO_HOME/AGENTS.md` の「書き込み先」の表の記録のファイル。タスク・判断待ち・タスクかプロジェクトに閉じた決定は記録のファイルに書かず、`bd` で書く（`karo:tasks` skill）。karo 自身の長い目の運用・設計の決定は、下の「Decision Record を書く」で `$KARO_HOME/decisions/` に書く。過去の会話も書き写さず、要るときは cass で引く（`karo:recall` skill）。
 - 下の `<scripts>` は `~/.config/claude/skills/karo/scripts` で、この `~/` の形のまま書く。
 - ノートを作る前と、ノートのフロントマターを書くか直す前に、この skill のフォルダの `frontmatter.md` を読む。フィールドの書き方、種類ごとの置き場所と埋め方、状態が変わったときに直すフィールドがある。
 
@@ -18,6 +18,25 @@ user-invocable: false
 - `state.md` は git の外の `$KARO_STATE_HOME/state.md` にあり（`$KARO_STATE_HOME` の値は SessionStart の hook が出す）、Edit で書き、commit のパスに並べない。
 - 運用の出来事（タスクを持たない依頼で記録を変えたこと）は、commit の本文に書く。
 - 長い本文（サブエージェントの調査の結果、imozuru の原文）は、そのサブエージェントや imozuru に `$KARO_HOME` の書き先へ直接書かせ、終わったらそのパスを commit に渡す。
+
+## Decision Record を書く
+
+- Decision Record は、karo 自身の将来の振る舞い・運用・設計に続けて効く決定の、背景と理由を持つ。基準は「将来の karo がこの理由を知らないと、誤った行動を取るか同じ議論を繰り返すか」で、当たらない決定とタスクに閉じた決定は `karo:tasks` skill の「判断待ちと決定」で Beads に書く。個別のシステムの決定（ADR）は書かない。
+- 書くのは、オーナーが決めたと会話か記録にある決定だけにする。会話の中の提案と、cass で引いた過去の発言は、オーナーが今決めたと確かめるまで書かない。
+- 新しい記録は `$KARO_HOME/decisions/YYYY-MM-DD-<話題>.md`（日付は決めた日）に Write で書き、フロントマターは `frontmatter.md` の「種類」の `Decision Record` の行に従う。本文は次の節をこの順に置く。
+
+| 節 | 書くこと |
+| --- | --- |
+| `## 状態` | `Accepted（オーナーの承認、会話 YYYY-MM-DD HH:MM）`。置き換えたら `Superseded（[<新しい記録の話題>](decisions/<新しい記録>.md)）` |
+| `## 背景` | 判断が要った背景 |
+| `## 決定` | 採った方針 |
+| `## 理由` | 採った理由と、検討して採らなかった選択肢 |
+| `## 影響` | 期待する効果、制約、トレードオフ |
+| `## 参照` | 関わるタスクの ID、記録へのパスのリンク、cass の出典（`karo:recall` skill の「出典」の形） |
+
+- 決定を変えるときは、新しい記録を書き、フロントマターの `supersedes` に古い記録のパスを書く。古い記録は消さずに、`frontmatter.md` の「追記したとき・状態が変わったとき」の表の「決定を新しい決定で置き換えた」の行のとおり直し、2 つを同じ commit に入れる。誤字と事実の誤りの訂正は、古い記録を Edit で直すだけにする。
+- 判断待ちの decision の bead から決まった決定は、記録を書いてから、bead を `bd close <決定> --reason '決定: decisions/<記録>.md' --json` で閉じる。決定の全文は記録にだけ置き、bead には書き写さない。
+- Decision Record は理由を持ち、karo が今従う規則は持たない。規則は `$KARO_HOME/AGENTS.md`・`$KARO_HOME/rule/`・skill に書き、規則の行から記録のパスを指す。
 
 ## 調べ物を頼む
 

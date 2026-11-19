@@ -1,11 +1,11 @@
 ---
 name: tasks
-description: '$KARO_HOME のタスク・判断待ち・決定を Beads（bd）で扱い、bv の robot mode で依存と優先順位を分析する手順と規則（作る前の重複の確かめ、委任・レビュー・取り込みに伴う状態、comment の語、判断待ちと決定、回復）。bd でタスク・判断待ち・決定を作る・変える・閉じる前、今のタスクと判断待ちの状況や、ある問いがもう決まったかを尋ねられたとき、次に何をするか・優先順位・ボトルネック・並べて進める計画を相談されたとき、Agent の状態と Beads が食い違ったとき、bd prime の手引きとこの skill が食い違って見えたときに使う。'
+description: '$KARO_HOME のタスク・判断待ち・タスクかプロジェクトに閉じた決定を Beads（bd）で扱い、bv の robot mode で依存と優先順位を分析する手順と規則（作る前の重複の確かめ、委任・レビュー・取り込みに伴う状態、comment の語、判断待ちと決定、回復）。bd でタスク・判断待ち・決定を作る・変える・閉じる前、今のタスクと判断待ちの状況や、ある問いがもう決まったかを尋ねられたとき、次に何をするか・優先順位・ボトルネック・並べて進める計画を相談されたとき、Agent の状態と Beads が食い違ったとき、bd prime の手引きとこの skill が食い違って見えたときに使う。'
 ---
 
 # タスク・判断待ち・決定（Beads と bv）
 
-- タスク・判断待ち・決定とその状態の正本は Beads（`bd`）で、状態を変えるのは `bd` だけにする。bv は同じタスクの集合を読んで分析し、その出力は推薦と診断にとどめる（下の「分析する（bv）」）。
+- タスク・判断待ち・タスクかプロジェクトに閉じた決定とその状態の正本は Beads（`bd`）で、状態を変えるのは `bd` だけにする。karo 自身の長い目の運用・設計の決定の正本は `$KARO_HOME/decisions/` の Decision Record で、書き方は `karo:record` skill の「Decision Record を書く」にある。bv は同じタスクの集合を読んで分析し、その出力は推薦と診断にとどめる（下の「分析する（bv）」）。
 - Agent の起動と操作は `karo:delegate`、成果物のレビューは `karo:review`、`$KARO_HOME` への取り込みは `karo:land` の skill の手順にある。この skill は、それらに伴うタスクの状態と記録の書き方を決める。
 - bd のコマンドの一覧と挙動は SessionStart の hook が出す `bd prime` と `bd <コマンド> --help` に、bv のコマンドは `bv --robot-help` と `bv --robot-capabilities` にある。「karo での使い方」が `bd prime` の勧めと食い違って見えたら「karo での使い方」に従う。
 
@@ -54,8 +54,8 @@ description: '$KARO_HOME のタスク・判断待ち・決定を Beads（bd）�
    完了条件: `bd show <ID> --json` の status が `in_progress` で、assignee が Agent 名。
 4. Agent の完了報告を受けたら、`報告:` の comment を書く。status は `in_progress` のままにし、残課題は 1・2 で `--deps discovered-from:<ID>` を付けて新しいタスクにする。
    完了条件: `bd show <ID> --json --include-comments` に `報告:` の comment がある。
-5. レビューを頼んだら、誰に何のレビューを頼んだかを `レビュー依頼:` の comment に書く。結果を受けたら、レビューの原本（`project/repo/<vcs>/<org>/<repo>/review/` のファイル）を保存したあとに、`変更依頼:` か `承認:` の comment に原本のパスを添えて書く。`karrybit:readiness-review` の判定は、`判定:` の comment に判定と原本のパスを書く（判定ごとの扱いは `karo:review` skill の「3」の 3）。
-   完了条件: `レビュー依頼:` の comment があり、結果を受けたあとは `変更依頼:`・`承認:`・`判定:` のどれかの comment に原本のパスがある。
+5. レビューを頼んだら、誰に何のレビューを頼んだかを `レビュー依頼:` の comment に書く。結果を受けたら、結果の要旨を `変更依頼:` か `承認:` の comment に書く。`karrybit:readiness-review` の判定は、`判定:` の comment に判定と要旨を書く（要旨の項目と判定ごとの扱いは `karo:review` skill の「3」）。レビューの全文はファイルに残さず、要るときは cass で引く（`karo:recall` skill）。
+   完了条件: `レビュー依頼:` の comment があり、結果を受けたあとは `変更依頼:`・`承認:`・`判定:` のどれかの comment に結果の要旨がある。
 6. 取り込んだら（karo の land、dotfiles の push と apply、PR の merge）、`bd close <ID> --reason '取り込み: <commit か PR>' --force --suggest-next --json` で閉じ、新しく ready になったタスクをオーナーに伝える。取り下げるときは、`--reason 'dropped: <理由>'` で閉じて `bd label add <ID> dropped --json` を付ける。
    完了条件: `bd show <ID> --json` の status が `closed` で、reason に取り込みか取り下げの印がある。
 
@@ -67,26 +67,26 @@ description: '$KARO_HOME のタスク・判断待ち・決定を Beads（bd）�
 
 ### comment の語
 
-- comment の先頭の語で種類を書く: `報告:`（要旨・commit・テスト結果・残課題・Agent の worktree と branch）、`レビュー依頼:`（誰に何のレビューを頼んだか）、`変更依頼:`・`承認:`（レビューの原本のパス）、`判定:`（`karrybit:readiness-review` の READY・REVISE・BLOCKED とレビューの原本のパス。オーナーの承認ではない）、`決定:`（そのタスクの中だけの決定と出典）、`メモ:`。
+- comment の先頭の語で種類を書く: `報告:`（要旨・commit・テスト結果・残課題・Agent の worktree と branch）、`レビュー依頼:`（誰に何のレビューを頼んだか）、`変更依頼:`・`承認:`（レビューの結果の要旨）、`判定:`（`karrybit:readiness-review` の READY・REVISE・BLOCKED と要旨。オーナーの承認ではない）、`決定:`（そのタスクの中だけの決定と出典）、`メモ:`。
 - 委任は claim の event が Agent 名と時刻を持ち、作業場所は Herdr の `cwd`（`karo:delegate` skill の冒頭）が持つので、委任の comment は書かない。
-- 長い原本（レビュー、調査）は `project/repo/<vcs>/<org>/<repo>/review/`・`investigation/` に置き、comment にはそのパスを書く。
+- 長い調査は `investigation/` に置き、comment にはそのパスを書く。レビューは要旨だけを comment に書く（上の「タスクを進める」の 5）。
 - 会話を出典に書くときは、オーナーの発言なら `会話 YYYY-MM-DD HH:MM`（その発言に hook が付けた `発言の時刻:` の値）、cass で引いた過去の会話なら `karo:recall` skill の「出典」の形で書く。
 
 ### 判断待ちと決定
 
-- 複数のタスクかプロジェクトに効く決定は decision の bead にし、そのタスクの中だけの決定は `決定:` の comment にする。
-- 判断待ちの問いから決定までを、1 つの decision の bead で持つ。判断待ちは label `human` があり開いている bead、決定は閉じて close_reason に決定の文がある bead で、開いている decision を決まったこととして扱わない。
-- 規則・`state.md`・ノートから決定を指すときは、`決定 <ID>` と書く。今の判断待ちと効く決定の引き方は、`$KARO_HOME/rule/information-design.md` の「探す」の表にある。
+- 複数のタスクかプロジェクトに効く決定は decision の bead にし、そのタスクの中だけの決定は `決定:` の comment にする。karo 自身の長い目の運用・設計の決定は、bead にも comment にも全文を書かず、`karo:record` skill の「Decision Record を書く」で記録にする。タスクを止める判断待ちは、決まる先がどちらでも、下の 1 の decision の bead で持つ。
+- 判断待ちの問いから決定までを、1 つの decision の bead で持つ。判断待ちは label `human` があり開いている bead、決定は閉じて close_reason に決定の文か Decision Record のパスがある bead で、開いている decision を決まったこととして扱わない。
+- 規則・`state.md`・ノートから Beads の決定を指すときは `決定 <ID>` と、Decision Record を指すときはそのパス（`decisions/YYYY-MM-DD-<話題>.md`）を書く。今の判断待ちと効く決定の引き方は、`$KARO_HOME/rule/information-design.md` の「探す」の表にある。
 
 1. 判断が必要になったら、`bd create '<問い 1 文>' -t decision -l human -l project:<名前> --body-file <本文> --json` で作る。本文は「問い」「選択肢と推奨」「出典」（上の「comment の語」の会話の出典の形）の節にする。全プロジェクトに効く問いは label `project:all` にする。タスクを止めるなら、`bd dep add <タスク> <決定> --json` で blocker にする（`--parent` の子は blocker にならない）。
    完了条件: `bd human list --status open --json` に出る。
-2. オーナーが決めたら、`bd update <決定> --title '<決めたこと 1 文>' --body-file <全文> --json` で、本文を「決定」「理由」「検討した選択肢」「影響」「出典」の節にする。続けて `bd close <決定> --reason '決定: <1 文>' --json` で閉じる（`bd human respond` は close_reason を `Responded` にし、決定の文を残さない）。
-   完了条件: `bd show <決定> --json` の close_reason に決定の文があり、止めていたタスクが `bd ready` に戻っている。
-3. 判断待ちを経ずにオーナーが決めたことは、1 を label `human` なしの `bd create -t decision` にして、2 を続ける。
-   完了条件: 2 と同じ。
+2. オーナーが決めたら、karo 自身の長い目の方針は `karo:record` skill の「Decision Record を書く」で記録にして bead を閉じ、この 2 の残りは行わない。それ以外は、`bd update <決定> --title '<決めたこと 1 文>' --body-file <全文> --json` で、本文を「決定」「理由」「検討した選択肢」「影響」「出典」の節にする。続けて `bd close <決定> --reason '決定: <1 文>' --json` で閉じる（`bd human respond` は close_reason を `Responded` にし、決定の文を残さない）。
+   完了条件: `bd show <決定> --json` の close_reason に決定の文か Decision Record のパスがあり、止めていたタスクが `bd ready` に戻っている。
+3. 判断待ちを経ずにオーナーが決めたことは、karo 自身の長い目の方針なら bead を作らずに `karo:record` skill の「Decision Record を書く」で記録にし、それ以外は 1 を label `human` なしの `bd create -t decision` にして、2 を続ける。
+   完了条件: Decision Record の commit が `OK` の行を出したか、2 と同じ。
 4. 決定に従うほかのタスクは、`bd dep add <タスク> <決定> --type related --json` でつなぐ。
    完了条件: `bd dep list <タスク> --json` に決定がある。
-5. 決定を置き換えるときは、新しい決定を 1〜3 で作り、`bd supersede <旧> --with <新> --json` でつなぐ。閉じた決定の本文は直さず、一部だけが変わるときも新しい決定を作る。
+5. Beads の決定を置き換えるときは、新しい決定を 1〜3 で作り、`bd supersede <旧> --with <新> --json` でつなぐ。閉じた決定の本文は直さず、一部だけが変わるときも新しい決定を作る。
    完了条件: `bd show <旧>` が SUPERSEDED BY に新しい決定を出す。
 
 ### 今の状況を読む

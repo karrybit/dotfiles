@@ -12,7 +12,7 @@ description: Task Orchestrator として、1 つの大きな仕事の作業の�
 
 | 受け持つ | karo に頼む |
 | --- | --- |
-| Goal と DAG、Worker と Reviewer の Subagent、統合、自分のブランチへの commit | Beads のタスクと決定、永続の管理が要る Goal の登録、独立した Agent のセッションの起動と終了、取り込み・push・merge |
+| Goal と DAG、Worker と Reviewer の Subagent、統合、自分のブランチへの commit | Beads のタスクと決定、Decision Record、永続の管理が要る Goal の登録、独立した Agent のセッションの起動と終了、取り込み・push・merge |
 
 - Worker と Reviewer は Subagent で動かし、親から独立したライフサイクルが要る仕事は、「karo に問う」の形で karo に独立したセッションを頼む。
 - 短命の内部の作業は Goal として会話と Subagent への依頼の中で扱い、永続の管理が要る Goal は、Goal・依存・完了の条件を書いて karo に登録を頼む。

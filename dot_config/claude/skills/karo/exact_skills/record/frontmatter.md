@@ -17,7 +17,8 @@
 | `date` | `YYYY-MM-DD`、引用符なし。ノートの日（standup の日、決めた日、MTG の日、調べた日） |
 | `tasks` | タスク ID のブロック形式のリスト（`  - karo-a2v`）。タスク ID のない仕事は外のチケットのキー（`ABC-123`） |
 | `projects` | プロジェクトの名前のブロック形式のリスト。値は Project のノートの、`project/repo/` か `project/misc/` より後ろのパスから `.md` を除いたもの（`github.com/acme/demo`、`work`） |
-| `status` | 下書きは `draft`、置き換わったものは `deprecated`。仕上がったものには書かない |
+| `status` | 下書きは `draft`、置き換わったものは `deprecated`。仕上がったもの（Accepted の Decision Record を含む）には書かない |
+| `supersedes` | 置き換えた古いノートの、`$KARO_HOME` からのパス |
 | `resource` | ノートが表す実物の URL（リポジトリ、PR） |
 | `sources` | `- { id, resource, title }` のリスト。外の原文（議事録、Slack、資料、ドキュメント）の URL |
 | `stale_after` | 見直しの日時。`2026-12-05T00:00:00+09:00` |
@@ -34,7 +35,8 @@
 | `project/repo/<vcs>/<org>/<repo>.md`、`project/misc/<theme>.md` | `Project` | `resource` はリポジトリの URL（`misc/` は書かない）。`<vcs>/<org>/<repo>` は `resource` の URL のホストとパスで、リモートのないリポジトリは `local/<owner>/<repo>`。`projects` は自分の名前 |
 | `project/misc/<theme>/YYYY-MM-DD-<資料名>.md` | `Playbook` | 下書きのあいだは `status: draft` |
 | `project/design/YYYY-MM-DD-design-doc-<話題>.md` | `Design Doc` | `date` はファイル名。`status` は書かない |
-| `project/repo/<vcs>/<org>/<repo>/review/` | `Review` | `tasks` はファイル名のタスク ID。`resource` はレビューした PR |
+| `project/repo/<vcs>/<org>/<repo>/review/` | `Review` | 今までのレビューの原本で、新しくは作らない（レビューの要旨は Beads の comment に書く。`karo:review` skill）。`tasks` はファイル名のタスク ID。`resource` はレビューした PR |
+| `decisions/YYYY-MM-DD-<話題>.md` | `Decision Record` | `description` は決定の名前になる 1 文。`date` はファイル名の日（決めた日）。`projects` は `$KARO_HOME` 自身の Project のノートの名前。本文の節は `SKILL.md` の「Decision Record を書く」 |
 | `source/meeting/YYYY-MM-DD-<MTG>.md` | `Meeting Notes` | 1 つのファイルに 1 つの MTG だけを置き、本文の `## ` の見出しの 1 つをその MTG の名前にする。`sources` には、その MTG の議事録と資料だけを、1 つずつ URL と名前で書く |
 | `investigation/YYYY-MM-DD-<話題>.md` | `Investigation` | `sources` に読んだ外の原文 |
 | `doc/<話題>.md` | `Document` | `sources` に外の元の資料 |
@@ -47,7 +49,7 @@
 | 出来事 | 直すフィールド |
 | --- | --- |
 | standup に追記した | なし |
-| 決定を新しい決定で置き換えた | なし（`bd supersede`。`karo:tasks` skill の「判断待ちと決定」） |
+| 決定を新しい決定で置き換えた | Decision Record は、新しいほうに `supersedes`、古いほうに `status: deprecated` と、`## 状態` の節の `Superseded` の行。Beads の決定は直すフィールドなし（`bd supersede`。`karo:tasks` skill の「判断待ちと決定」） |
 | 下書きが仕上がった | `status: draft` の行を消す |
 | 調査や資料が新しいものに置き換わった | 古いほうに `status: deprecated` |
 | ノートが別のタスクにも使われるようになった | `tasks` にそのタスク ID を足す |

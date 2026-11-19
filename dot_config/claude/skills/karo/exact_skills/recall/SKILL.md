@@ -1,20 +1,12 @@
 ---
 name: recall
-description: '過去の会話（Claude Code の transcript）から、今の作業に要る経緯・候補案と採否の理由・決定の根拠・前の Agent の似た作業・引き継ぎの文脈を、cass の robot mode で範囲を絞って探し、原文と出典つきで取り戻す手順。今のセッションの文脈と Beads・記録のファイルで答えが出ず、過去の発言や議論、決定に至った理由、前のセッションや Agent のやり方を確かめるときと、cass の出力（当たりや 0 件）を読んで答えるときに使う。'
+description: '過去の会話（Claude Code の transcript）から、今の作業に要る経緯・候補案と採否の理由・決定の根拠・前の Agent の似た作業・引き継ぎの文脈を、cass の robot mode で範囲を絞って探し、原文と出典つきで取り戻す手順。今のセッションの文脈と Beads・記録のファイル（Decision Record を含む）で答えが出ず、過去の発言や議論、決定に至った理由、前のセッションや Agent のやり方を確かめるときと、cass の出力（当たりや 0 件）を読んで答えるときに使う。'
 ---
 
 # 過去の会話から根拠を取り戻す（cass）
 
 - 目的は、検索することではなく、今の作業に要る根拠を、要る範囲だけ原文と出典つきで取り戻すこと。
-- 情報の役割は次のとおりで、cass の当たりは過去の証拠にとどめ、今も効く決定として扱うのは Beads にあるものだけにする。
-
-| 情報 | 役割 |
-| --- | --- |
-| 今のセッション | 進めている作業の文脈 |
-| Beads（`bd`） | タスク・判断待ち・決定の正本（`karo:tasks` skill） |
-| `$KARO_HOME` の記録のファイル | 続けて参照する資料と知識 |
-| cass | 過去の会話と Agent の活動の証拠 |
-
+- cass の当たりは過去の会話と Agent の活動の証拠で、今の状態と決定の正本ではない。情報ごとの正本は `$KARO_HOME/AGENTS.md` の「書き込み先」と「情報源」の表にある。
 - この skill で実行する cass のコマンドは、`cass search`・`cass view`・`cass index --json` の 3 つだけにする。会話の保持と削除は `karo:checkout` skill の 6 にあり、index の作り直しや設定の変更が要りそうなときはオーナーに伝える。
 - 見つけた会話は、要旨と下の「出典」を返事か Beads の comment に書くだけにする。会話は Claude Code が残し cass がいつでも引けるので、本文を別のファイルに写さない。
 - cass は `--robot` か `--json` を付けて単独の呼び出しで実行する（付けない `cass` は TUI を開く）。
@@ -22,7 +14,7 @@ description: '過去の会話（Claude Code の transcript）から、今の作�
 ## 探すかどうか
 
 - 今のセッションの文脈で答えが出るときは、cass を呼ばずにその文脈から答える。
-- 決定とタスクの今の状態は、先に `bd show <ID> --json` と `karo:tasks` skill の「今の状況を読む」で引く。cass は、その理由・経緯・候補案の原文が Beads と記録にないときに引く。
+- タスクとその決定の今の状態は、先に `bd show <ID> --json` と `karo:tasks` skill の「今の状況を読む」で、karo 自身の長い目の決定は `$KARO_HOME/decisions/` の Decision Record で引く。cass は、その理由・経緯・候補案の原文が Beads と記録にないときに引く。
 - 記録のファイルと `git log` の探し方は、`$KARO_HOME/rule/information-design.md` の「探す」の表にある。
 
 ## 手順
@@ -44,8 +36,8 @@ description: '過去の会話（Claude Code の transcript）から、今の作�
    完了条件: 当たりの一覧か 0 件の結果と、探した語・workspace・期間と、`stale`・`timed_out` の値が手元にある。
 3. snippet で問いに関わる当たりを 3 件まで選び、`cass view <source_path> --message-index <line_number> -C 3 --json` を単独で実行して前後の原文を読む（元のファイルが消えたあとも、cass の archive から読める）。決定・合意・理由を答えるときは、snippet だけで答えずに原文を読む。`cass view` が `error` を返したら、その `kind` を書き、その当たりは原文を確かめていないと書く。
    完了条件: 答えに使う当たりのすべてに、`cass view` の原文か、読めなかった `kind` がある。
-4. 原文の発言を、発言・提案・合意・決定・未確定のどれかに分ける。決定と書くのは、オーナーが決めたと原文にあり、Beads にも同じ決定（閉じた decision の bead か `決定:` の comment）があるものだけにする。Beads にない過去の決定は「過去の会話で決めた（Beads に記録なし）」と書いて今も効くかをオーナーに確かめ、効くと答えたら `karo:tasks` skill の「判断待ちと決定」の 3 で decision にする。
-   完了条件: 答えに使う発言のすべてに分類があり、決定と書いたものには Beads の ID がある。
+4. 原文の発言を、発言・提案・合意・決定・未確定のどれかに分ける。決定と書くのは、同じ決定が `$KARO_HOME/decisions/` の置き換えられていない Decision Record か Beads（閉じた decision の bead か `決定:` の comment）にあるものだけにする。原文にオーナーが決めたとあっても記録にないものは「過去の会話の発言（記録なし）」と書き、今も効くかをオーナーに確かめる。効くと答えたら、karo 自身の長い目の方針は `karo:record` skill の「Decision Record を書く」で、それ以外は `karo:tasks` skill の「判断待ちと決定」の 3 で記録にする。
+   完了条件: 答えに使う発言のすべてに分類があり、決定と書いたものには Decision Record のパスか Beads の ID がある。
 5. 要旨・分類・出典を返す。当たりがなかったときは「この範囲では見つからなかった」と書き、探した語・workspace・期間・`stale`・`timed_out` と、cass に残るのは `karo:checkout` skill の 6 の保持期間の中の会話だけであることを添える。
    完了条件: 返事のすべての主張に出典があるか、見つからなかった範囲が書いてある。
 

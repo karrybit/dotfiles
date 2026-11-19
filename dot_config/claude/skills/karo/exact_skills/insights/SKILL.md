@@ -7,7 +7,7 @@ description: karo と Agent の一日の働きを transcript と Beads（bd）�
 
 - 数えるのはこの skill の `scripts/insights`、例を確かめるのはサブエージェント、直すかどうかを決めるのはオーナーにする。
 - 結果には、数、場所（セッション ID の先頭 8 文字、時刻、Agent 名）、規則の名前だけを書き、transcript の会話・コマンド・出力の中身は書き写さない。
-- 結果は、今日の `$KARO_HOME/standup/YYYY-MM-DD.md` の末尾の `## Insights（<数えた日付>）` の節に置く。transcript から作り直せる、判断のための出力（Gold）なので、Silver には書かない。オーナーが直すと決めた候補は、ふだんの手順（Beads のタスクと決定）で Silver に入る。
+- 結果は、今日の `$KARO_HOME/standup/YYYY-MM-DD.md` の末尾の `## Insights（<数えた日付>）` の節に置く。transcript から作り直せる、判断のための出力（Gold）なので、Silver には書かない。オーナーが直すと決めた候補は、ふだんの手順（Beads のタスクと決定、karo 自身の長い目の方針は `decisions/` の Decision Record）で Silver に入る。
 
 ## 手順
 
