@@ -10,6 +10,10 @@ documentation: <https://code.claude.com/docs/en/plugin-evals.md>.
   `allowed_tools`, and optionally `tags`, then the user's request as body.
 - `case.yaml`: `schema_version`, `name`, and `context.scaffold_script` naming
   the scaffold script beside it.
+- Make a fixture script, scaffold or test, stop when setting up its throwaway
+  repository fails, with `set -e` or an `exit` on the failing command, since
+  `git` can fail inside a run and a script that continues changes the fixture
+  itself.
 - `graders/<name>.md`: frontmatter naming the grader `type` and its settings;
   an `llm` grader's rubric is the body.
 - `claude plugin eval init` drafts a suite through an interview, and
