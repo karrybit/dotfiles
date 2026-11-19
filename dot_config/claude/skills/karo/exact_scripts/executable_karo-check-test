@@ -16,7 +16,7 @@ fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
 pass() { printf 'ok\t%s\n' "$1"; }
 
 ok=$tmp/ok
-mkdir -p "$ok"/{standup,source/meeting,project/repo/github.com/acme/demo/review,project/design,investigation,doc,rule}
+mkdir -p "$ok"/{standup,source/meeting,project/repo/github.com/acme/demo/review,project/design,investigation,doc,decisions,rule}
 cp "$vault/rule/frontmatter-schema.yaml" "$ok/rule/" || exit 2
 printf -- '---\ntype: Project\ndescription: 例のプロジェクト。\nprojects:\n  - github.com/acme/demo\n---\n\n## demo\n' > "$ok/project/repo/github.com/acme/demo.md"
 # A project's reviews sit in the folder named after it, and Design Docs sit in project/design/.
@@ -27,6 +27,10 @@ printf -- '---\ntype: Investigation\ndescription: 例の調べ物。\ndate: 2026
 # A day's standup is standup/<day>.md, and a meeting's notes sit in source/meeting/.
 printf -- '---\ntype: Standup\ndate: 2026-01-01\n---\n\n## Checkin（2026-01-01）\n\n- 例\n' > "$ok/standup/2026-01-01.md"
 printf -- '---\ntype: Meeting Notes\ndescription: 例の MTG。\ndate: 2026-01-01\nprojects:\n  - github.com/acme/demo\nsources:\n  - { id: notes, resource: https://example.invalid/notes, title: 例の議事録 }\n---\n\n## 例の MTG\n\n- 決定: 例\n' > "$ok/source/meeting/2026-01-01-demo.md"
+
+# A decision record sits in decisions/; the one it replaces stays there as deprecated, named by supersedes.
+printf -- '---\ntype: Decision Record\ndescription: 例の古い決定。\ndate: 2026-01-01\nstatus: deprecated\nprojects:\n  - github.com/acme/demo\n---\n\n## 状態\n\nSuperseded（[新しい決定](decisions/2026-01-02-example.md)）\n' > "$ok/decisions/2026-01-01-example.md"
+printf -- '---\ntype: Decision Record\ndescription: 例の決定。\ndate: 2026-01-02\nprojects:\n  - github.com/acme/demo\nsupersedes: decisions/2026-01-01-example.md\n---\n\n## 状態\n\nAccepted\n' > "$ok/decisions/2026-01-02-example.md"
 
 if out=$("$bin/karo-check" "$ok" 2>&1); then pass "valid vault passes"; else fail "valid vault fails: $out"; fi
 
@@ -39,6 +43,9 @@ cases=(
   'standup named YYYY-MM-DD-standup.md|standup/2026-01-01-standup.md	path does not match Standup|mv standup/2026-01-01.md standup/2026-01-01-standup.md'
   'standup in journal/|journal/2026-01-01-standup.md	path does not match Standup|mkdir journal && mv standup/2026-01-01.md journal/2026-01-01-standup.md'
   'meeting notes outside source/meeting/|source/2026-01-01-demo.md	path does not match Meeting Notes|mv source/meeting/2026-01-01-demo.md source/2026-01-01-demo.md'
+  'decision record named without a date|decisions/example.md	path does not match Decision Record|mv decisions/2026-01-02-example.md decisions/example.md'
+  'decision record without projects|decisions/2026-01-02-example.md	missing projects|sed -i.bak "/^projects:/,/^  - github.com\/acme\/demo/d" decisions/2026-01-02-example.md'
+  'replaced decision record removed|decisions/2026-01-02-example.md	supersedes missing: decisions/2026-01-01-example.md|rm decisions/2026-01-01-example.md'
   'review name without a task ID|path does not match Review|mv project/repo/github.com/acme/demo/review/t-test0001-1.md project/repo/github.com/acme/demo/review/demo.md'
   'document without description|missing description|sed -i.bak "/^description:/d" doc/demo.md'
   'missing date and projects|investigation/2026-01-01-example.md	missing projects|sed -i.bak "/^date:/d; /^projects:/,/^  - all/d" investigation/2026-01-01-example.md'

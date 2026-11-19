@@ -76,6 +76,11 @@ if [[ $code -eq 0 && $out == "OK "* ]]; then pass "a standup commits"; else fail
 printf -- '---\ntype: Meeting Notes\ndescription: 例。\ndate: 2026-11-18\nprojects:\n  - all\nsources:\n  - https://example.invalid/a\n---\n\n## 例\n' > "$v/source/meeting/2026-11-18-weekly.md"
 run "t-test0001: MTG" "本文" source/meeting/2026-11-18-weekly.md
 if [[ $code -eq 0 && $out == "OK "* ]]; then pass "a meeting's notes commit"; else fail "a meeting's notes: exit $code: $out"; fi
+# A decision record in decisions/ is committed, and one without frontmatter there stops.
+mkdir -p "$v/decisions"
+printf -- '---\ntype: Decision Record\ndescription: 例の決定。\ndate: 2026-11-19\nprojects:\n  - github.com/acme/demo\n---\n\n## 状態\n\nAccepted\n' > "$v/decisions/2026-11-19-demo.md"
+run "t-test0001: 決定" "本文" decisions/2026-11-19-demo.md
+if [[ $code -eq 0 && $out == "OK "* ]]; then pass "a decision record commits"; else fail "a decision record: exit $code: $out"; fi
 
 before=$(head_)
 run "t-test0001: 変わらない" "本文" investigation/2026-01-01-demo.md
@@ -85,9 +90,10 @@ out=$("$bin/commit" "t-test0001: 本文なし" "" investigation/2026-01-01-demo.
 if [[ $code -eq 2 && $out == usage:* ]]; then pass "no body prints the usage"; else fail "no body: exit $code: $out"; fi
 
 # The bad writes.
-mkdir -p "$v/decisions" && printf '# a\n' > "$v/decisions/a.md"
-run "t-test0001: 外" "本文" decisions/a.md
-ng "a path outside the record" "not a record path: decisions/a.md"
+printf '# a\n' > "$v/decisions/a.md"
+run "t-test0001: 決定の形" "本文" decisions/a.md
+ng "a decision record without frontmatter stops" $'decisions/a.md\tno frontmatter'
+rm "$v/decisions/a.md"
 printf '# a\n' > "$v/assignments.md"
 run "t-test0001: 割り当て" "本文" assignments.md
 ng "assignments.md is outside the record" "not a record path: assignments.md"
@@ -192,7 +198,7 @@ before=$(head_)
 # The record folders are one list, record-folders beside the scripts: with a folder added to a copy of it,
 # commit takes a path there and karo-check checks the note.
 alt=$tmp/bin
-cp -R "$bin" "$alt" && printf 'standup source investigation project doc scrap\n' > "$alt/record-folders"
+cp -R "$bin" "$alt" && printf 'standup source investigation project doc decisions scrap\n' > "$alt/record-folders"
 mkdir -p "$v/scrap" && printf '## a\n' > "$v/scrap/t-test0001-demo.md"
 out=$("$alt/commit" "t-test0001: scrap" "本文" scrap/t-test0001-demo.md 2>&1); code=$?
 ng "a folder added to record-folders is a record folder" $'scrap/t-test0001-demo.md\tno frontmatter'
