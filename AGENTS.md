@@ -40,6 +40,9 @@
   `chezmoi apply --dry-run --verbose -S <worktree>`, and run tests and
   evaluations that read deployed target files only after the change has merged
   and been applied.
+- When extracting a copy with `chezmoi archive -S <worktree>`, select entries
+  with target arguments and `--exclude`, since its `--include` excludes the
+  named types instead (chezmoi v2.74.1).
 - After changing chezmoi-managed paths or `.chezmoiignore`, verify that the
   intended files are managed or ignored as expected.
 - Interpret unrelated existing live differences separately and report them
