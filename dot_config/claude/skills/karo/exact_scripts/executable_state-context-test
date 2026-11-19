@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Show that karo's SessionStart and PreCompact hooks, run from hooks.json with a hook input like Claude
-# Code's, put state.md into the context once and keep the compaction going: on startup, resume and
-# compact, all the SessionStart hooks whose matcher takes the source print state.md's body once, call no
-# `bd prime`, and stay under Claude Code's 10,000-character cap per hook; a missing state.md and one over
-# 8,000 characters each give a notice and exit 0; items marked "（… 時点）" bring a request to check them
+# Code's, put state.md into the context once and keep the compaction going: on startup, resume, clear,
+# compact and fork, all the SessionStart hooks whose matcher takes the source print state.md's body
+# once, call no `bd prime`, and stay under Claude Code's 10,000-character cap per hook; a missing
+# state.md and one over 8,000 characters each give a notice and exit 0; items marked "（… 時点）" bring a request to check them
 # against Beads and Herdr, and a state.md without the mark brings none; only compact asks to call the
 # skills again; on manual and auto PreCompact the hook exits 0 with no block decision and tells the
 # summary to leave state.md out, with its last change or the notice that it is missing; a session outside
@@ -72,7 +72,7 @@ zero() { [[ $codes =~ ^(0 )+$ ]]; }
 under() { local n; for n in $lens; do (( n <= $1 )) || return 1; done; }
 
 printf '%s\n' "$sample" > "$state"
-for source in startup resume compact; do
+for source in startup resume clear compact fork; do
   run SessionStart "{\"source\":\"$source\"}"
   check "$source: two SessionStart hooks run and exit 0" '[[ $codes == "0 0 " ]]'
   check "$source: state.md comes once" '[[ $(count "^- 記録の検査を速くする$") -eq 1 && $(count "^## state.md の終わり$") -eq 1 ]]'
@@ -99,7 +99,7 @@ check "a state.md over 8,000 characters gives a notice and its path, not its bod
   'zero && [[ $(count "8000 字を超えるので出さない") -eq 1 && $(count "^## state.md の終わり$") -eq 0 ]] && under 2000'
 
 rm "$tmp/state/state.md"
-for source in startup resume compact; do
+for source in startup resume clear compact fork; do
   run SessionStart "{\"source\":\"$source\"}"
   check "$source: a missing state.md exits 0 and says so" 'zero && [[ $(count "state.md がない") -eq 1 ]]'
 done

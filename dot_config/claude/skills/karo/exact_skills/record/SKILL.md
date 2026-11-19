@@ -42,7 +42,7 @@ user-invocable: false
 
 - `$KARO_STATE_HOME/state.md` は karo の今の状態（Working Memory）で、karo だけが書く。委任した Agent とサブエージェントには、state.md を書かせない。
 - state.md は git の外にあるので、Edit・Write で書き、commit のパスに並べない（`$KARO_STATE_HOME` の値は SessionStart の hook が出す）。
-- karo の `scripts/state-context` の hook が、SessionStart（startup・resume・compact）で state.md の全文と最終更新の時刻を出し、PreCompact で compact の要約に、state.md の中身を写さず最終更新より後の変化を残すよう指示する。
+- karo の `scripts/state-context` の hook が、SessionStart（startup・resume・clear・compact・fork）で state.md の全文と最終更新の時刻を出し、PreCompact で compact の要約に、state.md の中身を写さず最終更新より後の変化を残すよう指示する。
 - 1 行目を `# state`、次に `更新: YYYY-MM-DD HH:MM` を置き、下の 5 つの節をこの順に置いて、今も効く状態だけを書く。
 
 | 節 | 書くこと |
