@@ -97,7 +97,7 @@ description: '$KARO_HOME のタスク・判断待ち・タスクかプロジェ�
 
 | 問い | コマンド |
 | --- | --- |
-| 開いているタスク | `bd list --status open,in_progress,blocked,deferred --limit 0 --json`（type が `decision` のものは判断待ち） |
+| 開いているタスク | `~/.config/claude/skills/karo/scripts/open-tasks`（状態ごと・親ごとにまとめた Markdown の表を出す） |
 | 判断待ち | `bd human list --status open --json` |
 | 着手できる仕事 | `bd ready --exclude-type decision --json` |
 | 止まっているタスク | `bd blocked --json` |
@@ -106,6 +106,8 @@ description: '$KARO_HOME のタスク・判断待ち・タスクかプロジェ�
 | ある日から作ったタスク | `bd list --all --created-after <日付> --limit 0 --json` |
 | 7 日以上動いていないタスク | `bd stale --days 7 --limit 0 --json` |
 | 健全性 | `bd doctor --check artifacts --json`（`conventions`・`pollution` も同じ形）と、`bd list`・`bd create` が通ること |
+
+- 開いているタスクを答えるときは、`open-tasks` の出力を書き換えずに返事に貼り、karo の説明はその表の外に書く（表の形を毎回同じにし、写し間違いをなくすため）。
 
 - Agent とタスクを突き合わせるときは、`herdr agent list` の各 Agent の `name` と `agent_status` を、開いているタスクのうち `in_progress` の assignee と、Agent 名（`karo:herdr-agent` skill の「起動する」の `<名前>` と Agent 名の対応）で突き合わせる。Herdr にいない assignee の状態は「不明」とし、下の「回復」で直す。突き合わせの完了条件は、`in_progress` の assignee と `herdr agent list` の名前のある Agent のすべてについて、Herdr の状態か「不明」が手元にあること。
 

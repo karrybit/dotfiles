@@ -50,7 +50,8 @@ hook() {
 }
 
 check "karo is enabled" "$settings" '.enabledPlugins // {} | to_entries | any((.key | startswith("karo@")) and .value == true)'
-for rule in "scripts/commit *" "scripts/crit-open *" "skills/land/scripts/land *" "scripts/karo-check" "scripts/karo-check *"; do
+for rule in "scripts/commit *" "scripts/crit-open *" "skills/land/scripts/land *" "scripts/karo-check" "scripts/karo-check *" \
+  "scripts/open-tasks" "scripts/open-tasks *"; do
   check "Bash($karo/$rule) is allowed and in neither ask nor deny" "$settings" '
     any(.permissions.allow[]?; . == "Bash(\($r))")
       and ([.permissions.ask[]?, .permissions.deny[]?] | any(startswith("Bash(" + ($r | rtrimstr(" *")))) | not)' \

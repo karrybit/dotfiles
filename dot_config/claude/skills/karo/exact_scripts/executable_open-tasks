@@ -1,0 +1,36 @@
+#!/bin/sh
+# Prints the open tasks of the Beads at KARO_HOME (default ~/karo) as Markdown, one heading and table
+# per state in the order 作業中 (in_progress), 着手できる (open with no open blocker), 待ち (open with an
+# open blocker, or blocked), 後回し (deferred), leaving out a state with no task. In a table the tasks
+# are grouped by parent, and the 親 column names the parent's ID and title on a group's first row only;
+# a task with no parent has 親 `-`. One read-only `bd list` gives every task that is not closed, so a
+# blocker or parent that is not in the list is closed: the blocker is left out of 待っている先, and the
+# parent shows as its ID alone. プロジェクト joins the part after the last `/` of each `project:<名前>`
+# label, each name once. Titles are cut at 40 characters, and `|` in a cell is escaped. The arguments
+# go on to `bd list`, so `--label project:<名前>` narrows it. A bd that fails exits with its status.
+# usage: open-tasks [<bd list option>...]
+. "${0%/*}/../lib/karo-env"
+tasks=$(bd -C "$KARO_HOME" --readonly list --status open,in_progress,blocked,deferred --limit 0 --json "$@") || exit
+printf '%s\n' "$tasks" | jq -r '
+  def cell: gsub("\\|"; "\\|");
+  def short: if length > 40 then .[:40] + "…" else . end | cell;
+  def or_dash: if . == "" or . == null then "-" else . end;
+  (map({key: .id, value: .title}) | from_entries) as $titles
+  | map(. + {blockers: [.dependencies[]? | select(.type == "blocks") | .depends_on_id | select(. as $id | $titles | has($id))]})
+  | map(. + {state:
+      if .status == "in_progress" then "作業中"
+      elif .status == "deferred" then "後回し"
+      elif .status == "open" and (.blockers | length) == 0 then "着手できる"
+      else "待ち" end})
+  | (if length == 0 then "開いているタスクはない" else empty end),
+    (["作業中", "着手できる", "待ち", "後回し"][] as $state
+     | map(select(.state == $state)) | select(length > 0)
+     | sort_by(.parent == null, .parent)
+     | "## \($state)\n\n| 親 | ID | タイトル | 担当 | 待っている先 | プロジェクト |\n| --- | --- | --- | --- | --- | --- |\n"
+       + ([foreach .[] as $t ({}; {first: (.parent != $t.parent), parent: $t.parent, t: $t}; .)
+           | .t as $t
+           | (if $t.parent == null then "-"
+              elif .first then ($t.parent + (if $titles | has($t.parent) then " " + ($titles[$t.parent] | short) else "" end))
+              else "" end) as $parent
+           | "| \($parent) | \($t.id) | \($t.title | short) | \($t.assignee | or_dash | cell) | \($t.blockers | join(", ") | or_dash) | \([$t.labels[]? | select(startswith("project:")) | ltrimstr("project:") | split("/") | last] | unique | join(", ") | or_dash | cell) |"]
+          | join("\n")) + "\n")'

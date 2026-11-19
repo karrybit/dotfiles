@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2016,SC2034  # check evals its condition, which reads expected
+# Show that open-tasks turns the JSON of `bd list` into one heading and table per state: 作業中, 着手できる,
+# 待ち and 後回し in that order, no heading for a state with no task, the tasks grouped by parent with the
+# parent's ID and title on the first row of a group only, `-` for a task with no parent and the ID alone
+# for a parent that is not in the list, only the blockers in the list under 待っている先, a blocked task
+# with no blocker under 待ち, a title cut at 40 characters with its `|` escaped, and each project label
+# shortened to the part after its last `/`. It also shows that bd runs once on KARO_HOME, read only, with
+# the caller's arguments, that an empty list prints one line saying so, and that a bd that fails makes
+# open-tasks fail.
+# usage: open-tasks-test   (bd is a stub that logs its arguments and prints STUB_JSON; the files go to a
+#        temporary directory, which is removed)
+set -uo pipefail
+exec </dev/null
+bin=$(cd "$(dirname "$0")" && pwd)
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/open-tasks-test.XXXXXX") || exit 2
+trap 'rm -rf "$tmp"' EXIT
+failed=0
+fail() { printf 'FAIL\t%s\n' "$1"; failed=$((failed+1)); }
+pass() { printf 'ok\t%s\n' "$1"; }
+
+mkdir -p "$tmp/bin" || exit 2
+cat >"$tmp/bin/bd" <<'STUB' || exit 2
+#!/usr/bin/env bash
+echo "bd $*" >>"$STUB_LOG"
+[[ -n ${STUB_FAIL:-} ]] && { echo 'Error: no beads database found' >&2; exit 1; }
+cat "$STUB_JSON"
+STUB
+chmod +x "$tmp/bin/bd" || exit 2
+export PATH=$tmp/bin:$PATH STUB_LOG=$tmp/bd.log STUB_JSON=$tmp/list.json KARO_HOME=$tmp/karo
+
+# The tasks have the fields of `bd list --json` that open-tasks reads. demo-gone and demo-x1 are closed,
+# so they are not in the list. demo-lone sits between two children of demo-p1, which must still come
+# together.
+long='a|b'$(printf '長%.0s' {1..42})
+jq -n --arg long "$long" '
+  def blocks($id; $on): {issue_id: $id, depends_on_id: $on, type: "blocks"};
+  [ {id: "demo-p1", title: "親の作業", status: "in_progress", assignee: "karo", labels: ["project:github.com/acme/demo"]},
+    {id: "demo-p1.1", title: "子の作業", status: "in_progress", assignee: "agent-a", parent: "demo-p1",
+     labels: ["project:github.com/acme/demo", "project:tools", "project:other/tools"],
+     dependencies: [{issue_id: "demo-p1.1", depends_on_id: "demo-p1", type: "parent-child"}]},
+    {id: "demo-p1.2", title: "閉じた先を待っていた", status: "open", parent: "demo-p1", labels: [],
+     dependencies: [blocks("demo-p1.2"; "demo-gone")]},
+    {id: "demo-lone", title: $long, status: "open"},
+    {id: "demo-p1.4", title: "兄弟", status: "open", parent: "demo-p1"},
+    {id: "demo-x1.1", title: "閉じた親の子", status: "open", parent: "demo-x1", labels: ["project:tools"]},
+    {id: "demo-p1.3", title: "開いた先を待つ", status: "open", parent: "demo-p1",
+     dependencies: [blocks("demo-p1.3"; "demo-p1.2"), blocks("demo-p1.3"; "demo-gone"), blocks("demo-p1.3"; "demo-lone"),
+                    {issue_id: "demo-p1.3", depends_on_id: "demo-p1.4", type: "related"}]},
+    {id: "demo-ext", title: "外の回答を待つ", status: "blocked"} ]' >"$STUB_JSON" || exit 2
+cut="a\\|b$(printf '長%.0s' {1..37})…"
+expected="## 作業中
+
+| 親 | ID | タイトル | 担当 | 待っている先 | プロジェクト |
+| --- | --- | --- | --- | --- | --- |
+| demo-p1 親の作業 | demo-p1.1 | 子の作業 | agent-a | - | demo, tools |
+| - | demo-p1 | 親の作業 | karo | - | demo |
+
+## 着手できる
+
+| 親 | ID | タイトル | 担当 | 待っている先 | プロジェクト |
+| --- | --- | --- | --- | --- | --- |
+| demo-p1 親の作業 | demo-p1.2 | 閉じた先を待っていた | - | - | - |
+|  | demo-p1.4 | 兄弟 | - | - | - |
+| demo-x1 | demo-x1.1 | 閉じた親の子 | - | - | tools |
+| - | demo-lone | $cut | - | - | - |
+
+## 待ち
+
+| 親 | ID | タイトル | 担当 | 待っている先 | プロジェクト |
+| --- | --- | --- | --- | --- | --- |
+| demo-p1 親の作業 | demo-p1.3 | 開いた先を待つ | - | demo-p1.2, demo-lone | - |
+| - | demo-ext | 外の回答を待つ | - | - | - |
+"
+
+check() { if eval "$2"; then pass "$1"; else fail "$1: code=$code out=$out"; fi; }
+run() { : >"$STUB_LOG"; out=$("$bin/open-tasks" "$@" 2>&1); code=$?; }
+
+run --label project:github.com/acme/demo
+check "the tables come out as expected and exit 0" '[[ $code -eq 0 && $out == "${expected%$'\''\n'\''}" ]]'
+check "the headings come in the order of the states, and 後回し with no task has none" \
+  '[[ $(rg "^## " <<<"$out" | tr "\n" " ") == "## 作業中 ## 着手できる ## 待ち " ]]'
+check "bd runs once on KARO_HOME, read only, with the caller's arguments" \
+  '[[ $(<"$STUB_LOG") == "bd -C $KARO_HOME --readonly list --status open,in_progress,blocked,deferred --limit 0 --json --label project:github.com/acme/demo" ]]'
+
+jq -n '[{id: "demo-d1", title: "後でやる", status: "deferred", parent: "demo-gone"}]' >"$STUB_JSON" || exit 2
+run
+check "a list with deferred tasks only gives the 後回し heading alone" \
+  '[[ $code -eq 0 && $(rg "^## " <<<"$out") == "## 後回し" && $out == *"| demo-gone | demo-d1 | 後でやる | - | - | - |"* ]]'
+
+echo '[]' >"$STUB_JSON" || exit 2
+run
+check "an empty list prints one line saying so" '[[ $code -eq 0 && $out == 開いているタスクはない ]]'
+
+STUB_FAIL=1 run
+check "a bd that fails makes open-tasks fail with its message" '[[ $code -ne 0 && $out == *"no beads database"* ]]'
+
+echo "open-tasks-test: $failed failure(s)" >&2
+[ "$failed" -eq 0 ]

@@ -24,6 +24,8 @@
       "Bash(~/.config/claude/skills/karo/scripts/commit *)",
       "Bash(~/.config/claude/skills/karo/scripts/karo-check)",
       "Bash(~/.config/claude/skills/karo/scripts/karo-check *)",
+      "Bash(~/.config/claude/skills/karo/scripts/open-tasks)",
+      "Bash(~/.config/claude/skills/karo/scripts/open-tasks *)",
       "Bash(gh repo view *)",
       "Bash(gh pr view *)",
       "Bash(gh pr diff *)",
