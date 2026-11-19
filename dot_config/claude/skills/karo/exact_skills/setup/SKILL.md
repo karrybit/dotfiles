@@ -20,4 +20,5 @@ description: 別のマシンで、karo と $KARO_HOME の仕組みが動くか�
 4. `git -C $KARO_HOME branch --show-current` が `main` を出すかと、引数なしの `~/.config/claude/skills/karo/scripts/karo-check` を単独で実行した結果を確かめる。
    完了条件: `main` と `karo-check: 0 problem(s)` が出たか、違いをオーナーに示している。
 5. 人がする段をオーナーに頼む。Claude Code のログイン、`$KARO_HOME` のフォルダの信頼のダイアログ、外のサービスの接続の認証、そしてオーナーのターミナルで `karo` を実行して karo の会話を開き直すこと（`karo` は herdr の server をオーナーのターミナルから起こす）。
+   外のサービスへ書き込む前に確認が要るなら、使う MCP のツールの `permissions.ask` をオーナー自身の Claude Code のユーザー設定に置くよう案内する（karo-setup が写す型の settings は、特定のサービスの規則を持たない）。
    完了条件: オーナーが、頼んだ段を終えたと答えた。
