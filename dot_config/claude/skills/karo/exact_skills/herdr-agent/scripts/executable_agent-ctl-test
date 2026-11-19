@@ -3,7 +3,8 @@
 # Show that "agent-ctl close" closes only what it may: against the running Herdr, with workspaces and
 # a tab labelled ac...-test that this test makes for a temporary repository and notes in a test
 # ledger, an agent missing from the ledger and each unmet condition stop it with nothing closed, and
-# a done worktree, a pushed main checkout and a tab are tidied up with one JSON line. The
+# a done worktree (merged, or squash- or rebase-merged), a pushed main checkout and a tab are tidied
+# up with one JSON line. The
 # herdr-worktree place, which needs herdr worktrees and their parent workspaces, runs against a herdr
 # on PATH that keeps its state in a file. Every step runs git with no hook, fsmonitor, filter, or
 # include from the repository, and refuses a main checkout whose .git names another repository; the
@@ -170,6 +171,19 @@ if [[ $code -eq 0 && $out == "$want" ]] && ! exists "$id" && [[ ! -d $dir ]] && 
   pass "a done worktree is removed, its workspace closed, its branch kept, and its line dropped"
 else
   fail "done worktree: exit $code: $out (want $want)"
+fi
+
+# A worktree whose commit a squash merge took into main is done too.
+dir=$(worktree squashed)
+workspace ac0134-test "$dir"
+note_worktree ac0134-test "$id" "$dir"
+printf 'x\n' > "$dir/squashed.txt" && g -C "$dir" add squashed.txt && g -C "$dir" commit -q -m squashed
+g -C "$repo" merge -q --squash feat/squashed >/dev/null && g -C "$repo" commit -q -m squash
+run ac0134-test
+if [[ $code -eq 0 ]] && ! exists "$id" && [[ ! -d $dir ]]; then
+  pass "a squash-merged worktree is removed and its workspace closed"
+else
+  fail "squash-merged worktree: exit $code: $out"
 fi
 
 # A main checkout used as it is: closed only when its branch has nothing unpushed, and it stays.
@@ -650,7 +664,7 @@ pr_env=(PATH="$tmp/fakepr:$PATH" FAKE_HERDR_WORKTREES="$hw" HERDR_AGENT_TEST_LED
 # pr_repo <name>: a repository with a remote, main pushed, and *.local, **/.claude/.cc-writes/ and
 # .claude/*.lock ignored.
 pr_repo() {
-  g init -q --bare "$tmp/$1-remote.git" && g init -q -b main "$tmp/$1" && printf '*.local\n**/.claude/.cc-writes/\n.claude/*.lock\n' > "$tmp/$1/.gitignore" &&
+  g init -q --bare -b main "$tmp/$1-remote.git" && g init -q -b main "$tmp/$1" && printf '*.local\n**/.claude/.cc-writes/\n.claude/*.lock\n' > "$tmp/$1/.gitignore" &&
     g -C "$tmp/$1" add -A && g -C "$tmp/$1" commit -q -m init && g -C "$tmp/$1" remote add origin "$tmp/$1-remote.git" &&
     g -C "$tmp/$1" push -q origin main || exit 2
 }
@@ -719,6 +733,88 @@ if pr_start pr-untouched ac0215-test; then
   else
     fail "herdr-worktree untouched: exit $code: $out: $(cat "$FAKE_LOG")"
   fi
+fi
+
+# A branch whose commits are on no head of origin, but whose changes a squash or rebase merge took
+# into origin's default branch, has landed; one with changes the default branch lacks has not.
+# work <worktree> <file> <line>: commit the line added to the file.
+work() { printf '%s\n' "$3" >> "$1/$2" && g -C "$1" add "$2" && g -C "$1" commit -q -m "$2: $3"; }
+# squash <repository>: take feat/<repository> into main with a squash merge and push main.
+squash() {
+  g -C "$tmp/$1" merge -q --squash "feat/$1" >/dev/null && g -C "$tmp/$1" commit -q -m squash &&
+    g -C "$tmp/$1" push -q origin main
+}
+# closes <case> <name> and stays <case> <name> <want in the message>: close removes the worktree, or
+# stops with nothing removed.
+closes() {
+  pr_close "$2"
+  if [[ $code -eq 0 && ! -d $wt ]]; then pass "herdr-worktree: $1"; else fail "herdr-worktree $1: exit $code: $out: $(cat "$FAKE_LOG")"; fi
+}
+stays() {
+  pr_close "$2"
+  if [[ $code -eq 1 && $out == *"$3"* && -d $wt && ! -s $FAKE_LOG ]]; then pass "herdr-worktree: $1"; else fail "herdr-worktree $1: exit $code: $out: $(cat "$FAKE_LOG")"; fi
+}
+pr_repo pr-squash
+if pr_start pr-squash ac0218-test; then
+  work "$wt" a.txt one && work "$wt" b.txt two
+  squash pr-squash || fail "squash pr-squash"
+  closes "a squash-merged branch is closed" ac0218-test
+fi
+pr_repo pr-rebase
+if pr_start pr-rebase ac0219-test; then
+  work "$wt" a.txt one && work "$wt" b.txt two
+  work "$tmp/pr-rebase" c.txt other
+  g -C "$tmp/pr-rebase" cherry-pick main..feat/pr-rebase >/dev/null && g -C "$tmp/pr-rebase" push -q origin main || exit 2
+  closes "a rebase-merged branch is closed" ac0219-test
+fi
+# A later change to another line of the same file keeps the branch's change; one to its line does not.
+pr_repo pr-later
+if pr_start pr-later ac0220-test; then
+  printf 'a\nb\nc\nd\n' > "$tmp/pr-later/a.txt" && g -C "$tmp/pr-later" add a.txt && g -C "$tmp/pr-later" commit -q -m a &&
+    g -C "$tmp/pr-later" push -q origin main && g -C "$wt" merge -q --ff-only main || exit 2
+  sed -i.bak 's/^a$/A/' "$wt/a.txt" && rm "$wt/a.txt.bak" && g -C "$wt" commit -q -am 'a: A'
+  squash pr-later || fail "squash pr-later"
+  sed -i.bak 's/^d$/D/' "$tmp/pr-later/a.txt" && rm "$tmp/pr-later/a.txt.bak" && g -C "$tmp/pr-later" commit -q -am 'a: D' &&
+    g -C "$tmp/pr-later" push -q origin main
+  closes "a squash-merged branch whose file the default branch changed later elsewhere is closed" ac0220-test
+fi
+pr_repo pr-overwritten
+if pr_start pr-overwritten ac0221-test; then
+  work "$wt" a.txt one
+  squash pr-overwritten || fail "squash pr-overwritten"
+  printf 'changed\n' > "$tmp/pr-overwritten/a.txt" && g -C "$tmp/pr-overwritten" commit -q -am 'a: changed' &&
+    g -C "$tmp/pr-overwritten" push -q origin main
+  stays "a squash-merged branch whose line the default branch changed later stops it" ac0221-test "1 commit(s) not on a remote"
+fi
+pr_repo pr-extra
+if pr_start pr-extra ac0222-test; then
+  work "$wt" a.txt one
+  squash pr-extra || fail "squash pr-extra"
+  work "$wt" a.txt two
+  stays "a commit after the squash merge stops it" ac0222-test "2 commit(s) not on a remote"
+fi
+pr_repo pr-squash-dirty
+if pr_start pr-squash-dirty ac0223-test; then
+  work "$wt" a.txt one
+  squash pr-squash-dirty || fail "squash pr-squash-dirty"
+  printf 'x\n' > "$wt/new.txt"
+  stays "an uncommitted change in a squash-merged branch stops it" ac0223-test "has uncommitted changes"
+fi
+pr_repo pr-empty
+if pr_start pr-empty ac0224-test; then
+  g -C "$wt" commit -q --allow-empty -m 'empty'
+  stays "a branch of commits that change nothing is not taken as merged" ac0224-test "1 commit(s) not on a remote"
+fi
+# The squash commit made elsewhere and not fetched cannot be compared; after a fetch it can.
+pr_repo pr-unfetched
+if pr_start pr-unfetched ac0225-test; then
+  work "$wt" a.txt one
+  g clone -q "$tmp/pr-unfetched-remote.git" "$tmp/pr-unfetched-other" 2>/dev/null &&
+    g -C "$tmp/pr-unfetched" diff main feat/pr-unfetched | g -C "$tmp/pr-unfetched-other" apply --index &&
+    g -C "$tmp/pr-unfetched-other" commit -q -m squash && g -C "$tmp/pr-unfetched-other" push -q origin main || exit 2
+  stays "a squash merge whose commit is not here stops it" ac0225-test "commit(s) not on a remote"
+  g -C "$tmp/pr-unfetched" fetch -q origin
+  closes "a squash merge closes it once fetched" ac0225-test
 fi
 
 # A parent that was open before start is the owner's: it stays, named in parent_kept.

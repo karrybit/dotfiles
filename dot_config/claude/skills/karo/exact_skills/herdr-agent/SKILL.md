@@ -56,9 +56,9 @@ agent-ctl start [--goal <条件>] [--permission-mode <mode>] <名前> <ブリー
 
 | `<場所>` | 用意すること | `close` が取り込み済みとみなす条件 | `close` が片付けるもの |
 | --- | --- | --- | --- |
-| `dir <パス> [<ブランチ>]` | 既存の main checkout をそのまま使う。`<ブランチ>` を渡すと、その上にいることを確かめる | `<ブランチ>`（渡さなければ HEAD）の commit が、どれも origin のどれかのブランチに入っている | workspace（checkout は残る） |
-| `worktree <repo> <base> <ブランチ> <パス>` | `<repo>` の `<base>` から `git worktree add -b <ブランチ> <パス>` で作る | worktree の HEAD が `<base>` に入っている | worktree（ブランチは残る）と workspace |
-| `herdr-worktree <repo> <ブランチ>` | `herdr worktree create` で作る | HEAD が origin のどれかのブランチに入っている | worktree、workspace、`start` が開いた親の workspace |
+| `dir <パス> [<ブランチ>]` | 既存の main checkout をそのまま使う。`<ブランチ>` を渡すと、その上にいることを確かめる | `<ブランチ>`（渡さなければ HEAD）の commit が、どれも origin のどれかのブランチに入っているか、変更が origin の既定のブランチに入っている | workspace（checkout は残る） |
+| `worktree <repo> <base> <ブランチ> <パス>` | `<repo>` の `<base>` から `git worktree add -b <ブランチ> <パス>` で作る | worktree の HEAD が `<base>` に入っているか、変更が `<base>` に入っている | worktree（ブランチは残る）と workspace |
+| `herdr-worktree <repo> <ブランチ>` | `herdr worktree create` で作る | HEAD が origin のどれかのブランチに入っているか、変更が origin の既定のブランチに入っている | worktree、workspace、`start` が開いた親の workspace |
 | `tab <Agent の名前>` | その Agent の workspace に tab を足し、その Agent と同じ cwd で起動する | なし | tab |
 
 - パスと `<repo>` は絶対パスで渡す。
@@ -107,8 +107,9 @@ agent-ctl send --goal <条件> <名前>
 - `close` は、控えにある workspace（`tab` では tab）の label が名前であること、呼び出し側の workspace（`tab` では tab）でないこと、`working`・`blocked` の Agent がいないことを確かめる。`tab` のほかは、さらに submodule がないこと、未 commit の変更がないこと、場所の種類ごとの取り込み済みの条件（「起動する」の表）を確かめる。
 - worktree を消す場所では、すべての確かめを通ったあとに、`close` が `git clean -fdX` で ignored なファイル（`.venv`、`node_modules`、cache、`.claude/` の下の Claude Code の記録）を消してから worktree を消す。確かめのどれかで止まったときは、何も消さない。
 - JSON は `{name, kind, workspace, place, parent}` で、`tab` と `parent_kept`（閉じなかった親の workspace と理由）が付くことがある。`parent_kept` があれば、それも人に伝える。
-- origin のブランチは、`close` が `git ls-remote` で origin にいまの先頭を尋ねて確かめる。手元の `origin/<ブランチ>` は使わないので、push のあとに fetch は要らない。origin に届かなければ、`close` はその理由の 1 行で止まる。
-- origin の先頭の commit が手元にないブランチ（ほかから push された）とは比べないので、そのブランチにだけ入っている commit で止まったら、fetch してから呼び直す。
+- 「変更が入っている」は、squash merge か rebase merge で取り込まれたブランチを見分ける条件で、ブランチが分かれたところからファイルを変えていて、`git merge-tree` でブランチを既定のブランチに混ぜても何も変わらないこと。既定のブランチがあとから同じ行を変えていると、混ぜると衝突するので `close` は止まる。ファイルを変えない commit だけのブランチは、この条件に当たらない。
+- origin のブランチと既定のブランチは、`close` が `git ls-remote` で origin にいまの先頭を尋ねて確かめる。手元の `origin/<ブランチ>` は使わないので、push のあとに fetch は要らない。origin に届かなければ、`close` はその理由の 1 行で止まる。
+- origin の先頭の commit が手元にないブランチ（ほかから push された、origin で squash merge された）とは比べないので、そのブランチにだけ入っている commit で止まったら、fetch してから呼び直す。
 - 取り込まれていない commit で止まったら、取り込んでから呼び直す。
 
 ## 止まった Agent に答える
