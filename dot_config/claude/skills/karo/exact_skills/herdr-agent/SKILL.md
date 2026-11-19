@@ -118,7 +118,7 @@ agent-ctl send --goal <条件> <名前>
 2. 答えを決める。承認のダイアログは、呼び出し側が渡した「答えてよいダイアログの一覧」に合えば Yes と決め、一覧にないもの、どれにあたるか迷うものは人に尋ねる。AskUserQuestion は、依頼とブリーフから答えが決まる問いには呼び出し側が答えを決め、決まらない問いは人に尋ねる。
    完了条件: 送る答えが決まったか、人に尋ねている。
 3. 答えを送る。
-   - 承認のダイアログの Yes: `blocked` の Agent には `<scripts>/safe-key enter <名前>` で送る（`safe-key` は `blocked` の Agent にだけ Enter を送る）。`awaiting-answer` で返った `idle` か `done` の Agent には、`herdr agent send-keys <Agent 名> Enter` で送る。
+   - 承認のダイアログの Yes: `blocked` の Agent には `<scripts>/safe-key enter <名前>` で送る（`safe-key` は `blocked` の Agent にだけ Enter を送り、答えのない AskUserQuestion が transcript にある Agent には送らない）。`awaiting-answer` で返った `idle` か `done` の Agent には、`herdr agent send-keys <Agent 名> Enter` で送る。
    - 起動時の信頼のダイアログ（既定の選択が「No, exit」）: 人が信頼すると答えたら、`herdr agent send-keys <Agent 名> Down Enter` で「Yes, I trust this folder」を選ぶ。Enter だけを送ると「No, exit」が選ばれて Claude が終わる。`start` が `not_ready` で終わったときはブリーフが届いていないので、Agent が `idle` になってから、ブリーフの文を `agent-ctl send` で送る。
    - AskUserQuestion の選択肢: `herdr agent send-keys <Agent 名>` で `Down` か `Up` をカーソルが答えに来る回数だけ送ってから `Enter` を送る。multiSelect の問いでは、画面の下のキーの案内に従って、答えの選択肢をすべて選ぶ。
    - AskUserQuestion の自由記述: カーソルを `Other` の行（`Type something` と出る）に合わせ、`herdr pane send-text <pane> <答えの文>` で文を打ってから `Enter` を送る。`<pane>` は `herdr agent get <Agent 名>` の `pane_id`。

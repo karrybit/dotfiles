@@ -2,7 +2,8 @@
 # shellcheck disable=SC2016  # checks are single-quoted for eval
 # Show that safe-key sends Enter only to a blocked agent whose name matches HERDR_AGENT_NAME_PATTERN,
 # outside the caller's pane (a "." in the name reaching herdr as "-"), and nothing when the pattern
-# is unset; q only to a pane showing a pager;
+# is unset or the agent's transcript holds an unanswered AskUserQuestion or cannot be read; q only
+# to a pane showing a pager;
 # and refuses any other argument, against a herdr on PATH that logs what it is sent. The rules a
 # caller's settings.json needs for safe-key are checked by agent-ctl-test.
 # usage: safe-key-test   (tests the safe-key beside this script; its files go to a temporary
@@ -24,7 +25,7 @@ log() { printf '%s\n' "$*" >> "$FAKE_LOG"; }
 case "$1 $2" in
   "agent get")
     jq -nc --arg name "$3" --arg pane "$FAKE_AGENT_PANE" --arg status "$FAKE_STATUS" \
-      '{result: {agent: {name: $name, pane_id: $pane, agent_status: $status}}}' ;;
+      '{result: {agent: {name: $name, pane_id: $pane, agent_status: $status, agent_session: {value: "s-1"}, cwd: "/work"}}}' ;;
   "pane process-info")
     jq -nc --arg fg "$FAKE_FG" '{result: {process_info: {foreground_processes: [{name: $fg}]}}}' ;;
   "agent send-keys" | "pane send-keys") log "$*" ;;
@@ -33,7 +34,17 @@ esac
 EOF
 chmod +x "$tmp/fake/herdr"
 
-export FAKE_LOG=$tmp/log
+export FAKE_LOG=$tmp/log CLAUDE_CONFIG_DIR=$tmp/claude
+# The agent's transcript, where Claude Code keeps the session the fake herdr names.
+transcript=$tmp/claude/projects/-work/s-1.jsonl
+mkdir -p "${transcript%/*}"
+text='{"type":"assistant","message":{"content":[{"type":"text","text":"running the tests"}]}}'
+bash='{"type":"assistant","message":{"content":[{"type":"tool_use","id":"toolu_b1","name":"Bash","input":{"command":"make test"}}]}}'
+ask='{"type":"assistant","message":{"content":[{"type":"tool_use","id":"toolu_q1","name":"AskUserQuestion","input":{"questions":[]}}]}}'
+answer='{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"toolu_q1","content":"A"}]}}'
+# An approval dialog for a Bash call: the call has no result yet.
+approval() { printf '%s\n' "$text" "$bash" > "$transcript"; }
+approval
 # A caller's pattern: a1 and four digits, with -rv for a review agent.
 pattern='^a1[0-9]{4}(-rv)?$'
 # key <status> <agent's pane> <pane's foreground> <safe-key arguments...>
@@ -58,6 +69,20 @@ check "a child ID names the agent with - in place of ." eval '[[ $code -eq 0 ]] 
 key blocked w2:p1 zsh enter a10001.1-rv
 check "a child ID with the suffix names the agent with - in place of ." eval '[[ $code -eq 0 ]] && sent "agent send-keys a10001-1-rv Enter"'
 pattern='^a1[0-9]{4}(-rv)?$'
+
+printf '%s\n' "$text" "$ask" > "$transcript"
+key blocked w2:p1 zsh enter a10001
+check "an agent waiting on an AskUserQuestion gets nothing" eval '[[ $code -eq 1 && $out == *AskUserQuestion* && ! -s $FAKE_LOG ]]'
+printf '%s\n' "$text" "$ask" "$bash" > "$transcript"
+key blocked w2:p1 zsh enter a10001
+check "an AskUserQuestion beside a Bash call waiting for approval keeps Enter back" eval '[[ $code -eq 1 && ! -s $FAKE_LOG ]]'
+printf '%s\n' "$text" "$ask" "$answer" "$text" "$bash" > "$transcript"
+key blocked w2:p1 zsh enter a10001
+check "an answered AskUserQuestion before the approval dialog does not keep Enter back" eval '[[ $code -eq 0 ]] && sent "agent send-keys a10001 Enter"'
+rm "$transcript"
+key blocked w2:p1 zsh enter a10001
+check "an agent whose transcript cannot be read gets nothing" eval '[[ $code -eq 1 && $out == *"cannot read the transcript"* && ! -s $FAKE_LOG ]]'
+approval
 
 for status in idle working "done" unknown; do
   key "$status" w2:p1 zsh enter a10001

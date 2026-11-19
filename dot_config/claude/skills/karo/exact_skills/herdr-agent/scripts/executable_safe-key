@@ -10,6 +10,11 @@
 # ERE the caller's settings set; when it is unset, enter sends nothing. As in
 # agent-ctl, the name matches as given and names the Herdr agent with each
 # character herdr does not take in a name turned into "-".
+#
+# An AskUserQuestion shows as blocked too, and Enter there would pick the
+# highlighted option as the answer, so enter sends nothing while the agent's
+# transcript holds an AskUserQuestion with no result after its last text, or
+# cannot be read.
 set -eu
 
 usage() {
@@ -41,6 +46,24 @@ case "$1" in
     fi
     if [ "$status" != blocked ]; then
       echo "safe-key: $2 is $status, not blocked; not sending keys" >&2
+      exit 1
+    fi
+    # The transcript is found as agent-report finds it.
+    session=$(printf '%s\n' "$agent" | jq -r '.agent_session.value')
+    case $session in
+      '' | *[!A-Za-z0-9-]*) echo "safe-key: $2 has no session ID; not sending keys" >&2; exit 1 ;;
+    esac
+    project=$(printf '%s' "$(printf '%s\n' "$agent" | jq -r '.cwd')" | tr -c 'A-Za-z0-9' '-')
+    file=${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/$project/$session.jsonl
+    if ! asking=$(jq -rs '[.[] | select(.type == "user") | .message.content | arrays | .[] | select(.type == "tool_result") | .tool_use_id] as $answered
+      | [.[] | select(.type == "assistant") | .message.content[]? | select(.type == "text" or .type == "tool_use")]
+      | (map(.type) | indices("text") | last) as $text
+      | any(.[(if $text == null then 0 else $text + 1 end):][]; .name == "AskUserQuestion" and (.id | IN($answered[]) | not))' "$file" 2>/dev/null); then
+      echo "safe-key: cannot read the transcript of $2; not sending keys" >&2
+      exit 1
+    fi
+    if [ "$asking" != false ]; then
+      echo "safe-key: $2 is waiting on an AskUserQuestion; not sending keys" >&2
       exit 1
     fi
     herdr agent send-keys "$name" Enter >/dev/null
