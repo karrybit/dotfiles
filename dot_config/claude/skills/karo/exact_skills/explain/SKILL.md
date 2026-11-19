@@ -25,7 +25,7 @@ description: 'HTML の解説を git の外の store（`$KARO_DATA_HOME/html/<UUI
 
 - 必須は `id`（フォルダ名と同じ UUID）、`title`（解説の題）、`source`、`created_at`（`date -Iseconds` の出力の形。`2026-01-01T09:00:00+09:00`）。
 - `source` は、元の資料が git の資料かどうかで次の 2 つの形のどちらかにする。
-  - git の資料: `kind` は `git`。`repository` はリモートの URL（`git remote get-url origin`）で、リモートがなければ ghq の形の `local/<owner>/<repo>`。`path` はリポジトリの中の相対パス。`revision` は読んだ commit の 40 桁（`git rev-parse <commit>`）。
+  - git の資料: `kind` は `git`。`repository` はリモートの URL（`git remote get-url origin`）で、リモートがなければ、`<host>/<owner>/<repo>` の形で host を `local` にした `local/<owner>/<repo>`。`path` はリポジトリの中の相対パス。`revision` は読んだ commit の 40 桁（`git rev-parse <commit>`）。
   - git でない資料: `kind` は資料の種類（`confluence`、`web` など）、`location` は URL、`version` はページの版の番号（取れたときだけ）。
 - 任意は、`tasks`（解説を頼まれたタスク ID）、`projects`（`karo:record` skill の `frontmatter.md` の「フィールド」の `projects` の行の値）。
 - 入れるのは上の項目の値だけにする。HTML の本文、絶対パス、秘密、個人名は入れない。

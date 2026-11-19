@@ -28,7 +28,7 @@ description: 'Herdr 上の Agent に仕事を委任する手順。オーナー�
   - レビューの差分の base: PR を作らないリポジトリで、`karo:review` skill の「3」の 1 が差分を取る base。
   - 委任の前の決まり: 同時に動かせる Agent の数と、委任してはいけないとき。委任する前に読んで従い、委任できないときはオーナーに伝える。
 - `~` で始まるパスは引用符で囲まずに書く（shell が絶対パスに展開する）。
-- `<リポジトリのパス>` には、手元の checkout（`ghq root` の結果の下の `github.com/<owner>/<repo>`）を渡す。手元に clone がなければ、先に `ghq get <owner>/<repo>` を実行する。
+- `<リポジトリのパス>` には、`$KARO_HOME/project/repo/<name>.md` に書いた手元の checkout か、オーナーが渡したパスを渡す。どちらもなければ、オーナーに尋ねる。
 - ブランチ名は `<semantics>/agent/<title>` にする。semantics はリポジトリの commit の型（`feat`、`fix`、`docs` など）、title は変更の中身を表す kebab-case の英語にする（例: `feat/agent/retry-failed-upload`）。タスク ID と `cos` は入れない（settings の `env` の形を `agent-ctl` が確かめる）。
 - `$KARO_HOME` の worktree のディレクトリ名も、ブランチと同じ title にする。
 
