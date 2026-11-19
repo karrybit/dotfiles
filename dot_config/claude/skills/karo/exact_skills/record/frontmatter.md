@@ -5,7 +5,7 @@
 - `$KARO_HOME` の記録のフォルダ（この skill の `SKILL.md` の「書き込み先」の表のフォルダ）のノートは、1 行目から OKF（Open Knowledge Format v0.2）の YAML フロントマターを持つ。
 - 層・鮮度の考え方（何をいつ書くか）は `karrybit:data-information-design` skill にあり、このファイルは karo のフィールドの書き方を持つ。
 - どのノートも `date`・`description`・`tasks`・`projects` のキーを持つ。`date` と `description` には値を書く。`tasks` と `projects` は、ノートを作るきっかけになったタスクとプロジェクトを `rg` で引けるように書き、当たるものがなければ空のリスト `[]` にする（値のない `tasks:` は欠けになる）。`type` は任意。
-- `~/.config/claude/skills/karo/scripts/karo-check` が、4 つのキーがあること、`date` の形、`description` が空でないこと、`tasks` の ID の形と `projects` の名前、wiki link を確かめる。ほかのフィールドと本文のリンク先は確かめない。確かめることの範囲は `scripts/karo-check` の冒頭にある。
+- `~/.config/claude/skills/karo/scripts/karo-check` が、4 つのキーがあること、`date` の形、`description` が空でないこと、`tasks` の ID の形と `projects` の名前を確かめる。ほかのフィールドと本文（リンク先や wiki link）は確かめない。frontmatter がないノートと yq で読めないノートは、4 つのキーがないものとして出る。確かめることの範囲は `scripts/karo-check` の冒頭にある。
 - 対象はこれらのフォルダの `.md` すべてで、imozuru が書く `investigation/YYYY-MM-DD-<話題>/sources/` の原文と `log.md` は対象にしない。
 
 ## フィールド

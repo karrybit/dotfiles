@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # Show that karo-check can tell a valid vault from a broken one: a small valid vault must pass, each
 # broken note in a copy of it must be reported, and a copy of the real vault with one note broken must fail.
-# The cases break each frontmatter check, the project and wiki link checks, and the .beads checks, and
-# show what karo-check leaves alone.
+# The cases break each frontmatter check and show what karo-check leaves alone.
 # usage: karo-check-test [<karo dir>]   (default KARO_HOME or ~/karo, read only: the real vault is its
 #        copy; the copies go to a temporary directory and are removed)
 set -uo pipefail
@@ -37,15 +36,14 @@ cases=(
   'unknown project|unknown project: nope|sed -i.bak "s#  - github.com/acme/demo#  - nope#" doc/demo.md'
   'unknown project in a note without a type|doc/demo.md	unknown project: nope|sed -i.bak "/^type:/d; s#  - github.com/acme/demo#  - nope#" doc/demo.md'
   'bad task ID in a note with a type the schema does not name|doc/demo.md	bad task id: karo_a2v|sed -i.bak "s/^type: Document/type: Bogus/; s/  - t-test0001/  - karo_a2v/" doc/demo.md'
-  'wiki link|wiki link, write a path link: \[\[demo\]\]|sed -i.bak "s#\[demo\](project/repo/github.com/acme/demo.md)#[[demo]]#" doc/demo.md'
-  'no frontmatter where no type lives|investigation/2026-01-01-demo/notes.md	no frontmatter|mkdir -p investigation/2026-01-01-demo && printf "## no frontmatter\\n" > investigation/2026-01-01-demo/notes.md'
+  'no frontmatter: the four keys are missing|investigation/2026-01-01-demo/notes.md	missing date|mkdir -p investigation/2026-01-01-demo && printf "## no frontmatter\\n" > investigation/2026-01-01-demo/notes.md'
   # The four keys every note has: date and description with a value, tasks and projects
   'document without description|missing description|sed -i.bak "/^description:/d" doc/demo.md'
   'missing date|investigation/2026-01-01-example.md	missing date|sed -i.bak "/^date:/d" investigation/2026-01-01-example.md'
   'missing tasks key|doc/demo.md	missing tasks|sed -i.bak "/^tasks:/,/^  - t-test0001/d" doc/demo.md'
   'missing projects key|standup/2026-01-01.md	missing projects|sed -i.bak "/^projects:/d" standup/2026-01-01.md'
   'empty description|standup/2026-01-01.md	empty description|sed -i.bak "s/^description: .*/description: \"\"/" standup/2026-01-01.md'
-  'unparseable frontmatter|doc/demo.md	unparseable frontmatter|sed -i.bak "s/^description: .*/description: a: b/" doc/demo.md'
+  'unreadable frontmatter: the four keys are missing|doc/demo.md	missing projects|sed -i.bak "s/^description: .*/description: a: b/" doc/demo.md'
   'date not YYYY-MM-DD|doc/demo.md	date is not YYYY-MM-DD|sed -i.bak "s/^date: 2026-01-01/date: 2026-1-1/" doc/demo.md'
   'removed project still listed|doc/demo.md	unknown project: github.com/acme/demo|rm project/repo/github.com/acme/demo.md'
 )
@@ -75,10 +73,12 @@ for c in "${optional[@]}"; do
   if out=$("$bin/karo-check" "$copy" 2>&1); then pass "$name passes"; else fail "$name: $out"; fi
 done
 
-# What karo-check does not read passes: an unclosed [[ and wiki links in code, an excluded original, a
-# .md outside the record folders without frontmatter, and a file that is not .md.
+# What karo-check does not read passes: the body of a note (a wiki link, a link to a missing file), an
+# excluded original, a .md outside the record folders without frontmatter, a file that is not .md, and a
+# task database that git tracks.
 copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"
-printf '\n[[meet] と `[[a]]`\n\n```\n[[b]]\n```\n' >> "$copy/doc/demo.md"
+printf '\n[[demo]] と [なし](doc/gone.md)\n' >> "$copy/doc/demo.md"
+git -C "$copy" init -q && mkdir "$copy/.beads" && printf 'x\n' > "$copy/.beads/db" && git -C "$copy" add -f .beads/db
 mkdir -p "$copy/investigation/2026-01-01-example/sources" "$copy/scrap"
 printf '## 原文\n\n[[x]]\n' > "$copy/investigation/2026-01-01-example/sources/a.md"
 printf '## 例\n' > "$copy/scrap/t-test0001-demo.md"
@@ -90,8 +90,8 @@ copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"
 printf '## no frontmatter\n' > "$copy/standup/2026-01-02.md"
 sed -i.bak 's#  - github.com/acme/demo#  - nope#' "$copy/doc/demo.md" && rm "$copy/doc/demo.md.bak"
 out=$("$bin/karo-check" "$copy" 2>&1); code=$?
-if [[ $code -eq 1 ]] && [[ $(printf '%s\n' "$out" | rg -c -- '	no frontmatter') == 1 ]] && printf '%s\n' "$out" | rg -qF $'doc/demo.md\tunknown project: nope' \
-  && printf '%s\n' "$out" | rg -qxF 'karo-check: 2 problem(s)'; then
+if [[ $code -eq 1 ]] && [[ $(printf '%s\n' "$out" | rg -c -- '^standup/2026-01-02.md	missing ') == 4 ]] && printf '%s\n' "$out" | rg -qF $'doc/demo.md\tunknown project: nope' \
+  && printf '%s\n' "$out" | rg -qxF 'karo-check: 5 problem(s)'; then
   pass "problems of different checks counted together"
 else
   fail "problems of different checks counted together: exit $code: $out"
@@ -153,7 +153,6 @@ scoped=(
   'only: problem in another file is left out|pass|standup/2026-01-01.md|sed -i.bak "s#  - github.com/acme/demo#  - nope#" doc/demo.md'
   'only: a frontmatter problem in another file is left out|pass|standup/2026-01-01.md|sed -i.bak "/^description:/d" project/repo/github.com/acme/demo.md'
   'only: renamed project still listed|doc/demo.md	unknown project: github.com/acme/demo|project/repo/github.com/acme/demo.md project/repo/github.com/acme/demo2.md|sed -i.bak "s#\[demo\](project/repo/github.com/acme/demo.md)#demo#" doc/demo.md && mv project/repo/github.com/acme/demo.md project/repo/github.com/acme/demo2.md'
-  'only: wiki link in a given file|wiki link, write a path link: \[\[demo\]\]|doc/demo.md|sed -i.bak "s#\[demo\](project/repo/github.com/acme/demo.md)#[[demo]]#" doc/demo.md'
 )
 for c in "${scoped[@]}"; do
   name=${c%%|*}; rest=${c#*|}; want=${rest%%|*}; rest=${rest#*|}; paths=${rest%%|*}; cmd=${rest#*|}
@@ -166,15 +165,14 @@ for c in "${scoped[@]}"; do
   elif [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -q -- "$want"; then pass "$name"; else fail "$name: exit $code, want /$want/: $out"; fi
 done
 
-# A given path that is a symbolic link is not read through: the wiki link check does not print a line
-# of the file it points to.
+# A given path that is a symbolic link is not read through: the file it points to, which has no
+# frontmatter, is not checked.
 cp -R "$ok" "$tmp/linked"
-printf '[[secret]]\n' > "$tmp/outside.md"
+printf '## outside\n' > "$tmp/outside.md"
 ln -s "$tmp/outside.md" "$tmp/linked/doc/link.md"
-out=$("$bin/karo-check" --only doc/link.md "$tmp/linked" 2>&1)
-if printf '%s\n' "$out" | rg -qF '[[secret]]'; then fail "only: a symbolic link is read through: $out"; else pass "only: a symbolic link is not read through"; fi
+if out=$("$bin/karo-check" --only doc/link.md "$tmp/linked" 2>&1); then pass "only: a symbolic link is not read through"; else fail "only: a symbolic link is read through: $out"; fi
 # A given hidden path, such as a worktree under .claude/, is left out as a whole run leaves it out.
-mkdir -p "$tmp/linked/.claude/worktrees/w/doc" && printf '[[hidden]]\n' > "$tmp/linked/.claude/worktrees/w/doc/a.md"
+mkdir -p "$tmp/linked/.claude/worktrees/w/doc" && printf '## hidden\n' > "$tmp/linked/.claude/worktrees/w/doc/a.md"
 if out=$("$bin/karo-check" --only .claude/worktrees/w/doc/a.md "$tmp/linked" 2>&1); then pass "only: a hidden path is not read"; else fail "only: a hidden path: $out"; fi
 
 # A task ID is a prefix of a letter and letters or digits, then one or more hyphenated parts of letters or
@@ -195,23 +193,8 @@ for id in t000999 karo- -a2v 1-a2v karo-a2v. karo-a2v.x karo_a2v; do
   if [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -qxF -- "doc/demo.md	bad task id: $id"; then pass "$id is not a task ID"; else fail "bad ID $id: exit $code: $out"; fi
 done
 
-# In a git work tree, the task database, .beads, is ignored and nothing under it is tracked; a run with
-# --only leaves git alone.
-copy=$tmp/case; rm -rf "$copy"; cp -R "$ok" "$copy"
-if ! (git -C "$copy" init -q && mkdir "$copy/.beads" && printf 'x\n' > "$copy/.beads/db"); then fail "could not make the git copy"; fi
-out=$("$bin/karo-check" "$copy" 2>&1); code=$?
-if [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -qxF $'.beads\ttask database not ignored by git'; then pass ".beads not ignored fails"; else fail ".beads not ignored: exit $code: $out"; fi
-out=$("$bin/karo-check" --only project/repo/github.com/acme/demo.md "$copy" 2>&1); code=$?
-if [[ $code -eq 0 ]]; then pass "only: .beads is left alone"; else fail "only: .beads: exit $code: $out"; fi
-printf '.beads/\n' >> "$copy/.git/info/exclude"
-out=$("$bin/karo-check" "$copy" 2>&1); code=$?
-if [[ $code -eq 0 ]]; then pass ".beads ignored passes"; else fail ".beads ignored: exit $code: $out"; fi
-git -C "$copy" add -f .beads/db
-out=$("$bin/karo-check" "$copy" 2>&1); code=$?
-if [[ $code -eq 1 ]] && printf '%s\n' "$out" | rg -qxF $'.beads\ttask database tracked by git'; then pass ".beads tracked fails"; else fail ".beads tracked: exit $code: $out"; fi
-
 # A copy of the real vault with one note's description removed must fail on that note and on nothing else.
-# cp keeps the file names byte for byte; tar on macOS rewrites them to NFD, which breaks the link paths.
+# cp keeps the file names byte for byte; tar on macOS rewrites them to NFD.
 real=$tmp/real
 count() { "$bin/karo-check" "$1" 2>&1 | rg -c -v '^karo-check: '; }
 if cp -R "$vault/." "$real" && rm -rf "$real/.git"; then

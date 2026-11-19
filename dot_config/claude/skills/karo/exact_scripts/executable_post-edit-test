@@ -42,7 +42,7 @@ kept() { if grep -q ' $' "$2"; then pass "$1"; else fail "$1: file changed"; fi;
 note=$'---\ntype: Standup\ndescription: 例の日。\ndate: 2026-01-01\ntasks: []\nprojects: []\n---\n\n## 報告'
 edit "a valid record note passes" "$v/standup/2026-01-01.md" "$note" 0 ""
 fixed "rumdl formats a record note" "$v/standup/2026-01-01.md"
-edit "a broken record note exits 2 with its problem" "$v/standup/2026-01-02.md" $'## 例' 2 $'standup/2026-01-02.md\tno frontmatter'
+edit "a broken record note exits 2 with its problem" "$v/standup/2026-01-02.md" $'## 例' 2 $'standup/2026-01-02.md\tmissing date'
 fixed "rumdl formats a broken record note" "$v/standup/2026-01-02.md"
 edit "a .md outside the record folders is not checked" "$v/README.md" $'## 例' 0 ""
 fixed "rumdl formats a .md outside the record folders" "$v/README.md"
@@ -72,7 +72,7 @@ kept "rumdl leaves a file outside KARO_HOME" "$tmp/wt/standup/2026-01-02.md"
 w=$tmp/worktrees/w
 git -C "$v" worktree add -q -b w "$w" || exit 2
 mkdir -p "$w/doc" && printf -- '---\ntype: Document\n---\n\n## 例 \n' > "$w/doc/other.md"
-edit "a broken note in a worktree of the record exits 2 with its problem" "$w/standup/2026-01-07.md" $'## 例' 2 $'standup/2026-01-07.md\tno frontmatter'
+edit "a broken note in a worktree of the record exits 2 with its problem" "$w/standup/2026-01-07.md" $'## 例' 2 $'standup/2026-01-07.md\tmissing date'
 fixed "rumdl formats the edited note in a worktree" "$w/standup/2026-01-07.md"
 kept "rumdl leaves a note in the worktree that was not edited" "$w/doc/other.md"
 edit "a valid note in a worktree of the record passes" "$w/standup/2026-01-08.md" "${note//01-01/01-08}" 0 ""

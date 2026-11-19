@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
-# Check the karo records: each .md in a record folder starts with a frontmatter that yq can read, holding
-# the keys date, description, tasks and projects, with date in YYYY-MM-DD and description not empty;
-# each item of tasks has the form of a task ID and each item of projects names a project note or is
-# 'all' (both may be the empty list []). A [[...]] wiki link in any note is reported, and on a whole run
-# the task database, .beads, is kept out of git. It is the one implementation of the record checks, run
-# at three depths:
+# Check the frontmatter of the karo records: each .md in a record folder holds the keys date,
+# description, tasks and projects, with date in YYYY-MM-DD and description not empty; each item of tasks
+# has the form of a task ID and each item of projects names a project note or is 'all' (both may be the
+# empty list []). A note without a frontmatter, or with one yq cannot read, has none of the four keys.
+# It is the one implementation of the record checks, run at three depths:
 #   after an edit   post-edit runs --only <the edited file> and stops on that file's problems alone
 #   at a commit     commit runs --only <the staged paths>, removed ones included, on what the commit holds
 #   whole           karo:setup, karo:checkout, and karo:land run it without --only
 # An --only run vouches for the given paths and the files whose checks read them, not for the rest of the
-# record or for .beads; its count line says "in the --only scope" so it is not read as a whole run's.
+# record; its count line says "in the --only scope" so it is not read as a whole run's.
 # A task ID is a prefix of a letter and letters or digits, then one or more hyphenated parts of letters or
 # digits, a child with ".<n>" added (karo-a2v.1, t-a1b2c3d4, ABC-12). Tasks live in the task database,
 # which karo-check does not read, so only the form is checked.
@@ -89,12 +88,11 @@ expr='
       (($d.tasks // [])[] | (if (tostring | test("^[A-Za-z][A-Za-z0-9]*(-[A-Za-z0-9]+)+(\.[0-9]+)*$")) | not then "bad task id: " + tostring else null end))
     ] | map(select(. != null)) | .[] | sub("[[:cntrl:]]"; " ")),
     ("@info" + strenv(FS) + ((.projects // []) | map(tostring | sub("[[:cntrl:]]"; " ")) | join(strenv(LS))))'
+missing_all() { local k; for k in date description tasks projects; do report "$1" "missing $k"; done; }
 while IFS= read -r f; do
   first=; IFS= read -r first < "$f"
-  [[ $first == --- ]] || { report "$f" "no frontmatter"; continue; }
-  if ! out=$(yq --front-matter=extract "$expr" "$f" 2>&1); then
-    report "$f" "unparseable frontmatter: ${out%%$'\n'*}"; continue
-  fi
+  [[ $first == --- ]] || { missing_all "$f"; continue; }
+  out=$(yq --front-matter=extract "$expr" "$f" 2>/dev/null) || { missing_all "$f"; continue; }
   # Process substitution, not a here-string: a here-string needs a temporary file, and when the
   # sandbox refuses it the loop is skipped silently and the problems go uncounted.
   info=
@@ -108,28 +106,6 @@ while IFS= read -r f; do
     [[ $p == all || $vocab == *" $p "* ]] || report "$f" "unknown project: $p"
   done
 done < <(fd -t f -e md . ${existing[@]+"${existing[@]}"} | rg -v "$excl" | sort | while IFS= read -r f; do in_scope "$f" && printf '%s\n' "$f"; done)
-
-# A link to a note is a path link, [label](<folder>/<file>.md) with the path from the karo dir; a [[...]]
-# wiki link is reported (fenced code and inline code are skipped)
-while IFS=: read -r f l; do
-  f=${f#./}
-  while IFS= read -r w; do
-    [[ -n $w ]] && report "$f" "wiki link, write a path link: $w"
-  done < <(printf '%s' "$l" | rg -o '\[\[[^]]*\]\]')
-done < <(
-  # fd -t f leaves out symbolic links and hidden paths, so a given link is not read through
-  files=()
-  while IFS= read -r f; do
-    in_scope "$f" && files+=("$f")
-  done < <(fd -t f -e md -E "investigation/*/sources" -E rule -E AGENTS.md .)
-  (( ${#files[@]} )) && awk 'FNR == 1 {f = 0} /^```/{f=!f; next} !f{gsub(/`[^`]*`/, ""); if (/\[\[/) print FILENAME ":" $0}' "${files[@]}")
-
-# The task database, .beads, stays out of the karo dir's git: ignored when it is there, and nothing under
-# it tracked. Checked on a whole run in a git work tree; runs with --only leave git alone.
-if (( ! scoped )) && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  [[ -e .beads ]] && ! git check-ignore -q .beads && report .beads "task database not ignored by git"
-  [[ -n $(git ls-files -- .beads) ]] && report .beads "task database tracked by git"
-fi
 
 in=; (( scoped )) && in=" in the --only scope"
 echo "karo-check: $problems problem(s)$in" >&2

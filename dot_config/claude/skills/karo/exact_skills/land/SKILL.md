@@ -19,7 +19,7 @@ argument-hint: <branch> [--rebase]
    完了条件: ブランチが main より遅れていない。
 2. `~/.config/claude/skills/karo/skills/land/scripts/land <branch>` で、main をブランチに fast-forward する。
    完了条件: `$KARO_HOME` の main がブランチの先頭を指す。
-3. 引数なしの `~/.config/claude/skills/karo/scripts/karo-check` を単独のコマンドで実行し、記録全体を確かめる。commit の検査（`karo-check --only`）は commit したファイル（消した Project のノートなら、それを `projects` に挙げるノートも）だけを見て、`.beads` の git の扱いも見ないので、その外にある、取り込みが持ち込んだ問題はここで見つける。問題が出たら、出たファイルを直して commit する（`karo:record` skill）。
+3. 引数なしの `~/.config/claude/skills/karo/scripts/karo-check` を単独のコマンドで実行し、記録全体を確かめる。commit の検査（`karo-check --only`）は commit したファイル（消した Project のノートなら、それを `projects` に挙げるノートも）だけを見るので、その外にある、取り込みが持ち込んだ問題はここで見つける。問題が出たら、出たファイルを直して commit する（`karo:record` skill）。
    完了条件: `karo-check: 0 problem(s)` が出たか、直しの commit が `OK` の行を出した。
 
 ## 返すもの

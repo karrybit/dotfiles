@@ -92,7 +92,7 @@ if [[ $code -eq 2 && $out == usage:* ]]; then pass "no body prints the usage"; e
 # The bad writes.
 printf '# a\n' > "$v/decisions/a.md"
 run "t-test0001: 決定の形" "本文" decisions/a.md
-ng "a decision record without frontmatter stops" $'decisions/a.md\tno frontmatter'
+ng "a decision record without frontmatter stops" $'decisions/a.md\tmissing date'
 rm "$v/decisions/a.md"
 printf '# a\n' > "$v/assignments.md"
 run "t-test0001: 割り当て" "本文" assignments.md
@@ -121,7 +121,7 @@ rm "$v/standup/2026-11-19.md"
 
 printf '## 例\n\n例\n' > "$v/investigation/2026-01-02-new.md"
 run "t-test0002: 新しい調べ物" "本文" investigation/2026-01-02-new.md
-ng "a new note without frontmatter" $'investigation/2026-01-02-new.md\tno frontmatter'
+ng "a new note without frontmatter" $'investigation/2026-01-02-new.md\tmissing date'
 if [[ $(git -C "$v" status --porcelain -- investigation/2026-01-02-new.md) == "?? investigation/2026-01-02-new.md" ]]; then pass "the stopped new file stays untracked"; else fail "the stopped new file: $(git -C "$v" status --porcelain)"; fi
 rm "$v/investigation/2026-01-02-new.md"
 
@@ -202,7 +202,7 @@ alt=$tmp/bin
 cp -R "$bin" "$alt" && printf 'standup source investigation project doc decisions scrap\n' > "$alt/record-folders"
 mkdir -p "$v/scrap" && printf '## a\n' > "$v/scrap/t-test0001-demo.md"
 out=$("$alt/commit" "t-test0001: scrap" "本文" scrap/t-test0001-demo.md 2>&1); code=$?
-ng "a folder added to record-folders is a record folder" $'scrap/t-test0001-demo.md\tno frontmatter'
+ng "a folder added to record-folders is a record folder" $'scrap/t-test0001-demo.md\tmissing date'
 rm "$v/scrap/t-test0001-demo.md"
 
 # rumdl leaves reviews alone, so git diff --check catches a blank line at the end of one.
