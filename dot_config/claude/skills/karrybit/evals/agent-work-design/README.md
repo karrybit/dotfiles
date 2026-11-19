@@ -45,7 +45,7 @@ Cases for the `agent-work-design` skill in `exact_skills/exact_agent-core/`. The
 
 ## What the Suite Separates
 
-Measured on the plugin as `chezmoi archive` renders it with this skill and suite as at 46af21c, on a base that still held the `herdr-agent` skill, with `--runs 3`, `--model claude-sonnet-5-5`, and `--judge-model claude-opus-5-5`, one measurement per eval directory:
+Measured on the plugin as `chezmoi archive` renders it with this skill and suite as at 46af21c, with `--runs 3`, `--model claude-sonnet-5-5`, and `--judge-model claude-opus-5-5`, one measurement per eval directory:
 
 - Activation: every `fire` request loads the skill in 3 of 3 runs and no `nofire` request loads it (24 of 24 runs as expected). With the description before 46af21c, which said to use the skill before starting rather than before the first tool call, the `fire` requests loaded it in 8 of 12 runs: q03 in none, q02 in two. The failing runs searched the empty workspace first, found nothing, and asked the user without loading the skill.
 - Behavior: in the with-arm, every grader passes 3 of 3 runs. The skill fires in `deps-provider-switch` and `parallel-shared-file`, stays off in `one-goal-change`, and stays off in `replan-after-review`, where the session edits the plan directly. The baseline also passes every grader 3 of 3, so these cases show the expected behavior and guard against regressions, but do not separate the skill from no skill.
