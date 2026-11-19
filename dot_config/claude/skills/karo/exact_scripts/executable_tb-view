@@ -7,7 +7,8 @@
 # there is one, else right of the caller. terminal-browser has no option for
 # the pane to split; it splits the pane HERDR_PANE_ID and HERDR_TAB_ID name,
 # so those are set to that pane.
-# The new pane is the one herdr pane list shows after the open and not before.
+# The new pane is the one herdr pane list shows after the open and not before;
+# it is renamed only when its foreground process is terminal-browser.
 # Prints "<pane id> <label>", or a line saying the page went to an existing
 # pane, which keeps its name. Closing the pane ends its browser.
 # Its callers, such as crit-open, check the target first, so this script
@@ -43,5 +44,8 @@ new=$(printf '%s' "$after" | jq -r --argjson before "$before" '
 case $new in
   '') echo "tb-view: opened as a tab in an existing terminal-browser pane, which keeps its name" ;;
   *' '*) echo "tb-view: more than one new pane ($new); none renamed" >&2; exit 1 ;;
-  *) herdr pane rename "$new" "$label" >/dev/null; echo "$new $label" ;;
+  *)
+    fg=$(herdr pane process-info --pane "$new" | jq -r '.result.process_info.foreground_processes[0].name // empty')
+    [ "$fg" = terminal-browser ] || { echo "tb-view: the new pane $new runs ${fg:-nothing} in the foreground, not terminal-browser; not renamed" >&2; exit 1; }
+    herdr pane rename "$new" "$label" >/dev/null; echo "$new $label" ;;
 esac
