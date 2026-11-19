@@ -54,8 +54,8 @@ description: '$KARO_HOME のタスク・判断待ち・決定を Beads（bd）�
    完了条件: `bd show <ID> --json` の status が `in_progress` で、assignee が Agent 名。
 4. Agent の完了報告を受けたら、`報告:` の comment を書く。status は `in_progress` のままにし、残課題は 1・2 で `--deps discovered-from:<ID>` を付けて新しいタスクにする。
    完了条件: `bd show <ID> --json --include-comments` に `報告:` の comment がある。
-5. レビューを頼んだら、誰に何のレビューを頼んだかを `レビュー依頼:` の comment に書く。結果を受けたら、レビューの原本（`project/repo/<vcs>/<org>/<repo>/review/` のファイル）を保存したあとに、`変更依頼:` か `承認:` の comment に原本のパスを添えて書く。
-   完了条件: `レビュー依頼:` の comment があり、結果を受けたあとは `変更依頼:` か `承認:` の comment に原本のパスがある。
+5. レビューを頼んだら、誰に何のレビューを頼んだかを `レビュー依頼:` の comment に書く。結果を受けたら、レビューの原本（`project/repo/<vcs>/<org>/<repo>/review/` のファイル）を保存したあとに、`変更依頼:` か `承認:` の comment に原本のパスを添えて書く。`karrybit:readiness-review` の判定は、`判定:` の comment に判定と原本のパスを書く（判定ごとの扱いは `karo:review` skill の「3」の 3）。
+   完了条件: `レビュー依頼:` の comment があり、結果を受けたあとは `変更依頼:`・`承認:`・`判定:` のどれかの comment に原本のパスがある。
 6. 取り込んだら（karo の land、dotfiles の push と apply、PR の merge）、`bd close <ID> --reason '取り込み: <commit か PR>' --force --suggest-next --json` で閉じ、新しく ready になったタスクをオーナーに伝える。取り下げるときは、`--reason 'dropped: <理由>'` で閉じて `bd label add <ID> dropped --json` を付ける。
    完了条件: `bd show <ID> --json` の status が `closed` で、reason に取り込みか取り下げの印がある。
 
@@ -67,7 +67,7 @@ description: '$KARO_HOME のタスク・判断待ち・決定を Beads（bd）�
 
 ### comment の語
 
-- comment の先頭の語で種類を書く: `報告:`（要旨・commit・テスト結果・残課題・Agent の worktree と branch）、`レビュー依頼:`（誰に何のレビューを頼んだか）、`変更依頼:`・`承認:`（レビューの原本のパス）、`決定:`（そのタスクの中だけの決定と出典）、`メモ:`。
+- comment の先頭の語で種類を書く: `報告:`（要旨・commit・テスト結果・残課題・Agent の worktree と branch）、`レビュー依頼:`（誰に何のレビューを頼んだか）、`変更依頼:`・`承認:`（レビューの原本のパス）、`判定:`（`karrybit:readiness-review` の READY・REVISE・BLOCKED とレビューの原本のパス。オーナーの承認ではない）、`決定:`（そのタスクの中だけの決定と出典）、`メモ:`。
 - 委任は claim の event が Agent 名と時刻を持ち、作業場所は Herdr の `cwd`（`karo:delegate` skill の冒頭）が持つので、委任の comment は書かない。
 - 長い原本（レビュー、調査）は `project/repo/<vcs>/<org>/<repo>/review/`・`investigation/` に置き、comment にはそのパスを書く。
 - 会話を出典に書くときは、オーナーの発言なら `会話 YYYY-MM-DD HH:MM`（その発言に hook が付けた `発言の時刻:` の値）、cass で引いた過去の会話なら `karo:recall` skill の「出典」の形で書く。

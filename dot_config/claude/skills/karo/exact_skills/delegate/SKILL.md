@@ -77,8 +77,8 @@ description: 'Herdr 上の Agent に仕事を委任する手順。オーナー�
 - goal は、完了の条件を満たすまで Agent が自律でターンを続ける作業。
 - Claude Code の `/goal` は、条件を満たすまでそのセッションをふさぎ、1 セッションに 1 つしか持てない（https://code.claude.com/docs/en/goal.md）。そのため、1 つの goal を 1 つの Agent に渡し、その Agent のセッションで `/goal` を動かす。
 
-1. `karrybit:goal` skill を Skill tool で呼び、オーナーの依頼の原文を渡して、その手順を最後まで進める。返った goal ごとに、完了の条件は 2 の `--goal` とブリーフの受け入れ条件に、行き詰まりの扱いはブリーフの制約に使う。止めた goal は、その goal の委任を止めて、確かめることを AskUserQuestion でオーナーに尋ねる（ほかの goal は進めてよい）。
-   完了条件: 委任する goal のすべてに、`karrybit:goal` が返した完了の条件と行き詰まりの扱いがあり、止めた goal のすべてをオーナーに尋ねている。
+1. 依頼が 2 つ以上の goal か goal の間の依存を持つ大きな仕事なら、先に `karrybit:agent-work-design` skill を Skill tool で呼んで作業を設計する。返ったゲート（次の工程へ進む前に `karrybit:readiness-review` で確かめる境目）は、ゲートの前の goal の受け入れ条件に「`karrybit:readiness-review` の判定が READY（次の工程: <後ろの goal>）」と書き、後ろの goal を `karo:tasks` skill の「タスクを進める」の 2 の `bd dep add` で前の goal の後ろに置く。続けて、`karrybit:goal` skill を Skill tool で呼び、オーナーの依頼の原文と、設計を使ったときは返った goal と依存とゲートを渡して、その手順を最後まで進める。返った goal ごとに、完了の条件は 2 の `--goal` とブリーフの受け入れ条件に、行き詰まりの扱いはブリーフの制約に使う。止めた goal は、その goal の委任を止めて、確かめることを AskUserQuestion でオーナーに尋ねる（ほかの goal は進めてよい）。
+   完了条件: 委任する goal のすべてに、`karrybit:goal` が返した完了の条件と行き詰まりの扱いがあり、止めた goal のすべてをオーナーに尋ねている。設計を使ったときは、ゲートの前の goal のすべての受け入れ条件にゲートの行がある。
 2. goal ごとに、「新しいタスクを委任する」の手順で委任する。手順との違いは次の 4 つ。
    - タスク ID は goal ごとに 1 つ作る。
    - ブリーフの受け入れ条件は、この節の 1 の完了の条件にする。
