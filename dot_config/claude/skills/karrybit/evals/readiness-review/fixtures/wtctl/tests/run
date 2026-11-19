@@ -7,7 +7,7 @@ rm -rf "$tests/work"
 trap 'rm -rf "$tests/work"' EXIT
 git init -q "$tests/work" || exit 1
 cd "$tests/work" || exit 1
-git -c user.name=t -c user.email=t@example.invalid commit -q --allow-empty -m init
+git -c user.name=t -c user.email=t@example.invalid commit -q --allow-empty -m init || exit 1
 failures=0
 check() {
   if eval "$2"; then echo "ok   $1"; else echo "FAIL $1"; failures=$((failures + 1)); fi
