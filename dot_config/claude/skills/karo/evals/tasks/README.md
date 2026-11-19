@@ -26,7 +26,7 @@ The cases grant no `Bash`, so a run cannot reach a Beads database or bv; each ca
 
 ## Settings for This Suite
 
-- Cases grant no gated tool and have no scaffold: run them without `--scaffold` and `--allow-tools`.
+- Run with `--eval-dir evals/tasks/plugin-eval --ablation none`, without `--scaffold` and `--allow-tools`, since the cases grant no gated tool and have no scaffold.
 - Run against the whole karo plugin with `--ablation none`, since the cases depend on the karo session the skill describes rather than on a comparison with no plugin.
 - The karo manifest sets `defaultEnabled: false`, and an eval run enables nothing, so a run against the plugin as deployed loads no karo skill: run the suite against a copy whose `.claude-plugin/plugin.json` sets `defaultEnabled` to true.
 
