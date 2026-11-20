@@ -274,16 +274,6 @@ settings: Dynamic = new Dynamic {
         }
       }
     }
-    ["Stop"] = new Listing {
-      new Dynamic {
-        hooks = new Listing {
-          new Dynamic {
-            type = "command"
-            command = #"osascript -e 'display notification "Claude Code finished" with title "Claude"' 2>/dev/null; afplay /System/Library/Sounds/Glass.aiff 2>/dev/null; true"#
-          }
-        }
-      }
-    }
   }
 }
 
