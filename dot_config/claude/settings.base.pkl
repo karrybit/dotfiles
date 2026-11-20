@@ -158,6 +158,7 @@ settings: Dynamic = new Dynamic {
     ["plannotator-effective-html@effective-html"] = true
     ["pstack@cursor-plugins"] = true
     ["visual-explainer@visual-explainer-marketplace"] = true
+    ["kstack@karrybit"] = true
   }
   extraKnownMarketplaces {
     ["yomiyasu"] {
@@ -195,6 +196,7 @@ settings: Dynamic = new Dynamic {
         source = "github"
         repo = "karrybit/plugin-marketplace"
       }
+      autoUpdate = true
     }
   }
   alwaysThinkingEnabled = true
