@@ -37,3 +37,6 @@
 # and the eval-auditor subagent.
 .config/claude/skills/karrybit
 .config/claude/agents/eval-auditor.md
+
+# The karo launcher is installed by the Homebrew formula karo-core.
+.local/bin/karo
