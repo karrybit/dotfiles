@@ -212,46 +212,23 @@ interface, but only for an idle agent: `agent read --lines N` returns
 
 ### Handing Work to Another Claude Code Agent
 
-The `karo:herdr-agent` skill
-(`dot_config/claude/skills/karo/exact_skills/herdr-agent/`) starts a Claude
-Code agent in a workspace or tab of its own, sends it prompts, waits for its
-report, and closes only what it started. A project that uses it allows the
-skill's scripts in its `.claude/settings.json`; the skill's `SKILL.md` lists
-the rules, and the karo plugin's
-`scripts/settings-test <settings.json> [<settings.json>...]` checks them in
-the given files merged the way Claude Code merges settings layers.
+The `karo:herdr-agent` skill of the karo plugin (from the `karrybit` plugin
+marketplace, `karrybit/plugin-marketplace`) starts a Claude Code agent in a
+workspace or tab of its own, sends it prompts, waits for its report, and
+closes only what it started. A project that uses it allows the skill's
+scripts in its `.claude/settings.json`; the skill's `SKILL.md` lists the
+rules, and the karo plugin's
+`karo-settings-test <settings.json> [<settings.json>...]` checks them in the
+given files merged the way Claude Code merges settings layers.
 
 ### `karo`
 
-`karo` (`dot_local/bin/executable_karo`) opens a long-lived Claude Code session
-for a work directory, `$KARO_HOME` (`~/karo` when unset), and creates
-whatever is missing. Running it again only brings the same session back:
-
-1. Starts the herdr server if none is running. It is started from the calling
-   terminal so that panes keep Keychain access.
-2. Finds the workspace labelled `karo`, or creates one rooted at the directory.
-3. Makes sure an agent named `karo` is running there:
-   - Restores the name on a Claude Code agent that a server restart brought
-     back unnamed.
-   - Otherwise starts Claude Code in a free shell pane, or in a new tab when
-     every pane is busy. A pane whose shell has not reached its prompt yet,
-     as right after a restore, is retried for a few seconds before the next
-     pane is tried.
-4. Focuses the workspace and attaches. Inside herdr it focuses without
-   attaching.
-
-The session is tracked by a fixed ID in `<dir>/.karo-session-id`, not by its
-display name. `karo` resumes that ID while its transcript exists and starts a
-new session once the transcript is gone, for example after the
-`cleanupPeriodDays` sweep. Either way it passes
-`--settings <dir>/.claude/karo-settings.json`, settings that only this session
-reads and that agents started in worktrees of the directory do not. A Claude
-Code that herdr restored after a server restart is only renamed, not
-restarted, so it keeps the arguments herdr restored it with; when they lack
-`--settings`, exit it and run `karo`, which starts it again in the freed pane.
-The directory must already contain `AGENTS.md`:
-`karo` never creates its contents. `HERDR_SESSION` points every step at a named
-herdr session, which keeps experiments off the default server.
+`karo` opens a long-lived Claude Code session for the karo record
+repository, `$KARO_HOME` (`~/karo` when unset), in a herdr workspace labelled
+`karo`, and `karo init` sets up what it needs under `HOME` once. It is
+installed by the Homebrew formula `karo-core` from the
+`karrybit/plugin-marketplace` tap; `karo --help` and `man karo` describe
+its commands and steps.
 
 ---
 

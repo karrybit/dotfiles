@@ -67,52 +67,21 @@
 - User-scope instructions stay `dot_config/claude/CLAUDE.md`, deployed to
   `~/.config/claude/CLAUDE.md`: Claude Code has no user-scope `AGENTS.md`.
   No instruction file imports another.
-- Skills live in the `karrybit` plugin at `dot_config/claude/skills/karrybit/`,
-  which deploys to `~/.config/claude/skills/karrybit/` and loads in place as
-  `karrybit@skills-dir`, so each skill is called `karrybit:<skill>`; there is
-  no intermediate canonical copy. The plugin's `exact_skills/` makes
-  `chezmoi apply` remove a deployed skill whose source folder is gone.
-- Place a karrybit skill in the folder of its responsibility,
-  `exact_skills/exact_<category>/<skill>/`, and list each category in the
-  manifest's `skills`, since Claude Code scans only `skills/<skill>/` by
-  default; the folder does not change the name `karrybit:<skill>`. Give each
-  category folder the `exact_` prefix, since chezmoi's `exact_` does not
-  reach subfolders. `crit` sits directly in `exact_skills/`, where the
-  default `skills/<skill>/` scan loads it.
-- Skills and scripts that know the layout of the karo record repository,
-  and the `herdr-agent` skill that starts and closes karo's Herdr agents,
-  live in the `karo` plugin at `dot_config/claude/skills/karo/`, deployed and
-  loaded the same way as `karo@skills-dir`. Its manifest sets
-  `defaultEnabled: false`, so it loads only where a project's settings enable
-  it; keep owner-specific values out of it and read them from the caller's
-  arguments or from `$KARO_CONFIG_HOME/config.yaml`,
-  `$KARO_HOME/rule/<skill>.md`, and `$KARO_HOME/project/repo/<name>.md`,
-  each with a default for when the file is missing. It has no subagents: a
-  karo skill hands work to a `karrybit` subagent and passes the karo rules in
-  the request. Its hooks are in its
-  `exact_hooks/hooks.json`, which Claude Code merges with the project's
-  settings hooks, so keep them out of the project's settings: a hook in both
-  runs twice.
-- The karo plugin finds its folders through `KARO_HOME` (the record
-  repository), `KARO_DATA_HOME`, `KARO_CONFIG_HOME`, `KARO_STATE_HOME`, and
-  `HERDR_AGENT_STATE_HOME` (the `herdr-agent` skill's ledger and stop notes);
-  when one is unset, the scripts use `~/karo`, `karo` under
-  `${XDG_DATA_HOME:-~/.local/share}`, `${XDG_CONFIG_HOME:-~/.config}`, and
-  `${XDG_STATE_HOME:-~/.local/state}`, and `herdr-agent` under
-  `${XDG_STATE_HOME:-~/.local/state}`. The plugin's `lib/karo-env` sets these
-  defaults, and its scripts and hook commands read them from there. The
-  karrybit plugin reads none of them and takes paths from its caller.
+- Skills and subagents come from the `kstack` and `karo` plugins of the
+  `karrybit` marketplace (GitHub `karrybit/plugin-marketplace`, declared in
+  `extraKnownMarketplaces` in `dot_config/claude/settings.base.pkl`), called
+  `kstack:<name>` and `karo:<name>`. Change them in that repository: this
+  repository holds no copy of either plugin.
+- `dot_config/karo/config.yaml` deploys to `~/.config/karo/config.yaml`, the
+  `config.yaml` that the karo plugin reads from `$KARO_CONFIG_HOME`.
 - `run_onchange_04_prune-skills.sh.tmpl` removes skills deployed directly
   under `~/.config/claude/skills/` whose source entry is gone, which chezmoi
   does not do on its own. It only removes skills recorded in its own manifest,
   so skills installed by other routes survive.
-- When changing the `description` of a document-writing skill
-  (`karrybit:docs-information-design`, `karrybit:japanese-tech-writing`) or adding one, update
-  the routing table and test cases in `docs/WRITING.md` in the same change.
-- Claude Code subagents are in the `karrybit` plugin's `exact_agents/` and are
-  called `karrybit:<agent>`; `dot_config/claude/agents/` holds the user-scope
-  subagents called by a bare name (`eval-auditor`), deployed to
-  `~/.config/claude/agents/`.
+- When the `description` of a document-writing skill
+  (`kstack:docs-information-design`, `kstack:japanese-tech-writing`) changes
+  or one is added, update the routing table and test cases in
+  `docs/WRITING.md`.
 - Agent source summaries belong under `~/.local/share/agents/docs/`; only
   explicitly allowlisted summaries are chezmoi-managed.
 - Agent-operated scripts belong under `~/.local/share/agents/scripts/`; only
