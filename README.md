@@ -147,9 +147,14 @@ chezmoi init --apply karrybit/dotfiles
 # 3. Log in with zsh, install Claude Code, and authenticate GitHub
 exec zsh -l
 curl -fsSL https://claude.ai/install.sh | bash
-gh auth login
-gh auth setup-git
+gh auth login   # decline its Git credential setup
+chezmoi apply   # now that gh is on PATH, adds gh as the GitHub credential helper
 ```
+
+The Git config adds gh as the credential helper for `github.com` and
+`gist.github.com` when `gh` is on PATH at apply time, so `gh auth setup-git`
+is not needed; it would rewrite the helper with gh's full path and leave a
+difference that makes `upup` stop.
 
 Claude Code comes from its native installer, as on macOS, and Codex from aqua,
 as on `private_neo`.

@@ -60,3 +60,11 @@
     cme = commit --allow-empty-message -m ''
     ps = push
     st = status --short
+{{- if lookPath "gh" }}
+[credential "https://github.com"]
+	helper =
+	helper = !gh auth git-credential
+[credential "https://gist.github.com"]
+	helper =
+	helper = !gh auth git-credential
+{{- end }}
