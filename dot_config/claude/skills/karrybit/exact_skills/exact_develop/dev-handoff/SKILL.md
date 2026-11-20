@@ -2,6 +2,9 @@
 name: dev-handoff
 description: 要求・設計・進め方・実装・検証の 5 つの役が成果物を引き継ぐときの契約（成果物と持ち主、ID の prefix、引き継ぎの項目、証拠の状態の語、指摘の種類と返す先）。開発の役の Agent が起動時に読み込む。開発の役に仕事を渡すとき、役の報告から差し戻し先を決めるときにも使う。
 user-invocable: false
+metadata:
+  references:
+    - https://github.com/mattpocock/skills/tree/main/skills/productivity/writing-for-agents
 ---
 
 # 開発の引き継ぎの契約
@@ -107,5 +110,6 @@ user-invocable: false
 
 ## 報告
 
-- 完了の報告は `karrybit:completion-report` の見出しで書き、続けて `## 引き継ぎ` の見出しに上の「引き継ぎの項目」を書く。
+- 完了報告は `karrybit:completion-report` の見出しで書き、続けて `## 引き継ぎ` の見出しに上の「引き継ぎの項目」を書く。
 - `## 引き継ぎ` では、依頼から変わらない項目を、依頼で「なし」なら「なし」、それ以外なら「依頼のとおり」と書く。
+- `## 引き継ぎ` の「証拠」には、「実行した確かめ」に書いたコマンドと出力を書き写さず、その行を指す 1 行と、実行でない証拠（ファイルと行、URL）だけを書く。
