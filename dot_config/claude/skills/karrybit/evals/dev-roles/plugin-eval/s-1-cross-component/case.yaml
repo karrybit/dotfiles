@@ -1,4 +1,0 @@
-schema_version: "1.1"
-name: s-1-cross-component
-context:
-  scaffold_script: fixture.sh

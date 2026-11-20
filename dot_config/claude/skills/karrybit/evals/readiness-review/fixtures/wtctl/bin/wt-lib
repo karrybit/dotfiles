@@ -1,6 +1,0 @@
-# Sourced by the wt-* commands.
-top=$(git rev-parse --show-toplevel)
-
-ledger_path() {
-  printf '%s/state/ledger.tsv\n' "$top"
-}

@@ -1,9 +1,0 @@
-{
-  "evals": [
-    {
-      "name": "other-repo",
-      "files": ["../research/fixtures/fetcher"],
-      "note": "notes/retry.md"
-    }
-  ]
-}

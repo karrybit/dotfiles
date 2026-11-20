@@ -1,6 +1,0 @@
-{
-  "name": "quicknote",
-  "version": "1.0.0",
-  "description": "Take quick notes from any session.",
-  "hooks": "./hooks/hooks.json"
-}

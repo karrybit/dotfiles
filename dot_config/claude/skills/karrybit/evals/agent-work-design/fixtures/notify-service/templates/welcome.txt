@@ -1,3 +1,0 @@
-Subject: Welcome to the shop
-
-Hello {name}, thank you for signing up.

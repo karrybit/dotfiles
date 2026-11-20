@@ -1,7 +1,0 @@
-#!/bin/sh
-# Prints "<n> failure(s)" and exits 1 when any check fails.
-fail=0
-out=$(python3 -c 'import parse; print(parse.split_row("a,\"b,c\",d"))')
-[ "$out" = "['a', 'b,c', 'd']" ] || fail=$((fail + 1))
-echo "$fail failure(s)"
-[ "$fail" -eq 0 ]

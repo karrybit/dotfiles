@@ -1,3 +1,0 @@
-Subject: Your invoice {invoice_id}
-
-Hello {name}, your invoice {invoice_id} for {amount} is attached.

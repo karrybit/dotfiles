@@ -1,4 +1,0 @@
-schema_version: "1.1"
-name: one-goal-change
-context:
-  scaffold_script: fixture.sh

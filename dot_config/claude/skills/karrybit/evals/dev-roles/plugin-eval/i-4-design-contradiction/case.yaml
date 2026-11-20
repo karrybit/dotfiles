@@ -1,4 +1,0 @@
-schema_version: "1.1"
-name: i-4-design-contradiction
-context:
-  scaffold_script: fixture.sh

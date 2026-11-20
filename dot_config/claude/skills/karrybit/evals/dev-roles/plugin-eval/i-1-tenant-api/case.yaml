@@ -1,4 +1,0 @@
-schema_version: "1.1"
-name: i-1-tenant-api
-context:
-  scaffold_script: fixture.sh
