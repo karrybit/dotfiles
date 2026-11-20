@@ -116,6 +116,9 @@ Reference files named below live in `~/.local/share/agents/docs/`.
   prompt tends to be echoed verbatim into its output.
 - Read that output against these rules yourself before it is published; only
   the delegating session knows what is session-only.
+- Before drafting or polishing a message sent to people (Slack, email, chat, a
+  ticket comment), read `sent-message-style.md`; it does not cover commit
+  messages, branch names, PR bodies, issues, or documents.
 - Before creating any GitHub issue, confirm titles and boundaries with the user,
   since issue creation is a visible, external action; size each issue to an
   independently mergeable PR, and load `kstack:size-github-issues` before splitting a
