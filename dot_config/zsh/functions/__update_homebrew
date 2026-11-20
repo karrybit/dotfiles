@@ -14,16 +14,22 @@ __lib_require_commands chezmoi git jq __lib_chezmoi_profile || return 1
 (
     local _profile
     local _brewfile
+    local _token
 
     _profile=$(__lib_chezmoi_profile) || exit
     _brewfile="${XDG_CONFIG_HOME:-$HOME/.config}/homebrew/Brewfile.${_profile}"
 
-    brew upgrade || exit
-    brew autoremove || exit
-    brew cleanup || exit
+    # Homebrew passes HOMEBREW_GITHUB_API_TOKEN to git source downloads as
+    # GH_TOKEN, which lets formulae from private GitHub taps fetch their source.
+    # Without gh or a login the value stays empty and Homebrew ignores it.
+    _token=$(gh auth token 2>/dev/null) || _token=
+
+    HOMEBREW_GITHUB_API_TOKEN="${_token}" brew upgrade || exit
+    HOMEBREW_GITHUB_API_TOKEN="${_token}" brew autoremove || exit
+    HOMEBREW_GITHUB_API_TOKEN="${_token}" brew cleanup || exit
 
     # --no-go --no-uv --no-cargo: go, uv, and cargo install their own tools; keep them out of the Brewfile
-    brew bundle dump -f --no-go --no-uv --no-cargo --file "${_brewfile}" || exit
+    HOMEBREW_GITHUB_API_TOKEN="${_token}" brew bundle dump -f --no-go --no-uv --no-cargo --file "${_brewfile}" || exit
 
     __lib_chezmoi_commit_file \
         "${_brewfile}" \

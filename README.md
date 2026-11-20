@@ -179,6 +179,10 @@ When a package update fails, `upup` still runs the remaining updates, prints a
 warning, and exits non-zero without pushing or running `chezmoi apply`. Commits
 made by the updates that succeeded stay local until the next successful `upup`.
 
+`upup` and `vacuum` pass `gh auth token` to each `brew` call as
+`HOMEBREW_GITHUB_API_TOKEN`, so formulae from private GitHub taps can fetch
+their git sources. Without `gh` or a login, `brew` runs without a token.
+
 `vacuum` runs one `__clean_<tool>` function per tool and continues past a
 failing step. It removes:
 
