@@ -190,6 +190,12 @@ settings: Dynamic = new Dynamic {
         repo = "nicobailon/visual-explainer"
       }
     }
+    ["karrybit"] {
+      source {
+        source = "github"
+        repo = "karrybit/plugin-marketplace"
+      }
+    }
   }
   alwaysThinkingEnabled = true
   effortLevel = "xhigh"
