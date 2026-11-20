@@ -6,8 +6,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/Kitware/CMake/v4.5.0/cmake-4.5.0-macos-universal.tar.gz",
-      "checksum": "A645D69FD21E521759CC0C64E7C60462D43FAF0C7214AC05F75C80F7C5037DDE",
+      "id": "github_release/github.com/Kitware/CMake/v4.5.1/cmake-4.5.1-macos-universal.tar.gz",
+      "checksum": "E1FB288543E4EB2A410E385ECEBC64323BDA51F0205782F2B094CCD5D572CA2D",
       "algorithm": "sha256"
     },
     {
@@ -51,8 +51,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/dandavison/delta/0.20.1/delta-0.20.1-aarch64-apple-darwin.tar.gz",
-      "checksum": "BC1839CEA69288D4673A24FAFFBB825D408CA907E0F7D33B1678C9E6CDD5E58E",
+      "id": "github_release/github.com/dandavison/delta/0.21.2/delta-0.21.2-aarch64-apple-darwin.tar.gz",
+      "checksum": "AC78B8953C5087852437BFA0ABFCC7908DB1F7A7B7AB0E39E114A9454BB335A4",
       "algorithm": "sha256"
     },
     {
@@ -91,8 +91,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/gradle/gradle-distributions/v9.9.1/gradle-9.9.1-bin.zip",
-      "checksum": "D8A18A7A841DD5DF825D35A685FAD6F2D7F12AC0C280E57B67C27B4A520BA228",
+      "id": "github_release/github.com/gradle/gradle-distributions/v9.9.2/gradle-9.9.2-bin.zip",
+      "checksum": "971FCD7150CA4BA04852C0B2CA0D2D0AB9468E14B03473EAB19528809914C76B",
       "algorithm": "sha256"
     },
     {
@@ -121,8 +121,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/k1LoW/tbls/v1.96.1/tbls_v1.96.1_darwin_arm64.zip",
-      "checksum": "99D1D53B02E06635D4D94E2823FECC78B3249E996B1785A199BA1868F9F28A8F",
+      "id": "github_release/github.com/k1LoW/tbls/v1.97.0/tbls_v1.97.0_darwin_arm64.zip",
+      "checksum": "B070982D474E84421A2046F45AB67541A0A6DF209B2253A7A8F5A6B4B80AD8B9",
       "algorithm": "sha256"
     },
     {
@@ -216,8 +216,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "http/awscli.amazonaws.com/AWSCLIV2-2.41.1.pkg",
-      "checksum": "FCC64D3B7C5425A7E236BFB2FABA4CBDFA580F888C7165268715E474D9D1408D",
+      "id": "http/awscli.amazonaws.com/AWSCLIV2-2.41.2.pkg",
+      "checksum": "BE48F98304BD7B043921A561CE2C323C81997381CCACFCA3969A6DCF86A70E03",
       "algorithm": "sha256"
     },
     {
@@ -251,8 +251,8 @@
       "algorithm": "sha256"
     },
     {
-      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.589.0/registry.yaml",
-      "checksum": "E785A69E1CEF8A92F09079E96B7156FA4515255FEE4D58C1E9DCDAB23D96DCA2",
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.590.0/registry.yaml",
+      "checksum": "DB2639BE4C01CB90BC9C618194505998BBB6FECFF67E76283AF80F7BD9D2C71F",
       "algorithm": "sha256"
     }
   ]
