@@ -100,6 +100,7 @@ skills:
 
 ## 判断の規則
 
+- 消せるもの（使われないコード、要らなくなる検証や設定、中身のない stub）があれば、それを消すインクリメントを、その上に作るインクリメントより前に置く [PstackSubtract]。
 - 早いフィードバックと実装の費用が衝突するときは、確かめたい `DLVR-UCTN-n` を 1 つに絞った小さなインクリメントを選ぶ。それでも費用が大きいときは Spike にする。
 - 小さなインクリメントと早く動く成果物が衝突するときは、利用者が操作できる経路を 1 本通す方を先にする。
 - 確かめられない `DLVR-UCTN-n`（本番だけの条件など）は、残るリスクに書き、人の判断が要るものは「決めてほしいこと」に書く。
@@ -124,3 +125,4 @@ skills:
 - [Fairbanks10] George Fairbanks, Just Enough Software Architecture: A Risk-Driven Approach, 2010（Ch.3）, https://www.georgefairbanks.com/book/
 - [Agile01] Principles behind the Agile Manifesto, 2001, https://agilemanifesto.org/principles.html
 - [AnthMulti] Anthropic, How we built our multi-agent research system, 2025-06-13, https://www.anthropic.com/engineering/multi-agent-research-system
+- [PstackSubtract] pstack 0.15.36, principle-subtract-before-you-add skill, https://github.com/cursor/plugins/tree/main/pstack/skills/principle-subtract-before-you-add

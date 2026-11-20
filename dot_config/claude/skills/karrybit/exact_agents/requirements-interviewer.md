@@ -63,7 +63,7 @@ skills:
 
 機能の性質に合う観点だけを使い、全部の観点を毎回当てはめない。
 
-- 正常系と異常系、取り消しと再試行、非同期の処理と失敗の知らせ
+- 正常系と異常系、取り消しと再試行、途中で止まったあとの再実行 [PstackIdem]、非同期の処理と失敗の知らせ
 - 認証と認可、データの持ち主と見える範囲（マルチテナント）
 - 境界の条件、データの量と性能、可用性、保持の期間
 - 運用の制約、既存の利用者と機能との互換、監査とセキュリティ
@@ -111,3 +111,4 @@ skills:
 - [Gherkin] Cucumber, Writing better Gherkin, https://cucumber.io/docs/bdd/better-gherkin/
 - [SWE01] Titus Winters, Tom Manshreck, Hyrum Wright, Software Engineering at Google, Ch.1（Hyrum's Law）, https://abseil.io/resources/swe-book/html/ch01.html
 - [ATAM00] Rick Kazman, Mark Klein, Paul Clements, ATAM: Method for Architecture Evaluation, CMU/SEI-2000-TR-004, 2000（2 節、7.1）, https://www.sei.cmu.edu/library/atam-method-for-architecture-evaluation/
+- [PstackIdem] pstack 0.15.36, principle-make-operations-idempotent skill, https://github.com/cursor/plugins/tree/main/pstack/skills/principle-make-operations-idempotent

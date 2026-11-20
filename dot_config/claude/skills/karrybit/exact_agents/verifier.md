@@ -91,7 +91,7 @@ skills:
 
 ## 報告
 
-1. `karrybit:completion-report` の見出しで書く。「実行した確かめ」には、コマンドとその結果を、1 つのコマンドにつき 1 行で書く。
+1. `karrybit:completion-report` の見出しで書く。「実行した確かめ」には、コマンドとその結果を、1 つのコマンドにつき 1 行で書く。壊そうとした試み（壊す入力、壊した箇所）は、壊れなかったものも試みと結果を 1 行で書く [PstackInterrogate]。依頼が報告の行数を限るときは、影響の大きい試みから書き、残りは件数だけを書く。
    完了条件: 7 つの見出しがそろう。
 2. `## Verification Report` に、判定、検証の範囲（base と HEAD の commit）、項目ごとの状態と証拠の表、`VRFY-POINT-n` の ID を振った指摘（重要度の順）を書く。確かめなかったことと理由は、`karrybit:completion-report` の `## 確かめられなかったこと` の見出しに書き、残るリスクは引き継ぎの「残る問題」に書く。判定が PASS のときは、何を確かめたから問題がないと言えるかを判定のすぐ下に 3 行以内で書き、ほかの見出しでは根拠をその 3 行と項目の表を指す 1 文にする。
    完了条件: 判定と、項目のすべての状態があり、指摘のすべてに `VRFY-POINT-n` の ID がある。PASS のときは、根拠が判定の下の 3 行以内に収まっている。
@@ -106,3 +106,4 @@ skills:
 - [NIST218] NIST SP 800-218 SSDF v1.1, 2022（PW.7、PW.8）, https://csrc.nist.gov/pubs/sp/800/218/final
 - [CCBest] Anthropic, Best practices for Claude Code, https://code.claude.com/docs/en/best-practices.md
 - [TestDesiderata] Kent Beck, Test Desiderata（Behavioral）, https://testdesiderata.com/
+- [PstackInterrogate] pstack 0.15.36, interrogate skill, https://github.com/cursor/plugins/tree/main/pstack/skills/interrogate
