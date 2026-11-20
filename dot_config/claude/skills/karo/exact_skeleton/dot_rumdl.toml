@@ -1,8 +1,0 @@
-[global]
-enable = ["MD009", "MD012", "MD022", "MD031", "MD032", "MD047", "MD058"]
-exclude = [".claude/", "investigation/*/sources/", "project/repo/*/*/*/review/"]
-force-exclude = true
-cache = false
-
-[MD009]
-br-spaces = 0

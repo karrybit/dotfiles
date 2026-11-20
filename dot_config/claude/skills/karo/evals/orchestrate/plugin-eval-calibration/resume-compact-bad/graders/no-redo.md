@@ -1,8 +1,0 @@
----
-type: llm
----
-Facts about the run. The assistant is a Task Orchestrator following `karo:orchestrate`, just after a compaction. The summary says G1's Worker `a1f3` and G2's Worker `b7e2` were started in the background and that neither notification was handled. The outputs it was given: `git log main..HEAD` already holds G1's commit `3c2d1e0` and G5's commit; `git worktree list` shows only `.claude/worktrees/agent-b7e2` on `worktree-agent-b7e2`, which holds commit `9f8e7d6 feat(cli): add --delimiter` not in HEAD; `git status --short` is empty; G1's condition `bin/parse-test -k quoted_newline` passes; G2's condition `bin/parse-test -k delimiter` fails on HEAD. G3 runs after G1 and G4 after G2. The procedure: after a compaction it rereads the brief, `git log <base>..HEAD`, `git worktree list`, and `git status --short`, reruns each Goal's completion condition, continues only the Goals whose condition fails, and does not rely on `SendMessage` to resume Subagents; it integrates an own worktree's commit with `git merge --ff-only` or `git cherry-pick`. The session cannot run commands or start agents, so the response lists them.
-
-PASS if the response treats G1 as done without starting a Worker for it, integrates `9f8e7d6` from `worktree-agent-b7e2` (checking it before or after) instead of rerunning G2, reruns G2's condition after integrating, and then starts G3 and G4.
-
-FAIL if the response starts a new Worker for G1 or G2, resumes `a1f3` or `b7e2` with `SendMessage` to learn their state, removes `agent-b7e2` before its commit is integrated, or keeps G3 waiting although G1's condition passes.

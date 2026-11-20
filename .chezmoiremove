@@ -23,22 +23,6 @@
 # granted's assume picks an AWS profile and logs in to SSO.
 .config/zsh/functions/aws-login
 
-# karo keeps no PROVENANCE.md. Its plugin folder and skill folders are not
-# exact_, so these files stay on a machine after leaving the source.
-.config/claude/skills/karo/PROVENANCE.md
-.config/claude/skills/karo/skills/checkin/PROVENANCE.md
-.config/claude/skills/karo/skills/checkout/PROVENANCE.md
-.config/claude/skills/karo/skills/delegate/PROVENANCE.md
-.config/claude/skills/karo/skills/explain/PROVENANCE.md
-.config/claude/skills/karo/skills/insights/PROVENANCE.md
-.config/claude/skills/karo/skills/land/PROVENANCE.md
-.config/claude/skills/karo/skills/review/PROVENANCE.md
-.config/claude/skills/karo/skills/setup/PROVENANCE.md
-
-# The karo plugin has no subagents. The source has no agents folder, so
-# nothing makes chezmoi remove a deployed one otherwise.
-.config/claude/skills/karo/agents
-
 # The command that opens the karo workspace is karo.
 .local/bin/cos
 
@@ -46,17 +30,8 @@
 # so no shell file exports KARO_*.
 .config/zsh/zshenv.d/20_tool_karo.zsh
 
-# The karo:record skill holds its steps in SKILL.md alone. Its skill folder is
-# not exact_, so the removed examples.md stays on a machine otherwise.
-.config/claude/skills/karo/skills/record/examples.md
-
-# The karo plugin's entry scripts are in its bin/ as karo-<name>. The skill
-# folders are not exact_, so the old copies stay on a machine otherwise.
-.config/claude/skills/karo/skills/land/scripts/land
-.config/claude/skills/karo/skills/insights/scripts/insights
-.config/claude/skills/karo/skills/herdr-agent/scripts/agent-ctl
-.config/claude/skills/karo/skills/herdr-agent/scripts/agent-report
-.config/claude/skills/karo/skills/herdr-agent/scripts/safe-key
+# The karo plugin is installed from the karrybit plugin marketplace.
+.config/claude/skills/karo
 
 # The crit eval's branch case has no port-from-target grader. The evals folder
 # is not exact_, so the removed grader stays on a machine otherwise.
@@ -66,7 +41,6 @@
 # checks the script. The evals folders are not exact_, so the removed suites
 # stay on a machine otherwise.
 .config/claude/skills/karrybit/evals/okf-lint
-.config/claude/skills/karo/evals/okf-lint
 
 # The docs-information-design suite tests the description with its
 # plugin-eval-activation cases and keeps a fixture only for a case that uses
