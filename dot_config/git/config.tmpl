@@ -61,10 +61,12 @@
     ps = push
     st = status --short
 {{- if lookPath "gh" }}
+{{- /* aqua's proxy needs aqua on PATH, which tools such as brew strip. */}}
+{{- $gh := output "aqua" "which" "gh" | trim }}
 [credential "https://github.com"]
 	helper =
-	helper = !gh auth git-credential
+	helper = !{{ $gh }} auth git-credential
 [credential "https://gist.github.com"]
 	helper =
-	helper = !gh auth git-credential
+	helper = !{{ $gh }} auth git-credential
 {{- end }}

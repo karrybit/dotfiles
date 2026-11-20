@@ -153,8 +153,11 @@ chezmoi apply   # now that gh is on PATH, adds gh as the GitHub credential helpe
 
 The Git config adds gh as the credential helper for `github.com` and
 `gist.github.com` when `gh` is on PATH at apply time, so `gh auth setup-git`
-is not needed; it would rewrite the helper with gh's full path and leave a
-difference that makes `upup` stop.
+is not needed; it would rewrite the helper and leave a difference that makes
+`upup` stop. The helper calls the gh binary that `aqua which gh` resolves at
+apply time, by absolute path, because tools such as Homebrew run Git with a
+PATH that lacks aqua and its proxy. When that path changes, as with an aqua
+version bump, the next `chezmoi apply` writes the new one.
 
 Claude Code comes from its native installer, as on macOS, and Codex from aqua,
 as on `private_neo`.
