@@ -1,0 +1,3 @@
+[cache]
+# Ignore every remote cache and planner setting; keep the local cache only.
+local_only = true

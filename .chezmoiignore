@@ -46,6 +46,7 @@ docs
 
 {{ if ne .profile "work" -}}
 .crit.config.json
+.config/kache
 .config/terminal-browser
 .local/state/terminal-browser
 {{ end -}}
