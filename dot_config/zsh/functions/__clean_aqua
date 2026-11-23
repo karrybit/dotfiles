@@ -31,6 +31,8 @@ if command -v ghq >/dev/null 2>&1; then
 fi
 
 # aqua install never removes the shim of a package dropped from a config.
+# A command is still used only when aqua which resolves it under pkgs/:
+# for a command no config provides, aqua which falls back to PATH.
 if (( _projects_known && ${#_globals} > 0 )); then
     local _shim
     local _command
@@ -40,20 +42,17 @@ if (( _projects_known && ${#_globals} > 0 )); then
         [[ "$(readlink "${_shim}")" == "../aqua-proxy" ]] || continue
         _command=${_shim:t}
         [[ "${_command}" == aqua ]] && continue
-        (cd "${_root}" && aqua which "${_command}") >/dev/null 2>&1 && continue
+        [[ "$(cd "${_root}" && aqua which "${_command}" 2>/dev/null)" == "${_root}/pkgs/"* ]] && continue
 
         _used=0
         for _config in "${_projects[@]}"; do
-            if (cd "${_root}" && aqua -c "${_config}" which "${_command}") >/dev/null 2>&1; then
+            if [[ "$(cd "${_root}" && aqua -c "${_config}" which "${_command}" 2>/dev/null)" == "${_root}/pkgs/"* ]]; then
                 _used=1
                 break
             fi
         done
 
-        if (( ! _used )); then
-            printf "removing unused shim: %s\n" "${_command}"
-            rm -f -- "${_shim}"
-        fi
+        (( _used )) || (cd "${_root}" && aqua rm -m l "${_command}")
     done
 fi
 
