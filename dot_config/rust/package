@@ -1,4 +1,5 @@
 cargo-edit
 cargo-expand
 cargo-modules
+cargo-mutants
 cargo-sort

@@ -11,3 +11,5 @@ packages:
   - registry: standard
   - name: tomasz-tomczyk/crit
     registry: local
+  - name: kunobi-ninja/kache
+    registry: local

@@ -1,7 +1,6 @@
 tap "aquaproj/aqua", trusted: true
 tap "dicklesworthstone/tap", trusted: true
 tap "karrybit/karo", "https://github.com/karrybit/plugin-marketplace.git", trusted: { formulae: ["karo-core"] }
-tap "kunobi-ninja/kunobi"
 tap "microsoft/apm", trusted: true
 tap "olets/tap"
 tap "tomasz-tomczyk/tap", trusted: true
@@ -45,8 +44,6 @@ brew "dicklesworthstone/tap/bv", trusted: true
 brew "dicklesworthstone/tap/cass", trusted: true
 # Launcher that sets up and opens the karo Claude Code session in Herdr
 brew "karrybit/karo/karo-core"
-# Content-addressed zero-copy build cache for Rust, C/C++ and more
-brew "kunobi-ninja/kunobi/kache", trusted: true
 # Auto-expanding abbreviations manager for zsh, inspired by fish
 brew "olets/tap/zsh-abbr", trusted: true
 # Password manager that keeps all passwords secure behind one password
