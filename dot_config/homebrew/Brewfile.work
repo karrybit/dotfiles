@@ -3,7 +3,7 @@ tap "dicklesworthstone/tap", trusted: true
 tap "karrybit/karo", "https://github.com/karrybit/plugin-marketplace.git", trusted: { formulae: ["karo-core"] }
 tap "microsoft/apm", trusted: true
 tap "olets/tap"
-tap "tomasz-tomczyk/tap"
+tap "tomasz-tomczyk/tap", trusted: true
 # Fast and opinionated formatter for R code
 brew "air"
 # Development kit for the Java programming language
