@@ -75,6 +75,9 @@ Reference files named below live in `~/.local/share/agents/docs/`.
   rationale and historical context worth keeping in the commit message, PR
   description, or a decision log, tied to the decision to commit now, not to
   the artifact's ongoing self-description.
+- Limit a code comment to the reason the code cannot show, why it is not
+  written another way; keep explanations, locations, procedures, and
+  references out of comments.
 - After editing comments or documentation, re-check the diff against the
   current-design rule and report the result; a long, context-heavy session is
   the likeliest place for a violation to slip through unstated.
