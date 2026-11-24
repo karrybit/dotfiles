@@ -22,8 +22,11 @@ escalate, or fix a bug.
   a violation is detectable, since over-abstraction produces unactionable
   advice.
 - Match analysis depth to recurrence and impact: deep root-cause work for
-  recurring or high-impact defects, direct fixes for one-offs.
-- Close the verification gap that let the defect through, not just the defect.
+  recurring or high-impact defects, direct fixes for one-offs once the
+  structure is judged right.
+- Treat the verification gap that let the defect through as part of the
+  structure that `CLAUDE.md` Simple & Easy asks about, and close it, not just
+  the defect.
 - When fixing a bug that AI-assisted work introduced or a review missed, add
   the smallest deterministic regression test that fails on the old behavior.
 - In that test, cover the parallel paths the change touches (sandbox vs
