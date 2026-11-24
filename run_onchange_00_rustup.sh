@@ -12,3 +12,6 @@ fi
 if ! "$CARGO_HOME/bin/rustup" default >/dev/null 2>&1; then
   "$CARGO_HOME/bin/rustup" default stable
 fi
+
+# cargo-llvm-cov needs the LLVM tools of the default toolchain
+"$CARGO_HOME/bin/rustup" component add llvm-tools-preview
