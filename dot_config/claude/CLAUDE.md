@@ -23,6 +23,9 @@ Reference files named below live in `~/.local/share/agents/docs/`.
 
 ## Simple & Easy
 
+- Before fixing any problem, ask whether its structure produces it: if wrong,
+  change the structure so the problem cannot occur instead of fixing each
+  occurrence; if right, fix the problem itself. State which you chose and why.
 - Obsess over keeping solutions simple & easy. Complexity and difficulty raise
   cognitive and operational load, degrade quality, and make the tests complex
   and difficult too.
