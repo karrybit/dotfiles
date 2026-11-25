@@ -7,11 +7,6 @@ if ! command -v brew >/dev/null 2>&1; then
     return 0
 fi
 
-local _token
-
-# See __update_homebrew for why brew gets the gh token.
-_token=$(gh auth token 2>/dev/null) || _token=
-
-HOMEBREW_GITHUB_API_TOKEN="${_token}" brew autoremove
+brew autoremove
 # --prune=all drops every cached download; -s scrubs even the latest ones.
-HOMEBREW_GITHUB_API_TOKEN="${_token}" brew cleanup --prune=all -s
+brew cleanup --prune=all -s

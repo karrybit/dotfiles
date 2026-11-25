@@ -71,6 +71,16 @@ the user-scope `chrome-devtools` MCP server and passes the rest of that runtime
 state file through with `jq`. The server's URL guard is described in
 `dot_local/share/agents/scripts/chrome-devtools-url-guard/README.md`.
 
+Secret environment variables live in 1Password, not in this repository.
+`dot_config/zsh/zshenv.d/private_50_secrets.zsh.tmpl` reads each one with
+`onepasswordRead "op://<vault>/<item>/<field>"`, so every `chezmoi apply`
+asks 1Password to unlock, and the rendered
+`~/.config/zsh/zshenv.d/50_secrets.zsh` holds the values in plain text at mode
+`0600`. Because this repository is public, the vault and item names in each
+reference are public too. The template renders nothing until the `op` CLI
+(the `1password-cli` cask) is installed, and needs the 1Password app's
+"Integrate with 1Password CLI" setting on.
+
 ---
 
 ## Usage
@@ -98,7 +108,8 @@ chezmoi init --apply karrybit/dotfiles
 aqua comes from Homebrew, so the aqua and Python `run_onchange_` scripts skip
 on the first apply. Install it, then run what those scripts would have. The
 second `chezmoi apply` writes the files rendered from installed casks
-(terminal-browser's `setup-version`):
+(terminal-browser's `setup-version`, and the 1Password secrets once the
+1Password app's CLI integration is on):
 
 ```sh
 # 3. Install Homebrew, aqua-managed packages, and Python
@@ -187,9 +198,11 @@ When a package update fails, `upup` still runs the remaining updates, prints a
 warning, and exits non-zero without pushing or running `chezmoi apply`. Commits
 made by the updates that succeeded stay local until the next successful `upup`.
 
-`upup` and `vacuum` pass `gh auth token` to each `brew` call as
-`HOMEBREW_GITHUB_API_TOKEN`, so formulae from private GitHub taps can fetch
-their git sources. Without `gh` or a login, `brew` runs without a token.
+`brew` reads `HOMEBREW_GITHUB_API_TOKEN` from the 1Password secrets (see
+above), a read-only token for `karrybit/plugin-marketplace`, the only private
+repository a formula downloads from (karo-core's release asset). Until those
+secrets are rendered, `brew` runs without a token and karo-core cannot be
+installed or upgraded.
 
 `vacuum` runs one `__clean_<tool>` function per tool and continues past a
 failing step. It removes:
