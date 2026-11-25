@@ -48,6 +48,8 @@ brew "karrybit/karo/karo-core"
 brew "olets/tap/zsh-abbr", trusted: true
 # Password manager that keeps all passwords secure behind one password
 cask "1password"
+# Command-line interface for 1Password
+cask "1password-cli"
 # Screen capturing tool
 cask "cleanshot"
 # Universal database tool and SQL client

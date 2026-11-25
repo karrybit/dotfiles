@@ -21,6 +21,8 @@ brew "microsoft/apm/apm"
 brew "olets/tap/zsh-abbr", trusted: true
 # Password manager that keeps all passwords secure behind one password
 cask "1password"
+# Command-line interface for 1Password
+cask "1password-cli"
 # Screen capturing tool
 cask "cleanshot"
 # Terminal emulator that uses platform-native UI and GPU acceleration
